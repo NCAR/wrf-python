@@ -1,0 +1,291 @@
+#!/usr/bin/env python
+
+import traceback
+import sys
+import sqlite3
+from datetime import datetime as dt
+
+import numpy as n
+import matplotlib
+matplotlib.use('agg')
+import matplotlib.pyplot as plt
+
+#from wrf.core import Constants
+#from wrf.var.temp import calc_temp
+#from wrf.plot.matplotlib.defaults import (get_basemap, get_default_map_opts,
+#                                          get_null_opts)
+                            
+#from wrf.plot.matplotlib.helper import (add_plot_info_text, plot_map, 
+#                                        plot_contourf)
+
+#__all__ = ["plot_2d"]
+
+
+
+
+def get_basemap(wrfnc):
+    #TODO:  handle multiple projections
+    lat2d = wrfnc.variables["XLAT"][0,:,:]
+    lon2d = wrfnc.variables["XLONG"][0,:,:]
+    
+    ny = len(wrfnc.dimensions["south_north"])
+    nx = len(wrfnc.dimensions["west_east"])
+    nz = len(wrfnc.dimensions["bottom_top"])
+    
+    dx = wrfnc.DX
+    dy = wrfnc.DY
+    center_lat = wrfnc.CEN_LAT
+    center_lon = wrfnc.CEN_LON
+    true_lat1 = wrfnc.TRUELAT1
+    true_lat2 = wrfnc.TRUELAT2
+    
+    basemap = Basemap(projection="lcc", 
+                      lat_0=center_lat,
+                      lon_0=center_lon,
+                      lat_1=true_lat1,
+                      lat_2=true_lat2,
+                      llcrnrlon=lon2d[0,0], 
+                      llcrnrlat=lat2d[0,0], 
+                      urcrnrlon=lon2d[ny-1, nx-1], 
+                      urcrnrlat=lat2d[ny-1, nx-1],
+                      resolution='i')
+    
+    return basemap
+
+def get_default_map_opts():
+    landcolor = (204/255.0, 204/255.0, 153/255.0)
+    oceancolor = (102/255.0, 204/255.0, 255/255.0)
+    return MapOptions(
+                 coastargs = {"linewidth":1.0, "linestyle":'solid', "color":'k'},
+                 countryargs = {"linewidth":0.5, "linestyle":'solid', "color":'k'},
+                 stateargs = {"linewidth":0.5, "linestyle":'solid', "color":'k'},
+                 mapboundaryargs = {"color":'k', "linewidth":1.0, 
+                                    "fill_color":oceancolor},
+                 continentfillargs = {"color":landcolor, "lake_color":oceancolor,
+                                      "zorder":0})
+
+
+def get_null_opts():
+     return FilledContourOptions(fcontourargs={}, 
+                                 colorbarargs={"location" : "bottom", 
+                                               "size" : "5%", "pad" : "2%",
+                                               "extend" : "both"})
+
+def add_plot_info_text(ax,
+                       top_left_text="", top_right_text="",
+                       bot_left_text="", bot_right_text=""):
+    
+    plt.ioff()
+    if top_left_text != "":
+        plt.text(0.005,.995,top_left_text, 
+                 bbox=dict(facecolor="white"),
+                 horizontalalignment="left",
+                 verticalalignment="top",
+                 transform = ax.transAxes,
+                 fontsize=10)
+        
+    if top_right_text != "":  
+        plt.text(.995,.995,top_right_text, 
+                 bbox=dict(facecolor="white"),
+                 horizontalalignment="right",
+                 verticalalignment="top",
+                 transform = ax.transAxes,
+                 fontsize=10)
+    
+    if bot_left_text != "":  
+        plt.text(0.005,0.005,bot_left_text, 
+                 bbox=dict(facecolor="white"),
+                 horizontalalignment="left",
+                 verticalalignment="bottom",
+                 transform = ax.transAxes,
+                 fontsize=10)
+        
+    if bot_right_text != "":  
+        plt.text(.995,0.005,bot_right_text, 
+                 bbox=dict(facecolor="white"),
+                 horizontalalignment="right",
+                 verticalalignment="bottom",
+                 transform = ax.transAxes,
+                 fontsize=10)
+
+def plot_map(basemap, mapoptions):
+    plt.ioff()
+    if mapoptions.mapboundaryargs is not None:
+            basemap.drawmapboundary(**mapoptions.mapboundaryargs)
+            
+    if mapoptions.continentfillargs is not None:
+        basemap.fillcontinents(**mapoptions.continentfillargs)
+    
+    if mapoptions.coastargs is not None:
+        basemap.drawcoastlines(**mapoptions.coastargs)
+        
+    if mapoptions.countryargs is not None:
+        basemap.drawcountries(**mapoptions.countryargs)
+        
+    if mapoptions.stateargs is not None:
+        basemap.drawstates(**mapoptions.stateargs)
+        
+    if mapoptions.countyargs is not None:
+        basemap.drawcounties(**mapoptions.countyargs)
+        
+    if mapoptions.riverargs is not None:
+        basemap.drawrivers(**mapoptions.riverargs)
+
+def plot_contourf(x,y,data,basemap, contourfoptions):
+    plt.ioff()
+    cs1 = None
+    if contourfoptions.contourargs is not None:
+        cs1 = basemap.contour(x,y,data,**contourfoptions.contourargs)
+    
+    cs2 = None
+    if contourfoptions.fcontourargs is not None:
+        cs2 = basemap.contourf(x,y,data,**contourfoptions.fcontourargs)
+    
+    cb = None
+    if contourfoptions.colorbarargs is not None:
+        cb = basemap.colorbar(cs2, **contourfoptions.colorbarargs)
+        
+    if contourfoptions.labelargs is not None:
+        plt.clabel(cs1, **contourfoptions.labelargs)
+        
+    return cs1, cs2, cb
+    
+def get_null_opts():
+     return FilledContourOptions(fcontourargs={}, 
+                                 colorbarargs={"location" : "bottom", 
+                                               "size" : "5%", "pad" : "2%",
+                                               "extend" : "both"})
+
+class MapOptions(object):
+    def __init__(self, 
+                 coastargs = None,
+                 countyargs = None,
+                 countryargs = None,
+                 riverargs = None,
+                 stateargs = None,
+                 mapboundaryargs = None,
+                 continentfillargs = None):
+        self.coastargs = coastargs
+        self.countyargs = countyargs
+        self.countryargs = countryargs
+        self.riverargs = riverargs
+        self.stateargs = stateargs
+        self.mapboundaryargs = mapboundaryargs
+        self.continentfillargs = continentfillargs
+        
+def plot_2d(wrfnc, varname=None, outfile=None, title=None, 
+             map_opts=None, plot_opts=None,
+             top_left_info="", top_right_info="", 
+             bot_left_info="", bot_right_info="",
+             wks_type="png", var=None,
+             time_in=0):
+    
+    try:
+        plt.ioff()
+        print "generating %s.%s" % (outfile, wks_type)
+        if var is not None:
+            field = var
+        elif varname is not None:
+            field = wrfnc.variables[varname][time_in,:,:]
+        
+        lat2d = wrfnc.variables["XLAT"][time_in,:,:]
+        lon2d = wrfnc.variables["XLONG"][time_in,:,:]
+        times = wrfnc.variables["Times"][time_in,:]
+        model_time = "".join(times)
+        start_date = dt.strptime(model_time, "%Y-%m-%d_%H:%M:%S")
+        
+        ny = len(wrfnc.dimensions["south_north"])
+        nx = len(wrfnc.dimensions["west_east"])
+        nz = len(wrfnc.dimensions["bottom_top"])
+        
+        fig = plt.figure(figsize=(8,8), dpi=200)
+        ax = fig.add_axes([0.1,0.1,0.8,0.8])
+        
+        bm = get_basemap(wrfnc)
+        if map_opts is None:
+            map_opts = get_default_map_opts()
+        if plot_opts is None:
+            plot_opts = get_null_opts()
+        
+        x,y = bm(lon2d, lat2d)
+        
+        plot_map(bm,map_opts)
+        
+        plt.xticks(rotation=70)
+        tplot = plot_contourf(x,y,field,bm,plot_opts)
+        
+        
+        add_plot_info_text(ax, 
+                           top_left_info, top_right_info,
+                           bot_left_info, bot_right_info)
+        
+        ax.set_title(title,fontdict={"fontsize" : 20})
+        
+        plt.savefig("%s.%s" % (outfile, wks_type))
+        
+        plt.clf()
+        plt.close(fig)
+    except:
+        # print the stack trace since it will be lost when used in a 
+        # multiprocessing worker.
+        print traceback.format_exc()
+        raise
+    finally:
+        sys.stdout.flush()
+        
+def main():
+    parser = argparse.ArgumentParser(description="Generate meteorological "
+                                     "plots for a specific data file")
+    parser.add_argument("-v", "--var", required=True, 
+                        help="variable name")
+    parser.add_argument("-f", "--filename", required=True, 
+                        help="WRF file to plot")
+    parser.add_argument("-o", "--outdir", default=".", required=False,
+                        help="output directory for images")
+    parser.add_argument("-l", "--levels", required=False, type=float,
+                        nargs="+",
+                        default=None,
+                        help=("the start, end, and increment for contour levels"
+                              " as a list of items with spaces between them"
+                              "example: 1 10 2 "))
+    parser.add_argument("-c", "--customlevels", required=False, type=float,
+                        nargs="+",
+                        default=None,
+                        help=("a list of space delimited contour levels"
+                              "example: 1 2 3 4 5 19 28 200 "))
+    
+    args = parser.parse_args()
+    
+    if not os.path.exists(args.filename):
+        raise RuntimeError ("%s not found" % args.filename)
+    
+    if not os.path.exists(args.outdir):
+        os.makedirs(args.outdir)
+    
+    basename = os.path.basename(args.filename)
+    wrfnc = NetCDF(args.filename, mode='r')
+    
+    outfile = os.path.join(args.outdir, domain, args.var, "%s.%s" % (basename,args.var))
+    if not os.path.exists(os.path.dirname(outfile)):
+        os.makedirs(os.path.dirname(outfile))
+    
+    if args.levels is not None or args.customlevels is not None:
+        plot_opts = get_null_opts()
+        if args.levels is not None:
+            if len(args.levels) < 2 or len(args.levels) > 3:
+                raise RuntimeError("levels argument is invalid")
+            plot_opts.fcontourargs["levels"] = [x for x in n.arange(args.levels[0], 
+                                                                  args.levels[1], 
+                                                                  args.levels[2])]
+            plot_opts.fcontourargs["extend"] = "both"
+        elif args.customlevels is not None:
+            plot_opts.fcontourargs["levels"] = args.customlevels
+            plot_opts.fcontourargs["extend"] = "both"
+    else:
+        plot_opts = None
+    
+    plot_2d(wrfnc, args.var, outfile, "%s"%args.var,
+            plot_opts = plot_opts)
+    
+if __name__ == "__main__":
+    main()

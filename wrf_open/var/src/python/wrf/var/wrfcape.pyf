@@ -1,0 +1,74 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module tonpsadiabat__user__routines 
+    interface tonpsadiabat_user_interface 
+        subroutine throw_exception(e__capecalc3d___err,e__outside_of_lookup_table_bounds__prs_thte__err,prs,thte) ! in :_wrfcape:wrfcape.f90:tonpsadiabat:unknown_interface
+            character*(*) :: e__capecalc3d___err
+            character*(*) :: e__outside_of_lookup_table_bounds__prs_thte__err
+            real(kind=8) intent(in) :: prs
+            real(kind=8) intent(in) :: thte
+        end subroutine throw_exception
+    end interface tonpsadiabat_user_interface
+end python module tonpsadiabat__user__routines
+python module f_computecape__user__routines 
+    interface f_computecape_user_interface 
+        subroutine throw_exception(e__capecalc3d__kmax_got_too_big__kmax__err,kmax) ! in :_wrfcape:wrfcape.f90:f_computecape:unknown_interface
+            character*(*) :: e__capecalc3d__kmax_got_too_big__kmax__err
+            integer :: kmax
+        end subroutine throw_exception
+    end interface f_computecape_user_interface
+end python module f_computecape__user__routines
+python module _wrfcape ! in 
+    interface  ! in :_wrfcape
+        function tvirtual(temp,ratmix) ! in :_wrfcape:wrfcape.f90
+            real(kind=8) intent(in) :: temp
+            real(kind=8) intent(in) :: ratmix
+            real(kind=8) :: tvirtual
+        end function tvirtual
+        function tonpsadiabat(thte,prs,psadithte,psadiprs,psaditmk,gamma,throw_exception) ! in :_wrfcape:wrfcape.f90
+            use tonpsadiabat__user__routines
+            real(kind=8) intent(in) :: thte
+            real(kind=8) intent(in) :: prs
+            real(kind=8) dimension(150),intent(in) :: psadithte
+            real(kind=8) dimension(150),intent(in) :: psadiprs
+            real(kind=8) dimension(150,150),intent(in) :: psaditmk
+            real(kind=8) intent(in) :: gamma
+            external throw_exception
+            real(kind=8) :: tonpsadiabat
+        end function tonpsadiabat
+        subroutine dpfcalc(prs,sfp,pf,miy,mjx,mkzh,ter_follow) ! in :_wrfcape:wrfcape.f90
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: sfp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out),depend(miy,mjx,mkzh) :: pf
+            integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
+            integer intent(in) :: ter_follow
+        end subroutine dpfcalc
+        subroutine f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,psadithte,psadiprs,psaditmk,cmsg,i3dflag,ter_follow,throw_exception,miy,mjx,mkzh) ! in :_wrfcape:wrfcape.f90
+            use f_computecape__user__routines
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: tmk
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: qvp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: ght
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: ter
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: sfp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(inout),depend(miy,mjx,mkzh) :: cape
+            real(kind=8) dimension(miy,mjx,mkzh),intent(inout),depend(miy,mjx,mkzh) :: cin
+            real(kind=8) dimension(150),intent(in) :: psadithte
+            real(kind=8) dimension(150),intent(in) :: psadiprs
+            real(kind=8) dimension(150,150),intent(in) :: psaditmk
+            real(kind=8) intent(in) :: cmsg
+            integer intent(in) :: i3dflag
+            integer intent(in) :: ter_follow
+            external throw_exception
+            integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
+        end subroutine f_computecape
+    end interface 
+end python module _wrfcape
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

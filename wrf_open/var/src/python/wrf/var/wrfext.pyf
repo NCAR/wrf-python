@@ -1,0 +1,334 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module f_computeslp__user__routines 
+    interface f_computeslp_user_interface 
+        subroutine throw_exception(e__error_in_finding_100_hpa_up_err) ! in :_wrfext:wrfext.f90:f_computeslp:unknown_interface
+            character*(*) :: e__error_in_finding_100_hpa_up_err
+        end subroutine throw_exception
+    end interface f_computeslp_user_interface
+end python module f_computeslp__user__routines
+python module f_computewetbulb__user__routines 
+    interface f_computewetbulb_user_interface 
+        subroutine throw_exception(e__outside_of_lookup_table_bounds__prs_thte__err,p,eth) ! in :_wrfext:wrfext.f90:f_computewetbulb:unknown_interface
+            character*(*) :: e__outside_of_lookup_table_bounds__prs_thte__err
+            real(kind=8) :: p
+            real(kind=8) :: eth
+        end subroutine throw_exception
+    end interface f_computewetbulb_user_interface
+end python module f_computewetbulb__user__routines
+python module f_lltoij__user__routines 
+    interface f_lltoij_user_interface 
+        subroutine throw_exception(e__do_not_know_map_projection__err,map_proj) ! in :_wrfext:wrfext.f90:f_lltoij:unknown_interface
+            character*(*) :: e__do_not_know_map_projection__err
+            integer intent(in) :: map_proj
+        end subroutine throw_exception
+    end interface f_lltoij_user_interface
+end python module f_lltoij__user__routines
+python module f_ijtoll__user__routines 
+    interface f_ijtoll_user_interface 
+        subroutine throw_exception(e__do_not_know_map_projection__err,map_proj) ! in :_wrfext:wrfext.f90:f_ijtoll:unknown_interface
+            character*(*) :: e__do_not_know_map_projection__err
+            integer intent(in) :: map_proj
+        end subroutine throw_exception
+    end interface f_ijtoll_user_interface
+end python module f_ijtoll__user__routines
+python module _wrfext ! in 
+    interface  ! in :_wrfext
+        subroutine f_interpz3d(data3d,zdata,desiredloc,missingval,out2d,nx,ny,nz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: data3d
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: zdata
+            real(kind=8) intent(in) :: desiredloc
+            real(kind=8) intent(in) :: missingval
+            real(kind=8) dimension(nx,ny),intent(out),depend(nx,ny) :: out2d
+            integer, optional,intent(in),check(shape(data3d,0)==nx),depend(data3d) :: nx=shape(data3d,0)
+            integer, optional,intent(in),check(shape(data3d,1)==ny),depend(data3d) :: ny=shape(data3d,1)
+            integer, optional,intent(in),check(shape(data3d,2)==nz),depend(data3d) :: nz=shape(data3d,2)
+        end subroutine f_interpz3d
+        subroutine f_interp2dxy(v3d,xy,v2d,nx,ny,nz,nxy) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: v3d
+            real(kind=8) dimension(2,nxy),intent(in) :: xy
+            real(kind=8) dimension(nxy,nz),intent(out),depend(nxy,nz) :: v2d
+            integer, optional,intent(in),check(shape(v3d,0)==nx),depend(v3d) :: nx=shape(v3d,0)
+            integer, optional,intent(in),check(shape(v3d,1)==ny),depend(v3d) :: ny=shape(v3d,1)
+            integer, optional,intent(in),check(shape(v3d,2)==nz),depend(v3d) :: nz=shape(v3d,2)
+            integer, optional,intent(in),check(shape(xy,1)==nxy),depend(xy) :: nxy=shape(xy,1)
+        end subroutine f_interp2dxy
+        subroutine f_interp1d(v_in,z_in,z_out,vmsg,v_out,nz_in,nz_out) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nz_in),intent(in) :: v_in
+            real(kind=8) dimension(nz_in),intent(in),depend(nz_in) :: z_in
+            real(kind=8) dimension(nz_out),intent(in) :: z_out
+            real(kind=8) intent(in) :: vmsg
+            real(kind=8) dimension(nz_out),intent(out),depend(nz_out) :: v_out
+            integer, optional,intent(in),check(len(v_in)>=nz_in),depend(v_in) :: nz_in=len(v_in)
+            integer, optional,intent(in),check(len(z_out)>=nz_out),depend(z_out) :: nz_out=len(z_out)
+        end subroutine f_interp1d
+        subroutine f_computeslp(z,t,p,q,t_sea_level,t_surf,level,throw_exception,sea_level_pressure,nx,ny,nz) ! in :_wrfext:wrfext.f90
+            use f_computeslp__user__routines
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: z
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: t
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: p
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: q
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: t_sea_level
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: t_surf
+            integer dimension(nx,ny),intent(inout),depend(nx,ny) :: level
+            external throw_exception
+            real(kind=8) dimension(nx,ny),intent(out),depend(nx,ny) :: sea_level_pressure
+            integer, optional,intent(in),check(shape(z,0)==nx),depend(z) :: nx=shape(z,0)
+            integer, optional,intent(in),check(shape(z,1)==ny),depend(z) :: ny=shape(z,1)
+            integer, optional,intent(in),check(shape(z,2)==nz),depend(z) :: nz=shape(z,2)
+        end subroutine f_computeslp
+        subroutine f_computetk(pressure,theta,tk,nx) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx),intent(in) :: pressure
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: theta
+            real(kind=8) dimension(nx),intent(out),depend(nx) :: tk
+            integer, optional,intent(in),check(len(pressure)>=nx),depend(pressure) :: nx=len(pressure)
+        end subroutine f_computetk
+        subroutine f_computetd(pressure,qv_in,td,nx) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx),intent(in) :: pressure
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: qv_in
+            real(kind=8) dimension(nx),intent(out),depend(nx) :: td
+            integer, optional,intent(in),check(len(pressure)>=nx),depend(pressure) :: nx=len(pressure)
+        end subroutine f_computetd
+        subroutine f_computerh(qv,p,t,rh,nx) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx),intent(in) :: qv
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: p
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: t
+            real(kind=8) dimension(nx),intent(out),depend(nx) :: rh
+            integer, optional,intent(in),check(len(qv)>=nx),depend(qv) :: nx=len(qv)
+        end subroutine f_computerh
+        subroutine f_computeabsvort(u,v,msfu,msfv,msft,cor,dx,dy,av,nx,ny,nz,nxp1,nyp1) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nxp1,ny,nz),intent(in) :: u
+            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nz) :: v
+            real(kind=8) dimension(nxp1,ny),intent(in),depend(nxp1,ny) :: msfu
+            real(kind=8) dimension(nx,nyp1),intent(in),depend(nx,nyp1) :: msfv
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: msft
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: cor
+            real(kind=8) :: dx
+            real(kind=8) :: dy
+            real(kind=8) dimension(nx,ny,nz),intent(out),depend(nx,ny,nz) :: av
+            integer, optional,intent(in),check(shape(v,0)==nx),depend(v) :: nx=shape(v,0)
+            integer, optional,intent(in),check(shape(u,1)==ny),depend(u) :: ny=shape(u,1)
+            integer, optional,intent(in),check(shape(u,2)==nz),depend(u) :: nz=shape(u,2)
+            integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
+            integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
+        end subroutine f_computeabsvort
+        subroutine f_computepvo(u,v,theta,prs,msfu,msfv,msft,cor,dx,dy,pv,nx,ny,nz,nxp1,nyp1) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nxp1,ny,nz),intent(in) :: u
+            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nz) :: v
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: theta
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: prs
+            real(kind=8) dimension(nxp1,ny),intent(in),depend(nxp1,ny) :: msfu
+            real(kind=8) dimension(nx,nyp1),intent(in),depend(nx,nyp1) :: msfv
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: msft
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: cor
+            real(kind=8) :: dx
+            real(kind=8) :: dy
+            real(kind=8) dimension(nx,ny,nz),intent(out),depend(nx,ny,nz) :: pv
+            integer, optional,intent(in),check(shape(v,0)==nx),depend(v) :: nx=shape(v,0)
+            integer, optional,intent(in),check(shape(u,1)==ny),depend(u) :: ny=shape(u,1)
+            integer, optional,intent(in),check(shape(u,2)==nz),depend(u) :: nz=shape(u,2)
+            integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
+            integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
+        end subroutine f_computepvo
+        subroutine f_computeeth(qvp,tmk,prs,eth,miy,mjx,mkzh) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: qvp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: tmk
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: prs
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out),depend(miy,mjx,mkzh) :: eth
+            integer, optional,intent(in),check(shape(qvp,0)==miy),depend(qvp) :: miy=shape(qvp,0)
+            integer, optional,intent(in),check(shape(qvp,1)==mjx),depend(qvp) :: mjx=shape(qvp,1)
+            integer, optional,intent(in),check(shape(qvp,2)==mkzh),depend(qvp) :: mkzh=shape(qvp,2)
+        end subroutine f_computeeth
+        subroutine f_computeuvmet(u,v,longca,longcb,flong,flat,cen_long,cone,rpd,istag,is_msg_val,umsg,vmsg,uvmetmsg,uvmet,nx,ny,nxp1,nyp1,nz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nxp1,ny,nz),intent(in) :: u
+            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nz) :: v
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: longca
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: longcb
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: flong
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: flat
+            real(kind=8) intent(in) :: cen_long
+            real(kind=8) intent(in) :: cone
+            real(kind=8) intent(in) :: rpd
+            integer intent(in) :: istag
+            logical intent(in) :: is_msg_val
+            real(kind=8) intent(in) :: umsg
+            real(kind=8) intent(in) :: vmsg
+            real(kind=8) intent(in) :: uvmetmsg
+            real(kind=8) dimension(nx,ny,nz,2),intent(out),depend(nx,ny,nz) :: uvmet
+            integer, optional,intent(in),check(shape(v,0)==nx),depend(v) :: nx=shape(v,0)
+            integer, optional,intent(in),check(shape(u,1)==ny),depend(u) :: ny=shape(u,1)
+            integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
+            integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
+            integer, optional,intent(in),check(shape(u,2)==nz),depend(u) :: nz=shape(u,2)
+        end subroutine f_computeuvmet
+        subroutine f_computeomega(qvp,tmk,www,prs,omg,mx,my,mz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(mx,my,mz),intent(in) :: qvp
+            real(kind=8) dimension(mx,my,mz),intent(in),depend(mx,my,mz) :: tmk
+            real(kind=8) dimension(mx,my,mz),intent(in),depend(mx,my,mz) :: www
+            real(kind=8) dimension(mx,my,mz),intent(in),depend(mx,my,mz) :: prs
+            real(kind=8) dimension(mx,my,mz),intent(out),depend(mx,my,mz) :: omg
+            integer, optional,intent(in),check(shape(qvp,0)==mx),depend(qvp) :: mx=shape(qvp,0)
+            integer, optional,intent(in),check(shape(qvp,1)==my),depend(qvp) :: my=shape(qvp,1)
+            integer, optional,intent(in),check(shape(qvp,2)==mz),depend(qvp) :: mz=shape(qvp,2)
+        end subroutine f_computeomega
+        subroutine f_computetv(temp,qv,tv,nx,ny,nz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: temp
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: qv
+            real(kind=8) dimension(nx,ny,nz),intent(out),depend(nx,ny,nz) :: tv
+            integer, optional,intent(in),check(shape(temp,0)==nx),depend(temp) :: nx=shape(temp,0)
+            integer, optional,intent(in),check(shape(temp,1)==ny),depend(temp) :: ny=shape(temp,1)
+            integer, optional,intent(in),check(shape(temp,2)==nz),depend(temp) :: nz=shape(temp,2)
+        end subroutine f_computetv
+        subroutine f_computewetbulb(prs,tmk,qvp,psadithte,psadiprs,psaditmk,throw_exception,twb,nx,ny,nz) ! in :_wrfext:wrfext.f90
+            use f_computewetbulb__user__routines
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: prs
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: tmk
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: qvp
+            real(kind=8) dimension(150),intent(in) :: psadithte
+            real(kind=8) dimension(150),intent(in) :: psadiprs
+            real(kind=8) dimension(150,150),intent(in) :: psaditmk
+            external throw_exception
+            real(kind=8) dimension(nx,ny,nz),intent(out),depend(nx,ny,nz) :: twb
+            integer, optional,intent(in),check(shape(prs,0)==nx),depend(prs) :: nx=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==ny),depend(prs) :: ny=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
+        end subroutine f_computewetbulb
+        subroutine f_computesrh(u,v,ght,ter,top,sreh,miy,mjx,mkzh) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: u
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: v
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: ght
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: ter
+            real(kind=8) intent(in) :: top
+            real(kind=8) dimension(miy,mjx),intent(out),depend(miy,mjx) :: sreh
+            integer, optional,intent(in),check(shape(u,0)==miy),depend(u) :: miy=shape(u,0)
+            integer, optional,intent(in),check(shape(u,1)==mjx),depend(u) :: mjx=shape(u,1)
+            integer, optional,intent(in),check(shape(u,2)==mkzh),depend(u) :: mkzh=shape(u,2)
+        end subroutine f_computesrh
+        subroutine f_computeuh(zp,mapfct,dx,dy,uhmnhgt,uhmxhgt,us,vs,w,tem1,tem2,uh,nx,ny,nz,nzp1) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nzp1),intent(in) :: zp
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: mapfct
+            real(kind=8) intent(in) :: dx
+            real(kind=8) intent(in) :: dy
+            real(kind=8) intent(in) :: uhmnhgt
+            real(kind=8) intent(in) :: uhmxhgt
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny) :: us
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: vs
+            real(kind=8) dimension(nx,ny,nzp1),intent(in),depend(nx,ny,nzp1) :: w
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: tem1
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: tem2
+            real(kind=8) dimension(nx,ny),intent(out),depend(nx,ny) :: uh
+            integer, optional,intent(in),check(shape(zp,0)==nx),depend(zp) :: nx=shape(zp,0)
+            integer, optional,intent(in),check(shape(zp,1)==ny),depend(zp) :: ny=shape(zp,1)
+            integer, optional,intent(in),check(shape(us,2)==nz),depend(us) :: nz=shape(us,2)
+            integer, optional,intent(in),check(shape(zp,2)==nzp1),depend(zp) :: nzp1=shape(zp,2)
+        end subroutine f_computeuh
+        subroutine f_computepw(p,tv,qv,ht,zdiff,pw,nx,ny,nz,nzh) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: p
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: tv
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: qv
+            real(kind=8) dimension(nx,ny,nzh),intent(in),depend(nx,ny) :: ht
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: zdiff
+            real(kind=8) dimension(nx,ny),intent(out),depend(nx,ny) :: pw
+            integer, optional,intent(in),check(shape(p,0)==nx),depend(p) :: nx=shape(p,0)
+            integer, optional,intent(in),check(shape(p,1)==ny),depend(p) :: ny=shape(p,1)
+            integer, optional,intent(in),check(shape(p,2)==nz),depend(p) :: nz=shape(p,2)
+            integer, optional,intent(in),check(shape(ht,2)==nzh),depend(ht) :: nzh=shape(ht,2)
+        end subroutine f_computepw
+        subroutine f_computedbz(prs,tmk,qvp,qra,qsn,qgr,sn0,ivarint,iliqskin,dbz,nx,ny,nz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: prs
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: tmk
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qvp
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qra
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qsn
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qgr
+            integer intent(in) :: sn0
+            integer intent(in) :: ivarint
+            integer intent(in) :: iliqskin
+            real(kind=8) dimension(nx,ny,nz),intent(out),depend(nx,ny,nz) :: dbz
+            integer, optional,intent(in),check(shape(prs,0)==nx),depend(prs) :: nx=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==ny),depend(prs) :: ny=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
+        end subroutine f_computedbz
+        subroutine rotatecoords(ilat,ilon,olat,olon,lat_np,lon_np,lon_0,direction) ! in :_wrfext:wrfext.f90
+            real(kind=8) intent(in) :: ilat
+            real(kind=8) intent(in) :: ilon
+            real(kind=8) intent(out) :: olat
+            real(kind=8) intent(out) :: olon
+            real(kind=8) intent(in) :: lat_np
+            real(kind=8) intent(in) :: lon_np
+            real(kind=8) intent(in) :: lon_0
+            integer intent(in) :: direction
+        end subroutine rotatecoords
+        subroutine f_lltoij(map_proj,truelat1,truelat2,stdlon,lat1,lon1,pole_lat,pole_lon,knowni,knownj,dx,latinc,loninc,lat,lon,throw_exception,loc) ! in :_wrfext:wrfext.f90
+            use f_lltoij__user__routines
+            integer intent(in) :: map_proj
+            real(kind=8) intent(inout) :: truelat1
+            real(kind=8) intent(inout) :: truelat2
+            real(kind=8) intent(in) :: stdlon
+            real(kind=8) intent(in) :: lat1
+            real(kind=8) intent(in) :: lon1
+            real(kind=8) intent(in) :: pole_lat
+            real(kind=8) intent(in) :: pole_lon
+            real(kind=8) intent(in) :: knowni
+            real(kind=8) intent(in) :: knownj
+            real(kind=8) intent(in) :: dx
+            real(kind=8) intent(in) :: latinc
+            real(kind=8) intent(in) :: loninc
+            real(kind=8) intent(inout) :: lat
+            real(kind=8) intent(inout) :: lon
+            external throw_exception
+            real(kind=8) dimension(2),intent(out) :: loc
+        end subroutine f_lltoij
+        subroutine f_ijtoll(map_proj,truelat1,truelat2,stdlon,lat1,lon1,pole_lat,pole_lon,knowni,knownj,dx,latinc,loninc,ai,aj,throw_exception,loc) ! in :_wrfext:wrfext.f90
+            use f_ijtoll__user__routines
+            integer intent(in) :: map_proj
+            real(kind=8) intent(inout) :: truelat1
+            real(kind=8) intent(inout) :: truelat2
+            real(kind=8) intent(in) :: stdlon
+            real(kind=8) intent(in) :: lat1
+            real(kind=8) intent(in) :: lon1
+            real(kind=8) intent(in) :: pole_lat
+            real(kind=8) intent(in) :: pole_lon
+            real(kind=8) intent(in) :: knowni
+            real(kind=8) intent(in) :: knownj
+            real(kind=8) intent(in) :: dx
+            real(kind=8) intent(in) :: latinc
+            real(kind=8) intent(in) :: loninc
+            real(kind=8) intent(in) :: ai
+            real(kind=8) intent(in) :: aj
+            external throw_exception
+            real(kind=8) dimension(2),intent(out) :: loc
+        end subroutine f_ijtoll
+        subroutine f_converteta(full_t,znu,psfc,ptop,pcalc,mean_t,temp_t,z,nx,ny,nz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: full_t
+            real(kind=8) dimension(nz),intent(in),depend(nz) :: znu
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: psfc
+            real(kind=8) intent(in) :: ptop
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: pcalc
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: mean_t
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: temp_t
+            real(kind=8) dimension(nx,ny,nz),intent(out),depend(nx,ny,nz) :: z
+            integer, optional,intent(in),check(shape(full_t,0)==nx),depend(full_t) :: nx=shape(full_t,0)
+            integer, optional,intent(in),check(shape(full_t,1)==ny),depend(full_t) :: ny=shape(full_t,1)
+            integer, optional,intent(in),check(shape(full_t,2)==nz),depend(full_t) :: nz=shape(full_t,2)
+        end subroutine f_converteta
+        subroutine f_computectt(prs,tk,qci,qcw,qvp,ght,ter,haveqci,ctt,ew,ns,nz) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: prs
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: tk
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qci
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qcw
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qvp
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: ght
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: ter
+            integer intent(in) :: haveqci
+            real(kind=8) dimension(ew,ns),intent(out),depend(ew,ns) :: ctt
+            integer, optional,intent(in),check(shape(prs,0)==ew),depend(prs) :: ew=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==ns),depend(prs) :: ns=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
+        end subroutine f_computectt
+    end interface 
+end python module _wrfext
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/
