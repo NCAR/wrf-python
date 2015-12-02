@@ -5,7 +5,7 @@ from wrf.var.decorators import convert_units
 
 __all__ = ["get_slp"]
 
-@convert_units("pressure", "pa")
+@convert_units("pressure", "hpa")
 def get_slp(wrfnc, units="hpa", timeidx=0):
 
     t = wrfnc.variables["T"][timeidx,:,:,:]
