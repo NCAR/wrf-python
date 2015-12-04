@@ -2,7 +2,8 @@ from collections import Iterable
 
 import numpy as n
 
-__all__ = ["extract_vars", "extract_global_attrs", "hold_dim_fixed"]
+__all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
+           "hold_dim_fixed", "combine_files"]
 
 def _is_multi_time(timeidx):
     if timeidx == -1:
@@ -35,7 +36,33 @@ def extract_global_attrs(wrfnc, attrs):
         wrfnc = wrfnc[0]
     
     return {attr:_get_attr(wrfnc, attr) for attr in attrlist}
+
+def extract_dim(wrfnc, dim):
+    d = wrfnc.dimensions[dim]
+    if not isinstance(d, int):
+        return len(d) #netCDF4
+    return d # PyNIO
         
+def combine_files(wrflist, var, timeidx):
+    
+    multitime = _is_multi_time(timeidx)
+    numfiles = len(wrflist)  
+    
+    if not multitime:
+        time_idx_or_slice = timeidx
+    else:
+        time_idx_or_slice = slice(None, None, None)
+        
+    first_var = wrflist[0].variables[var][time_idx_or_slice, :]
+    outdims = [numfiles]
+    outdims += first_var.shape
+    outarr = n.zeros(outdims, first_var.dtype)
+    outarr[0,:] = first_var[:]
+    
+    for idx, wrfnc in enumerate(wrflist[1:], start=1):
+        outarr[idx,:] = wrfnc.variables[var][time_idx_or_slice, :]
+            
+    return outarr
 
 def extract_vars(wrfnc, timeidx, vars):
     if isinstance(vars, str):
@@ -49,6 +76,11 @@ def extract_vars(wrfnc, timeidx, vars):
     # Single file, single time
     if not multitime and not multifile:
         return {var:wrfnc.variables[var][timeidx,:] for var in varlist}
+    elif multitime and not multifile:
+        return {var:wrfnc.variables[var][:] for var in varlist}
+    else:
+        return {var:combine_files(wrfnc, var, timeidx) for var in varlist}
+        
     
 def hold_dim_fixed(var, dim, idx):
     """Generic method to hold a single dimension to a fixed index when 
@@ -56,7 +88,7 @@ def hold_dim_fixed(var, dim, idx):
     be negative.
     
     For example, on a 4D array with 'dim' set to 
-    -1 and 'idx' set to 3, this is simply going to do this operation:
+    -1 and 'idx' set to 3, this is going to return this view:
     
     var[:,:,:,3]
     
