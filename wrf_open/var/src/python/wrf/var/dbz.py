@@ -17,13 +17,13 @@ def get_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
     as liquid)
     
     """
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 
                                               "QRAIN"))
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
-    qr = vars["QRAIN"]
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
+    qr = ncvars["QRAIN"]
     
     try:
         snowvars = extract_vars(wrfnc, timeidx, vars="QSNOW")

@@ -8,8 +8,8 @@ __all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw"]
 
 @convert_units("temp", "k")
 def get_theta(wrfnc, units="k", timeidx=0):
-    vars = extract_vars(wrfnc, timeidx, vars="T")
-    t = vars["T"]
+    ncvars = extract_vars(wrfnc, timeidx, vars="T")
+    t = ncvars["T"]
     full_t = t + Constants.T_BASE
 
     return full_t
@@ -18,10 +18,10 @@ def get_theta(wrfnc, units="k", timeidx=0):
 def get_temp(wrfnc, units="k", timeidx=0):
     """Return the temperature in Kelvin or Celsius"""
     
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB"))
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB"))
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -33,11 +33,11 @@ def get_temp(wrfnc, units="k", timeidx=0):
 def get_eth(wrfnc, units="k", timeidx=0):
     "Return equivalent potential temperature (Theta-e) in Kelvin"
     
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -51,12 +51,12 @@ def get_eth(wrfnc, units="k", timeidx=0):
 def get_tv(wrfnc, units="k", timeidx=0):
     "Return the virtual temperature (tv) in Kelvin or Celsius"
     
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
     
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -71,11 +71,11 @@ def get_tv(wrfnc, units="k", timeidx=0):
 def get_tw(wrfnc, units="k", timeidx=0):
     "Return the wetbulb temperature (tw)"
     
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb

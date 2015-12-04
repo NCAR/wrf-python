@@ -4,7 +4,6 @@ import numpy as n
 from wrf.var.constants import Constants
 from wrf.var.destagger import destagger_windcomp
 from wrf.var.decorators import convert_units
-from wrf.var.util import extract_vars
 
 __all__ = ["get_u_destag", "get_v_destag", "get_w_destag",
            "get_destag_wspd_wdir"]
@@ -18,7 +17,6 @@ def _calc_wdir(u, v):
     return n.remainder(wdir, 360.0)
 
 def _calc_wspd_wdir(u, v, units="mps"):
-    check_units(units, "wind")
     return (_calc_wspd(u,v, units), _calc_wdir(u,v))
 
 @convert_units("wind", "mps")

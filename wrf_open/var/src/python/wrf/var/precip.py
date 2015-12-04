@@ -5,9 +5,9 @@ from wrf.var.util import extract_vars
 __all__ = ["get_accum_precip", "get_precip_diff"]
 
 def get_accum_precip(wrfnc, timeidx=0):
-    vars = extract_vars(wrfnc, timeidx, vars=("RAINC", "RAINNC"))
-    rainc = vars["RAINC"]
-    rainnc = vars["RAINNC"]
+    ncvars = extract_vars(wrfnc, timeidx, vars=("RAINC", "RAINNC"))
+    rainc = ncvars["RAINC"]
+    rainnc = ncvars["RAINNC"]
     
     rainsum = rainc + rainnc
     

@@ -7,12 +7,12 @@ from wrf.var.util import extract_vars
 __all__ = ["get_omega"]
 
 def get_omega(wrfnc, timeidx=0):
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "W", "PB", "QVAPOR"))
-    t = vars["T"]
-    p = vars["P"]
-    w = vars["W"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "W", "PB", "QVAPOR"))
+    t = ncvars["T"]
+    p = ncvars["P"]
+    w = ncvars["W"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
     
     wa = destagger(w, 0)
     full_t = t + Constants.T_BASE

@@ -14,15 +14,15 @@ def get_ctt(wrfnc, units="c", timeidx=0):
     """Return the cloud top temperature.
     
     """
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "PH" ,"PHB",
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "PH" ,"PHB",
                                               "HGT", "QVAPOR"))
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    ph = vars["PH"]
-    phb = vars["PHB"]
-    ter = vars["HGT"]
-    qv = vars["QVAPOR"] * 1000.0 # g/kg
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    ph = ncvars["PH"]
+    phb = ncvars["PHB"]
+    ter = ncvars["HGT"]
+    qv = ncvars["QVAPOR"] * 1000.0 # g/kg
     
     haveqci = 1
     try:

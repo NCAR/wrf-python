@@ -9,11 +9,11 @@ __all__ = ["get_srh", "get_uh"]
 def get_srh(wrfnc, top=3000.0, timeidx=0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
-    vars = extract_vars(wrfnc, timeidx, vars=("HGT", "PH", "PHB"))
+    ncvars = extract_vars(wrfnc, timeidx, vars=("HGT", "PH", "PHB"))
     
-    ter = vars["HGT"]
-    ph = vars["PH"]
-    phb = vars["PHB"]
+    ter = ncvars["HGT"]
+    ph = ncvars["PH"]
+    phb = ncvars["PHB"]
     
     try:
         u_vars = extract_vars(wrfnc, timeidx, vars="U")
@@ -55,12 +55,12 @@ def get_srh(wrfnc, top=3000.0, timeidx=0):
 
 def get_uh(wrfnc, bottom=2000.0, top=5000.0, timeidx=0):
     
-    vars = extract_vars(wrfnc, timeidx, vars=("W", "PH", "PHB", "MAPFAC_M"))
+    ncvars = extract_vars(wrfnc, timeidx, vars=("W", "PH", "PHB", "MAPFAC_M"))
     
-    wstag = vars["W"]
-    ph = vars["PH"]
-    phb = vars["PHB"]
-    mapfct = vars["MAPFAC_M"]
+    wstag = ncvars["W"]
+    ph = ncvars["PH"]
+    phb = ncvars["PHB"]
+    mapfct = ncvars["MAPFAC_M"]
     
     attrs  = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     dx = attrs["DX"]

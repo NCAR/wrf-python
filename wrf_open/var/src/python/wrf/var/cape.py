@@ -9,17 +9,17 @@ __all__ = ["get_2dcape", "get_3dcape"]
 
 def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
                                               "PHB", "HGT", "PSFC"))
     
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
-    ph = vars["PH"]
-    phb = vars["PHB"]
-    ter = vars["HGT"]
-    psfc = vars["PSFC"]
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
+    ph = ncvars["PH"]
+    phb = ncvars["PHB"]
+    ter = ncvars["HGT"]
+    psfc = ncvars["PSFC"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -31,9 +31,7 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     
     # Convert pressure to hPa
     p_hpa = ConversionFactors.PA_TO_HPA * full_p
-    psfc_hpa = ConversionFactors.PA_TO_HPA * psfc # This may be the bug in NCL, as they pass this in 
-                          # has Pa, but other pressure is hPa.  Converting to 
-                          # hPa here.
+    psfc_hpa = ConversionFactors.PA_TO_HPA * psfc 
     
     i3dflag = 0
     ter_follow = 1
@@ -54,16 +52,16 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
 def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
     """Return the 3d fields of cape and cin"""
     
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
                                               "PHB", "HGT", "PSFC"))
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
-    ph = vars["PH"]
-    phb = vars["PHB"]
-    ter = vars["HGT"]
-    psfc = vars["PSFC"]
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
+    ph = ncvars["PH"]
+    phb = ncvars["PHB"]
+    ter = ncvars["HGT"]
+    psfc = ncvars["PSFC"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -75,9 +73,7 @@ def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
     
     # Convert pressure to hPa
     p_hpa = ConversionFactors.PA_TO_HPA * full_p
-    psfc_hpa = ConversionFactors.PA_TO_HPA * psfc # This may be the bug in NCL, as they pass this in 
-                          # has Pa, but other pressure is hPa.  Converting to 
-                          # hPa here.
+    psfc_hpa = ConversionFactors.PA_TO_HPA * psfc 
     
     i3dflag = 1
     ter_follow = 1

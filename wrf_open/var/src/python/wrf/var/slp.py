@@ -8,15 +8,15 @@ __all__ = ["get_slp"]
 
 @convert_units("pressure", "hpa")
 def get_slp(wrfnc, units="hpa", timeidx=0):
-    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR",
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR",
                                               "PH", "PHB"))
 
-    t = vars["T"]
-    p = vars["P"]
-    pb = vars["PB"]
-    qvapor = vars["QVAPOR"]
-    ph = vars["PH"]
-    phb = vars["PHB"]
+    t = ncvars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qvapor = ncvars["QVAPOR"]
+    ph = ncvars["PH"]
+    phb = ncvars["PHB"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
