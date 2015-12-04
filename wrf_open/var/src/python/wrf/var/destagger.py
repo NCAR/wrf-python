@@ -9,7 +9,8 @@ def destagger(var, stagger_dim):
     Arguments:
         - var is a numpy array for the variable 
         - stagger_dim is the dimension of the numpy array to de-stagger 
-        (e.g. 0, 1, 2)
+        (e.g. 0, 1, 2).  Note:  negative values are acceptable to choose
+        a dimensions from the right hand side (e.g. -1, -2, -3)
     
     """
     var_shape = var.shape
@@ -41,13 +42,13 @@ def destagger(var, stagger_dim):
 def destagger_windcomp(wrfnc, comp, timeidx=0):
     if comp.lower() == "u":
         wrfvar = "U"
-        stagdim = 2
+        stagdim = -1
     elif comp.lower() == "v":
         wrfvar = "V"
-        stagdim = 1
+        stagdim = -2
     elif comp.lower() == "w":
         wrfvar = "W"
-        stagdim = 0
+        stagdim = -3
         
     wind_data = wrfnc.variables[wrfvar][timeidx,:,:,:]
     return destagger(wind_data, stagdim)

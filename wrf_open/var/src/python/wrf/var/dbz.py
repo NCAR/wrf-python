@@ -2,6 +2,7 @@ import numpy as n
 
 from wrf.var.extension import computedbz,computetk
 from wrf.var.constants import Constants
+from wrf.var.util import extract_vars
 
 __all__ = ["get_dbz", "get_max_dbz"]
 
@@ -16,22 +17,27 @@ def get_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
     as liquid)
     
     """
-    t = wrfnc.variables["T"][timeidx,:,:,:]
-    p = wrfnc.variables["P"][timeidx,:,:,:]
-    pb = wrfnc.variables["PB"][timeidx,:,:,:]
+    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 
+                                              "QRAIN"))
+    t = vars["T"]
+    p = vars["P"]
+    pb = vars["PB"]
+    qv = vars["QVAPOR"]
+    qr = vars["QRAIN"]
     
-    qv = wrfnc.variables["QVAPOR"][timeidx,:,:,:]
-    qr = wrfnc.variables["QRAIN"][timeidx,:,:,:]
+    try:
+        snowvars = extract_vars(wrfnc, timeidx, vars="QSNOW")
+    except KeyError:
+        qs = n.zeros(qv.shape, "float")
+    else:
+        qs = snowvars["QSNOW"]
     
-    if "QSNOW" in wrfnc.variables:
-        qs = wrfnc.variables["QSNOW"][timeidx,:,:,:]
+    try:
+        graupvars = extract_vars(wrfnc, timeidx, vars="QGRAUP")
+    except KeyError:
+        qg = n.zeros(qv.shape, "float")
     else:
-        qs = n.zeros((qv.shape[0], qv.shape[1], qv.shape[2]), "float")
-        
-    if "QGRAUP" in wrfnc.variables:
-        qg = wrfnc.variables["QGRAUP"][timeidx,:,:,:]
-    else:
-        qg = n.zeros((qv.shape[0], qv.shape[1], qv.shape[2]), "float")
+        qg = graupvars["QGRAUP"]
     
     # If qsnow is all 0, set sn0 to 1
     sn0 = 0

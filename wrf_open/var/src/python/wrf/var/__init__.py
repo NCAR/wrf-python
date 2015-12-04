@@ -2,6 +2,8 @@ import warnings
 
 from extension import *
 import extension
+from util import *
+import util
 from cape import *
 import cape
 from constants import *
@@ -55,6 +57,7 @@ import units
 
 __all__ = ["getvar"]
 __all__ += extension.__all__
+__all__ += util.__all__
 __all__ += cape.__all__
 __all__ += constants.__all__
 __all__ += ctt.__all__

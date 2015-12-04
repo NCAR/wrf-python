@@ -2,18 +2,21 @@ from wrf.var.extension import computeslp, computetk
 from wrf.var.constants import Constants
 from wrf.var.destagger import destagger
 from wrf.var.decorators import convert_units
+from wrf.var.util import extract_vars
 
 __all__ = ["get_slp"]
 
 @convert_units("pressure", "hpa")
 def get_slp(wrfnc, units="hpa", timeidx=0):
+    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR",
+                                              "PH", "PHB"))
 
-    t = wrfnc.variables["T"][timeidx,:,:,:]
-    p = wrfnc.variables["P"][timeidx,:,:,:]
-    pb = wrfnc.variables["PB"][timeidx,:,:,:]
-    qvapor = wrfnc.variables["QVAPOR"][timeidx,:,:,:]
-    ph = wrfnc.variables["PH"][timeidx,:,:,:]
-    phb = wrfnc.variables["PHB"][timeidx,:,:,:]
+    t = vars["T"]
+    p = vars["P"]
+    pb = vars["PB"]
+    qvapor = vars["QVAPOR"]
+    ph = vars["PH"]
+    phb = vars["PHB"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb

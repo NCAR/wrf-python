@@ -3,19 +3,23 @@ import numpy.ma as ma
 from wrf.var.extension import computetk,computecape
 from wrf.var.destagger import destagger
 from wrf.var.constants import Constants, ConversionFactors
+from wrf.var.util import extract_vars
 
 __all__ = ["get_2dcape", "get_3dcape"]
 
 def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
-    t = wrfnc.variables["T"][timeidx,:,:,:]
-    p = wrfnc.variables["P"][timeidx,:,:,:]
-    pb = wrfnc.variables["PB"][timeidx,:,:,:]
-    qv = wrfnc.variables["QVAPOR"][timeidx,:,:,:]
-    ph = wrfnc.variables["PH"][timeidx,:,:,:]
-    phb = wrfnc.variables["PHB"][timeidx,:,:,:]
-    ter = wrfnc.variables["HGT"][timeidx,:,:]
-    psfc = wrfnc.variables["PSFC"][timeidx,:,:]
+    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
+                                              "PHB", "HGT", "PSFC"))
+    
+    t = vars["T"]
+    p = vars["P"]
+    pb = vars["PB"]
+    qv = vars["QVAPOR"]
+    ph = vars["PH"]
+    phb = vars["PHB"]
+    ter = vars["HGT"]
+    psfc = vars["PSFC"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -49,14 +53,17 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
 
 def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
     """Return the 3d fields of cape and cin"""
-    t = wrfnc.variables["T"][timeidx,:,:,:]
-    p = wrfnc.variables["P"][timeidx,:,:,:]
-    pb = wrfnc.variables["PB"][timeidx,:,:,:]
-    qv = wrfnc.variables["QVAPOR"][timeidx,:,:,:]
-    ph = wrfnc.variables["PH"][timeidx,:,:,:]
-    phb = wrfnc.variables["PHB"][timeidx,:,:,:]
-    ter = wrfnc.variables["HGT"][timeidx,:,:]
-    psfc = wrfnc.variables["PSFC"][timeidx,:,:]
+    
+    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
+                                              "PHB", "HGT", "PSFC"))
+    t = vars["T"]
+    p = vars["P"]
+    pb = vars["PB"]
+    qv = vars["QVAPOR"]
+    ph = vars["PH"]
+    phb = vars["PHB"]
+    ter = vars["HGT"]
+    psfc = vars["PSFC"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb

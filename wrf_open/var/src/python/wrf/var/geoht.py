@@ -1,6 +1,7 @@
 from wrf.var.constants import Constants
 from wrf.var.destagger import destagger
 from wrf.var.decorators import convert_units
+from wrf.var.util import extract_vars
 
 __all__ = ["get_geopt", "get_height"]
 
@@ -11,16 +12,24 @@ def _get_geoht(wrfnc, height=True, msl=True, timeidx=0):
     height is subtracted).
     
     """
-
-    if "PH" in wrfnc.variables:
-        ph = wrfnc.variables["PH"][timeidx,:,:,:]
-        phb = wrfnc.variables["PHB"][timeidx,:,:,:]
-        hgt = wrfnc.variables["HGT"][timeidx,:,:]
+    
+    try:
+        ph_vars = extract_vars(wrfnc, timeidx, ("PH", "PHB", "HGT"))
+    except KeyError:
+        try:
+            ght_vars = extract_vars(wrfnc, timeidx, ("GHT", "HGT_U"))
+        except KeyError:
+            raise RuntimeError("Cannot calculate height with variables in "
+                               "NetCDF file")
+        else:
+            geopt_unstag = ght_vars["GHT"] * Constants.G
+            hgt = destagger(ght_vars["HGT_U"], 1)
+    else:
+        ph = ph_vars["PH"]
+        phb = ph_vars["PHB"]
+        hgt = ph_vars["HGT"]
         geopt = ph + phb
         geopt_unstag = destagger(geopt, 0)
-    elif "GHT" in wrfnc.variables: # met_em files
-        geopt_unstag = wrfnc.variables["GHT"][timeidx,:,:,:] * Constants.G
-        hgt = destagger(wrfnc.variables["HGT_U"][timidx,:,:], 1)
     
     if height:
         if msl:

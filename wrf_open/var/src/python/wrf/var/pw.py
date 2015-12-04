@@ -1,17 +1,20 @@
 
 from wrf.var.extension import computepw,computetv,computetk
 from wrf.var.constants import Constants
+from wrf.var.util import extract_vars
 
 __all__ = ["get_pw"]
 
 def get_pw(wrfnc, timeidx=0):
+    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "PH", "PHB", 
+                                              "QVAPOR"))
     
-    t = wrfnc.variables["T"][timeidx,:,:,:]
-    p = wrfnc.variables["P"][timeidx,:,:,:]
-    pb = wrfnc.variables["PB"][timeidx,:,:,:]
-    ph = wrfnc.variables["PH"][timeidx,:,:,:]
-    phb = wrfnc.variables["PHB"][timeidx,:,:,:]
-    qv = wrfnc.variables["QVAPOR"][timeidx,:,:,:]
+    t = vars["T"]
+    p = vars["P"]
+    pb = vars["PB"]
+    ph = vars["PH"]
+    phb = vars["PHB"]
+    qv = vars["QVAPOR"]
     
     # Change this to use real virtual temperature!
     full_p   =  p + pb

@@ -1,15 +1,16 @@
 
 from wrf.var.constants import Constants   
 from wrf.var.extension import computerh, computetk
+from wrf.var.util import extract_vars
 
 __all__ = ["get_rh", "get_rh_2m"]
 
 def get_rh(wrfnc, timeidx=0):
-    t = wrfnc.variables["T"][timeidx,:,:,:]
-    #t00 = wrfnc.variables["T00"][timeidx]
-    p = wrfnc.variables["P"][timeidx,:,:,:]
-    pb = wrfnc.variables["PB"][timeidx,:,:,:]
-    qvapor = wrfnc.variables["QVAPOR"][timeidx,:,:,:]
+    vars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    t = vars["T"]
+    p = vars["P"]
+    pb = vars["PB"]
+    qvapor = vars["QVAPOR"]
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -20,9 +21,10 @@ def get_rh(wrfnc, timeidx=0):
     return rh
 
 def get_rh_2m(wrfnc, timeidx=0):
-    t2 = wrfnc.variables["T2"][timeidx,:,:]
-    psfc = wrfnc.variables["PSFC"][timeidx,:,:]
-    q2 = wrfnc.variables["Q2"][timeidx,:,:]
+    vars = extract_vars(wrfnc, timeidx, vars=("T2", "PSFC", "Q2"))
+    t2 = vars["T2"]
+    psfc = vars["PSFC"]
+    q2 = vars["Q2"]
     
     q2[q2 < 0] = 0
     rh = computerh(q2, psfc, t2)

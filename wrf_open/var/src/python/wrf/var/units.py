@@ -1,7 +1,7 @@
 
 from wrf.var.constants import Constants, ConversionFactors
 
-__all__ = ["check_units", "do_conversion", "convert_units"]
+__all__ = ["check_units", "do_conversion"]
 
 # Handles unit conversions that only differ by multiplication factors
 def _apply_conv_fact(var, vartype, var_unit, dest_unit):
@@ -119,7 +119,6 @@ def do_conversion(var, vartype, var_unit, dest_unit):
     else:
         return _apply_temp_conv(var, var_unit, dest_unit)
     
-convert_units = do_conversion
 
 
     

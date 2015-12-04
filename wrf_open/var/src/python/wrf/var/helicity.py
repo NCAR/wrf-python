@@ -2,26 +2,43 @@ from wrf.var.constants import Constants
 
 from wrf.var.extension import computesrh, computeuh
 from wrf.var.destagger import destagger
+from wrf.var.util import extract_vars, extract_global_attrs
 
 __all__ = ["get_srh", "get_uh"]
 
 def get_srh(wrfnc, top=3000.0, timeidx=0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
-    if "U" in wrfnc.variables:
-        u = destagger(wrfnc.variables["U"][timeidx,:,:,:], 2)
-    elif "UU" in wrfnc.variables:
-        u = destagger(wrfnc.variables["UU"][timeidx,:,:,:], 2) # support met_em files
+    vars = extract_vars(wrfnc, timeidx, vars=("HGT", "PH", "PHB"))
+    
+    ter = vars["HGT"]
+    ph = vars["PH"]
+    phb = vars["PHB"]
+    
+    try:
+        u_vars = extract_vars(wrfnc, timeidx, vars="U")
+    except KeyError:
+        try:
+            uu_vars = extract_vars(wrfnc, timeidx, vars="UU")
+        except KeyError:
+            raise RuntimeError("No valid wind data found in NetCDF file")
+        else:
+            u = destagger(uu_vars["UU"], -1) # support met_em files
+    else:
+        u = destagger(u_vars["U"], -1)   
         
-    if "V" in wrfnc.variables:
-        v = destagger(wrfnc.variables["V"][timeidx,:,:,:], 1)
-    elif "VV" in wrfnc.variables:
-        v = destagger(wrfnc.variables["VV"][timeidx,:,:,:], 1) 
-    
-    ter = wrfnc.variables["HGT"][timeidx,:,:]
-    ph = wrfnc.variables["PH"][timeidx,:,:,:]
-    phb = wrfnc.variables["PHB"][timeidx,:,:,:]
-    
+    try:
+        v_vars = extract_vars(wrfnc, timeidx, vars="V")
+    except KeyError:
+        try:
+            vv_vars = extract_vars(wrfnc, timeidx, vars="VV")
+        except KeyError:
+            raise RuntimeError("No valid wind data found in NetCDF file")
+        else:
+            v = destagger(vv_vars["VV"], -2) # support met_em files
+    else:
+        v = destagger(v_vars["V"], -2) 
+
     geopt = ph + phb
     geopt_unstag = destagger(geopt, 0)
     
@@ -38,26 +55,43 @@ def get_srh(wrfnc, top=3000.0, timeidx=0):
 
 def get_uh(wrfnc, bottom=2000.0, top=5000.0, timeidx=0):
     
-    if "U" in wrfnc.variables:
-            u = destagger(wrfnc.variables["U"][timeidx,:,:,:], 2)
-    elif "UU" in wrfnc.variables:
-        u = destagger(wrfnc.variables["UU"][timeidx,:,:,:], 2) # support met_em files
-        
-    if "V" in wrfnc.variables:
-        v = destagger(wrfnc.variables["V"][timeidx,:,:,:], 1)
-    elif "VV" in wrfnc.variables:
-        v = destagger(wrfnc.variables["VV"][timeidx,:,:,:], 1) 
+    vars = extract_vars(wrfnc, timeidx, vars=("W", "PH", "PHB", "MAPFAC_M"))
     
-    wstag = wrfnc.variables["W"][timeidx,:,:,:]
-    ph = wrfnc.variables["PH"][timeidx,:,:,:]
-    phb = wrfnc.variables["PHB"][timeidx,:,:,:]
+    wstag = vars["W"]
+    ph = vars["PH"]
+    phb = vars["PHB"]
+    mapfct = vars["MAPFAC_M"]
+    
+    attrs  = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
+    dx = attrs["DX"]
+    dy = attrs["DY"]
+    
+    try:
+        u_vars = extract_vars(wrfnc, timeidx, vars="U")
+    except KeyError:
+        try:
+            uu_vars = extract_vars(wrfnc, timeidx, vars="UU")
+        except KeyError:
+            raise RuntimeError("No valid wind data found in NetCDF file")
+        else:
+            u = destagger(uu_vars["UU"], -1) # support met_em files
+    else:
+        u = destagger(u_vars["U"], -1)   
+        
+    try:
+        v_vars = extract_vars(wrfnc, timeidx, vars="V")
+    except KeyError:
+        try:
+            vv_vars = extract_vars(wrfnc, timeidx, vars="VV")
+        except KeyError:
+            raise RuntimeError("No valid wind data found in NetCDF file")
+        else:
+            v = destagger(vv_vars["VV"], -2) # support met_em files
+    else:
+        v = destagger(v_vars["V"], -2)  
+    
     zp = ph + phb
     
-    mapfct = wrfnc.variables["MAPFAC_M"][timeidx,:,:]
-    dx = wrfnc.getncattr("DX")
-    dy = wrfnc.getncattr("DY")
-       
-       
     uh = computeuh(zp, mapfct, u, v, wstag, dx, dy, bottom, top)
     
     return uh

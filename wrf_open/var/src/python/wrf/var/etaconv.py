@@ -3,6 +3,7 @@ import numpy as n
 from wrf.var.extension import computeeta
 from wrf.var.constants import Constants
 from wrf.var.decorators import convert_units
+from wrf.var.util import extract_vars
 
 #__all__ = ["convert_eta"]
 __all__ = []
