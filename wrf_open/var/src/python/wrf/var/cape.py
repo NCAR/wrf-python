@@ -1,9 +1,10 @@
+import numpy as n
 import numpy.ma as ma
 
 from wrf.var.extension import computetk,computecape
 from wrf.var.destagger import destagger
 from wrf.var.constants import Constants, ConversionFactors
-from wrf.var.util import extract_vars
+from wrf.var.util import extract_vars, hold_dim_fixed
 
 __all__ = ["get_2dcape", "get_3dcape"]
 
@@ -38,22 +39,30 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     
     cape_res,cin_res = computecape(p_hpa,tk,qv,z,ter,psfc_hpa,
                                    missing,i3dflag,ter_follow)
+     
+    cape = hold_dim_fixed(cape_res, -3, 0)
+    cin = hold_dim_fixed(cin_res, -3, 0)
+    lcl = hold_dim_fixed(cin_res, -3, 1)
+    lfc = hold_dim_fixed(cin_res, -3, 2)
     
-    cape = cape_res[0,:,:]
-    cin = cin_res[0,:,:]
-    lcl = cin_res[1,:,:]
-    lfc = cin_res[2,:,:]
+    resdim = [4]
+    resdim += cape.shape
     
-    return (ma.masked_values(cape,missing), 
-            ma.masked_values(cin,missing), 
-            ma.masked_values(lcl,missing), 
-            ma.masked_values(lfc,missing))
+    # Make a new output array for the result
+    res = n.zeros((resdim), cape.dtype)
+    
+    res[0,:] = cape[:]
+    res[1,:] = cin[:]
+    res[2,:] = lcl[:]
+    res[3,:] = lfc[:]
+    
+    return ma.masked_values(res,missing)
 
 def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
     """Return the 3d fields of cape and cin"""
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
-                                              "PHB", "HGT", "PSFC"))
+    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 
+                                                "PH", "PHB", "HGT", "PSFC"))
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -80,8 +89,16 @@ def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
     
     cape,cin = computecape(p_hpa,tk,qv,z,ter,psfc_hpa,
                            missing,i3dflag,ter_follow)
-    return (ma.masked_values(cape, missing), 
-            ma.masked_values(cin, missing))
+    
+    # Make a new output array for the result
+    resdim = [2]
+    resdim += cape.shape
+    res = n.zeros((resdim), cape.dtype)
+    
+    res[0,:] = cape[:]
+    res[1,:] = cin[:]
+    
+    return ma.masked_values(res, missing)
     
     
     

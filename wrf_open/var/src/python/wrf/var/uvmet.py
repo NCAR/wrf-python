@@ -40,16 +40,6 @@ def get_uvmet(wrfnc, ten_m=False, units ="mps", timeidx=0):
             v = destagger(v_vars["V"], -2) 
             
     else:
-#         # Original code, keeping for reference
-#         if "U10" in wrfnc.variables:
-#             u = wrfnc.variables["U10"][timeidx,:,:]
-#         elif "UU" in wrfnc.variables:
-#             u = destagger(wrfnc.variables["UU"][timeidx,0,:,:], 1) # support met_em files
-#         
-#         if "V10" in wrfnc.variables:
-#             v = wrfnc.variables["V10"][timeidx,:,:]
-#         elif "VV" in wrfnc.variables:
-#             v = destagger(wrfnc.variables["VV"][timeidx,0,:,:], 0) # support met_em files
         try:
             u_vars = extract_vars(wrfnc, timeidx, vars="U10")
         except KeyError:
