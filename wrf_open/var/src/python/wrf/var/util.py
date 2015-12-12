@@ -3,7 +3,7 @@ from collections import Iterable
 import numpy as n
 
 __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
-           "combine_files"]
+           "combine_files", "is_standard_wrf_var"]
 
 def _is_multi_time(timeidx):
     if timeidx == -1:
@@ -80,6 +80,12 @@ def extract_vars(wrfnc, timeidx, vars):
         return {var:wrfnc.variables[var][:] for var in varlist}
     else:
         return {var:combine_files(wrfnc, var, timeidx) for var in varlist}
+    
+def is_standard_wrf_var(wrfnc, var):
+    multifile = _is_multi_file(wrfnc)
+    if multifile:
+        wrfnc = wrfnc[0]
+    return var in wrfnc.variables
         
     
     

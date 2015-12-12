@@ -5,12 +5,7 @@ import numpy.ma as ma
 import os, sys
 import subprocess
 
-import Ngl, Nio
 from wrf.var import getvar
-
-# This should work with Nio
-from netCDF4 import Dataset as NetCDF
-from boto.ec2.instancestatus import Status
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
@@ -45,14 +40,40 @@ def setUpModule():
 
 # Using helpful information at: 
 # http://eli.thegreenplace.net/2014/04/02/dynamically-generating-python-test-cases
-def make_test(varname, wrf_in, referent, multi=False, repeat=3):
+def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
     def test(self):
+        try:
+            from netCDF4 import Dataset as NetCDF
+        except:
+            pass
+        
+        try:
+            from PyNIO import Nio
+        except:
+            pass
         
         if not multi:
-            in_wrfnc = NetCDF(wrf_in)
+            if not pynio:
+                in_wrfnc = NetCDF(wrf_in)
+            else:
+                # Note: Python doesn't like it if you reassign an outer scoped
+                # variable (wrf_in in this case)
+                if not wrf_in.endswith(".nc"):
+                    wrf_file = wrf_in + ".nc"
+                else:
+                    wrf_file = wrf_in
+                in_wrfnc = Nio.open_file(wrf_file)
         else:
-            nc = NetCDF(wrf_in)
-            in_wrfnc = [nc for i in xrange(repeat)]
+            if not pynio:
+                nc = NetCDF(wrf_in)
+                in_wrfnc = [nc for i in xrange(repeat)]
+            else:
+                if not wrf_in.endswith(".nc"):
+                    wrf_file = wrf_in + ".nc"
+                else:
+                    wrf_file = wrf_in
+                nc = Nio.open_file(wrf_file)
+                in_wrfnc = [nc for i in xrange(repeat)]
         
         refnc = NetCDF(referent)
             
@@ -161,15 +182,35 @@ if __name__ == "__main__":
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
                 "wa", "uvmet10", "uvmet", "z", "ctt", "cape_2d", "cape_3d"]
     
-    for var in wrf_vars:
-        if var in ignore_vars:
-            continue
+    try:
+        import netCDF4
+    except ImportError:
+        pass
+    else:
+        for var in wrf_vars:
+            if var in ignore_vars:
+                continue
+            
+            test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE)
+            test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True)
+            setattr(WRFVarsTest, 'test_{0}'.format(var), test_func1)
+            setattr(WRFVarsTest, 'test_multi_{0}'.format(var), test_func2)
         
-        test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE)
-        test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True)
-        setattr(WRFVarsTest, 'test_{0}'.format(var), test_func1)
-        setattr(WRFVarsTest, 'test_multi_{0}'.format(var), test_func2)
-    
-    
+    try:
+        import PyNIO
+    except ImportError:
+        pass
+    else:
+        for var in wrf_vars:
+            if var in ignore_vars:
+                continue
+            
+            test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE,pynio=True)
+            test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True,
+                                   pynio=True)
+            setattr(WRFVarsTest, 'test_pynio_{0}'.format(var), test_func1)
+            setattr(WRFVarsTest, 'test_pynio_multi_{0}'.format(var), 
+                    test_func2)
+        
     ut.main()
     

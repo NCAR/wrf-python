@@ -159,7 +159,8 @@ _VALID_ARGS = {"cape2d" : ["missing", "timeidx"],
              "wspddir" : ["units", "timeidx"],
              "wspddir_uvmet" : ["units", "timeidx"],
              "wspddir_uvmet10" : ["units", "timeidx"],  
-             "ctt" : ["timeidx"]
+             "ctt" : ["timeidx"],
+             "default" : ["timeidx"]
             }
 
 _ALIASES = {"cape_2d" : "cape2d",
@@ -196,13 +197,20 @@ def _undo_alias(alias):
         return actual
 
 def _check_kargs(var, kargs):
-    for arg, val in kargs.iteritems():
+    for arg in kargs.iterkeys():
         if arg not in _VALID_ARGS[var]:
             raise ArgumentError("'%s' is an invalid keyword "
                           "argument for '%s" % (arg, var))
             
 
 def getvar(wrfnc, var, **kargs):
+    if is_standard_wrf_var(wrfnc, var):
+        if "timeidx" in kargs:
+            timeidx = kargs["timeidx"]
+        else:
+            timeidx = 0 
+        return extract_vars(wrfnc, timeidx, var)[var]
+    
     actual_var = _undo_alias(var)
     if actual_var not in _VALID_ARGS:
         raise ArgumentError("'%s' is not a valid variable name" % (var))
