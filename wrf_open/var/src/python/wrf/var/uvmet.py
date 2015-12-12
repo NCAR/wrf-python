@@ -1,7 +1,7 @@
 from math import fabs, log, tan, sin, cos
 
 from wrf.var.extension import computeuvmet
-from wrf.var.destagger import destagger
+from wrf.var.destag import destagger
 from wrf.var.constants import Constants
 from wrf.var.wind import _calc_wspd_wdir
 from wrf.var.decorators import convert_units

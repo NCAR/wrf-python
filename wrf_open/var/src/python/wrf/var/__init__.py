@@ -12,8 +12,8 @@ from ctt import *
 import ctt
 from dbz import *
 import dbz
-from destagger import *
-import destagger
+from destag import *
+import destag
 from dewpoint import *
 import dewpoint
 from etaconv import *
@@ -62,7 +62,7 @@ __all__ += cape.__all__
 __all__ += constants.__all__
 __all__ += ctt.__all__
 __all__ += dbz.__all__
-__all__ += destagger.__all__
+__all__ += destag.__all__
 __all__ += dewpoint.__all__
 __all__ += etaconv.__all__
 __all__ += geoht.__all__

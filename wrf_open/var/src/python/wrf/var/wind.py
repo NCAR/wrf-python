@@ -2,7 +2,7 @@
 import numpy as n
 
 from wrf.var.constants import Constants
-from wrf.var.destagger import destagger_windcomp
+from wrf.var.destag import destagger_windcomp
 from wrf.var.decorators import convert_units
 
 __all__ = ["get_u_destag", "get_v_destag", "get_w_destag",

@@ -3,7 +3,7 @@ import numpy as n
 
 from wrf.var.extension import computectt, computetk
 from wrf.var.constants import Constants, ConversionFactors
-from wrf.var.destagger import destagger
+from wrf.var.destag import destagger
 from wrf.var.decorators import convert_units
 from wrf.var.util import extract_vars
 

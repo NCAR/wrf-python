@@ -1,7 +1,7 @@
 from wrf.var.constants import Constants
 
 from wrf.var.extension import computesrh, computeuh
-from wrf.var.destagger import destagger
+from wrf.var.destag import destagger
 from wrf.var.util import extract_vars, extract_global_attrs
 
 __all__ = ["get_srh", "get_uh"]

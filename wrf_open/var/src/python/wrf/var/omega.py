@@ -1,6 +1,6 @@
 
 from wrf.var.constants import Constants
-from wrf.var.destagger import destagger
+from wrf.var.destag import destagger
 from wrf.var.extension import computeomega,computetk
 from wrf.var.util import extract_vars
 

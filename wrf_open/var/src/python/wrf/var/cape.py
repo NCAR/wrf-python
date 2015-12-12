@@ -2,7 +2,7 @@ import numpy as n
 import numpy.ma as ma
 
 from wrf.var.extension import computetk,computecape
-from wrf.var.destagger import destagger
+from wrf.var.destag import destagger
 from wrf.var.constants import Constants, ConversionFactors
 from wrf.var.util import extract_vars
 

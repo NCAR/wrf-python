@@ -5,7 +5,7 @@ from itertools import product
 import numpy as n
 
 from wrf.var.units import do_conversion, check_units
-from wrf.var.destagger import destagger
+from wrf.var.destag import destagger
 
 __all__ = ["convert_units", "handle_left_iter"]
 

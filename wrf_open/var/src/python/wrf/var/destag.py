@@ -1,5 +1,4 @@
 
-import numpy as n
 
 from wrf.var.util import extract_vars
 
