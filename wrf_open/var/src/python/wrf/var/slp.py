@@ -23,7 +23,7 @@ def get_slp(wrfnc, units="hpa", timeidx=0):
     qvapor[qvapor < 0] = 0.
     full_ph = (ph + phb) / Constants.G
     
-    destag_ph = destagger(full_ph, 0)
+    destag_ph = destagger(full_ph, -3)
     
     tk = computetk(full_p, full_t)
     slp = computeslp(destag_ph, tk, full_p, qvapor)

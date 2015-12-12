@@ -1,6 +1,8 @@
 
 import numpy as n
 
+from wrf.var.util import extract_vars
+
 __all__ = ["destagger", "destagger_windcomp", "destagger_winds"]
 
 def destagger(var, stagger_dim):
@@ -50,7 +52,9 @@ def destagger_windcomp(wrfnc, comp, timeidx=0):
         wrfvar = "W"
         stagdim = -3
         
-    wind_data = wrfnc.variables[wrfvar][timeidx,:,:,:]
+    #wind_data = wrfnc.variables[wrfvar][timeidx,:,:,:]
+    ncvars = extract_vars(wrfnc, timeidx, vars=wrfvar)
+    wind_data = ncvars[wrfvar]
     return destagger(wind_data, stagdim)
 
 def destagger_winds(wrfnc, timeidx=0):

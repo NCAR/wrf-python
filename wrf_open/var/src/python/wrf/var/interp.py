@@ -35,7 +35,7 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
     """ 
     
     # Have a pivot point with an angle to find cross section
-    if pivot is not None and angle is not None:
+    if pivot_point is not None and angle is not None:
         xp = pivot_point[0]
         yp = pivot_point[1]
         
@@ -132,7 +132,7 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
 
 # TODO:  Add flag to use lat/lon points by doing conversion
 def get_vertcross(data3d, z, missingval=-99999, 
-                  pivot=None,angle=None,start_point=None,end_point=None):
+                  pivot_point=None,angle=None,start_point=None,end_point=None):
     
     xdim = z.shape[2]
     ydim = z.shape[1]

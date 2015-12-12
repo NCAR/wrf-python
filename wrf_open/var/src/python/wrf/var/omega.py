@@ -14,7 +14,7 @@ def get_omega(wrfnc, timeidx=0):
     pb = ncvars["PB"]
     qv = ncvars["QVAPOR"]
     
-    wa = destagger(w, 0)
+    wa = destagger(w, -3)
     full_t = t + Constants.T_BASE
     full_p = p + pb
     tk = computetk(full_p, full_t)

@@ -1,6 +1,7 @@
 import unittest as ut
 import numpy.testing as nt 
 import numpy as n
+import numpy.ma as ma
 import os, sys
 import subprocess
 
@@ -44,12 +45,36 @@ def setUpModule():
 
 # Using helpful information at: 
 # http://eli.thegreenplace.net/2014/04/02/dynamically-generating-python-test-cases
-def make_test(varname, wrf_in, referent):
+def make_test(varname, wrf_in, referent, multi=False, repeat=3):
     def test(self):
-        in_wrfnc = NetCDF(wrf_in)
-        refnc = NetCDF(referent)
         
-        ref_vals = refnc.variables[varname][...]
+        if not multi:
+            in_wrfnc = NetCDF(wrf_in)
+        else:
+            nc = NetCDF(wrf_in)
+            in_wrfnc = [nc for i in xrange(repeat)]
+        
+        refnc = NetCDF(referent)
+            
+        if not multi:
+            ref_vals = refnc.variables[varname][:]
+        else:
+            data = refnc.variables[varname][:]
+            new_dims = [repeat] + [x for x in data.shape]
+            masked=False
+            if (isinstance(data, ma.core.MaskedArray)):
+                masked=True
+            
+            if not masked:
+                ref_vals = n.zeros(new_dims, data.dtype)
+            else:
+                ref_vals = ma.asarray(n.zeros(new_dims, data.dtype))
+                
+            for i in xrange(repeat):
+                ref_vals[i,:] = data[:]
+                
+                if masked:
+                    ref_vals.mask[i,:] = data.mask[:]
         
         if (varname == "tc"):
             my_vals = getvar(in_wrfnc, "temp", units="c")
@@ -104,20 +129,16 @@ def make_test(varname, wrf_in, referent):
             atol = 0
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
         elif (varname == "cape_2d"):
-            mcape, mcin, lcl, lfc = getvar(in_wrfnc, varname)
+            cape_2d = getvar(in_wrfnc, varname)
             tol = 1/100.
             atol = 0
-            nt.assert_allclose(mcape, ref_vals[0,:,:], tol, atol)
-            nt.assert_allclose(mcin, ref_vals[1,:,:], tol, atol)
-            nt.assert_allclose(lcl, ref_vals[2,:,:], tol, atol)
-            nt.assert_allclose(lfc, ref_vals[3,:,:], tol, atol)
+            nt.assert_allclose(cape_2d, ref_vals, tol, atol)
         elif (varname == "cape_3d"):
-            cape, cin = getvar(in_wrfnc, varname)
+            cape_3d = getvar(in_wrfnc, varname)
             tol = 1/100.
             atol = 0
-            nt.assert_allclose(cape, ref_vals[0,:,:], tol, atol)
-            nt.assert_allclose(cin, ref_vals[1,:,:], tol, atol)
             
+            nt.assert_allclose(cape_3d, ref_vals, tol, atol)
             
         else:
             my_vals = getvar(in_wrfnc, varname)
@@ -144,8 +165,10 @@ if __name__ == "__main__":
         if var in ignore_vars:
             continue
         
-        test_func = make_test(var, TEST_FILE, OUT_NC_FILE)
-        setattr(WRFVarsTest, 'test_{0}'.format(var), test_func)
+        test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE)
+        test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True)
+        setattr(WRFVarsTest, 'test_{0}'.format(var), test_func1)
+        setattr(WRFVarsTest, 'test_multi_{0}'.format(var), test_func2)
     
     
     ut.main()

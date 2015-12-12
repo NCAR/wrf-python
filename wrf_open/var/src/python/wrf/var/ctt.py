@@ -46,7 +46,7 @@ def get_ctt(wrfnc, units="c", timeidx=0):
     tk = computetk(full_p, full_t)
     
     geopt = ph + phb
-    geopt_unstag = destagger(geopt, 0)
+    geopt_unstag = destagger(geopt, -3)
     ght = geopt_unstag / Constants.G
     
     ctt = computectt(p_hpa,tk,qice,qcld,qv,ght,ter,haveqci)

@@ -3,7 +3,7 @@ from collections import Iterable
 import numpy as n
 
 __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
-           "hold_dim_fixed", "combine_files"]
+           "combine_files"]
 
 def _is_multi_time(timeidx):
     if timeidx == -1:
@@ -82,28 +82,5 @@ def extract_vars(wrfnc, timeidx, vars):
         return {var:combine_files(wrfnc, var, timeidx) for var in varlist}
         
     
-def hold_dim_fixed(var, dim, idx):
-    """Generic method to hold a single dimension to a fixed index when 
-    the array shape is unknown.  The values for 'dim' and 'idx' can 
-    be negative.
-    
-    For example, on a 4D array with 'dim' set to 
-    -1 and 'idx' set to 3, this is going to return this view:
-    
-    var[:,:,:,3]
-    
-    """
-    
-    var_shape = var.shape
-    num_dims = len(var_shape) 
-    full_slice = slice(None, None, None)
-    
-    # Make the sequence of slices
-    dim_slices = [full_slice for x in xrange(num_dims)]
-    
-    # Replace the dimension with the fixed index
-    dim_slices[dim] = idx
-
-    return var[dim_slices]
     
     

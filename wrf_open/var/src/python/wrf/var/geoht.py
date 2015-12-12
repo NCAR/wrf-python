@@ -23,13 +23,13 @@ def _get_geoht(wrfnc, height=True, msl=True, timeidx=0):
                                "NetCDF file")
         else:
             geopt_unstag = ght_vars["GHT"] * Constants.G
-            hgt = destagger(ght_vars["HGT_U"], 1)
+            hgt = destagger(ght_vars["HGT_U"], -1)
     else:
         ph = ph_vars["PH"]
         phb = ph_vars["PHB"]
         hgt = ph_vars["HGT"]
         geopt = ph + phb
-        geopt_unstag = destagger(geopt, 0)
+        geopt_unstag = destagger(geopt, -3)
     
     if height:
         if msl:

@@ -60,5 +60,5 @@ def get_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
 
 def get_max_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
     return n.amax(get_dbz(wrfnc, do_varint, do_liqskin, timeidx), 
-                  axis=0)
+                  axis=-3)
 

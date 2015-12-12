@@ -5,7 +5,7 @@ from wrf.var.destagger import destagger
 from wrf.var.constants import Constants
 from wrf.var.wind import _calc_wspd_wdir
 from wrf.var.decorators import convert_units
-from wrf.var.util import extract_vars, extract_global_attrs, hold_dim_fixed
+from wrf.var.util import extract_vars, extract_global_attrs
 
 __all__=["get_uvmet", "get_uvmet10", "get_uvmet_wspd_wdir", 
          "get_uvmet10_wspd_wdir"]
@@ -50,7 +50,7 @@ def get_uvmet(wrfnc, ten_m=False, units ="mps", timeidx=0):
             else:
                 # For met_em files, this just takes the lowest level winds
                 # (3rd dimension from right is bottom_top)
-                u = destagger(hold_dim_fixed(uu_vars["UU"], -3, 0), -1) # support met_em files
+                u = destagger(uu_vars["UU"][...,0,:,:], -1) # support met_em files
         else:
             u = u_vars["U10"] 
         
@@ -64,7 +64,7 @@ def get_uvmet(wrfnc, ten_m=False, units ="mps", timeidx=0):
             else:
                 # For met_em files, this just takes the lowest level winds
                 # (3rd dimension from right is bottom_top)
-                v = destagger(hold_dim_fixed(vv_vars["VV"], -3, 0), -2) # support met_em files
+                v = destagger(vv_vars["VV"][...,0,:,:], -2) # support met_em files
         else:
             v = v_vars["V10"]
     
@@ -141,10 +141,7 @@ def get_uvmet(wrfnc, ten_m=False, units ="mps", timeidx=0):
         
         res = computeuvmet(u,v,lat,lon,cen_lon,cone)
         
-        if u.ndim == 3:
-            return res
-        else:
-            return res[:,0,:,:]
+        return res
             
     
 def get_uvmet10(wrfnc, units="mps", timeidx=0):

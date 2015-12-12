@@ -11,7 +11,7 @@ from wrf.var._wrfext import (f_interpz3d, f_interp2dxy,f_interp1d,
                      f_computesrh, f_computeuh, f_computepw, f_computedbz,
                      f_lltoij, f_ijtoll, f_converteta, f_computectt)
 from wrf.var._wrfcape import f_computecape
-from wrf.var.decorators import handle_left_iter
+from wrf.var.decorators import handle_left_iter, uvmet_left_iter
 
 __all__ = ["FortranException", "computeslp", "computetk", "computetd", 
            "computerh", "computeavo", "computepvo", "computeeth", 
@@ -86,7 +86,7 @@ def computerh(qv,q,t):
     res = n.reshape(res, shape, "A")
     return res.astype("float32")
 
-@handle_left_iter(3,3,0, ignore_args=(6,7))
+@handle_left_iter(3,3,0, ignore_args=(6,7), ref_stag_dim=-1)
 def computeavo(u,v,msfu,msfv,msfm,cor,dx,dy):
     res = f_computeabsvort(u.astype("float64").T,
                            v.astype("float64").T,
@@ -99,7 +99,7 @@ def computeavo(u,v,msfu,msfv,msfm,cor,dx,dy):
     
     return res.astype("float32").T
 
-@handle_left_iter(3,3,0, ignore_args=(8,9))
+@handle_left_iter(3,3,2, ignore_args=(8,9))
 def computepvo(u,v,theta,prs,msfu,msfv,msfm,cor,dx,dy):
     
     res = f_computepvo(u.astype("float64").T,
@@ -124,7 +124,7 @@ def computeeth(qv, tk, p):
     
     return res.astype("float32").T
 
-@handle_left_iter(4,2,2, ignore_args=(4,5), alg_out_fixed_dims=(2,))
+@uvmet_left_iter()
 def computeuvmet(u,v,lat,lon,cen_long,cone):
     longca = n.zeros((lat.shape[-2], lat.shape[-1]), "float64")
     longcb = n.zeros((lon.shape[-2], lon.shape[-1]), "float64")
@@ -132,7 +132,7 @@ def computeuvmet(u,v,lat,lon,cen_long,cone):
     
     
     # Make the 2D array a 3D array with 1 dimension
-    if u.ndim != 3:
+    if u.ndim < 3:
         u = u.reshape((1,u.shape[-2], u.shape[-1]))
         v = v.reshape((1,v.shape[-2], v.shape[-1]))
 
@@ -154,7 +154,7 @@ def computeuvmet(u,v,lat,lon,cen_long,cone):
                0)
 
     
-    return res.astype("float32").T
+    return n.squeeze(res.astype("float32").T)
 
 @handle_left_iter(3,3,0)
 def computeomega(qv, tk, w, p):
@@ -190,7 +190,7 @@ def computewetbulb(p,tk,qv):
 
 @handle_left_iter(2,3,0, ignore_args=(4,))
 def computesrh(u, v, z, ter, top):
-    
+
     res = f_computesrh(u.astype("float64").T, 
                        v.astype("float64").T, 
                        z.astype("float64").T, 
@@ -276,10 +276,11 @@ def computecape(p_hpa,tk,qv,ht,ter,sfp,missing,i3dflag,ter_follow):
                   FortranException())
     
     # Don't need to transpose since we only passed a view to fortran
-    cape = flip_cape.astype("float32")
-    cin = flip_cin.astype("float32")
+    cape = flip_cape.astype("float32")[::-1,:,:]
+    cin = flip_cin.astype("float32")[::-1,:,:]
+    
     # Remember to flip cape and cin back to descending p coordinates
-    return (cape[::-1,:,:],cin[::-1,:,:])
+    return (cape, cin)
 
 # TODO:  This should handle lists of coords
 def computeij(map_proj,truelat1,truelat2,stdlon,

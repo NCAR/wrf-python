@@ -40,14 +40,14 @@ def get_srh(wrfnc, top=3000.0, timeidx=0):
         v = destagger(v_vars["V"], -2) 
 
     geopt = ph + phb
-    geopt_unstag = destagger(geopt, 0)
+    geopt_unstag = destagger(geopt, -3)
     
     z = geopt_unstag / Constants.G
     
     # Re-ordering from high to low
-    u1 = u[::-1,:,:]
-    v1 = v[::-1,:,:]
-    z1 = z[::-1,:,:]
+    u1 = u[...,::-1,:,:] 
+    v1 = v[...,::-1,:,:]
+    z1 = z[...,::-1,:,:]
     
     srh = computesrh(u1, v1, z1, ter, top)
     

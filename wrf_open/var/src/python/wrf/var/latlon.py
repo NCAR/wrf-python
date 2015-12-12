@@ -1,3 +1,5 @@
+from collections import Iterable
+
 from wrf.var.extension import computeij, computell
 from wrf.var.util import extract_vars, extract_global_attrs
 

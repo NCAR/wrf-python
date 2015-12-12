@@ -4,7 +4,7 @@ import numpy.ma as ma
 from wrf.var.extension import computetk,computecape
 from wrf.var.destagger import destagger
 from wrf.var.constants import Constants, ConversionFactors
-from wrf.var.util import extract_vars, hold_dim_fixed
+from wrf.var.util import extract_vars
 
 __all__ = ["get_2dcape", "get_3dcape"]
 
@@ -27,7 +27,7 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     tk = computetk(full_p, full_t)
     
     geopt = ph + phb
-    geopt_unstag = destagger(geopt, 0)
+    geopt_unstag = destagger(geopt, -3)
     z = geopt_unstag/Constants.G
     
     # Convert pressure to hPa
@@ -40,21 +40,23 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     cape_res,cin_res = computecape(p_hpa,tk,qv,z,ter,psfc_hpa,
                                    missing,i3dflag,ter_follow)
      
-    cape = hold_dim_fixed(cape_res, -3, 0)
-    cin = hold_dim_fixed(cin_res, -3, 0)
-    lcl = hold_dim_fixed(cin_res, -3, 1)
-    lfc = hold_dim_fixed(cin_res, -3, 2)
+    cape = cape_res[...,0,:,:]
+    cin = cin_res[...,0,:,:]
+    lcl = cin_res[...,1,:,:]
+    lfc = cin_res[...,2,:,:]
     
-    resdim = [4]
-    resdim += cape.shape
+    left_dims = [x for x in cape_res.shape[0:-3]]
+    right_dims = [x for x in cape_res.shape[-2:]]
+    
+    resdim = left_dims + [4] + right_dims
     
     # Make a new output array for the result
     res = n.zeros((resdim), cape.dtype)
     
-    res[0,:] = cape[:]
-    res[1,:] = cin[:]
-    res[2,:] = lcl[:]
-    res[3,:] = lfc[:]
+    res[...,0,:,:] = cape[:]
+    res[...,1,:,:] = cin[:]
+    res[...,2,:,:] = lcl[:]
+    res[...,3,:,:] = lfc[:]
     
     return ma.masked_values(res,missing)
 
@@ -77,7 +79,7 @@ def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
     tk = computetk(full_p, full_t)
     
     geopt = ph + phb
-    geopt_unstag = destagger(geopt, 0)
+    geopt_unstag = destagger(geopt, -3)
     z = geopt_unstag/Constants.G
     
     # Convert pressure to hPa
@@ -91,13 +93,17 @@ def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
                            missing,i3dflag,ter_follow)
     
     # Make a new output array for the result
-    resdim = [2]
-    resdim += cape.shape
-    res = n.zeros((resdim), cape.dtype)
+    left_dims = [x for x in cape.shape[0:-3]]
+    right_dims = [x for x in cape.shape[-3:]]
     
-    res[0,:] = cape[:]
-    res[1,:] = cin[:]
+    resdim = left_dims + [2] + right_dims
     
+    res = n.zeros(resdim, cape.dtype)
+    
+    res[...,0,:,:,:] = cape[:]
+    res[...,1,:,:,:] = cin[:]
+    
+    #return res
     return ma.masked_values(res, missing)
     
     
