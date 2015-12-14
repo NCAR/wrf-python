@@ -710,7 +710,7 @@ SUBROUTINE f_computewetbulb(prs,tmk,qvp,PSADITHTE,PSADIPRS,PSADITMK,throw_except
 
             jt=-1
             DO jtch=1,150-1
-              IF (eth.GE.psadithte(jtch).AND.eth.LT.psadithte(jtch+1)) then
+              IF (eth.GE.psadithte(jtch).AND.eth.LT.psadithte(jtch+1)) THEN
                  jt=jtch
                  EXIT
               ENDIF
@@ -719,7 +719,7 @@ SUBROUTINE f_computewetbulb(prs,tmk,qvp,PSADITHTE,PSADIPRS,PSADITMK,throw_except
     !    213        CONTINUE
             ip=-1
             DO ipch=1,150-1
-              IF (p.LE.psadiprs(ipch).AND.p.GT.psadiprs(ipch+1)) then
+              IF (p.LE.psadiprs(ipch).AND.p.GT.psadiprs(ipch+1)) THEN
                  ip=ipch
                  EXIT
               ENDIF
@@ -734,7 +734,7 @@ SUBROUTINE f_computewetbulb(prs,tmk,qvp,PSADITHTE,PSADIPRS,PSADITMK,throw_except
             fracjt2=1.-fracjt
             fracip=(psadiprs(ip)-p)/(psadiprs(ip)-psadiprs(ip+1))
             fracip2=1.-fracip
-            IF (psaditmk(ip,jt).GT.1e9.OR.psaditmk(ip+1,jt).GT.1e9.OR.psaditmk(ip,jt+1).GT.1e9.OR.psaditmk(ip+1,jt+1).GT.1e9) then
+            IF (psaditmk(ip,jt).GT.1e9.OR.psaditmk(ip+1,jt).GT.1e9.OR.psaditmk(ip,jt+1).GT.1e9.OR.psaditmk(ip+1,jt+1).GT.1e9) THEN
                 !PRINT*,'Tried to access missing tmperature in lookup table.'
                 CALL throw_exception('Prs and Thte probably unreasonable. prs,thte=',p,eth)
                !STOP ! TODO: Need to make python throw an exception here

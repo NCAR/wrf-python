@@ -7,7 +7,8 @@ import numpy as n
 from wrf.var.units import do_conversion, check_units
 from wrf.var.destag import destagger
 
-__all__ = ["convert_units", "handle_left_iter"]
+__all__ = ["convert_units", "handle_left_iter", "uvmet_left_iter", 
+           "handle_casting"]
 
 def convert_units(unit_type, alg_unit):
     """A decorator that applies unit conversion to a function's output array.
@@ -248,5 +249,38 @@ def uvmet_left_iter():
     
     return indexing_decorator
 
+def handle_casting(ref_idx=0, arg_idxs=(), karg_names=None,dtype=n.float64):
+    """Decorator to handle iterating over leftmost dimensions when using 
+    multiple files and/or multiple times with the uvmet product.
+    
+    """
+    def cast_decorator(func):
+        @wraps(func)
+        def func_wrapper(*args, **kargs):
+            orig_type = args[ref_idx].dtype
+            
+            new_args = [arg.astype(dtype)
+                        if i in arg_idxs else arg 
+                        for i,arg in enumerate(args)]
+            
+            new_kargs = {key:(val.astype(dtype)
+                        if key in karg_names else val)
+                        for key,val in kargs.iteritems()}
+                
+            
+            res = func(*new_args, **new_kargs) 
+            
+            if isinstance(res, n.ndarray):
+                if res.dtype == orig_type:
+                    return res
+                return res.astype(orig_type)
+            else:   # got back a sequence of arrays
+                return tuple(arr.astype(orig_type) 
+                             if arr.dtype != orig_type else arr
+                             for arr in res)
+        
+        return func_wrapper
+    
+    return cast_decorator
 
 
