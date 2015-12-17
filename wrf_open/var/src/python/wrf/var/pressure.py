@@ -6,7 +6,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_pressure"]
 
 @convert_units("pressure", "pa")
-def get_pressure(wrfnc, units="hpa", timeidx=0):
+def get_pressure(wrfnc, timeidx=0, units="hpa"):
 
     try:
         p_vars = extract_vars(wrfnc, timeidx, vars=("P", "PB"))

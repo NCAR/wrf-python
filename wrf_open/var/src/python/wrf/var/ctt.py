@@ -10,7 +10,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_ctt"]
 
 @convert_units("temp", "c")
-def get_ctt(wrfnc, units="c", timeidx=0):
+def get_ctt(wrfnc, timeidx=0, units="c"):
     """Return the cloud top temperature.
     
     """

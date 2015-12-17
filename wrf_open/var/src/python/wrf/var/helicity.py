@@ -6,7 +6,7 @@ from wrf.var.util import extract_vars, extract_global_attrs
 
 __all__ = ["get_srh", "get_uh"]
 
-def get_srh(wrfnc, top=3000.0, timeidx=0):
+def get_srh(wrfnc, timeidx=0, top=3000.0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("HGT", "PH", "PHB"))
@@ -53,7 +53,7 @@ def get_srh(wrfnc, top=3000.0, timeidx=0):
     
     return srh
 
-def get_uh(wrfnc, bottom=2000.0, top=5000.0, timeidx=0):
+def get_uh(wrfnc, timeidx=0, bottom=2000.0, top=5000.0):
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("W", "PH", "PHB", "MAPFAC_M"))
     

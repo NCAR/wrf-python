@@ -16,25 +16,25 @@ def _calc_wdir(u, v):
     wdir = 270.0 - n.arctan2(v,u) * (180.0/Constants.PI)
     return n.remainder(wdir, 360.0)
 
-def _calc_wspd_wdir(u, v, units="mps"):
+def _calc_wspd_wdir(u, v, units):
     return (_calc_wspd(u,v, units), _calc_wdir(u,v))
 
 @convert_units("wind", "mps")
-def get_u_destag(wrfnc, units="mps", timeidx=0):
+def get_u_destag(wrfnc, timeidx=0, units="mps"):
     u = destagger_windcomp(wrfnc,"u", timeidx)
     return u
 
 @convert_units("wind", "mps")
-def get_v_destag(wrfnc, units="mps", timeidx=0):
+def get_v_destag(wrfnc, timeidx=0, units="mps"):
     v = destagger_windcomp(wrfnc,"v", timeidx)
     return v
 
 @convert_units("wind", "mps")
-def get_w_destag(wrfnc, units="mps", timeidx=0):
+def get_w_destag(wrfnc, timeidx=0, units="mps"):
     w = destagger_windcomp(wrfnc,"w", timeidx)
     return w
 
-def get_destag_wspd_wdir(wrfnc, units="mps", timeidx=0):
+def get_destag_wspd_wdir(wrfnc, timeidx=0, units="mps"):
     u = destagger_windcomp(wrfnc,"u", timeidx)
     v = destagger_windcomp(wrfnc,"v", timeidx)
     

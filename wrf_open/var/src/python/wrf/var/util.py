@@ -1,9 +1,10 @@
 from collections import Iterable
+import datetime as dt
 
 import numpy as n
 
 __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
-           "combine_files", "is_standard_wrf_var"]
+           "combine_files", "is_standard_wrf_var", "extract_times"]
 
 def _is_multi_time(timeidx):
     if timeidx == -1:
@@ -53,14 +54,14 @@ def combine_files(wrflist, var, timeidx):
     else:
         time_idx_or_slice = slice(None, None, None)
         
-    first_var = wrflist[0].variables[var][time_idx_or_slice, :]
+    first_var = n.squeeze(wrflist[0].variables[var][time_idx_or_slice, :])
     outdims = [numfiles]
     outdims += first_var.shape
     outarr = n.zeros(outdims, first_var.dtype)
     outarr[0,:] = first_var[:]
     
     for idx, wrfnc in enumerate(wrflist[1:], start=1):
-        outarr[idx,:] = wrfnc.variables[var][time_idx_or_slice, :]
+        outarr[idx,:] = n.squeeze(wrfnc.variables[var][time_idx_or_slice, :])
             
     return outarr
 
@@ -77,9 +78,35 @@ def extract_vars(wrfnc, timeidx, vars):
     if not multitime and not multifile:
         return {var:wrfnc.variables[var][timeidx,:] for var in varlist}
     elif multitime and not multifile:
-        return {var:wrfnc.variables[var][:] for var in varlist}
+        return {var:n.squeeze(wrfnc.variables[var][:]) for var in varlist}
     else:
         return {var:combine_files(wrfnc, var, timeidx) for var in varlist}
+
+def _make_time(timearr):
+    return dt.datetime.strptime("".join(timearr[:]), "%Y-%m-%d_%H:%M:%S")
+
+def _file_times(wrfnc,timeidx):
+    multitime = _is_multi_time(timeidx)
+    if multitime:
+        times = wrfnc.variables["Times"][:,:]
+        for i in xrange(times.shape[0]):
+            yield _make_time(times[i,:])
+    else:
+        times = wrfnc.variables["Times"][timeidx,:]
+        yield _make_time(times)
+        
+
+def extract_times(wrfnc,timeidx):
+    multi_file = _is_multi_file(wrfnc)
+    if not multi_file:
+        wrf_list = [wrfnc]
+    else:
+        wrf_list = wrfnc
+    
+    return [file_time 
+            for wrf_file in wrf_list 
+            for file_time in _file_times(wrf_file,timeidx) ]        
+        
     
 def is_standard_wrf_var(wrfnc, var):
     multifile = _is_multi_file(wrfnc)

@@ -23,6 +23,7 @@ class FortranException(Exception):
     def __call__(self, message):
         raise self.__class__(message)
 
+@handle_left_iter(2,3,0)
 @handle_casting(arg_idxs=(0,1))
 def interpz3d(data3d,zdata,desiredloc,missingval):
     res = f_interpz3d(data3d.T, 
@@ -32,6 +33,7 @@ def interpz3d(data3d,zdata,desiredloc,missingval):
     return res.T
 
 @handle_casting(arg_idxs=(0,1))
+@handle_left_iter(2,2,0)
 def interpz2d(data3d,xy):
     res = f_interp2dxy(data3d.T,
                        xy.T)

@@ -124,43 +124,43 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "ctt" : get_ctt
              }
 
-_VALID_ARGS = {"cape2d" : ["missing", "timeidx"],
-             "cape3d" : ["missing", "timeidx"],
-             "dbz" : ["do_variant", "do_liqskin", "timeidx"],
-             "maxdbz" : ["do_variant", "do_liqskin", "timeidx"],
-             "dp" : ["timeidx", "units"],
-             "dp2m" : ["timeidx", "units"], 
-             "height" : ["msl", "units", "timeidx"],
-             "geopt" : ["timeidx"],
-             "srh" : ["top", "timeidx"],
-             "uhel" : ["bottom", "top", "timeidx"],
-             "omega" : ["timeidx"],
-             "pw" : ["timeidx"],
-             "rh" : ["timeidx"], 
-             "rh2m" : ["timeidx"], 
-             "slp" : ["units", "timeidx"], 
-             "temp" : ["units", "timeidx"], 
-             "theta" : ["units", "timeidx"],
-             "theta_e" : ["timeidx", "units"], 
-             "tv" : ["units", "timeidx"], 
-             "twb" : ["units", "timeidx"], 
-             "terrain" : ["units", "timeidx"],
-             "times" : ["timeidx"], 
-             "uvmet" : ["units", "timeidx"], 
-             "uvmet10" : ["units", "timeidx"],
-             "avo" : ["timeidx"],
-             "pvo" : ["timeidx"],
-             "ua" : ["units", "timeidx"], 
-             "va" : ["units", "timeidx"],
-             "wa" : ["units", "timeidx"],
-             "lat" : ["timeidx"],
-             "lon" : ["timeidx"],
-             "pressure" : ["units", "timeidx"],
-             "wspddir" : ["units", "timeidx"],
-             "wspddir_uvmet" : ["units", "timeidx"],
-             "wspddir_uvmet10" : ["units", "timeidx"],  
-             "ctt" : ["timeidx"],
-             "default" : ["timeidx"]
+_VALID_KARGS = {"cape2d" : ["missing"],
+             "cape3d" : ["missing"],
+             "dbz" : ["do_variant", "do_liqskin"],
+             "maxdbz" : ["do_variant", "do_liqskin"],
+             "dp" : ["units"],
+             "dp2m" : ["units"], 
+             "height" : ["msl", "units"],
+             "geopt" : [],
+             "srh" : ["top"],
+             "uhel" : ["bottom", "top"],
+             "omega" : [],
+             "pw" : [],
+             "rh" : [], 
+             "rh2m" : [], 
+             "slp" : ["units"], 
+             "temp" : ["units"], 
+             "theta" : ["units"],
+             "theta_e" : ["units"], 
+             "tv" : ["units"], 
+             "twb" : ["units"], 
+             "terrain" : ["units"],
+             "times" : [], 
+             "uvmet" : ["units"], 
+             "uvmet10" : ["units"],
+             "avo" : [],
+             "pvo" : [],
+             "ua" : ["units"], 
+             "va" : ["units"],
+             "wa" : ["units"],
+             "lat" : [],
+             "lon" : [],
+             "pressure" : ["units"],
+             "wspddir" : ["units"],
+             "wspddir_uvmet" : ["units"],
+             "wspddir_uvmet10" : ["units"],  
+             "ctt" : [],
+             "default" : []
             }
 
 _ALIASES = {"cape_2d" : "cape2d",
@@ -198,25 +198,21 @@ def _undo_alias(alias):
 
 def _check_kargs(var, kargs):
     for arg in kargs.iterkeys():
-        if arg not in _VALID_ARGS[var]:
+        if arg not in _VALID_KARGS[var]:
             raise ArgumentError("'%s' is an invalid keyword "
-                          "argument for '%s" % (arg, var))
+                          "argument for '%s'" % (arg, var))
             
 
-def getvar(wrfnc, var, **kargs):
+def getvar(wrfnc, var, timeidx=0, **kargs):
     if is_standard_wrf_var(wrfnc, var):
-        if "timeidx" in kargs:
-            timeidx = kargs["timeidx"]
-        else:
-            timeidx = 0 
         return extract_vars(wrfnc, timeidx, var)[var]
     
     actual_var = _undo_alias(var)
-    if actual_var not in _VALID_ARGS:
+    if actual_var not in _VALID_KARGS:
         raise ArgumentError("'%s' is not a valid variable name" % (var))
     
     _check_kargs(actual_var, kargs)
-    return _FUNC_MAP[actual_var](wrfnc,**kargs)
+    return _FUNC_MAP[actual_var](wrfnc,timeidx,**kargs)
     
 
     

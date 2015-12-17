@@ -5,7 +5,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_terrain"]
 
 @convert_units("height", "m")
-def get_terrain(wrfnc, units="m", timeidx=0):
+def get_terrain(wrfnc, timeidx=0, units="m"):
     
     try:
         hgt_vars = extract_vars(wrfnc, timeidx, vars="HGT")

@@ -5,7 +5,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_dp", "get_dp_2m"]
 
 @convert_units("temp", "c")
-def get_dp(wrfnc, units="c", timeidx=0):
+def get_dp(wrfnc, timeidx=0, units="c"):
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("P", "PB", "QVAPOR"))
     
@@ -21,7 +21,7 @@ def get_dp(wrfnc, units="c", timeidx=0):
     return td
     
 @convert_units("temp", "c")
-def get_dp_2m(wrfnc, units="c", timeidx=0):
+def get_dp_2m(wrfnc, timeidx=0, units="c"):
     ncvars = extract_vars(wrfnc, timeidx, vars=("PSFC", "Q2"))
 
     # Algorithm requires hPa

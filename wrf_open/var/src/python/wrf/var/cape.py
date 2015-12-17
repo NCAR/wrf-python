@@ -8,7 +8,7 @@ from wrf.var.util import extract_vars
 
 __all__ = ["get_2dcape", "get_3dcape"]
 
-def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
+def get_2dcape(wrfnc, timeidx=0, missing=-999999.0):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
                                               "PHB", "HGT", "PSFC"))
@@ -60,7 +60,7 @@ def get_2dcape(wrfnc, missing=-999999.0, timeidx=0):
     
     return ma.masked_values(res,missing)
 
-def get_3dcape(wrfnc, missing=-999999.0, timeidx=0):
+def get_3dcape(wrfnc, timeidx=0, missing=-999999.0):
     """Return the 3d fields of cape and cin"""
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 

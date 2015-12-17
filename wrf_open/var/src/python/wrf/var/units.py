@@ -108,9 +108,9 @@ _TEMP_CONV_METHODS = {"k" : _c_to_k,
                       "f" : _c_to_f
                       }
 
-def check_units(unit, type):
+def check_units(unit, unit_type):
     unitl = unit.lower()
-    if unitl not in _VALID_UNITS[type]:
+    if unitl not in _VALID_UNITS[unit_type]:
         raise ValueError("invalid unit type '%s'" % unit)
 
 def do_conversion(var, vartype, var_unit, dest_unit):

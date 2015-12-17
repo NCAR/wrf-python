@@ -7,7 +7,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw"]
 
 @convert_units("temp", "k")
-def get_theta(wrfnc, units="k", timeidx=0):
+def get_theta(wrfnc, timeidx=0, units="k"):
     ncvars = extract_vars(wrfnc, timeidx, vars="T")
     t = ncvars["T"]
     full_t = t + Constants.T_BASE
@@ -15,7 +15,7 @@ def get_theta(wrfnc, units="k", timeidx=0):
     return full_t
 
 @convert_units("temp", "k")
-def get_temp(wrfnc, units="k", timeidx=0):
+def get_temp(wrfnc, timeidx=0, units="k"):
     """Return the temperature in Kelvin or Celsius"""
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB"))
@@ -30,7 +30,7 @@ def get_temp(wrfnc, units="k", timeidx=0):
     return tk
 
 @convert_units("temp", "k")
-def get_eth(wrfnc, units="k", timeidx=0):
+def get_eth(wrfnc, timeidx=0, units="k"):
     "Return equivalent potential temperature (Theta-e) in Kelvin"
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
@@ -48,7 +48,7 @@ def get_eth(wrfnc, units="k", timeidx=0):
     return eth
     
 @convert_units("temp", "k")
-def get_tv(wrfnc, units="k", timeidx=0):
+def get_tv(wrfnc, timeidx=0, units="k"):
     "Return the virtual temperature (tv) in Kelvin or Celsius"
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
@@ -68,7 +68,7 @@ def get_tv(wrfnc, units="k", timeidx=0):
     
 
 @convert_units("temp", "k")
-def get_tw(wrfnc, units="k", timeidx=0):
+def get_tw(wrfnc, timeidx=0, units="k"):
     "Return the wetbulb temperature (tw)"
     
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))

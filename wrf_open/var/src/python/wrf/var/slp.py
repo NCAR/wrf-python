@@ -7,7 +7,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_slp"]
 
 @convert_units("pressure", "hpa")
-def get_slp(wrfnc, units="hpa", timeidx=0):
+def get_slp(wrfnc, timeidx=0, units="hpa"):
     ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR",
                                               "PH", "PHB"))
 

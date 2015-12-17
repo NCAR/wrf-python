@@ -98,7 +98,7 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
                 x1 =  (y1 - intercept)/slope
             
             if( y1 > ydim-1):# intersect outside of top boundary
-                y1 = ydim1
+                y1 = ydim-1
                 x1 =  (y1 - intercept)/slope
     elif start_point is not None and end_point is not None:
         x0 = start_point[0]
@@ -118,7 +118,7 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
     npts = int(distance)
     dxy = distance/npts
     
-    xz = n.zeros((npts,2), "float")
+    xy = n.zeros((npts,2), "float")
 
     dx = dx/npts
     dy = dy/npts
@@ -134,8 +134,8 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
 def get_vertcross(data3d, z, missingval=-99999, 
                   pivot_point=None,angle=None,start_point=None,end_point=None):
     
-    xdim = z.shape[2]
-    ydim = z.shape[1]
+    xdim = z.shape[-1]
+    ydim = z.shape[-2]
     
     xy = _get_xy(xdim, ydim, pivot_point, angle, start_point, end_point)
     

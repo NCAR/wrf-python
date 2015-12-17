@@ -5,7 +5,7 @@ from wrf.var.util import extract_vars
 
 __all__ = ["get_geopt", "get_height"]
 
-def _get_geoht(wrfnc, height=True, msl=True, timeidx=0):
+def _get_geoht(wrfnc, timeidx, height=True, msl=True):
     """Return the geopotential in units of m2 s-2 if height is False,
     otherwise return the geopotential height in meters.  If height is True,
     then if msl is True the result will be in MSL, otherwise AGL (the terrain
@@ -40,10 +40,10 @@ def _get_geoht(wrfnc, height=True, msl=True, timeidx=0):
         return geopt_unstag
 
 def get_geopt(wrfnc, timeidx=0):
-    return _get_geoht(wrfnc, False, timeidx=timeidx)
+    return _get_geoht(wrfnc, timeidx, False)
 
 @convert_units("height", "m")
-def get_height(wrfnc, msl=True, units="m", timeidx=0):
-    z = _get_geoht(wrfnc, True, msl, timeidx)
+def get_height(wrfnc, timeidx=0, msl=True, units="m"):
+    z = _get_geoht(wrfnc, timeidx, True, msl)
     return z
 

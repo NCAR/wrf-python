@@ -15,7 +15,7 @@ def destagger(var, stagger_dim):
     
     """
     var_shape = var.shape
-    num_dims = len(var_shape)
+    num_dims = var.ndim
     stagger_dim_size = var_shape[stagger_dim]
     
     # Dynamically building the range slices to create the appropriate 
@@ -29,8 +29,8 @@ def destagger(var, stagger_dim):
     slice2 = slice(1, stagger_dim_size, 1)
     
     # default to full slices
-    dim_ranges_1 = [full_slice for x in xrange(num_dims)]
-    dim_ranges_2 = [full_slice for x in xrange(num_dims)]
+    dim_ranges_1 = [full_slice] * num_dims
+    dim_ranges_2 = [full_slice] * num_dims
     
     # for the stagger dim, insert the appropriate slice range
     dim_ranges_1[stagger_dim] = slice1

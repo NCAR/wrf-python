@@ -6,7 +6,7 @@ from wrf.var.util import extract_vars
 
 __all__ = ["get_dbz", "get_max_dbz"]
 
-def get_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
+def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
     """ Return the dbz
     
     do_varint - do variable intercept (if False, constants are used.  Otherwise, 
@@ -58,7 +58,7 @@ def get_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
     
     return computedbz(full_p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin)
 
-def get_max_dbz(wrfnc, do_varint=False, do_liqskin=False, timeidx=0):
+def get_max_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
     return n.amax(get_dbz(wrfnc, do_varint, do_liqskin, timeidx), 
                   axis=-3)
 

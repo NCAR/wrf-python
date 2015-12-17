@@ -11,7 +11,7 @@ __all__=["get_uvmet", "get_uvmet10", "get_uvmet_wspd_wdir",
          "get_uvmet10_wspd_wdir"]
 
 @convert_units("wind", "mps")
-def get_uvmet(wrfnc, ten_m=False, units ="mps", timeidx=0):
+def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
     """ Return a tuple of u,v with the winds rotated in to earth space"""
     
     if not ten_m:
@@ -144,15 +144,15 @@ def get_uvmet(wrfnc, ten_m=False, units ="mps", timeidx=0):
         return res
             
     
-def get_uvmet10(wrfnc, units="mps", timeidx=0):
-    return get_uvmet(wrfnc, True, units, timeidx)
+def get_uvmet10(wrfnc, timeidx=0, units="mps"):
+    return get_uvmet(wrfnc, timeidx, True, units)
 
-def get_uvmet_wspd_wdir(wrfnc, units="mps", timeidx=0):
-    u,v = get_uvmet(wrfnc, False, units, timeidx)
+def get_uvmet_wspd_wdir(wrfnc, timeidx=0, units="mps"):
+    u,v = get_uvmet(wrfnc, timeidx, False, units)
     return _calc_wspd_wdir(u, v, units)
 
-def get_uvmet10_wspd_wdir(wrfnc, units="mps", timeidx=0):
-    u,v = get_uvmet10(wrfnc, units="mps", timeidx=0)
+def get_uvmet10_wspd_wdir(wrfnc, timeidx=0, units="mps"):
+    u,v = get_uvmet10(wrfnc, timeidx, units="mps")
     return _calc_wspd_wdir(u, v, units)
 
             
