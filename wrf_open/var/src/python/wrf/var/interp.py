@@ -3,11 +3,13 @@ from math import floor, ceil
 import numpy as n
 import numpy.ma as ma
 
-from wrf.var.extension import interpz3d,interpz2d,interp1d
+from wrf.var.extension import interpz3d,interp2dxy,interp1d
+from wrf.var.decorators import handle_left_iter, handle_casting
 
-__all__ = ["get_interplevel", "get_vertcross"]
+__all__ = ["interplevel", "vertcross", "interpline"]
 
-def get_interplevel(data3d,zdata,desiredloc,missingval=-99999):
+#  Note:  Extension decorator is good enough to handle left dims
+def interplevel(data3d,zdata,desiredloc,missingval=-99999):
     """Return the horizontally interpolated data at the provided level
     
     data3d - the 3D field to interpolate
@@ -27,17 +29,17 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
     
     xdim - maximum x-dimension
     ydim - maximum y-dimension
-    pivot_point - a pivot point of (x,y) (must be used with angle)
+    pivot_point - a pivot point of (south_north, west_east) (must be used with angle)
     angle - the angle through the pivot point in degrees
-    start_point - a start_point tuple of (x,y)
-    end_point - an end point tuple of (x,y)
+    start_point - a start_point tuple of (south_north1, west_east1)
+    end_point - an end point tuple of (south_north2, west_east2)
     
     """ 
     
     # Have a pivot point with an angle to find cross section
     if pivot_point is not None and angle is not None:
-        xp = pivot_point[0]
-        yp = pivot_point[1]
+        xp = pivot_point[-1]
+        yp = pivot_point[-2]
         
         if (angle > 315.0 or angle < 45.0 
             or ((angle > 135.0) and (angle < 225.0))):
@@ -101,10 +103,10 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
                 y1 = ydim-1
                 x1 =  (y1 - intercept)/slope
     elif start_point is not None and end_point is not None:
-        x0 = start_point[0]
-        y0 = start_point[1]
-        x1 = end_point[0]
-        y1 = end_point[1]
+        x0 = start_point[-1]
+        y0 = start_point[-2]
+        x1 = end_point[-1]
+        y1 = end_point[-2]
         if ( x1 > xdim-1 ): 
             x1 = xdim
         if ( y1 > ydim-1): 
@@ -129,10 +131,25 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
         
     return xy
 
-
-# TODO:  Add flag to use lat/lon points by doing conversion
-def get_vertcross(data3d, z, missingval=-99999, 
-                  pivot_point=None,angle=None,start_point=None,end_point=None):
+# TODO:  Need a decorator that can handle right dimensions based on what
+# is returned.  In this case, the result of the xy calculation determines
+# output dimensions on right.
+@handle_casting(arg_idxs=(0,1))
+def vertcross(data3d, z, missingval=-99999, 
+              pivot_point=None,angle=None,
+              start_point=None,end_point=None):
+    """Return the vertical cross section for a 3D field, interpolated 
+    to a verical plane defined by a horizontal line.
+    
+    Arguments:
+        data3d - a 3D data field
+        z - 3D height field
+        pivot_point - a pivot point of (south_north,west_east) (must be used with angle)
+        angle - the angle through the pivot point in degrees
+        start_point - a start_point tuple of (south_north1,west_east1)
+        end_point - an end point tuple of (south_north2,west_east2)
+        
+    """
     
     xdim = z.shape[-1]
     ydim = z.shape[-2]
@@ -140,7 +157,7 @@ def get_vertcross(data3d, z, missingval=-99999,
     xy = _get_xy(xdim, ydim, pivot_point, angle, start_point, end_point)
     
     # Interp z
-    var2dz   = interpz2d(z, xy)
+    var2dz   = interp2dxy(z, xy)
     
     #  interp to constant z grid
     if(var2dz[0,0] > var2dz[1,0]):  # monotonically decreasing coordinate
@@ -165,13 +182,46 @@ def get_vertcross(data3d, z, missingval=-99999,
     #interp the variable
     
     var2d = n.zeros((nlevels, xy.shape[0]),dtype=var2dz.dtype)
-    var2dtmp = interpz2d(data3d, xy)
+    var2dtmp = interp2dxy(data3d, xy)
     
     for i in xrange(xy.shape[0]):
         var2d[:,i] = interp1d(var2dtmp[:,i], var2dz[:,i], z_var2d, missingval)
         
     return ma.masked_values(var2d, missingval)
+
+# TODO:  Need a decorator that can handle right dimensions based on what
+# is returned.  In this case, the result of the xy calculation determines
+# output dimensions on right.
+@handle_casting(arg_idxs=(0,))
+def interpline(data2d, pivot_point=None, 
+                 angle=None, start_point=None,
+                 end_point=None):
+    """Return the 2D field interpolated along a line.
+    
+    Arguments:
+        var2d - a 2D data field
+        pivot_point - a pivot point of (south_north,west_east)
+        angle - the angle through the pivot point in degrees
+        start_point - a start_point tuple of (south_north1,west_east1)
+        end_point - an end point tuple of (south_north2,west_east2)
         
+    """
+    
+    tmp_shape = [0] + [x for x in data2d.shape]
+    
+    var2dtmp = n.zeros(tmp_shape, data2d.dtype)
+    
+    xdim = data2d.shape[-1]
+    ydim = data2d.shape[-2]
+    
+    xy = _get_xy(xdim, ydim, pivot_point, angle, start_point, end_point)
+    
+    var2dtmp[0,:,:] = data2d[:,:]
+    
+    var1dtmp = interp2dxy(var2dtmp, xy)
+    
+    return var1dtmp[0,:]
+
     
     
     

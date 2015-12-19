@@ -23,7 +23,7 @@ class FortranException(Exception):
     def __call__(self, message):
         raise self.__class__(message)
 
-@handle_left_iter(2,3,0)
+@handle_left_iter(3,0, ignore_args=(2,3))
 @handle_casting(arg_idxs=(0,1))
 def interpz3d(data3d,zdata,desiredloc,missingval):
     res = f_interpz3d(data3d.T, 
@@ -32,9 +32,9 @@ def interpz3d(data3d,zdata,desiredloc,missingval):
                       missingval)
     return res.T
 
+@handle_left_iter(2,0)
 @handle_casting(arg_idxs=(0,1))
-@handle_left_iter(2,2,0)
-def interpz2d(data3d,xy):
+def interp2dxy(data3d,xy):
     res = f_interp2dxy(data3d.T,
                        xy.T)
     return res.T
@@ -48,7 +48,7 @@ def interp1d(v_in,z_in,z_out,missingval):
     
     return res
 
-@handle_left_iter(2,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
 def computeslp(z,t,p,q):
     t_surf = n.zeros((z.shape[-2], z.shape[-1]), "float64")
@@ -66,7 +66,7 @@ def computeslp(z,t,p,q):
     
     return res.T
 
-@handle_left_iter(3,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1))
 def computetk(pres, theta):
     # No need to transpose here since operations on 1D array
@@ -95,7 +95,7 @@ def computerh(qv,q,t):
     res = n.reshape(res, shape, "A")
     return res
 
-@handle_left_iter(3,3,0, ignore_args=(6,7), ref_stag_dim=-1)
+@handle_left_iter(3,0, ignore_args=(6,7))
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
 def computeavo(u,v,msfu,msfv,msfm,cor,dx,dy):
     res = f_computeabsvort(u.T,
@@ -109,7 +109,7 @@ def computeavo(u,v,msfu,msfv,msfm,cor,dx,dy):
     
     return res.T
 
-@handle_left_iter(3,3,2, ignore_args=(8,9))
+@handle_left_iter(3,2, ignore_args=(8,9))
 @handle_casting(arg_idxs=(0,1,2,3,4,5,6,7))
 def computepvo(u,v,theta,prs,msfu,msfv,msfm,cor,dx,dy):
     
@@ -126,7 +126,7 @@ def computepvo(u,v,theta,prs,msfu,msfv,msfm,cor,dx,dy):
     
     return res.T
 
-@handle_left_iter(3,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2))
 def computeeth(qv, tk, p):
     
@@ -169,7 +169,7 @@ def computeuvmet(u,v,lat,lon,cen_long,cone):
     
     return n.squeeze(res.T)
 
-@handle_left_iter(3,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
 def computeomega(qv, tk, w, p):
     
@@ -181,7 +181,7 @@ def computeomega(qv, tk, w, p):
     #return res.T
     return res.T
 
-@handle_left_iter(3,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1))
 def computetv(tk,qv):
     res = f_computetv(tk.T,
@@ -189,7 +189,7 @@ def computetv(tk,qv):
     
     return res.T
 
-@handle_left_iter(3,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2))
 def computewetbulb(p,tk,qv):
     PSADITHTE, PSADIPRS, PSADITMK = get_lookup_tables()
@@ -204,7 +204,7 @@ def computewetbulb(p,tk,qv):
     
     return res.T
 
-@handle_left_iter(2,3,0, ignore_args=(4,))
+@handle_left_iter(3,0, ignore_args=(4,))
 @handle_casting(arg_idxs=(0,1,2,3))
 def computesrh(u, v, z, ter, top):
 
@@ -216,7 +216,7 @@ def computesrh(u, v, z, ter, top):
     
     return res.T
 
-@handle_left_iter(2,3,2, ignore_args=(5,6,7,8))
+@handle_left_iter(3,2, ignore_args=(5,6,7,8))
 @handle_casting(arg_idxs=(0,1,2,3,4))
 def computeuh(zp, mapfct, u, v, wstag, dx, dy, bottom, top):
     
@@ -237,7 +237,7 @@ def computeuh(zp, mapfct, u, v, wstag, dx, dy, bottom, top):
     
     return res.T
 
-@handle_left_iter(2,3,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
 def computepw(p,tv,qv,ht):
     # Note, dim -3 is height, we only want y and x
@@ -250,7 +250,7 @@ def computepw(p,tv,qv,ht):
     
     return res.T
 
-@handle_left_iter(3,3,0, ignore_args=(6,7,8))
+@handle_left_iter(3,0, ignore_args=(6,7,8))
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
 def computedbz(p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin):
     
@@ -266,7 +266,7 @@ def computedbz(p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin):
     
     return res.T
 
-@handle_left_iter(3,3,0,ignore_args=(6,7,8))
+@handle_left_iter(3,0,ignore_args=(6,7,8))
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
 def computecape(p_hpa,tk,qv,ht,ter,sfp,missing,i3dflag,ter_follow):
     flip_cape = n.zeros((p_hpa.shape[-3],p_hpa.shape[-2],p_hpa.shape[-1]), 
@@ -330,7 +330,7 @@ def computell(map_proj,truelat1,truelat2,stdlon,lat1,lon1,
     # Want lon,lat
     return res[1],res[0]
 
-@handle_left_iter(3,3,0, ignore_args=(3,))
+@handle_left_iter(3,0, ignore_args=(3,))
 @handle_casting(arg_idxs=(0,1,2))
 def computeeta(full_t, znu, psfc, ptop):
     pcalc = n.zeros(full_t.shape, "float64")
@@ -347,7 +347,7 @@ def computeeta(full_t, znu, psfc, ptop):
     
     return res.T
 
-@handle_left_iter(2,3,0,ignore_args=(7,))
+@handle_left_iter(3,0,ignore_args=(7,))
 @handle_casting(arg_idxs=(0,1,2,3,4,5,6))
 def computectt(p_hpa,tk,qice,qcld,qv,ght,ter,haveqci):
     res = f_computectt(p_hpa.T,

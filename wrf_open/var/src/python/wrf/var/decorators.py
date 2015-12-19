@@ -59,15 +59,18 @@ def _left_indexes(dims):
     for idxs in product(*arg):
         yield idxs
 
-def handle_left_iter(alg_out_num_dims, ref_var_expected_dims, ref_var_idx=-1,
-                   ref_var_name=None, alg_out_fixed_dims=(), 
-                   ignore_args=(), ignore_kargs={}, ref_stag_dim=None):
+def _calc_out_dims(outvar, left_dims):
+    left_dims = [x for x in left_dims]
+    right_dims = [x for x in outvar.shape]
+    return left_dims + right_dims 
+
+def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
+                   ref_var_name=None,
+                   ignore_args=(), ignore_kargs={}):
     """Decorator to handle iterating over leftmost dimensions when using 
     multiple files and/or multiple times.
     
     Arguments:
-        - alg_out_num_dims - the return dimension count from the numerical 
-        algorithm
         - ref_var_expected_dims - the number of dimensions that the Fortran 
         algorithm is expecting for the reference variable
         - ref_var_idx - the index in args used as the reference variable for 
@@ -95,33 +98,14 @@ def handle_left_iter(alg_out_num_dims, ref_var_expected_dims, ref_var_idx=-1,
                 ref_var = kargs[ref_var_name]
             
             ref_var_shape = ref_var.shape
-            extra_dim_num = ref_var.ndim- ref_var_expected_dims
+            extra_dim_num = ref_var.ndim - ref_var_expected_dims
             
             # No special left side iteration, return the function result
             if (extra_dim_num == 0):
                 return func(*args, **kargs)
             
             # Start by getting the left-most 'extra' dims
-            outdims = [ref_var_shape[x] for x in xrange(extra_dim_num)]
-            extra_dims = list(outdims) # Copy the left-most dims for iteration
-            
-            # Append the right-most dimensions
-            # Note: numerical algorithm output dim count might be less than 
-            # or greater than reference variable
-            if alg_out_num_dims <= ref_var_expected_dims:
-                outdims += [ref_var_shape[x] 
-                        for x in xrange(-alg_out_num_dims,0,1)]
-            else: 
-                # numerical algorithm has greater dim count than reference, 
-                # Note: user must provide this information to decorator
-                right_dims = [dim for dim in alg_out_fixed_dims]
-                neg_start_idx = -(alg_out_num_dims - len(alg_out_fixed_dims))
-                right_dims += [ref_var_shape[x] 
-                        for x in xrange(neg_start_idx,0,1)]
-                outdims += right_dims
-            
-            if ref_stag_dim is not None:
-                outdims[ref_stag_dim] -= 1  
+            extra_dims = [ref_var_shape[x] for x in xrange(extra_dim_num)]            
             
             out_inited = False
             for left_idxs in _left_indexes(extra_dims):
@@ -147,6 +131,7 @@ def handle_left_iter(alg_out_num_dims, ref_var_expected_dims, ref_var_idx=-1,
                 if isinstance(res, n.ndarray):
                     # Output array
                     if not out_inited:
+                        outdims = _calc_out_dims(res, extra_dims)
                         output = n.zeros(outdims, ref_var.dtype)
                         out_inited = True
                     
@@ -154,6 +139,7 @@ def handle_left_iter(alg_out_num_dims, ref_var_expected_dims, ref_var_idx=-1,
                     
                 else:   # This should be a list or a tuple (cape)
                     if not out_inited:
+                        outdims = _calc_out_dims(res[0], extra_dims)
                         output = [n.zeros(outdims, ref_var.dtype) 
                                   for i in xrange(len(res))]
                         out_inited = True
@@ -250,8 +236,8 @@ def uvmet_left_iter():
     return indexing_decorator
 
 def handle_casting(ref_idx=0, arg_idxs=(), karg_names=None,dtype=n.float64):
-    """Decorator to handle iterating over leftmost dimensions when using 
-    multiple files and/or multiple times with the uvmet product.
+    """Decorator to handle casting to/from required dtype used in 
+    numerical routine.
     
     """
     def cast_decorator(func):
