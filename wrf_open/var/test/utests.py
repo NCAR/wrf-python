@@ -5,7 +5,7 @@ import numpy.ma as ma
 import os, sys
 import subprocess
 
-from wrf.var import getvar
+from wrf.var import getvar, interplevel, interpline, vertcross
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
@@ -76,7 +76,7 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                 in_wrfnc = [nc for i in xrange(repeat)]
         
         refnc = NetCDF(referent)
-            
+        
         if not multi:
             ref_vals = refnc.variables[varname][:]
         else:
@@ -124,14 +124,14 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
         elif (varname == "slp"):
             my_vals = getvar(in_wrfnc, varname, units="hpa")
-            tol = 2/100.
+            tol = 1/100.
             atol = 0
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
             
         elif (varname == "uvmet"):
             my_vals = getvar(in_wrfnc, varname)
-            tol = 1/100.
-            atol = .5
+            tol = 0/100.
+            atol = 0.0001
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
         elif (varname == "uvmet10"):
             my_vals = getvar(in_wrfnc, varname)
@@ -170,7 +170,132 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
     
     return test
 
+def _get_refvals(referent, varname, repeat, multi):
+    try:
+        from netCDF4 import Dataset as NetCDF
+    except:
+        pass
+        
+    refnc = NetCDF(referent)
+    
+    if not multi:
+        ref_vals = refnc.variables[varname][:]
+    else:
+        data = refnc.variables[varname][:]
+        new_dims = [repeat] + [x for x in data.shape]
+        masked=False
+        if (isinstance(data, ma.core.MaskedArray)):
+            masked=True
+          
+        if not masked:
+            ref_vals = n.zeros(new_dims, data.dtype)
+        else:
+            ref_vals = ma.asarray(n.zeros(new_dims, data.dtype))
+              
+        for i in xrange(repeat):
+            ref_vals[i,:] = data[:]
+              
+            if masked:
+                ref_vals.mask[i,:] = data.mask[:]
+                
+    return ref_vals
+
+def make_interp_test(varname, wrf_in, referent, multi=False, 
+                     repeat=3, pynio=False):
+    def test(self):
+        try:
+            from netCDF4 import Dataset as NetCDF
+        except:
+            pass
+        
+        try:
+            from PyNIO import Nio
+        except:
+            pass
+        
+        if not multi:
+            if not pynio:
+                in_wrfnc = NetCDF(wrf_in)
+            else:
+                # Note: Python doesn't like it if you reassign an outer scoped
+                # variable (wrf_in in this case)
+                if not wrf_in.endswith(".nc"):
+                    wrf_file = wrf_in + ".nc"
+                else:
+                    wrf_file = wrf_in
+                in_wrfnc = Nio.open_file(wrf_file)
+        else:
+            if not pynio:
+                nc = NetCDF(wrf_in)
+                in_wrfnc = [nc for i in xrange(repeat)]
+            else:
+                if not wrf_in.endswith(".nc"):
+                    wrf_file = wrf_in + ".nc"
+                else:
+                    wrf_file = wrf_in
+                nc = Nio.open_file(wrf_file)
+                in_wrfnc = [nc for i in xrange(repeat)]
+        
+        if (varname == "interplevel"):
+            ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
+            hts = getvar(in_wrfnc, "z")
+            p = getvar(in_wrfnc, "pressure", units="hpa")
+            hts_500 = interplevel(hts, p, 500)
+            
+            nt.assert_allclose(hts_500, ref_ht_500)
+            
+        elif (varname == "vertcross"):
+            ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)
+            ref_p_cross = _get_refvals(referent, "p_cross", repeat, multi)
+            
+            hts = getvar(in_wrfnc, "z")
+            p = getvar(in_wrfnc, "pressure", units="hpa")
+            
+            pivot_point = (hts.shape[-2] / 2, hts.shape[-1] / 2) 
+            ht_cross = vertcross(hts, p, pivot_point=pivot_point,angle=90.)
+            
+            nt.assert_allclose(ht_cross, ref_ht_cross, rtol=.01)
+            
+            # Test opposite
+            p_cross1 = vertcross(p,hts,pivot_point=pivot_point, angle=90.0)
+
+            nt.assert_allclose(p_cross1, 
+                               ref_p_cross, 
+                               rtol=.01)
+            # Test point to point
+            start_point = (hts.shape[-2]/2, 0)
+            end_point = (hts.shape[-2]/2, -1)
+            
+            p_cross2 = vertcross(p,hts,start_point=start_point, 
+                                end_point=end_point)
+            
+            nt.assert_allclose(p_cross1, p_cross2)
+            
+        elif (varname == "interpline"):
+            ref_t2_line = _get_refvals(referent, "t2_line", repeat, multi)
+            
+            t2 = getvar(in_wrfnc, "T2")
+            pivot_point = (t2.shape[-2] / 2, t2.shape[-1] / 2) 
+            
+            t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
+            
+            nt.assert_allclose(t2_line1, ref_t2_line)
+            
+            # Test point to point
+            start_point = (t2.shape[-2]/2, 0)
+            end_point = (t2.shape[-2]/2, -1)
+            
+            t2_line2 = interpline(t2, start_point=start_point, 
+                                  end_point=end_point)
+            
+            nt.assert_allclose(t2_line1, t2_line2)
+    
+    return test
+
 class WRFVarsTest(ut.TestCase):
+    longMessage = True
+    
+class WRFInterpTest(ut.TestCase):
     longMessage = True
         
 
@@ -181,6 +306,7 @@ if __name__ == "__main__":
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
                 "wa", "uvmet10", "uvmet", "z", "ctt", "cape_2d", "cape_3d"]
+    interp_methods = ["interplevel", "vertcross", "interpline"]
     
     try:
         import netCDF4
@@ -195,6 +321,16 @@ if __name__ == "__main__":
             test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True)
             setattr(WRFVarsTest, 'test_{0}'.format(var), test_func1)
             setattr(WRFVarsTest, 'test_multi_{0}'.format(var), test_func2)
+            
+        for method in interp_methods:
+            test_interp_func1 = make_interp_test(method, TEST_FILE, 
+                                                 OUT_NC_FILE)
+            test_interp_func2 = make_interp_test(method, TEST_FILE, 
+                                                 OUT_NC_FILE, multi=True)
+            setattr(WRFInterpTest, 'test_{0}'.format(method), 
+                    test_interp_func1)
+            setattr(WRFInterpTest, 'test_multi_{0}'.format(method), 
+                    test_interp_func2)
         
     try:
         import PyNIO
@@ -211,6 +347,16 @@ if __name__ == "__main__":
             setattr(WRFVarsTest, 'test_pynio_{0}'.format(var), test_func1)
             setattr(WRFVarsTest, 'test_pynio_multi_{0}'.format(var), 
                     test_func2)
+            
+        for method in interp_methods:
+            test_interp_func1 = make_interp_test(method, TEST_FILE, 
+                                                 OUT_NC_FILE)
+            test_interp_func2 = make_interp_test(method, TEST_FILE, 
+                                                 OUT_NC_FILE, multi=True)
+            setattr(WRFInterpTest, 'test_pynio_{0}'.format(method), 
+                    test_interp_func1)
+            setattr(WRFInterpTest, 'test_pynio_multi_{0}'.format(method), 
+                    test_interp_func2)
         
     ut.main()
     

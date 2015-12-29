@@ -32,7 +32,7 @@ def interpz3d(data3d,zdata,desiredloc,missingval):
                       missingval)
     return res.T
 
-@handle_left_iter(2,0)
+@handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1))
 def interp2dxy(data3d,xy):
     res = f_interp2dxy(data3d.T,

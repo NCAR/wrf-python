@@ -94,7 +94,7 @@
            
        end do
     end do 
-    
+        
     setfileoption(fout,"DefineMode",True)
     
     ; Set global attributes
@@ -125,6 +125,57 @@
        filevarattdef(fout,wrf_vars[i], d)
        fout->$wrf_vars[i]$ = (/d/)
     end do
+    
+    ; Do the interpolation routines manually
+    ; 3D vertical cross section
+    z  = wrf_user_getvar(input_file, "z", 0)        ; grid point height
+    p  = wrf_user_getvar(input_file, "pressure", 0) ; total pressure
+    
+    dimsz = dimsizes(z)
+    pivot = (/ dimsz(2)/2, dimsz(1)/2 /)    ; pivot point is center of domain
+    
+    ht_cross = wrf_user_intrp3d(z,p,"v",pivot,90.0,False)
+    p_cross = wrf_user_intrp3d(p,z,"v",pivot,90.0,False)
+    
+    ht_cross_dims = dimsizes(ht_cross)
+    p_cross_dims = dimsizes(p_cross)
+    
+    ; 3D horizontal interpolation
+    plev = 500.   ; 500 MB
+    z_500 = wrf_user_intrp3d(z,p,"h",plev,0.,False)
+    z_500_dims = dimsizes(z_500)
+    
+    ; 2D interpolation along line
+    t2 = wrf_user_getvar(input_file, "T2", 0)
+    dimst2 = dimsizes(t2)
+    pivot = (/ dimst2(1)/2, dimst2(0)/2 /)
+    
+    t2_line = wrf_user_intrp2d(t2, pivot, 90.0, False)
+    t2_line_dims = dimsizes(t2_line) 
+    
+    filedimdef(fout, (/"ht_cross_vert", "ht_cross_horiz", "p_cross_vert", "p_cross_horiz"/), \
+                     (/ht_cross_dims(0), ht_cross_dims(1), p_cross_dims(0), p_cross_dims(1)/), \ 
+                     (/False,False,False,False/))
+    filedimdef(fout, (/"z500_vert", "z500_horiz"/), \
+                     (/z_500_dims(0), z_500_dims(1) /), \
+                     (/False, False/))                 
+    filedimdef(fout, (/"t2_line_horiz"/), \
+                     (/t2_line_dims(0) /), \
+                     (/False/))
+    
+    filevardef(fout, "ht_cross", typeof(ht_cross), (/"ht_cross_vert", "ht_cross_horiz"/))
+    filevardef(fout, "p_cross", typeof(p_cross), (/"p_cross_vert", "p_cross_horiz"/))
+    filevardef(fout, "z_500", typeof(z_500), (/"z500_vert", "z500_horiz"/))
+    filevardef(fout, "t2_line", typeof(t2_line), (/"t2_line_horiz"/))
+    
+    filevarattdef(fout,"ht_cross", ht_cross)
+    filevarattdef(fout,"p_cross", p_cross)
+    filevarattdef(fout, "z_500", z_500)
+    filevarattdef(fout, "t2_line", t2_line)
+    fout->ht_cross = (/ht_cross/)
+    fout->p_cross = (/p_cross/)
+    fout->z_500 = (/z_500/)
+    fout->t2_line = (/t2_line/)
     
     delete(fout)
 

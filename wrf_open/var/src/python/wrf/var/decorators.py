@@ -3,6 +3,7 @@ from inspect import getargspec
 from itertools import product
 
 import numpy as n
+import numpy.ma as ma
 
 from wrf.var.units import do_conversion, check_units
 from wrf.var.destag import destagger
@@ -66,7 +67,7 @@ def _calc_out_dims(outvar, left_dims):
 
 def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
                    ref_var_name=None,
-                   ignore_args=(), ignore_kargs={}):
+                   ignore_args=(), ignore_kargs=()):
     """Decorator to handle iterating over leftmost dimensions when using 
     multiple files and/or multiple times.
     
@@ -118,8 +119,7 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
                 new_args = [arg[left_and_slice_idxs] 
                             if i not in ignore_args else arg 
                             for i,arg in enumerate(args)]
-                          
-                
+                    
                 # Slice the kargs if applicable
                 new_kargs = {key:(val[left_and_slice_idxs] 
                              if key not in ignore_kargs else val)
@@ -132,20 +132,47 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
                     # Output array
                     if not out_inited:
                         outdims = _calc_out_dims(res, extra_dims)
-                        output = n.zeros(outdims, ref_var.dtype)
-                        out_inited = True
+                        if not isinstance(res, ma.MaskedArray):
+                            output = n.zeros(outdims, ref_var.dtype)
+                            masked = False
+                        else:
+                            output = ma.MaskedArray(
+                                            n.zeros(outdims, ref_var.dtype),
+                                            mask=n.zeros(outdims, n.bool_),
+                                            fill_value=res.fill_value)
+                            masked = True
+                        
+                        out_inited = True 
                     
-                    output[left_and_slice_idxs] = res[:]
+                    if not masked:
+                        output[left_and_slice_idxs] = res[:]
+                    else:
+                        output.data[left_and_slice_idxs] = res.data[:]
+                        output.mask[left_and_slice_idxs] = res.mask[:]
                     
                 else:   # This should be a list or a tuple (cape)
                     if not out_inited:
                         outdims = _calc_out_dims(res[0], extra_dims)
-                        output = [n.zeros(outdims, ref_var.dtype) 
-                                  for i in xrange(len(res))]
+                        if not isinstance(res[0], ma.MaskedArray):
+                            output = [n.zeros(outdims, ref_var.dtype) 
+                                      for i in xrange(len(res))]
+                            masked = False
+                        else:
+                            output = [ma.MaskedArray(
+                                        n.zeros(outdims, ref_var.dtype),
+                                        mask=n.zeros(outdims, n.bool_),
+                                        fill_value=res[0].fill_value) 
+                                      for i in xrange(len(res))]
+                            masked = True
+                        
                         out_inited = True
                     
                     for i,outarr in enumerate(res):
-                        (output[i])[left_and_slice_idxs] = outarr[:]
+                        if not masked:
+                            output[i][left_and_slice_idxs] = outarr[:]
+                        else:
+                            output[i].data[left_and_slice_idxs] = outarr.data[:]
+                            output[i].mask[left_and_slice_idxs] = outarr.mask[:]
                 
             
             return output
@@ -235,7 +262,7 @@ def uvmet_left_iter():
     
     return indexing_decorator
 
-def handle_casting(ref_idx=0, arg_idxs=(), karg_names=None,dtype=n.float64):
+def handle_casting(ref_idx=0, arg_idxs=(), karg_names=(),dtype=n.float64):
     """Decorator to handle casting to/from required dtype used in 
     numerical routine.
     

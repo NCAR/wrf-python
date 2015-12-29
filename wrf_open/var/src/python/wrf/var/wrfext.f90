@@ -149,7 +149,7 @@ SUBROUTINE f_computeslp(z,t,p,q,t_sea_level,t_surf,level,throw_exception,&
 
     !     Specific constants for assumptions made in this routine:
 
-    REAL(KIND=8), PARAMETER :: TC=273.16D0, PCONST=10000
+    REAL(KIND=8), PARAMETER :: TC=273.16D0+17.5D0, PCONST=10000
 
     LOGICAL, PARAMETER :: ridiculous_mm5_test=.TRUE.
     !      PARAMETER (ridiculous_mm5_test = .FALSE.)
@@ -1818,6 +1818,63 @@ SUBROUTINE f_computectt(prs,tk,qci,qcw,qvp,ght,ter,haveqci,ctt,ew,ns,nz)
 ! 190  CONTINUE
     RETURN
 END SUBROUTINE f_computectt
+
+SUBROUTINE f_filter2d(a, b, missing, it, nx, ny)
+    IMPLICIT NONE
+
+    INTEGER, INTENT(IN) :: nx, ny, it
+    REAL(KIND=8), DIMENSION(nx, ny), INTENT(IN) :: a
+    REAL(KIND=8), INTENT(IN) :: missing
+    REAL(KIND=8), DIMENSION(nx, ny), INTENT(OUT) :: b
+
+    REAL(KIND=8), PARAMETER :: COEF=0.25D0
+
+    INTEGER :: i, j, iter
+
+    DO iter=1,it
+      DO j=1,ny
+          DO i = 1,nx
+              b(i,j) = a(i,j)
+          END DO
+      END DO
+
+      DO j=2,ny-1
+         DO i=1,nx
+            IF (b(i,j-1).EQ.missing .OR. b(i,j).EQ.missing .OR. b(i,j+1).EQ.missing) THEN
+               a(i,j) = a(i,j)
+            ELSE
+               a(i,j) = a(i,j) + COEF*(b(i,j-1)-2*b(i,j) + b(i,j+1))
+            END IF
+         END DO
+      END DO
+
+      DO j=1,ny
+         DO i=2,nx-1
+            IF (b(i-1,j).EQ.missing .OR. b(i,j).EQ.missing .OR. b(i+1,j).EQ.missing) THEN
+               a(i,j) = a(i,j)
+            ELSE
+               a(i,j) = a(i,j) + COEF*(b(i-1,j)-2*b(i,j)+b(i+1,j))
+            END IF
+         END DO
+      END DO
+    c        do j=1,ny
+    c        do i=1,nx
+    c          b(i,j) = a(i,j)
+    c        enddo
+    c        enddo
+    c        do j=2,ny-1
+    c        do i=1,nx
+    c          a(i,j) = a(i,j) - .99*coef*(b(i,j-1)-2*b(i,j)+b(i,j+1))
+    c        enddo
+    c        enddo
+    c        do j=1,ny
+    c        do i=2,nx-1
+    c          a(i,j) = a(i,j) - .99*coef*(b(i-1,j)-2*b(i,j)+b(i+1,j))
+    c        enddo
+    c        enddo
+    END DO
+    RETURN
+END
 
 
 

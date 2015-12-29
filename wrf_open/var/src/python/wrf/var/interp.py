@@ -23,6 +23,11 @@ def interplevel(data3d,zdata,desiredloc,missingval=-99999):
     masked_r1 = ma.masked_values (r1, missingval)
     return masked_r1
 
+def _to_positive_idxs(shape, coord):
+    if (coord[-2] >= 0 and coord[-1] >=0):
+        return coord
+    return [x if (x >= 0) else shape[i]+x for (i,x) in enumerate(coord) ]
+
 def _get_xy(xdim, ydim, pivot_point=None, angle=None, 
            start_point=None, end_point=None):
     """Returns the x,y points for the horizontal cross section line.
@@ -31,8 +36,8 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
     ydim - maximum y-dimension
     pivot_point - a pivot point of (south_north, west_east) (must be used with angle)
     angle - the angle through the pivot point in degrees
-    start_point - a start_point tuple of (south_north1, west_east1)
-    end_point - an end point tuple of (south_north2, west_east2)
+    start_point - a start_point sequence of [south_north1, west_east1]
+    end_point - an end point sequence of [south_north2, west_east2]
     
     """ 
     
@@ -131,9 +136,9 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
         
     return xy
 
-# TODO:  Need a decorator that can handle right dimensions based on what
-# is returned.  In this case, the result of the xy calculation determines
-# output dimensions on right.
+@handle_left_iter(3, 0, ignore_args=(2,3,4,5,6),
+                  ignore_kargs=("missingval", "pivot_point", "angle",
+                                "start_point", "end_point"))
 @handle_casting(arg_idxs=(0,1))
 def vertcross(data3d, z, missingval=-99999, 
               pivot_point=None,angle=None,
@@ -151,20 +156,35 @@ def vertcross(data3d, z, missingval=-99999,
         
     """
     
+    if pivot_point is not None:
+        pos_pivot = _to_positive_idxs(z.shape[-2:], pivot_point)
+    else:
+        pos_pivot = pivot_point
+        
+    if start_point is not None:
+        pos_start = _to_positive_idxs(z.shape[-2:], start_point)
+    else:
+        pos_start = start_point
+    
+    if end_point is not None:
+        pos_end = _to_positive_idxs(z.shape[-2:], end_point)
+    else:
+        pos_end = start_point   
+        
     xdim = z.shape[-1]
     ydim = z.shape[-2]
     
-    xy = _get_xy(xdim, ydim, pivot_point, angle, start_point, end_point)
+    xy = _get_xy(xdim, ydim, pos_pivot, angle, pos_start, pos_end)
     
     # Interp z
     var2dz   = interp2dxy(z, xy)
     
     #  interp to constant z grid
-    if(var2dz[0,0] > var2dz[1,0]):  # monotonically decreasing coordinate
-        z_max = floor(n.amax(z)/10)*10     # bottom value
-        z_min = ceil(n.amin(z)/10)*10      # top value
+    if(var2dz[0,0] > var2dz[-1,0]):  # monotonically decreasing coordinate
+        z_max = floor(n.amax(z) / 10) * 10     # bottom value
+        z_min = ceil(n.amin(z) / 10) * 10      # top value
         dz = 10
-        nlevels = int( (z_max-z_min)/dz)
+        nlevels = int((z_max-z_min) / dz)
         z_var2d = n.zeros((nlevels), dtype=z.dtype)
         z_var2d[0] = z_max
         dz = -dz
@@ -172,7 +192,7 @@ def vertcross(data3d, z, missingval=-99999,
         z_max = n.amax(z)
         z_min = 0.
         dz = 0.01 * z_max
-        nlevels = int( z_max/dz )
+        nlevels = int(z_max / dz)
         z_var2d = n.zeros((nlevels), dtype=z.dtype)
         z_var2d[0] = z_min
     
@@ -189,9 +209,9 @@ def vertcross(data3d, z, missingval=-99999,
         
     return ma.masked_values(var2d, missingval)
 
-# TODO:  Need a decorator that can handle right dimensions based on what
-# is returned.  In this case, the result of the xy calculation determines
-# output dimensions on right.
+@handle_left_iter(2, 0, ignore_args=(1,2,3,4), 
+                  ignore_kargs=("pivot_point", "angle",
+                                "start_point", "end_point"))
 @handle_casting(arg_idxs=(0,))
 def interpline(data2d, pivot_point=None, 
                  angle=None, start_point=None,
@@ -207,14 +227,29 @@ def interpline(data2d, pivot_point=None,
         
     """
     
-    tmp_shape = [0] + [x for x in data2d.shape]
+    if pivot_point is not None:
+        pos_pivot = _to_positive_idxs(data2d.shape[-2:], pivot_point)
+    else:
+        pos_pivot = pivot_point
+        
+    if start_point is not None:
+        pos_start = _to_positive_idxs(data2d.shape[-2:], start_point)
+    else:
+        pos_start = start_point
+    
+    if end_point is not None:
+        pos_end = _to_positive_idxs(data2d.shape[-2:], end_point)
+    else:
+        pos_end = start_point 
+    
+    tmp_shape = [1] + [x for x in data2d.shape]
     
     var2dtmp = n.zeros(tmp_shape, data2d.dtype)
     
     xdim = data2d.shape[-1]
     ydim = data2d.shape[-2]
     
-    xy = _get_xy(xdim, ydim, pivot_point, angle, start_point, end_point)
+    xy = _get_xy(xdim, ydim, pos_pivot, angle, pos_start, pos_end)
     
     var2dtmp[0,:,:] = data2d[:,:]
     
