@@ -2128,7 +2128,8 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
 
                 IF (datain(i,j,1) .EQ. rmsg) THEN
                     tempout(i,j) = rmsg
-                    GOTO 333 ! CYCLE
+                    !GOTO 333 ! CYCLE
+                    CYCLE
                 END IF
 
 
