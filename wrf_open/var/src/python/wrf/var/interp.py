@@ -5,11 +5,12 @@ import numpy.ma as ma
 
 from wrf.var.extension import interpz3d,interp2dxy,interp1d
 from wrf.var.decorators import handle_left_iter, handle_casting
+from wrf.var.constants import Constants
 
 __all__ = ["interplevel", "vertcross", "interpline"]
 
 #  Note:  Extension decorator is good enough to handle left dims
-def interplevel(data3d,zdata,desiredloc,missingval=-99999):
+def interplevel(data3d,zdata,desiredloc,missingval=Constants.DEFAULT_FILL):
     """Return the horizontally interpolated data at the provided level
     
     data3d - the 3D field to interpolate
@@ -140,7 +141,7 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
                   ignore_kargs=("missingval", "pivot_point", "angle",
                                 "start_point", "end_point"))
 @handle_casting(arg_idxs=(0,1))
-def vertcross(data3d, z, missingval=-99999, 
+def vertcross(data3d, z, missingval=Constants.DEFAULT_FILL, 
               pivot_point=None,angle=None,
               start_point=None,end_point=None):
     """Return the vertical cross section for a 3D field, interpolated 

@@ -8,6 +8,7 @@ class Constants(object):
     TCK0 = 273.15
     T_BASE = 300.0 # In WRF the base temperature is always 300 (not var T00)
     PI = 3.14159265
+    DEFAULT_FILL = 9.9692099683868690e+36 # Value is from netcdf.h
 
 
 class ConversionFactors(object):
