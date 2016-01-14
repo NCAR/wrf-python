@@ -327,6 +327,57 @@ python module _wrfext ! in
             integer, optional,intent(in),check(shape(prs,1)==ns),depend(prs) :: ns=shape(prs,1)
             integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
         end subroutine f_computectt
+        subroutine f_filter2d(a,b,missing,it,nx,ny) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(nx,ny),intent(inout) :: a
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: b
+            real(kind=8) intent(in) :: missing
+            integer intent(in) :: it
+            integer, optional,intent(in),check(shape(a,0)==nx),depend(a) :: nx=shape(a,0)
+            integer, optional,intent(in),check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
+        end subroutine f_filter2d
+        subroutine f_monotonic(out,in,lvprs,cor,idir,delta,ew,ns,nz,icorsw) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(ew,ns,nz),intent(out),depend(ew,ns,nz) :: out
+            real(kind=8) dimension(ew,ns,nz),intent(inout) :: in
+            real(kind=8) dimension(ew,ns,nz),depend(ew,ns,nz) :: lvprs
+            real(kind=8) dimension(ew,ns),depend(ew,ns) :: cor
+            integer intent(in) :: idir
+            real(kind=8) intent(in) :: delta
+            integer, optional,intent(in),check(shape(in,0)==ew),depend(in) :: ew=shape(in,0)
+            integer, optional,intent(in),check(shape(in,1)==ns),depend(in) :: ns=shape(in,1)
+            integer, optional,intent(in),check(shape(in,2)==nz),depend(in) :: nz=shape(in,2)
+            integer intent(in) :: icorsw
+        end subroutine f_monotonic
+        function f_intrpvalue(wvalp0,wvalp1,vlev,vcp0,vcp1,icase) ! in :_wrfext:wrfext.f90
+            real(kind=8) intent(in) :: wvalp0
+            real(kind=8) intent(in) :: wvalp1
+            real(kind=8) intent(in) :: vlev
+            real(kind=8) intent(in) :: vcp0
+            real(kind=8) intent(in) :: vcp1
+            integer intent(in) :: icase
+            real(kind=8) :: f_intrpvalue
+        end function f_intrpvalue
+        subroutine f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,sfp,smsfp,vcarray,interp_levels,numlevels,icase,ew,ns,nz,extrap,vcor,logp,rmsg) ! in :_wrfext:wrfext.f90
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: datain
+            real(kind=8) dimension(ew,ns,numlevels),intent(out),depend(ew,ns,numlevels) :: dataout
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: pres
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: tk
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qvp
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: ght
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: terrain
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: sfp
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: smsfp
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: vcarray
+            real(kind=8) dimension(numlevels),intent(in) :: interp_levels
+            integer, optional,intent(in),check(len(interp_levels)>=numlevels),depend(interp_levels) :: numlevels=len(interp_levels)
+            integer intent(in) :: icase
+            integer, optional,intent(in),check(shape(datain,0)==ew),depend(datain) :: ew=shape(datain,0)
+            integer, optional,intent(in),check(shape(datain,1)==ns),depend(datain) :: ns=shape(datain,1)
+            integer, optional,intent(in),check(shape(datain,2)==nz),depend(datain) :: nz=shape(datain,2)
+            integer intent(in) :: extrap
+            integer intent(in) :: vcor
+            integer intent(in) :: logp
+            real(kind=8) intent(in) :: rmsg
+        end subroutine f_vintrp
     end interface 
 end python module _wrfext
 

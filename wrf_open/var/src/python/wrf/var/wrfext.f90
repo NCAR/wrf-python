@@ -1,6 +1,8 @@
 
 SUBROUTINE f_interpz3d(data3d,zdata,desiredloc,missingval,out2d,nx,ny,nz)
+
     IMPLICIT NONE
+
     INTEGER, INTENT(IN) :: nx,ny,nz
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) ::  data3d
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: out2d
@@ -45,10 +47,13 @@ SUBROUTINE f_interpz3d(data3d,zdata,desiredloc,missingval,out2d,nx,ny,nz)
     END DO
 
     RETURN
+
 END SUBROUTINE f_interpz3d
 
 SUBROUTINE f_interp2dxy(v3d,xy,v2d,nx,ny,nz,nxy)
+
     IMPLICIT NONE
+
     INTEGER,INTENT(IN) :: nx,ny,nz,nxy
     REAL(KIND=8),DIMENSION(nx,ny,nz),INTENT(IN) :: v3d
     REAL(KIND=8),DIMENSION(nxy,nz),INTENT(OUT) :: v2d
@@ -73,10 +78,13 @@ SUBROUTINE f_interp2dxy(v3d,xy,v2d,nx,ny,nz,nxy)
     END DO
 
     RETURN
+
 END SUBROUTINE f_interp2dxy
 
 SUBROUTINE f_interp1d(v_in,z_in,z_out,vmsg,v_out,nz_in,nz_out)
+
     IMPLICIT NONE
+
     INTEGER,INTENT(IN) :: NZ_IN,NZ_OUT
     REAL(KIND=8),DIMENSION(nz_in),INTENT(IN) :: v_in,z_in
     REAL(KIND=8),DIMENSION(nz_out),INTENT(IN) :: z_out
@@ -116,6 +124,7 @@ SUBROUTINE f_interp1d(v_in,z_in,z_out,vmsg,v_out,nz_in,nz_out)
     END DO
 
     RETURN
+
 END SUBROUTINE f_interp1d
 
 ! This routine assumes
@@ -132,7 +141,9 @@ END SUBROUTINE f_interp1d
 
 SUBROUTINE f_computeslp(z,t,p,q,t_sea_level,t_surf,level,throw_exception,&
                         sea_level_pressure,nx,ny,nz)
+
     IMPLICIT NONE
+
     EXTERNAL throw_exception
     !     Estimate sea level pressure.
     INTEGER, INTENT(IN) :: nx,ny,nz
@@ -269,11 +280,14 @@ SUBROUTINE f_computeslp(z,t,p,q,t_sea_level,t_surf,level,throw_exception,&
     !    *         sea_level_pressure(20,2),sea_level_pressure(20,3)
 
     RETURN
+
 END SUBROUTINE f_computeslp
 
 ! Temperature from potential temperature in kelvin.
 SUBROUTINE f_computetk(pressure,theta,tk,nx)
+
     IMPLICIT NONE
+
     INTEGER, INTENT(IN) :: nx
     REAL(KIND=8) :: pi
     REAL(KIND=8), DIMENSION(nx), INTENT(IN) :: pressure
@@ -289,10 +303,12 @@ SUBROUTINE f_computetk(pressure,theta,tk,nx)
     END DO
 
     RETURN
+
 END SUBROUTINE f_computetk
 
 ! Dewpoint.  Note:  1D array arguments.
 SUBROUTINE f_computetd(pressure,qv_in,td,nx)
+
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: nx
@@ -315,10 +331,12 @@ SUBROUTINE f_computetd(pressure,qv_in,td,nx)
     END DO
 
     RETURN
+
 END SUBROUTINE f_computetd
 
 ! Relative Humidity.  Note:  1D array arguments
 SUBROUTINE f_computerh(qv,p,t,rh,nx)
+
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: nx
@@ -345,10 +363,13 @@ SUBROUTINE f_computerh(qv,p,t,rh,nx)
     END DO
 
     RETURN
+
 END SUBROUTINE f_computerh
 
 SUBROUTINE f_computeabsvort(u,v,msfu,msfv,msft,cor,dx,dy,av,nx,ny,nz,nxp1,nyp1)
+
     IMPLICIT NONE
+
     INTEGER, INTENT(IN) :: nx,ny,nz,nxp1,nyp1
     REAL(KIND=8),DIMENSION(nxp1,ny,nz),INTENT(IN) :: u
     REAL(KIND=8),DIMENSION(nx,nyp1,nz),INTENT(IN) :: v
@@ -392,11 +413,14 @@ SUBROUTINE f_computeabsvort(u,v,msfu,msfv,msft,cor,dx,dy,av,nx,ny,nz,nxp1,nyp1)
     END DO
 
     RETURN
+
 END SUBROUTINE f_computeabsvort
 
 
 SUBROUTINE f_computepvo(u,v,theta,prs,msfu,msfv,msft,cor,dx,dy,pv,nx,ny,nz,nxp1,nyp1)
+
     IMPLICIT NONE
+
     INTEGER,INTENT(IN) :: nx,ny,nz,nxp1,nyp1
     REAL(KIND=8),DIMENSION(nxp1,ny,nz),INTENT(IN) :: u
     REAL(KIND=8),DIMENSION(nx,nyp1,nz),INTENT(IN) :: v
@@ -454,12 +478,16 @@ SUBROUTINE f_computepvo(u,v,theta,prs,msfu,msfv,msft,cor,dx,dy,pv,nx,ny,nz,nxp1,
           END DO
       END DO
     END DO
+
     RETURN
+
 END SUBROUTINE f_computepvo
 
 ! Theta-e
 SUBROUTINE f_computeeth(qvp,tmk,prs,eth,miy,mjx,mkzh)
+
     IMPLICIT NONE
+
     ! Input variables
     ! Qvapor [g/kg]
     REAL(KIND=8),DIMENSION(miy,mjx,mkzh),INTENT(IN) :: qvp
@@ -513,11 +541,13 @@ SUBROUTINE f_computeeth(qvp,tmk,prs,eth,miy,mjx,mkzh)
     END DO
 
     RETURN
+
 END SUBROUTINE f_computeeth
 
 SUBROUTINE f_computeuvmet(u,v,longca,longcb,flong,flat,&
                         cen_long,cone,rpd,istag,is_msg_val,umsg,vmsg,uvmetmsg,&
                         uvmet,nx,ny,nxp1,nyp1,nz)
+
     IMPLICIT NONE
 
     ! ISTAG should be 0 if the U,V grids are not staggered.
@@ -594,11 +624,14 @@ SUBROUTINE f_computeuvmet(u,v,longca,longcb,flong,flat,&
     END DO
 
     RETURN
+
 END SUBROUTINE f_computeuvmet
 
 
 SUBROUTINE f_computeomega(qvp,tmk,www,prs,omg,mx,my,mz)
+
     IMPLICIT NONE
+
     INTEGER,INTENT(IN) :: mx, my, mz
     REAL(KIND=8),INTENT(IN),DIMENSION(mx,my,mz) :: qvp
     REAL(KIND=8),INTENT(IN),DIMENSION(mx,my,mz) :: tmk
@@ -622,10 +655,13 @@ SUBROUTINE f_computeomega(qvp,tmk,www,prs,omg,mx,my,mz)
     END DO
     !
     RETURN
+
 END SUBROUTINE f_computeomega
 
 SUBROUTINE f_computetv(temp,qv,tv,nx,ny,nz)
+
     IMPLICIT NONE
+
     INTEGER, INTENT(IN) :: nx,ny,nz
     REAL(KIND=8),DIMENSION(nx,ny,nz),INTENT(IN) :: temp
     REAL(KIND=8),DIMENSION(nx,ny,nz),INTENT(IN) :: qv
@@ -641,12 +677,16 @@ SUBROUTINE f_computetv(temp,qv,tv,nx,ny,nz)
           END DO
         END DO
     END DO
+
     RETURN
+
 END SUBROUTINE f_computetv
 
 ! Need to deal with the fortran stop statements
 SUBROUTINE f_computewetbulb(prs,tmk,qvp,PSADITHTE,PSADIPRS,PSADITMK,throw_exception,twb,nx,ny,nz)
+
     IMPLICIT NONE
+
     EXTERNAL throw_exception
     INTEGER,INTENT(IN) :: nx, ny, nz
     REAL(KIND=8),DIMENSION(nx,ny,nz),INTENT(IN) :: prs
@@ -751,10 +791,13 @@ SUBROUTINE f_computewetbulb(prs,tmk,qvp,PSADITHTE,PSADIPRS,PSADITMK,throw_except
     END DO
 
     RETURN
+
 END SUBROUTINE f_computewetbulb
 
 SUBROUTINE f_computesrh(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
+
     IMPLICIT NONE
+
     INTEGER,INTENT(IN) :: miy, mjx, mkzh
     REAL(KIND=8),DIMENSION(miy,mjx,mkzh),INTENT(IN) :: u, v, ght
     REAL(KIND=8),INTENT(IN) :: top
@@ -825,10 +868,13 @@ SUBROUTINE f_computesrh(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
     END DO
 
     RETURN
+
 END SUBROUTINE f_computesrh
 
 SUBROUTINE f_computeuh(zp,mapfct,dx,dy,uhmnhgt,uhmxhgt,us,vs,w,tem1,tem2,uh,nx,ny,nz,nzp1)
+
   IMPLICIT NONE
+
   INTEGER, INTENT(IN) :: nx,ny,nz,nzp1
   REAL(KIND=8),DIMENSION(nx,ny,nzp1),INTENT(IN)  :: zp
   REAL(KIND=8),DIMENSION(nx,ny),INTENT(IN) :: mapfct
@@ -954,10 +1000,13 @@ SUBROUTINE f_computeuh(zp,mapfct,dx,dy,uhmnhgt,uhmxhgt,us,vs,w,tem1,tem2,uh,nx,n
   uh = uh * 1000.   ! Scale according to Kain et al. (2008)
 
   RETURN
+
 END SUBROUTINE f_computeuh
 
 SUBROUTINE f_computepw(p,tv,qv,ht,zdiff,pw,nx,ny,nz,nzh)
+
     IMPLICIT NONE
+
     REAL(KIND=8),DIMENSION(nx,ny,nz),INTENT(IN) :: p,tv,qv
     REAL(KIND=8),DIMENSION(nx,ny,nzh),INTENT(IN) :: ht
     REAL(KIND=8),DIMENSION(nx,ny),INTENT(OUT) :: pw
@@ -979,11 +1028,14 @@ SUBROUTINE f_computepw(p,tv,qv,ht,zdiff,pw,nx,ny,nz,nzh)
 
 
     RETURN
+
 END SUBROUTINE f_computepw
 
 
 SUBROUTINE f_computedbz(prs,tmk,qvp,qra,qsn,qgr,sn0,ivarint,iliqskin,dbz,nx,ny,nz)
+
     IMPLICIT NONE
+
     !   Arguments
     INTEGER, INTENT(IN) :: nx,ny,nz
     INTEGER, INTENT(IN) :: sn0,ivarint,iliqskin
@@ -1135,10 +1187,13 @@ SUBROUTINE f_computedbz(prs,tmk,qvp,qra,qsn,qgr,sn0,ivarint,iliqskin,dbz,nx,ny,n
     END DO
 
     RETURN
+
 END SUBROUTINE f_computedbz
 
 SUBROUTINE rotatecoords(ilat,ilon,olat,olon,lat_np,lon_np,lon_0,direction)
+
     IMPLICIT NONE
+
     REAL(KIND=8),INTENT(IN) :: ilat,ilon
     REAL(KIND=8),INTENT(OUT) :: olat,olon
     REAL(KIND=8),INTENT(IN) :: lat_np,lon_np,lon_0
@@ -1183,12 +1238,15 @@ SUBROUTINE rotatecoords(ilat,ilon,olat,olon,lat_np,lon_np,lon_0,direction)
     olon = DEG_PER_RAD*(ATAN2(sinlam,coslam)-dlam-lam_0+lam_np)
 
     RETURN
+
 END SUBROUTINE rotatecoords
 
 SUBROUTINE f_lltoij(map_proj,truelat1,truelat2,stdlon,lat1,lon1,&
                    pole_lat,pole_lon,knowni,knownj,dx,latinc,&
                    loninc,lat,lon,throw_exception,loc)
+
     IMPLICIT NONE
+
     EXTERNAL throw_exception
     ! Converts input lat/lon values to the cartesian (i,j) value
     ! for the given projection.
@@ -1386,6 +1444,7 @@ SUBROUTINE f_lltoij(map_proj,truelat1,truelat2,stdlon,lat1,lon1,&
     loc(2) = i
 
     RETURN
+
 END SUBROUTINE f_lltoij
 
 
@@ -1396,6 +1455,7 @@ SUBROUTINE f_ijtoll(map_proj,truelat1,truelat2,stdlon,lat1,lon1,&
     ! converts input lat/lon values to the cartesian (i,j) value
     ! for the given projection.
     IMPLICIT NONE
+
     EXTERNAL throw_exception
     INTEGER,INTENT(IN) :: map_proj
     REAL(KIND=8),INTENT(IN) :: stdlon
@@ -1626,6 +1686,7 @@ SUBROUTINE f_ijtoll(map_proj,truelat1,truelat2,stdlon,lat1,lon1,&
     loc(2) = lon
 
     RETURN
+
 END SUBROUTINE f_ijtoll
 
 ! Eta = (p - ptop) / (psfc - ptop)
@@ -1638,6 +1699,7 @@ SUBROUTINE f_converteta(full_t, znu, psfc, ptop, pcalc, mean_t, temp_t,&
                         z, nx,ny,nz)
 
     IMPLICIT NONE
+
     REAL(KIND=8),DIMENSION(nx,ny,nz),INTENT(IN) :: full_t
     REAL(KIND=8),DIMENSION(nz),INTENT(IN) :: znu
     REAL(KIND=8),DIMENSION(nx,ny),INTENT(IN) :: psfc
@@ -1692,6 +1754,7 @@ SUBROUTINE f_converteta(full_t, znu, psfc, ptop, pcalc, mean_t, temp_t,&
     END DO
 
     RETURN
+
 END SUBROUTINE f_converteta
 
 
@@ -1729,6 +1792,8 @@ SUBROUTINE f_computectt(prs,tk,qci,qcw,qvp,ght,ter,haveqci,ctt,ew,ns,nz)
     !mjx = ew
     !miy = ns
     !mkzh = nz
+
+    prsctt = 0 ! removes the warning
 
 ! Calculate the surface pressure
     DO j=1,ns
@@ -1817,67 +1882,75 @@ SUBROUTINE f_computectt(prs,tk,qci,qcw,qvp,ght,ter,haveqci,ctt,ew,ns,nz)
 !   40    CONTINUE
 ! 190  CONTINUE
     RETURN
+
 END SUBROUTINE f_computectt
 
 SUBROUTINE f_filter2d(a, b, missing, it, nx, ny)
+
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: nx, ny, it
-    REAL(KIND=8), DIMENSION(nx, ny), INTENT(IN) :: a
+    REAL(KIND=8), DIMENSION(nx, ny), INTENT(INOUT) :: a
     REAL(KIND=8), INTENT(IN) :: missing
-    REAL(KIND=8), DIMENSION(nx, ny), INTENT(OUT) :: b
+    REAL(KIND=8), DIMENSION(nx, ny), INTENT(INOUT) :: b
 
     REAL(KIND=8), PARAMETER :: COEF=0.25D0
 
     INTEGER :: i, j, iter
 
     DO iter=1,it
-      DO j=1,ny
-          DO i = 1,nx
-              b(i,j) = a(i,j)
-          END DO
-      END DO
+        DO j=1,ny
+            DO i = 1,nx
+                b(i,j) = a(i,j)
+            END DO
+        END DO
 
-      DO j=2,ny-1
-         DO i=1,nx
-            IF (b(i,j-1).EQ.missing .OR. b(i,j).EQ.missing .OR. b(i,j+1).EQ.missing) THEN
-               a(i,j) = a(i,j)
-            ELSE
-               a(i,j) = a(i,j) + COEF*(b(i,j-1)-2*b(i,j) + b(i,j+1))
-            END IF
-         END DO
-      END DO
+        DO j=2,ny-1
+            DO i=1,nx
+                IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
+                    b(i,j+1) .EQ. missing) THEN
+                    a(i,j) = a(i,j)
+                ELSE
+                    a(i,j) = a(i,j) + COEF*(b(i,j-1)-2*b(i,j) + b(i,j+1))
+                END IF
+            END DO
+        END DO
 
-      DO j=1,ny
-         DO i=2,nx-1
-            IF (b(i-1,j).EQ.missing .OR. b(i,j).EQ.missing .OR. b(i+1,j).EQ.missing) THEN
-               a(i,j) = a(i,j)
-            ELSE
-               a(i,j) = a(i,j) + COEF*(b(i-1,j)-2*b(i,j)+b(i+1,j))
-            END IF
-         END DO
-      END DO
-    c        do j=1,ny
-    c        do i=1,nx
-    c          b(i,j) = a(i,j)
-    c        enddo
-    c        enddo
-    c        do j=2,ny-1
-    c        do i=1,nx
-    c          a(i,j) = a(i,j) - .99*coef*(b(i,j-1)-2*b(i,j)+b(i,j+1))
-    c        enddo
-    c        enddo
-    c        do j=1,ny
-    c        do i=2,nx-1
-    c          a(i,j) = a(i,j) - .99*coef*(b(i-1,j)-2*b(i,j)+b(i+1,j))
-    c        enddo
-    c        enddo
+        DO j=1,ny
+            DO i=2,nx-1
+                IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
+                    b(i+1,j) .EQ. missing) THEN
+                    a(i,j) = a(i,j)
+                ELSE
+                    a(i,j) = a(i,j) + COEF*(b(i-1,j)-2*b(i,j)+b(i+1,j))
+                END IF
+            END DO
+        END DO
+    !        do j=1,ny
+    !        do i=1,nx
+    !          b(i,j) = a(i,j)
+    !        enddo
+    !        enddo
+    !        do j=2,ny-1
+    !        do i=1,nx
+    !          a(i,j) = a(i,j) - .99*coef*(b(i,j-1)-2*b(i,j)+b(i,j+1))
+    !        enddo
+    !        enddo
+    !        do j=1,ny
+    !        do i=2,nx-1
+    !          a(i,j) = a(i,j) - .99*coef*(b(i-1,j)-2*b(i,j)+b(i+1,j))
+    !        enddo
+    !        enddo
     END DO
+
     RETURN
-END
+
+END SUBROUTINE f_filter2d
 
 SUBROUTINE f_monotonic(out,in,lvprs,cor,idir,delta,ew,ns,nz,icorsw)
+
     IMPLICIT NONE
+
     INTEGER, INTENT(IN) :: idir,ew,ns,nz,icorsw
     REAL(KIND=8), INTENT(IN) :: delta
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(INOUT) :: in
@@ -1887,37 +1960,39 @@ SUBROUTINE f_monotonic(out,in,lvprs,cor,idir,delta,ew,ns,nz,icorsw)
 
     INTEGER :: i,j,k,ripk,k300
 
+    k300 = 0 ! removes the warning
+
     DO j=1,ns
         DO i=1,ew
-            IF (icorsw.EQ.1.AND.cor(i,j).LT.0.) THEN
+            IF (icorsw .EQ. 1 .AND. cor(i,j) .LT. 0.) THEN
                 DO k=1,nz
-                    in(i,j,k)=-in(i,j,k)
+                    in(i,j,k) = -in(i,j,k)
                 END DO
             END IF
 
             ! First find k index that is at or below (height-wise)
             ! the 300 hPa level.
             DO k = 1,nz
-                ripk =  nz-k+1
+                ripk = nz-k+1
                 IF (lvprs(i,j,k) .LE. 300.d0) THEN
-                    k300=k
+                    k300 = k
                     EXIT
                 END IF
             END DO
 
             DO k = k300, 1,-1
-                IF (idir.EQ.1) THEN
-                    out(i,j,k)=MIN(in(i,j,k),in(i,j,k+1)+delta)
-                ELSE IF (idir.EQ.-1) THEN
-                    out(i,j,k)=MAX(in(i,j,k),in(i,j,k+1)-delta)
+                IF (idir .EQ. 1) THEN
+                    out(i,j,k) = MIN(in(i,j,k), in(i,j,k+1)+delta)
+                ELSE IF (idir .EQ. -1) THEN
+                    out(i,j,k) = MAX(in(i,j,k), in(i,j,k+1)-delta)
                 END IF
             END DO
 
             DO k = k300+1, nz
-                IF (idir.EQ.1) THEN
-                    out(i,j,k)=MAX(in(i,j,k),in(i,j,k-1)-delta)
-                ELSE IF (idir.EQ.-1) THEN
-                    out(i,j,k)=MIN(in(i,j,k),in(i,j,k-1)+delta)
+                IF (idir .EQ. 1) THEN
+                    out(i,j,k) = MAX(in(i,j,k), in(i,j,k-1)-delta)
+                ELSE IF (idir .EQ. -1) THEN
+                    out(i,j,k) = MIN(in(i,j,k), in(i,j,k-1)+delta)
                 END IF
             END DO
         END DO
@@ -1929,6 +2004,7 @@ END SUBROUTINE f_monotonic
 
 
 FUNCTION f_intrpvalue (wvalp0,wvalp1,vlev,vcp0,vcp1,icase)
+
     IMPLICIT NONE
 
     INTEGER, INTENT(IN) :: icase
@@ -1976,25 +2052,26 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                        icase,ew,ns,nz,extrap,vcor,logp,rmsg)
 
     IMPLICIT NONE
+
     INTEGER, INTENT(IN) :: ew,ns,nz,icase,extrap
     INTEGER, INTENT(IN) :: vcor,numlevels,logp
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: datain,pres,tk,qvp
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: ght
     REAL(KIND=8), DIMENSION(ew,ns), INTENT(IN) :: terrain,sfp,smsfp
     REAL(KIND=8), DIMENSION(ew,ns,numlevels), INTENT(OUT) :: dataout
-    REAL(KIND-8), DIMENSION(ew,ns,nz), INTENT(IN) :: vcarray(ew,ns,nz)
-    REAL(KIND=8), DIMENSION(numlevels), INTENT(IN) :: interp_levels(numlevels)
+    REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: vcarray
+    REAL(KIND=8), DIMENSION(numlevels), INTENT(IN) :: interp_levels
     REAL(KIND=8), INTENT(IN) :: rmsg
 
-    INTEGER :: njx,niy,nreqlvs,ripk
-    INTEGER :: i,j,k,itriv,kupper
-    INTEGER :: ifound,miy,mjx,isign
+    INTEGER :: nreqlvs,ripk !njx,niy
+    INTEGER :: i,j,k,kupper !itriv
+    INTEGER :: ifound,isign !miy,mjx
     REAL(KIND=8), DIMENSION(ew,ns) :: tempout
     REAL(KIND=8) :: rlevel,vlev,diff
     REAL(KIND=8) :: tmpvlev
     REAL(KIND=8) :: vcp1,vcp0,valp0,valp1
-    REAL(KIND=8) :: cvc
-    REAL(KIND=8) :: qvlhsl,ttlhsl,vclhsl,vctophsl
+!    REAL(KIND=8) :: cvc
+    REAL(KIND=8) :: vclhsl,vctophsl !qvlhsl,ttlhsl
     REAL(KIND=8) :: f_intrpvalue
     REAL(KIND=8) :: plhsl,zlhsl,ezlhsl,tlhsl,psurf,pratio,tlev
     REAL(KIND=8) :: ezsurf,psurfsm,zsurf,qvapor,vt
@@ -2023,6 +2100,12 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
     REAL(KIND=8), PARAMETER :: GAMMA    = RGAS/CP
     REAL(KIND=8), PARAMETER :: GAMMAMD  = RGASMD-CPMD
 
+    ! Removes the warnings for uninitialized variables
+    cvcord = ''
+    plev = 0
+    zlev = 0
+    vlev = 0
+
     IF (vcor .EQ. 1) THEN
         cvcord = 'p'
     ELSE IF ((vcor .EQ. 2) .OR. (vcor .EQ. 3)) THEN
@@ -2044,7 +2127,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
 
     DO nreqlvs = 1,numlevels
         IF (cvcord .EQ. 'z') THEN
-            !Convert rlevel to meters from km
+            ! Convert rlevel to meters from km
             rlevel = interp_levels(nreqlvs) * 1000.d0
             vlev = EXP(-rlevel/SCLHT)
         ELSE IF (cvcord .EQ. 'p') THEN
@@ -2056,7 +2139,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
 
         DO j=1,ns
             DO i=1,ew
-                !Get the interpolated value that is within the model domain
+                ! Get the interpolated value that is within the model domain
                 ifound = 0
                 DO k = 1,nz-1
                     ripk = nz-k+1
@@ -2094,7 +2177,8 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
  !115  CONTINUE
 
                 IF (ifound .EQ. 1) THEN !Grid point is in the model domain
-                    GOTO 333 ! CYCLE
+                    !GOTO 333 ! CYCLE
+                    CYCLE
                 END IF
 
                 !If the user has requested no extrapolatin then just assign
@@ -2122,9 +2206,9 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     CYCLE
                 END IF
 
-                !   Only remaining possibility is that the specified level is below
-                !   lowest model level.  If lowest model level value is missing,
-                !   set interpolated value to missing.
+                ! Only remaining possibility is that the specified level is below
+                ! lowest model level.  If lowest model level value is missing,
+                ! set interpolated value to missing.
 
                 IF (datain(i,j,1) .EQ. rmsg) THEN
                     tempout(i,j) = rmsg
@@ -2133,18 +2217,18 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                 END IF
 
 
-                !   If the field comming in is not a pressure,temperature or height
-                !   field we can set the output array to the value at the lowest
-                !   model level.
+                ! If the field comming in is not a pressure,temperature or height
+                ! field we can set the output array to the value at the lowest
+                ! model level.
 
                 tempout(i,j) = datain(i,j,1)
 
-                !   For the special cases of pressure on height levels or height on
-                !   pressure levels, or temperature-related variables on pressure or
-                !   height levels, perform a special extrapolation based on
-                !   US Standard Atmosphere.  Here we calcualate the surface pressure
-                !   with the altimeter equation.  This is how RIP calculates the
-                !   surface pressure.
+                ! For the special cases of pressure on height levels or height on
+                ! pressure levels, or temperature-related variables on pressure or
+                ! height levels, perform a special extrapolation based on
+                ! US Standard Atmosphere.  Here we calcualate the surface pressure
+                ! with the altimeter equation.  This is how RIP calculates the
+                ! surface pressure.
                 IF (icase .GT. 0) THEN
                     plhsl = pres(i,j,1) * 0.01d0  !pressure at lowest model level
                     zlhsl = ght(i,j,1)            !grid point height a lowest model level
@@ -2221,7 +2305,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                             END IF
                         ELSE IF (cvcord .EQ. 'z') THEN
                             zlev = -sclht*LOG(vlev)
-                            plev = pbot*(1. + USSALR/vt*(zbot-zlev))**/EXPONI
+                            plev = pbot*(1. + USSALR/vt*(zbot-zlev))**EXPONI
                             IF (icase .EQ. 1) THEN
                                 tempout(i,j) = plev
                                 !GOTO 333 ! CYCLE
@@ -2245,9 +2329,9 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     ! extraolation for equivalent potential temperature
                     ELSE IF (icase .EQ. 6) THEN
                         e = qvapor*plev/(EPS + qvapor)
-                        tlcl = TLCLC1/(LOG(tlev**TLCLC2/e)-TLCLC3) + TLCLC4
+                        tlcl = TLCLC1/(LOG(tlev**TLCLC2/e) - TLCLC3) + TLCLC4
                         tempout(i,j)=tlev*(1000.d0/plev)**(gammam)*&
-                                     EXP((THTECON1/tlcl-THTECON2)*&
+                                     EXP((THTECON1/tlcl - THTECON2)*&
                                      qvapor*(1. + THTECON3*qvapor))
                     END IF
                 END IF
@@ -2267,7 +2351,8 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
     END DO !end for the nreqlvs
 
     RETURN
-END SUBROUTINE f_vinterp
+
+END SUBROUTINE f_vintrp
 
 
 

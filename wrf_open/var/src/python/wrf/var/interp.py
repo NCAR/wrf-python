@@ -3,11 +3,17 @@ from math import floor, ceil
 import numpy as n
 import numpy.ma as ma
 
-from wrf.var.extension import interpz3d,interp2dxy,interp1d
+from wrf.var.extension import (interpz3d,interp2dxy,interp1d,
+                               smooth2d,monotonic,vintrp)
 from wrf.var.decorators import handle_left_iter, handle_casting
-from wrf.var.constants import Constants
+from wrf.var.util import extract_vars, is_staggered
+from wrf.var.constants import Constants, ConversionFactors
+from wrf.var.terrain import get_terrain
+from wrf.var.geoht import get_height
+from wrf.var.temp import get_theta, get_temp, get_eth
+from wrf.var.pressure import get_pressure
 
-__all__ = ["interplevel", "vertcross", "interpline"]
+__all__ = ["interplevel", "vertcross", "interpline", "vinterp"]
 
 #  Note:  Extension decorator is good enough to handle left dims
 def interplevel(data3d,zdata,desiredloc,missingval=Constants.DEFAULT_FILL):
@@ -257,6 +263,125 @@ def interpline(data2d, pivot_point=None,
     var1dtmp = interp2dxy(var2dtmp, xy)
     
     return var1dtmp[0,:]
+
+def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False, 
+            field_type=None, log_p=False):
+    valid_coords = ("pressure", "pres", "ght_msl", 
+                    "ght_agl", "theta", "theta-e")
+    
+    valid_field_types = (None,"none", "pressure","pres","p","z",
+                         "tc","tk", "theta","theta-e", "ght")
+    
+    icase_lookup = { None : 0,
+                     "p" : 1,
+                     "pres" : 1,
+                     "pressure" : 1,
+                     "z" : 2,
+                     "ght" : 2,
+                     "tc" : 3, 
+                     "tk" : 4,
+                     "theta" : 5,
+                     "theta-e" : 6}
+    
+    # These constants match what's in the fortran code.  
+    rgas    = 287.04     #J/K/kg
+    ussalr  = .0065      # deg C per m, avg lapse rate
+    sclht   = rgas*256./9.81
+    
+    # interp_levels might be a list or tuple, make a numpy array
+    if not isinstance(interp_levels, n.ndarray):
+        interp_levels = n.array(interp_levels, "float64")
+        
+    # TODO: Check if field is staggered
+    if is_staggered(field, wrfnc):
+        raise RuntimeError("Please unstagger field in the vertical")
+    
+    # Check for valid coord
+    if vert_coord not in valid_coords:
+        raise RuntimeError("'%s' is not a valid vertical "
+                           "coordinate type" %  vert_coord)
+    
+    # Check for valid field type
+    if field_type not in valid_field_types:
+        raise RuntimeError("'%s' is not a valid field type" % field_type)
+    
+    log_p_int = 1 if log_p else 0
+    
+    icase = 0
+    extrap = 0
+    
+    if extrapolate:
+        extrap = 1
+        icase = icase_lookup[field_type.lower()]
+    
+    # Extract vriables
+    timeidx = -1 # Should this be an argument?
+    ncvars = extract_vars(wrfnc, timeidx, vars=("PSFC", "QVAPOR", "F"))
+    
+    sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
+    qv = ncvars["QVAPOR"]
+    coriolis = ncvars["F"]
+    
+    terht = get_terrain(wrfnc, timeidx)
+    t = get_theta(wrfnc, timeidx)
+    tk = get_temp(wrfnc, timeidx, units="k")
+    p = get_pressure(wrfnc, timeidx)
+    ght = get_height(wrfnc, timeidx, msl=True)
+    ht_agl = get_height(wrfnc, timeidx, msl=False)
+    
+    smsfp = smooth2d(sfp, 3)        
+        
+    # Vertical coordinate type
+    vcor = 0
+    
+    if vert_coord in ("pressure", "pres"):
+        vcor = 1
+        vcord_array = p * ConversionFactors.PA_TO_HPA
+        
+    elif vert_coord == "ght_msl":
+        vcor = 2
+        vcord_array = n.exp(-ght/sclht)
+        
+    elif vert_coord == "ght_agl":
+        vcor = 3
+        vcord_array = n.exp(-ht_agl/sclht)
+    
+    elif vert_coord == "theta":
+        vcor = 4
+        idir = 1
+        icorsw = 0
+        delta = 0.01
+        
+        p_hpa = p * ConversionFactors.PA_TO_HPA
+        
+        vcord_array = monotonic(t,p_hpa,coriolis,idir,delta,icorsw)
+        
+    elif vert_coord == "theta-e":
+        vcor = 5
+        icorsw = 0
+        idir = 1
+        delta = 0.01
+        
+        eth = get_eth(wrfnc, timeidx)
+        
+        p_hpa = p * ConversionFactors.PA_TO_HPA
+        
+        vcord_array = monotonic(eth,p_hpa,coriolis,idir,delta,icorsw)
+        # We only extrapolate temperature fields below ground if we are
+        # interpolating to pressure or height vertical surfaces
+        icase = 0
+    
+    # Set the missing value
+    if isinstance(field, n.ma.MaskedArray):
+        missing = field.fill_value
+    else:
+        missing = Constants.DEFAULT_FILL
+        
+    res = vintrp(field,p,tk,qv,ght,terht,sfp,smsfp,
+                       vcord_array,interp_levels,
+                       icase,extrap,vcor,log_p_int,missing)
+    
+    return ma.masked_values(res,missing)
 
     
     

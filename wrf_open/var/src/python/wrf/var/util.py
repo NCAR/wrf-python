@@ -1,10 +1,13 @@
 from collections import Iterable
+from itertools import product
 import datetime as dt
 
 import numpy as n
 
 __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
-           "combine_files", "is_standard_wrf_var", "extract_times"]
+           "combine_files", "is_standard_wrf_var", "extract_times",
+           "iter_left_indexes", "get_left_indexes", "get_right_slices",
+           "is_staggered"]
 
 def _is_multi_time(timeidx):
     if timeidx == -1:
@@ -39,6 +42,9 @@ def extract_global_attrs(wrfnc, attrs):
     return {attr:_get_attr(wrfnc, attr) for attr in attrlist}
 
 def extract_dim(wrfnc, dim):
+    if _is_multi_file(wrfnc):
+        wrfnc = wrfnc[0]
+    
     d = wrfnc.dimensions[dim]
     if not isinstance(d, int):
         return len(d) #netCDF4
@@ -113,6 +119,63 @@ def is_standard_wrf_var(wrfnc, var):
     if multifile:
         wrfnc = wrfnc[0]
     return var in wrfnc.variables
+
+def is_staggered(var, wrfnc):
+    we = extract_dim(wrfnc, "west_east")
+    sn = extract_dim(wrfnc, "south_north")
+    bt = extract_dim(wrfnc, "bottom_top")
+    
+    if (var.shape[-1] != we or var.shape[-2] != sn or var.shape[-3] != bt):
+        return True
+    
+    return False
+
+def get_left_indexes(ref_var, expected_dims):
+    """Returns the extra left side dimensions for a variable with an expected
+    shape.
+    
+    For example, if a 2D variable contains an additional left side dimension
+    for time, this will return the time dimension size.
+    
+    """
+    extra_dim_num = ref_var.ndim - expected_dims
+    
+    if (extra_dim_num == 0):
+        return []
+    
+    return [ref_var.shape[x] for x in xrange(extra_dim_num)] 
+
+def iter_left_indexes(dims):
+    """A generator which yields the iteration tuples for a sequence of 
+    dimensions sizes.
+    
+    For example, if an array shape is (3,3), then this will yield:
+    
+    (0,0), (0,1), (1,0), (1,1)
+    
+    Arguments:
+    
+        - dims - a sequence of dimensions sizes (e.g. ndarry.shape)
+    
+    """
+    arg = [xrange(dim) for dim in dims]
+    for idxs in product(*arg):
+        yield idxs
+        
+def get_right_slices(var, right_ndims, fixed_val=0):
+    extra_dim_num = var.ndim - right_ndims
+    if extra_dim_num == 0:
+        return [slice(None,None,None)] * right_ndims
+    
+    return [fixed_val]*extra_dim_num + [slice(None,None,None)]*right_ndims
+    
+    
+    
+    
+
+
+
+
         
     
     

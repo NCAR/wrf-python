@@ -8,7 +8,8 @@ from wrf.var._wrfext import (f_interpz3d, f_interp2dxy,f_interp1d,
                      f_computeuvmet, 
                      f_computeomega, f_computetv, f_computewetbulb,
                      f_computesrh, f_computeuh, f_computepw, f_computedbz,
-                     f_lltoij, f_ijtoll, f_converteta, f_computectt)
+                     f_lltoij, f_ijtoll, f_converteta, f_computectt,
+                     f_monotonic, f_filter2d, f_vintrp)
 from wrf.var._wrfcape import f_computecape
 from wrf.var.decorators import (handle_left_iter, uvmet_left_iter, 
                                 handle_casting)
@@ -360,6 +361,68 @@ def computectt(p_hpa,tk,qice,qcld,qv,ght,ter,haveqci):
                     haveqci)
     
     return res.T
+
+@handle_left_iter(2,0,ignore_args=(1,))
+@handle_casting(arg_idxs=(0,))
+def smooth2d(field, passes):
+    # Unlike NCL, this routine will not modify the values in place, but 
+    # copies the original data before modifying it.  This allows the decorator
+    # to work properly and also behaves like the other methods.
+    
+    if isinstance(field, n.ma.MaskedArray):
+        missing = field.fill_value
+    else:
+        missing = Constants.DEFAULT_FILL
+    
+    field_copy = field.copy()
+    field_tmp = n.zeros(field_copy.shape, field_copy.dtype)  
+    
+    f_filter2d(field_copy.T, 
+               field_tmp.T, 
+               missing,
+               passes)
+    
+    # Don't transpose here since the fortran routine is not returning an
+    # array.  It's only modifying the existing array.
+    return field_copy
+    
+@handle_left_iter(3,0,ignore_args=(3,4,5))
+@handle_casting(arg_idxs=(0,1,2))
+def monotonic(var,lvprs,coriolis,idir,delta,icorsw):
+    res = f_monotonic(var.T,
+                      lvprs.T,
+                      coriolis.T,
+                      idir,
+                      delta,
+                      icorsw)
+    
+    return res.T
+
+# TODO:  Check those decorators, they might be wrong
+@handle_left_iter(3,0,ignore_args=(9,10,11,12,13,14))
+@handle_casting(arg_idxs=(0,1,2,3,4,5,6,7,8,9))
+def vintrp(field,pres,tk,qvp,ght,terrain,sfp,smsfp,
+           vcarray,interp_levels,icase,extrap,vcor,logp,
+           missing):
+    
+    res = f_vintrp(field.T,
+             pres.T,
+             tk.T,
+             qvp.T,
+             ght.T,
+             terrain.T,
+             sfp.T,
+             smsfp.T,
+             vcarray.T,
+             interp_levels,
+             icase,
+             extrap,
+             vcor,
+             logp,
+             missing)
+    
+    return res.T
+    
 
     
     

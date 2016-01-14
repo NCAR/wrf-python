@@ -1,12 +1,12 @@
 from functools import wraps
 from inspect import getargspec
-from itertools import product
 
 import numpy as n
 import numpy.ma as ma
 
 from wrf.var.units import do_conversion, check_units
 from wrf.var.destag import destagger
+from wrf.var.util import iter_left_indexes
 
 __all__ = ["convert_units", "handle_left_iter", "uvmet_left_iter", 
            "handle_casting"]
@@ -43,22 +43,6 @@ def convert_units(unit_type, alg_unit):
     
     return convert_decorator
 
-def _left_indexes(dims):
-    """A generator which yields the iteration tuples for a sequence of 
-    dimensions sizes.
-    
-    For example, if an array shape is (3,3), then this will yield:
-    
-    (0,0), (0,1), (1,0), (1,1)
-    
-    Arguments:
-    
-        - dims - a sequence of dimensions sizes (e.g. ndarry.shape)
-    
-    """
-    arg = [xrange(dim) for dim in dims]
-    for idxs in product(*arg):
-        yield idxs
 
 def _calc_out_dims(outvar, left_dims):
     left_dims = [x for x in left_dims]
@@ -109,7 +93,7 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
             extra_dims = [ref_var_shape[x] for x in xrange(extra_dim_num)]            
             
             out_inited = False
-            for left_idxs in _left_indexes(extra_dims):
+            for left_idxs in iter_left_indexes(extra_dims):
                 # Make the left indexes plus a single slice object
                 # The single slice will handle all the dimensions to
                 # the right (e.g. [1,1,:])
@@ -232,7 +216,7 @@ def uvmet_left_iter():
             
             output = n.zeros(outdims, u.dtype)
             
-            for left_idxs in _left_indexes(extra_dims):
+            for left_idxs in iter_left_indexes(extra_dims):
                 # Make the left indexes plus a single slice object
                 # The single slice will handle all the dimensions to
                 # the right (e.g. [1,1,:])

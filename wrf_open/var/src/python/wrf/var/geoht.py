@@ -35,6 +35,13 @@ def _get_geoht(wrfnc, timeidx, height=True, msl=True):
         if msl:
             return geopt_unstag / Constants.G
         else:
+            # Due to broadcasting with multifile/multitime, the 2D terrain
+            # array needs to be reshaped to a 3D array so the right dims
+            # line up
+            new_dims = list(hgt.shape)
+            new_dims.insert(-2,1)
+            hgt = hgt.reshape(new_dims)
+            
             return (geopt_unstag / Constants.G) - hgt
     else:
         return geopt_unstag

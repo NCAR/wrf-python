@@ -5,7 +5,7 @@ import numpy.ma as ma
 import os, sys
 import subprocess
 
-from wrf.var import getvar, interplevel, interpline, vertcross
+from wrf.var import getvar, interplevel, interpline, vertcross, vinterp
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
@@ -289,6 +289,23 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                                   end_point=end_point)
             
             nt.assert_allclose(t2_line1, t2_line2)
+        elif (varname == "vinterp"):
+            tk = getvar(in_wrfnc, "temp", units="k")
+            
+            interp_levels = [200,1000,50]
+            
+            field = vinterp(in_wrfnc, 
+                            field=tk, 
+                            vert_coord="theta", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk", 
+                            log_p=True)
+            
+            print field.shape
+            print field
+            
+            
     
     return test
 
@@ -306,7 +323,7 @@ if __name__ == "__main__":
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
                 "wa", "uvmet10", "uvmet", "z", "ctt", "cape_2d", "cape_3d"]
-    interp_methods = ["interplevel", "vertcross", "interpline"]
+    interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     
     try:
         import netCDF4

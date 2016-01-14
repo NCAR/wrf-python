@@ -43,7 +43,7 @@ def get_eth(wrfnc, timeidx=0, units="k"):
     full_p = p + pb
     tk = computetk(full_p, full_t)
     
-    eth = computeeth ( qv, tk, full_p )
+    eth = computeeth(qv, tk, full_p)
     
     return eth
     
