@@ -24,7 +24,7 @@ REAL(KIND=8) FUNCTION tvirtual(temp,ratmix)
     REAL(KIND=8),INTENT(IN) :: temp,ratmix
     REAL(KIND=8),PARAMETER :: EPS = .622D0
 
-    tvirtual = temp*(EPS+ratmix)/(EPS*(1.D0+ratmix))
+    tvirtual = temp*(EPS + ratmix)/(EPS*(1.D0 + ratmix))
     RETURN
 END FUNCTION tvirtual
 
@@ -65,7 +65,7 @@ REAL(KIND=8) FUNCTION tonpsadiabat(thte,prs,PSADITHTE,PSADIPRS,PSADITMK,GAMMA,&
 
     jt = -1
     DO jtch = 1,150 - 1
-      IF (thte.GE.PSADITHTE(jtch) .AND. thte.LT.PSADITHTE(jtch+1)) THEN
+      IF (thte .GE. PSADITHTE(jtch) .AND. thte .LT. PSADITHTE(jtch+1)) THEN
           jt = jtch
           EXIT
           !GO TO 213
@@ -94,8 +94,8 @@ REAL(KIND=8) FUNCTION tonpsadiabat(thte,prs,PSADITHTE,PSADIPRS,PSADITMK,GAMMA,&
     fracjt2 = 1.D0 - fracjt
     fracip = (PSADIPRS(ip)-prs) / (PSADIPRS(ip)-PSADIPRS(ip+1))
     fracip2 = 1.D0 - fracip
-    IF (PSADITMK(ip,jt).GT.1D9 .OR. PSADITMK(ip+1,jt).GT.1D9 .OR. &
-        PSADITMK(ip,jt+1).GT.1D9 .OR. PSADITMK(ip+1,jt+1).GT.1D9) THEN
+    IF (PSADITMK(ip,jt) .GT. 1D9 .OR. PSADITMK(ip+1,jt) .GT. 1D9 .OR. &
+        PSADITMK(ip,jt+1) .GT. 1D9 .OR. PSADITMK(ip+1,jt+1) .GT. 1D9) THEN
         CALL throw_exception('capecalc3d: ','Tried to access missing temperature in lookup table.',&
         'Prs and Thte probably unreasonable. prs,thte=',prs,thte)
       !STOP
@@ -137,16 +137,16 @@ SUBROUTINE dpfcalc(prs,sfp,pf,miy,mjx,mkzh,ter_follow)
     !  do i=1,miy-1  staggered grid
       DO i = 1,miy
           DO k = 1,mkzh
-              IF (k.EQ.mkzh) THEN
+              IF (k .EQ. mkzh) THEN
     !  terrain-following data
-                  IF (ter_follow.EQ.1) THEN
+                  IF (ter_follow .EQ. 1) THEN
                       pf(i,j,k) = sfp(i,j)
     !  pressure-level data
                   ELSE
-                      pf(i,j,k) = .5D0 * (3.D0*prs(i,j,k)-prs(i,j,k-1))
+                      pf(i,j,k) = .5D0 * (3.D0*prs(i,j,k) - prs(i,j,k-1))
                   END IF
               ELSE
-                  pf(i,j,k) = .5D0* (prs(i,j,k+1)+prs(i,j,k))
+                  pf(i,j,k) = .5D0 * (prs(i,j,k+1) + prs(i,j,k))
               END IF
           END DO
       END DO
@@ -289,24 +289,22 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
           cape(i,j,1) = 0.d0
           cin(i,j,1) = 0.d0
 
-          IF (i3dflag.eq.1) THEN
+          IF (i3dflag .EQ. 1) THEN
               kpar1 = 2
               kpar2 = mkzh
           ELSE
-
-    !      find parcel with max theta-e in lowest 3 km agl.
-
+              ! find parcel with max theta-e in lowest 3 km agl.
               ethmax = -1.d0
               DO k = mkzh,1,-1
-                  IF (ght(i,j,k)-ter(i,j).lt.3000.d0) then
-                      q = MAX(qvp(i,j,k),1.d-15)
+                  IF (ght(i,j,k)-ter(i,j) .LT. 3000.d0) THEN
+                      q = MAX(qvp(i,j,k), 1.d-15)
                       t = tmk(i,j,k)
                       p = prs(i,j,k)
-                      e = q*p/ (EPS+q)
-                      tlcl = TLCLC1/ (log(t**TLCLC2/e)-TLCLC3) + TLCLC4
-                      eth = t* (1000.d0/p)**(GAMMA* (1.d0+GAMMAMD*q))*&
-                              EXP((THTECON1/tlcl-THTECON2)*q*(1.d0+THTECON3*q))
-                      IF (eth.gt.ethmax) then
+                      e = q*p/(EPS + q)
+                      tlcl = TLCLC1/ (LOG(t**TLCLC2/e)-TLCLC3) + TLCLC4
+                      eth = t * (1000.d0/p)**(GAMMA*(1.d0 + GAMMAMD*q))*&
+                              EXP((THTECON1/tlcl - THTECON2)*q*(1.d0 + THTECON3*q))
+                      IF (eth .GT. ethmax) THEN
                           klev = k
                           ethmax = eth
                       END IF
@@ -315,29 +313,29 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               kpar1 = klev
               kpar2 = klev
 
-    !      establish average properties of that parcel
-    !         (over depth of approximately davg meters)
+              ! Establish average properties of that parcel
+              ! (over depth of approximately davg meters)
 
-    !         davg=.1
+              ! davg=.1
               davg = 500.d0
               pavg = davg*prs(i,j,kpar1)*&
-                  GRAV/(RGAS*tvirtual(tmk(i,j,kpar1),qvp(i,j,kpar1)))
-              p2 = MIN(prs(i,j,kpar1)+.5d0*pavg,prsf(i,j,mkzh))
+                  GRAV/(RGAS*tvirtual(tmk(i,j,kpar1), qvp(i,j,kpar1)))
+              p2 = MIN(prs(i,j,kpar1)+.5d0*pavg, prsf(i,j,mkzh))
               p1 = p2 - pavg
               totthe = 0.d0
               totqvp = 0.d0
               totprs = 0.d0
               DO k = mkzh,2,-1
-                  IF (prsf(i,j,k).le.p1) GOTO 35
-                  IF (prsf(i,j,k-1).ge.p2) GOTO 34
+                  IF (prsf(i,j,k) .LE. p1) GOTO 35
+                  IF (prsf(i,j,k-1) .GE. p2) GOTO 34
                   p = prs(i,j,k)
                   pup = prsf(i,j,k)
                   pdn = prsf(i,j,k-1)
                   q = MAX(qvp(i,j,k),1.d-15)
-                  th = tmk(i,j,k)* (1000.d0/p)**(GAMMA* (1.d0+GAMMAMD*q))
+                  th = tmk(i,j,k)*(1000.d0/p)**(GAMMA*(1.d0 + GAMMAMD*q))
                   pp1 = MAX(p1,pdn)
                   pp2 = MIN(p2,pup)
-                  IF (pp2.gt.pp1) then
+                  IF (pp2 .GT. pp1) THEN
                       deltap = pp2 - pp1
                       totqvp = totqvp + q*deltap
                       totthe = totthe + th*deltap
@@ -353,53 +351,52 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
           DO kpar = kpar1,kpar2
 
-    !   calculate temperature and moisture properties of parcel
-    !     (note, qvppari and tmkpari already calculated above for 2d case.)
+              ! Calculate temperature and moisture properties of parcel
+              ! (note, qvppari and tmkpari already calculated above for 2d case.)
 
-              IF (i3dflag.eq.1) then
+              IF (i3dflag .EQ. 1) THEN
                   qvppari = qvp(i,j,kpar)
                   tmkpari = tmk(i,j,kpar)
               END IF
               prspari = prs(i,j,kpar)
               ghtpari = ght(i,j,kpar)
-              gammam = GAMMA* (1.d0+GAMMAMD*qvppari)
-              cpm = CP* (1.d0+CPMD*qvppari)
+              gammam = GAMMA * (1.d0 + GAMMAMD*qvppari)
+              cpm = CP * (1.d0 + CPMD*qvppari)
 
-              e = MAX(1.d-20,qvppari*prspari/ (EPS+qvppari))
-              tlcl = TLCLC1/ (LOG(tmkpari**TLCLC2/e)-TLCLC3) +TLCLC4
-              ethpari = tmkpari* (1000.d0/prspari)**(GAMMA*(1.d0+GAMMAMD*qvppari))*&
-                  EXP((THTECON1/tlcl-THTECON2)*qvppari*(1.d0+THTECON3*qvppari))
-              zlcl = ghtpari + (tmkpari-tlcl)/ (GRAV/cpm)
+              e = MAX(1.d-20,qvppari*prspari/(EPS + qvppari))
+              tlcl = TLCLC1/(LOG(tmkpari**TLCLC2/e) - TLCLC3) + TLCLC4
+              ethpari = tmkpari*(1000.d0/prspari)**(GAMMA*(1.d0 + GAMMAMD*qvppari))*&
+                  EXP((THTECON1/tlcl - THTECON2)*qvppari*(1.d0 + THTECON3*qvppari))
+              zlcl = ghtpari + (tmkpari - tlcl)/(GRAV/cpm)
 
-    !   calculate buoyancy and relative height of lifted parcel at
-    !   all levels, and store in bottom up arrays.  add a level at the lcl,
-    !   and at all points where buoyancy is zero.
-    !
-    !  for arrays that go bottom to top
+              ! Calculate buoyancy and relative height of lifted parcel at
+              ! all levels, and store in bottom up arrays.  add a level at the lcl,
+              ! and at all points where buoyancy is zero.
+              !
+              ! For arrays that go bottom to top
               kk = 0
               ilcl = 0
-              IF (ghtpari.ge.zlcl) THEN
 
-    !      initial parcel already saturated or supersaturated.
-
+              IF (ghtpari .GE. zlcl) THEN
+                  ! Initial parcel already saturated or supersaturated.
                   ilcl = 2
                   klcl = 1
               END IF
+
               DO k = kpar,1,-1
-    !  for arrays that go bottom to top
-    33                 kk = kk + 1
-    !  model level is below lcl
+                  ! For arrays that go bottom to top
+    33            kk = kk + 1
+
+                  ! Model level is below lcl
                   IF (ght(i,j,k).lt.zlcl) THEN
                       qvplift = qvppari
-                      tmklift = tmkpari - GRAV/cpm*(ght(i,j,k)-ghtpari)
-                      tvenv = tvirtual(tmk(i,j,k),qvp(i,j,k))
-                      tvlift = tvirtual(tmklift,qvplift)
+                      tmklift = tmkpari - GRAV/cpm*(ght(i,j,k) - ghtpari)
+                      tvenv = tvirtual(tmk(i,j,k), qvp(i,j,k))
+                      tvlift = tvirtual(tmklift, qvplift)
                       ghtlift = ght(i,j,k)
-                  ELSE IF (ght(i,j,k).ge.zlcl .and. ilcl.eq.0) THEN
-
-    !     this model level and previous model level straddle the lcl,
-    !     so first create a new level in the bottom-up array, at the lcl.
-
+                  ELSE IF (ght(i,j,k) .GE. zlcl .AND. ilcl .EQ. 0) THEN
+                      ! This model level and previous model level straddle the lcl,
+                      ! so first create a new level in the bottom-up array, at the lcl.
                       tmklift = tlcl
                       qvplift = qvppari
                       facden = ght(i,j,k) - ght(i,j,k+1)
@@ -407,97 +404,92 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                       fac2 = (ght(i,j,k)-zlcl)/facden
                       tmkenv = tmk(i,j,k+1)*fac2 + tmk(i,j,k)*fac1
                       qvpenv = qvp(i,j,k+1)*fac2 + qvp(i,j,k)*fac1
-                      tvenv = tvirtual(tmkenv,qvpenv)
-                      tvlift = tvirtual(tmklift,qvplift)
+                      tvenv = tvirtual(tmkenv, qvpenv)
+                      tvlift = tvirtual(tmklift, qvplift)
                       ghtlift = zlcl
                       ilcl = 1
-
                   ELSE
-                      tmklift = tonpsadiabat(ethpari,prs(i,j,k),PSADITHTE,PSADIPRS,PSADITMK,GAMMA,throw_exception)
-
-                      eslift = EZERO*exp(ESLCON1* (tmklift-CELKEL)/(tmklift-ESLCON2))
-                      qvplift = EPS*eslift/ (prs(i,j,k)-eslift)
-                      tvenv = tvirtual(tmk(i,j,k),qvp(i,j,k))
-                      tvlift = tvirtual(tmklift,qvplift)
+                      tmklift = tonpsadiabat(ethpari, prs(i,j,k), PSADITHTE, PSADIPRS,&
+                                             PSADITMK, GAMMA, throw_exception)
+                      eslift = EZERO*EXP(ESLCON1*(tmklift - CELKEL)/(tmklift - ESLCON2))
+                      qvplift = EPS*eslift/(prs(i,j,k) - eslift)
+                      tvenv = tvirtual(tmk(i,j,k), qvp(i,j,k))
+                      tvlift = tvirtual(tmklift, qvplift)
                       ghtlift = ght(i,j,k)
                   END IF
-    !  buoyancy
-                  buoy(kk) = GRAV* (tvlift-tvenv)/tvenv
+                  !  Buoyancy
+                  buoy(kk) = GRAV*(tvlift - tvenv)/tvenv
                   zrel(kk) = ghtlift - ghtpari
 
-                  IF ((kk.gt.1).and.(buoy(kk)*buoy(kk-1).lt.0.0d0)) THEN
-
-    !   parcel ascent curve crosses sounding curve, so create a new level
-    !   in the bottom-up array at the crossing.
-
+                  IF ((kk .GT. 1) .AND. (buoy(kk)*buoy(kk-1) .LT. 0.0d0)) THEN
+                      ! Parcel ascent curve crosses sounding curve, so create a new level
+                      ! in the bottom-up array at the crossing.
                       kk = kk + 1
                       buoy(kk) = buoy(kk-1)
                       zrel(kk) = zrel(kk-1)
                       buoy(kk-1) = 0.d0
-                      zrel(kk-1) = zrel(kk-2) +buoy(kk-2)/&
-                          (buoy(kk-2)-buoy(kk))*(zrel(kk)-zrel(kk-2))
-
+                      zrel(kk-1) = zrel(kk-2) + buoy(kk-2)/&
+                          (buoy(kk-2) - buoy(kk))*(zrel(kk) - zrel(kk-2))
                   END IF
 
-                  IF (ilcl.eq.1) THEN
+                  IF (ilcl .EQ. 1) THEN
                       klcl = kk
                       ilcl = 2
                       GOTO 33
                   END IF
               END DO
+
               kmax = kk
-              IF (kmax.gt.150) THEN
+              IF (kmax .GT. 150) THEN
                   ! Need an exception here
                   CALL throw_exception('capecalc3d: kmax got too big. kmax=',kmax)
                   !STOP
               END IF
 
-    !   if no lcl was found, set klcl to kmax.  it is probably not really
-    !   at kmax, but this will make the rest of the routine behave
-    !   properly.
+              ! If no lcl was found, set klcl to kmax.  it is probably not really
+              ! at kmax, but this will make the rest of the routine behave
+              ! properly.
+              IF (ilcl .EQ. 0) klcl=kmax
 
-              IF (ilcl.eq.0) klcl=kmax
-
-    !   get the accumulated buoyant energy from the parcel's starting
-    !   point, at all levels up to the top level.
-
+              ! Get the accumulated buoyant energy from the parcel's starting
+              ! point, at all levels up to the top level.
               benaccum(1) = 0.0d0
               benamin = 9d9
               DO k = 2,kmax
                   dz = zrel(k) - zrel(k-1)
-                  benaccum(k) = benaccum(k-1) +.5d0*dz* (buoy(k-1)+buoy(k))
-                  IF (benaccum(k).lt.benamin) then
+                  benaccum(k) = benaccum(k-1) + .5d0*dz*(buoy(k-1) + buoy(k))
+                  IF (benaccum(k) .LT. benamin) THEN
                       benamin = benaccum(k)
                   END IF
               END DO
 
-    !     determine equilibrium level (el), which we define as the highest
-    !     level of non-negative buoyancy above the lcl. note, this may be
-    !     the top level if the parcel is still buoyant there.
+              ! Determine equilibrium level (el), which we define as the highest
+              ! level of non-negative buoyancy above the lcl. note, this may be
+              ! the top level if the parcel is still buoyant there.
 
               DO k = kmax,klcl,-1
-                  IF (buoy(k).ge.0.d0) THEN
-    !  k of equilibrium level
+                  IF (buoy(k) .GE. 0.d0) THEN
+                      ! k of equilibrium level
                       kel = k
                       GOTO 50
                   END IF
               END DO
 
-    !   if we got through that loop, then there is no non-negative
-    !   buoyancy above the lcl in the sounding.  in these situations,
-    !   both cape and cin will be set to -0.1 j/kg. (see below about
-    !   missing values in v6.1.0). also, where cape is
-    !   non-zero, cape and cin will be set to a minimum of +0.1 j/kg, so
-    !   that the zero contour in either the cin or cape fields will
-    !   circumscribe regions of non-zero cape.
+              ! If we got through that loop, then there is no non-negative
+              ! buoyancy above the lcl in the sounding.  in these situations,
+              ! both cape and cin will be set to -0.1 j/kg. (see below about
+              ! missing values in v6.1.0). also, where cape is
+              ! non-zero, cape and cin will be set to a minimum of +0.1 j/kg, so
+              ! that the zero contour in either the cin or cape fields will
+              ! circumscribe regions of non-zero cape.
 
-    !   in v6.1.0 of ncl, we added a _fillvalue attribute to the return
-    !   value of this function. at that time we decided to change -0.1
-    !   to a more appropriate missing value, which is passed into this
-    !   routine as cmsg.
+              ! In v6.1.0 of ncl, we added a _fillvalue attribute to the return
+              ! value of this function. at that time we decided to change -0.1
+              ! to a more appropriate missing value, which is passed into this
+              ! routine as cmsg.
 
-    !                 cape(i,j,kpar) = -0.1d0
-    !                 cin(i,j,kpar) = -0.1d0
+              ! cape(i,j,kpar) = -0.1d0
+              ! cin(i,j,kpar) = -0.1d0
               cape(i,j,kpar) = cmsg
               cin(i,j,kpar)  = cmsg
               klfc = kmax
@@ -506,47 +498,46 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
     50        CONTINUE
 
-    !   if there is an equilibrium level, then cape is positive.  we'll
-    !   define the level of free convection (lfc) as the point below the
-    !   el, but at or above the lcl, where accumulated buoyant energy is a
-    !   minimum.  the net positive area (accumulated buoyant energy) from
-    !   the lfc up to the el will be defined as the cape, and the net
-    !   negative area (negative of accumulated buoyant energy) from the
-    !   parcel starting point to the lfc will be defined as the convective
-    !   inhibition (cin).
+              !   If there is an equilibrium level, then cape is positive.  we'll
+              !   define the level of free convection (lfc) as the point below the
+              !   el, but at or above the lcl, where accumulated buoyant energy is a
+              !   minimum.  the net positive area (accumulated buoyant energy) from
+              !   the lfc up to the el will be defined as the cape, and the net
+              !   negative area (negative of accumulated buoyant energy) from the
+              !   parcel starting point to the lfc will be defined as the convective
+              !   inhibition (cin).
 
-    !   first get the lfc according to the above definition.
-
+              !   First get the lfc according to the above definition.
               benamin = 9d9
               klfc = kmax
               DO k = klcl,kel
-                  IF (benaccum(k).lt.benamin) THEN
+                  IF (benaccum(k) .LT. benamin) THEN
                       benamin = benaccum(k)
                       klfc = k
                   END IF
               END DO
 
-    !   now we can assign values to cape and cin
+              ! Now we can assign values to cape and cin
 
-              cape(i,j,kpar) = MAX(benaccum(kel)-benamin,0.1d0)
-              cin(i,j,kpar) = MAX(-benamin,0.1d0)
+              cape(i,j,kpar) = MAX(benaccum(kel)-benamin, 0.1d0)
+              cin(i,j,kpar) = MAX(-benamin, 0.1d0)
 
-    !   cin is uninteresting when cape is small (< 100 j/kg), so set
-    !   cin to -0.1 (see note about missing values in v6.1.0) in
-    !   that case.
+              ! cin is uninteresting when cape is small (< 100 j/kg), so set
+              ! cin to -0.1 (see note about missing values in v6.1.0) in
+              ! that case.
 
-    !   in v6.1.0 of ncl, we added a _fillvalue attribute to the return
-    !   value of this function. at that time we decided to change -0.1
-    !   to a more appropriate missing value, which is passed into this
-    !   routine as cmsg.
+              ! In v6.1.0 of ncl, we added a _fillvalue attribute to the return
+              ! value of this function. at that time we decided to change -0.1
+              ! to a more appropriate missing value, which is passed into this
+              ! routine as cmsg.
 
-    !                 IF (cape(i,j,kpar).lt.100.d0) cin(i,j,kpar) = -0.1d0
-              IF (cape(i,j,kpar).lt.100.d0) cin(i,j,kpar) = cmsg
+              ! IF (cape(i,j,kpar).lt.100.d0) cin(i,j,kpar) = -0.1d0
+              IF (cape(i,j,kpar) .LT. 100.d0) cin(i,j,kpar) = cmsg
     102   CONTINUE
 
           END DO
 
-          IF (i3dflag.eq.0) THEN
+          IF (i3dflag .EQ. 0) THEN
               cape(i,j,mkzh) = cape(i,j,kpar1)
               cin(i,j,mkzh) = cin(i,j,kpar1)
     !  meters agl
