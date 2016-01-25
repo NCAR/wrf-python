@@ -295,7 +295,7 @@ SUBROUTINE f_computetk(pressure,theta,tk,nx)
     REAL(KIND=8), DIMENSION(nx), INTENT(OUT) :: tk
 
     INTEGER :: i
-    REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, R_D=287.06D0, CP=7.D0*R_D/2.D0
+    REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, R_D=287.D0, CP=7.D0*R_D/2.D0
 
     DO i = 1,nx
         pi = (pressure(i)/P1000MB)**(R_D/CP)
@@ -639,7 +639,6 @@ SUBROUTINE f_computeomega(qvp,tmk,www,prs,omg,mx,my,mz)
     REAL(KIND=8),INTENT(IN),DIMENSION(mx,my,mz) :: prs
     REAL(KIND=8),INTENT(OUT),DIMENSION(mx,my,mz) :: omg
 
-
     ! Local variables
     INTEGER :: i, j, k
     REAL(KIND=8),PARAMETER :: GRAV=9.81, RGAS=287.04, EPS=0.622
@@ -648,8 +647,8 @@ SUBROUTINE f_computeomega(qvp,tmk,www,prs,omg,mx,my,mz)
         DO j=1,my
           DO i=1,mx
               omg(i,j,k)=-GRAV*prs(i,j,k) / &
-                          (RGAS*((tmk(i,j,k)*(EPS+qvp(i,j,k))) / &
-                          (EPS*(1.+qvp(i,j,k)))))*www(i,j,k)
+              (RGAS*((tmk(i,j,k)*(EPS+qvp(i,j,k))) / &
+              (EPS*(1.+qvp(i,j,k)))))*www(i,j,k)
           END DO
         END DO
     END DO
@@ -2034,7 +2033,7 @@ FUNCTION f_intrpvalue (wvalp0,wvalp1,vlev,vcp0,vcp1,icase)
 
     rvalue = (vlev-vcp0)*(valp1-valp0)/(vcp1-vcp0)+valp0
     IF (icase .EQ. 2) THEN  !GHT
-        f_intrpvalue = -SCLHT*log(rvalue)
+        f_intrpvalue = -SCLHT*LOG(rvalue)
     ELSE
         f_intrpvalue = rvalue
     END IF
@@ -2099,6 +2098,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
     REAL(KIND=8), PARAMETER :: CPMD     = 0.887d0
     REAL(KIND=8), PARAMETER :: GAMMA    = RGAS/CP
     REAL(KIND=8), PARAMETER :: GAMMAMD  = RGASMD-CPMD
+    REAL(KIND=8), PARAMETER :: CELKEL   = 273.16d0
 
     ! Removes the warnings for uninitialized variables
     cvcord = ''
@@ -2136,7 +2136,6 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
             vlev = interp_levels(nreqlvs)
         END IF
 
-
         DO j=1,ns
             DO i=1,ew
                 ! Get the interpolated value that is within the model domain
@@ -2147,6 +2146,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     vcp0 = vcarray(i,j,ripk)
                     valp0 = datain(i,j,ripk)
                     valp1 = datain(i,j,ripk-1)
+
                     IF ((vlev .GE. vcp0 .AND. vlev .LE. vcp1) .OR. &
                         (vlev .LE. vcp0 .AND. vlev .GE. vcp1)) THEN
                         ! print *,i,j,valp0,valp1
@@ -2167,6 +2167,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                                 tmpvlev = vlev
                             END IF
                             tempout(i,j) = f_intrpvalue(valp0,valp1,tmpvlev,vcp0,vcp1,icase)
+
                             ! print *,"one ",i,j,tempout(i,j)
                             ifound = 1
                         END IF
@@ -2188,7 +2189,6 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     !GOTO 333 ! CYCLE
                     CYCLE
                 END IF
-
 
                 ! The grid point is either above or below the model domain
                 ! First we will check to see if the grid point is above the
@@ -2215,7 +2215,6 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     !GOTO 333 ! CYCLE
                     CYCLE
                 END IF
-
 
                 ! If the field comming in is not a pressure,temperature or height
                 ! field we can set the output array to the value at the lowest
@@ -2244,7 +2243,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     ezsurf = EXP(-zsurf/SCLHT)
 
                     ! The if for checking above ground
-                    if ((cvcord .EQ. 'z' .AND. vlev .LT. ezsurf) .OR. &
+                    IF ((cvcord .EQ. 'z' .AND. vlev .LT. ezsurf) .OR. &
                         (cvcord .EQ. 'p' .AND. vlev .LT. psurf)) THEN
 
                     ! We are below the lowest data level but above the ground.
@@ -2320,7 +2319,7 @@ SUBROUTINE  f_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,&
                     qvapor = MAX(qvp(i,j,1),1.e-15)
                     gammam = GAMMA*(1. + GAMMAMD*qvapor)
                     IF (icase .EQ. 3) THEN
-                        tempout(i,j) = tlev - 273.16d0
+                        tempout(i,j) = tlev - CELKEL
                     ELSE IF (icase .EQ. 4) THEN
                         tempout(i,j) = tlev
                     ! Potential temperature - theta

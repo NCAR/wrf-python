@@ -100,71 +100,28 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
         if (varname == "tc"):
             my_vals = getvar(in_wrfnc, "temp", units="c")
             tol = 0
-            atol = .1
+            atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "tk"):
-            my_vals = getvar(in_wrfnc, "temp", units="k")
-            tol = 0
-            atol = .1
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "td"):
-            my_vals = getvar(in_wrfnc, "td", units="c")
-            tol = 0
-            atol = .1
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "pressure"):
-            my_vals = getvar(in_wrfnc, varname, units="hpa")
-            tol = 1/100.
-            atol = 0
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "p"):
-            my_vals = getvar(in_wrfnc, varname, units="pa")
-            tol = 1/100.
-            atol = 0
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "slp"):
-            my_vals = getvar(in_wrfnc, varname, units="hpa")
-            tol = 1/100.
-            atol = 0
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-            
-        elif (varname == "uvmet"):
-            my_vals = getvar(in_wrfnc, varname)
-            tol = 0/100.
-            atol = 0.0001
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "uvmet10"):
-            my_vals = getvar(in_wrfnc, varname)
-            tol = 1/100.
-            atol = .5
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-            
-        elif (varname == "omg"):
-            my_vals = getvar(in_wrfnc, varname)
-            tol = 2/100.
-            atol = 0
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
-        elif (varname == "ctt"):
-            my_vals = getvar(in_wrfnc, varname)
-            tol = 1/100.
-            atol = 0
+        elif (varname == "pw"):
+            my_vals = getvar(in_wrfnc, "pw")
+            tol = .5/100.0
+            atol = 0 # NCL uses different constants and doesn't use same
+                     # handrolled virtual temp in method
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
         elif (varname == "cape_2d"):
             cape_2d = getvar(in_wrfnc, varname)
-            tol = 1/100.
-            atol = 0
+            tol = 0/100.    # Not sure why different, F77 vs F90?
+            atol = .1
             nt.assert_allclose(cape_2d, ref_vals, tol, atol)
         elif (varname == "cape_3d"):
             cape_3d = getvar(in_wrfnc, varname)
-            tol = 1/100.
-            atol = 0
-            
+            tol = 0/100.  # Not sure why different, F77 vs F90?
+            atol = .01
             nt.assert_allclose(cape_3d, ref_vals, tol, atol)
-            
         else:
             my_vals = getvar(in_wrfnc, varname)
-            tol = 1/100.
-            atol = 0
+            tol = 0/100.
+            atol = 0.0001
             nt.assert_allclose(my_vals, ref_vals, tol, atol)
     
     
@@ -239,7 +196,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
         if (varname == "interplevel"):
             ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
             hts = getvar(in_wrfnc, "z")
-            p = getvar(in_wrfnc, "pressure", units="hpa")
+            p = getvar(in_wrfnc, "pressure")
             hts_500 = interplevel(hts, p, 500)
             
             nt.assert_allclose(hts_500, ref_ht_500)
@@ -249,7 +206,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_p_cross = _get_refvals(referent, "p_cross", repeat, multi)
             
             hts = getvar(in_wrfnc, "z")
-            p = getvar(in_wrfnc, "pressure", units="hpa")
+            p = getvar(in_wrfnc, "pressure")
             
             pivot_point = (hts.shape[-2] / 2, hts.shape[-1] / 2) 
             ht_cross = vertcross(hts, p, pivot_point=pivot_point,angle=90.)
@@ -290,9 +247,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             nt.assert_allclose(t2_line1, t2_line2)
         elif (varname == "vinterp"):
+            # Tk to theta
+            fld_tk_theta = _get_refvals(referent, "fld_tk_theta", repeat, multi)
+            fld_tk_theta = n.squeeze(fld_tk_theta)
+            
             tk = getvar(in_wrfnc, "temp", units="k")
             
-            interp_levels = [200,1000,50]
+            interp_levels = [200,300,500,1000]
             
             field = vinterp(in_wrfnc, 
                             field=tk, 
@@ -302,10 +263,131 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             field_type="tk", 
                             log_p=True)
             
-            print field.shape
-            print field
+            tol = 0/100.
+            atol = 0.0001
             
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_tk_theta, tol, atol)
             
+            # Tk to theta-e
+            fld_tk_theta_e = _get_refvals(referent, "fld_tk_theta_e", repeat, multi)
+            fld_tk_theta_e = n.squeeze(fld_tk_theta_e)
+            
+            interp_levels = [200,300,500,1000]
+            
+            field = vinterp(in_wrfnc, 
+                            field=tk, 
+                            vert_coord="theta-e", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk", 
+                            log_p=True)
+            
+            tol = 0/100.
+            atol = 0.0001
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_tk_theta_e, tol, atol)
+            
+            # Tk to pressure
+            fld_tk_pres = _get_refvals(referent, "fld_tk_pres", repeat, multi)
+            fld_tk_pres = n.squeeze(fld_tk_pres)
+            
+            interp_levels = [850,500]
+            
+            field = vinterp(in_wrfnc, 
+                            field=tk, 
+                            vert_coord="pressure", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk", 
+                            log_p=True)
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_tk_pres, tol, atol)
+            
+            # Tk to geoht_msl
+            fld_tk_ght_msl = _get_refvals(referent, "fld_tk_ght_msl", repeat, multi)
+            fld_tk_ght_msl = n.squeeze(fld_tk_ght_msl)
+            interp_levels = [1,2]
+            
+            field = vinterp(in_wrfnc, 
+                            field=tk, 
+                            vert_coord="ght_msl", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk", 
+                            log_p=True)
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_tk_ght_msl, tol, atol)
+            
+            # Tk to geoht_agl
+            fld_tk_ght_agl = _get_refvals(referent, "fld_tk_ght_agl", repeat, multi)
+            fld_tk_ght_agl = n.squeeze(fld_tk_ght_agl)
+            interp_levels = [1,2]
+            
+            field = vinterp(in_wrfnc, 
+                            field=tk, 
+                            vert_coord="ght_agl", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk", 
+                            log_p=True)
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_tk_ght_agl, tol, atol)
+            
+            # Hgt to pressure
+            fld_ht_pres = _get_refvals(referent, "fld_ht_pres", repeat, multi)
+            fld_ht_pres = n.squeeze(fld_ht_pres)
+            
+            z = getvar(in_wrfnc, "height", units="m")
+            interp_levels = [500,50]
+            field = vinterp(in_wrfnc, 
+                            field=z, 
+                            vert_coord="pressure", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="ght", 
+                            log_p=True)
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_ht_pres, tol, atol)
+            
+            # Pressure to theta
+            fld_pres_theta = _get_refvals(referent, "fld_pres_theta", repeat, multi)
+            fld_pres_theta = n.squeeze(fld_pres_theta)
+            
+            p = getvar(in_wrfnc, "pressure")
+            interp_levels = [200,300,500,1000]
+            field = vinterp(in_wrfnc, 
+                            field=p, 
+                            vert_coord="theta", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="pressure", 
+                            log_p=True)
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_pres_theta, tol, atol)
+            
+            # Theta-e to pres
+            fld_thetae_pres = _get_refvals(referent, "fld_thetae_pres", repeat, multi)
+            fld_thetae_pres = n.squeeze(fld_thetae_pres)
+            
+            eth = getvar(in_wrfnc, "eth")
+            interp_levels = [850,500,5]
+            field = vinterp(in_wrfnc, 
+                            field=eth, 
+                            vert_coord="pressure", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="theta-e", 
+                            log_p=True)
+            
+            field = n.squeeze(field)
+            nt.assert_allclose(field, fld_thetae_pres, tol, atol)
     
     return test
 

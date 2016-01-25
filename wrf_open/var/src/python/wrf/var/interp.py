@@ -266,22 +266,30 @@ def interpline(data2d, pivot_point=None,
 
 def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False, 
             field_type=None, log_p=False):
-    valid_coords = ("pressure", "pres", "ght_msl", 
-                    "ght_agl", "theta", "theta-e")
+    # Remove case sensitivity
+    field_type = field_type.lower() if field_type is not None else "none"
+    vert_coord = vert_coord.lower() if vert_coord is not None else "none"
+        
+    valid_coords = ("pressure", "pres", "p", "ght_msl", 
+                    "ght_agl", "theta", "th", "theta-e", "thetae", "eth")
     
-    valid_field_types = (None,"none", "pressure","pres","p","z",
-                         "tc","tk", "theta","theta-e", "ght")
+    valid_field_types = ("none", "pressure", "pres", "p", "z",
+                         "tc", "tk", "theta", "th", "theta-e", "thetae", 
+                         "eth", "ght")
     
-    icase_lookup = { None : 0,
-                     "p" : 1,
-                     "pres" : 1,
-                     "pressure" : 1,
-                     "z" : 2,
-                     "ght" : 2,
-                     "tc" : 3, 
-                     "tk" : 4,
-                     "theta" : 5,
-                     "theta-e" : 6}
+    icase_lookup = {"none" : 0,
+                    "p" : 1,
+                    "pres" : 1,
+                    "pressure" : 1,
+                    "z" : 2,
+                    "ght" : 2,
+                    "tc" : 3, 
+                    "tk" : 4,
+                    "theta" : 5,
+                    "th" : 5,
+                    "theta-e" : 6,
+                    "thetae" : 6,
+                    "eth" : 6}
     
     # These constants match what's in the fortran code.  
     rgas    = 287.04     #J/K/kg
@@ -312,7 +320,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     
     if extrapolate:
         extrap = 1
-        icase = icase_lookup[field_type.lower()]
+        icase = icase_lookup[field_type]
     
     # Extract vriables
     timeidx = -1 # Should this be an argument?
@@ -325,7 +333,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     terht = get_terrain(wrfnc, timeidx)
     t = get_theta(wrfnc, timeidx)
     tk = get_temp(wrfnc, timeidx, units="k")
-    p = get_pressure(wrfnc, timeidx)
+    p = get_pressure(wrfnc, timeidx, units="pa")
     ght = get_height(wrfnc, timeidx, msl=True)
     ht_agl = get_height(wrfnc, timeidx, msl=False)
     
@@ -334,7 +342,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     # Vertical coordinate type
     vcor = 0
     
-    if vert_coord in ("pressure", "pres"):
+    if vert_coord in ("pressure", "pres", "p"):
         vcor = 1
         vcord_array = p * ConversionFactors.PA_TO_HPA
         
@@ -346,7 +354,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         vcor = 3
         vcord_array = n.exp(-ht_agl/sclht)
     
-    elif vert_coord == "theta":
+    elif vert_coord in ("theta", "th"):
         vcor = 4
         idir = 1
         icorsw = 0
@@ -356,7 +364,12 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         
         vcord_array = monotonic(t,p_hpa,coriolis,idir,delta,icorsw)
         
-    elif vert_coord == "theta-e":
+        # We only extrapolate temperature fields below ground 
+        # if we are interpolating to pressure or height vertical surfaces.
+        
+        icase = 0 
+        
+    elif vert_coord in ("theta-e", "thetae", "eth"):
         vcor = 5
         icorsw = 0
         idir = 1
@@ -378,8 +391,8 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         missing = Constants.DEFAULT_FILL
         
     res = vintrp(field,p,tk,qv,ght,terht,sfp,smsfp,
-                       vcord_array,interp_levels,
-                       icase,extrap,vcor,log_p_int,missing)
+                 vcord_array,interp_levels,
+                 icase,extrap,vcor,log_p_int,missing)
     
     return ma.masked_values(res,missing)
 

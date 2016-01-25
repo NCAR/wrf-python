@@ -1,12 +1,11 @@
 
-from wrf.var.constants import Constants
 from wrf.var.decorators import convert_units
 from wrf.var.util import extract_vars
 
-__all__ = ["get_pressure"]
+__all__ = ["get_pressure", "get_pressure_hpa"]
 
 @convert_units("pressure", "pa")
-def get_pressure(wrfnc, timeidx=0, units="hpa"):
+def get_pressure(wrfnc, timeidx=0, units="pa"):
 
     try:
         p_vars = extract_vars(wrfnc, timeidx, vars=("P", "PB"))
@@ -23,6 +22,10 @@ def get_pressure(wrfnc, timeidx=0, units="hpa"):
         pres = p + pb
     
     return pres
+
+def get_pressure_hpa(wrfnc, timeidx=0, units="hpa"):
+    return get_pressure(wrfnc, timeidx, units=units)
+
 
     
     

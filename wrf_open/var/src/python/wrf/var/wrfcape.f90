@@ -248,6 +248,7 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     klev = 0
     klcl = 0
 
+
     ! the comments were taken from a mark stoelinga email, 23 apr 2007,
     ! in response to a user getting the "outside of lookup table bounds"
     ! error message.
@@ -410,8 +411,10 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                       tvlift = tvirtual(tmklift,qvplift)
                       ghtlift = zlcl
                       ilcl = 1
+
                   ELSE
                       tmklift = tonpsadiabat(ethpari,prs(i,j,k),PSADITHTE,PSADIPRS,PSADITMK,GAMMA,throw_exception)
+
                       eslift = EZERO*exp(ESLCON1* (tmklift-CELKEL)/(tmklift-ESLCON2))
                       qvplift = EPS*eslift/ (prs(i,j,k)-eslift)
                       tvenv = tvirtual(tmk(i,j,k),qvp(i,j,k))
@@ -421,6 +424,7 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !  buoyancy
                   buoy(kk) = GRAV* (tvlift-tvenv)/tvenv
                   zrel(kk) = ghtlift - ghtpari
+
                   IF ((kk.gt.1).and.(buoy(kk)*buoy(kk-1).lt.0.0d0)) THEN
 
     !   parcel ascent curve crosses sounding curve, so create a new level
@@ -432,7 +436,9 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                       buoy(kk-1) = 0.d0
                       zrel(kk-1) = zrel(kk-2) +buoy(kk-2)/&
                           (buoy(kk-2)-buoy(kk))*(zrel(kk)-zrel(kk-2))
+
                   END IF
+
                   IF (ilcl.eq.1) THEN
                       klcl = kk
                       ilcl = 2
@@ -547,8 +553,8 @@ SUBROUTINE f_computecape(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               cin(i,j,mkzh-1) = zrel(klcl) + ghtpari - ter(i,j)
     !  meters agl
               cin(i,j,mkzh-2) = zrel(klfc) + ghtpari - ter(i,j)
-          ENDIF
 
+          ENDIF
       END DO
     END DO
 

@@ -26,10 +26,18 @@ def convert_units(unit_type, alg_unit):
             # If units are provided to the method call, use them.  
             # Otherwise, need to parse the argspec to find what the default 
             # value is since wraps does not preserve this.
+            argspec = getargspec(func)
+            try:
+                unit_idx = argspec.args.index("units")
+            except ValueError:
+                unit_idx = None
+                
             if ("units" in kargs):
                 desired_units = kargs["units"]
+            elif (len(args) > unit_idx and unit_idx is not None):
+                desired_units = args[unit_idx]
             else:
-                argspec = getargspec(func)
+                
                 arg_idx_from_right = (len(argspec.args) 
                                       - argspec.args.index("units"))
                 desired_units = argspec.defaults[-arg_idx_from_right]

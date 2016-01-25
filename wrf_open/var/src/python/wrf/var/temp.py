@@ -4,7 +4,8 @@ from wrf.var.extension import computetk, computeeth, computetv, computewetbulb
 from wrf.var.decorators import convert_units
 from wrf.var.util import extract_vars
 
-__all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw"]
+__all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw",
+           "get_tk", "get_tc"]
 
 @convert_units("temp", "k")
 def get_theta(wrfnc, timeidx=0, units="k"):
@@ -84,6 +85,12 @@ def get_tw(wrfnc, timeidx=0, units="k"):
     tw = computewetbulb(full_p,tk,qv)
     
     return tw
+
+def get_tk(wrfnc, timeidx=0):
+    return get_temp(wrfnc, timeidx, units="k")
+
+def get_tc(wrfnc, timeidx=0):
+    return get_temp(wrfnc, timeidx, units="c")
     
     
 

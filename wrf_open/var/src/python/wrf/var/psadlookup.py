@@ -4568,13 +4568,15 @@ _LOOKUP_TABLE = (
 """)
 
 _LOOKUP_LIST = _LOOKUP_TABLE.split()
-_PSADITHTE = n.array([float(x) for x in _LOOKUP_LIST[0:_THETA_DIM]],n.double)
+_PSADITHTE = n.array([float(x) for x in _LOOKUP_LIST[0:_THETA_DIM]],
+                     "float64")
 _PSADIPRS = n.array([float(x) 
-                for x in _LOOKUP_LIST[_THETA_DIM:_THETA_DIM+_PRS_DIM]], n.double)
+                for x in _LOOKUP_LIST[_THETA_DIM:_THETA_DIM+_PRS_DIM]], 
+                    "float64")
 # Will keep C-indexing at the python level, be sure to transpose this
 _PSADITMK = n.array([float(x) 
     for x in _LOOKUP_LIST[_THETA_DIM+_PRS_DIM:]],
-                    n.double).reshape((_PRS_DIM,_THETA_DIM))
+                    "float64").reshape((_PRS_DIM,_THETA_DIM))
 
 def get_lookup_tables():
     return _PSADITHTE,_PSADIPRS,_PSADITMK

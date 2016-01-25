@@ -29,7 +29,7 @@ def _c_to_k(var):
     return var + Constants.TCK0
 
 def _c_to_f(var):
-    return ((9.0/5.0)*var) + 32.0
+    return 1.8 * var + 32.0
 
 # Temperature is a more complicated operation so requres functions
 def _apply_temp_conv(var, var_unit, dest_unit):
@@ -115,9 +115,10 @@ def check_units(unit, unit_type):
 
 def do_conversion(var, vartype, var_unit, dest_unit):
     if vartype != "temp":
-        return _apply_conv_fact(var, vartype, var_unit, dest_unit)
+        return _apply_conv_fact(var, vartype, 
+                                var_unit.lower(), dest_unit.lower())
     else:
-        return _apply_temp_conv(var, var_unit, dest_unit)
+        return _apply_temp_conv(var, var_unit.lower(), dest_unit.lower())
     
 
 
