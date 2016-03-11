@@ -12,7 +12,7 @@ from wrf.var._wrfext import (f_interpz3d, f_interp2dxy,f_interp1d,
                      f_monotonic, f_filter2d, f_vintrp)
 from wrf.var._wrfcape import f_computecape
 from wrf.var.decorators import (handle_left_iter, uvmet_left_iter, 
-                                handle_casting)
+                                handle_casting, handle_extract_transpose)
 
 __all__ = ["FortranException", "computeslp", "computetk", "computetd", 
            "computerh", "computeavo", "computepvo", "computeeth", 
@@ -26,21 +26,24 @@ class FortranException(Exception):
 
 @handle_left_iter(3,0, ignore_args=(2,3))
 @handle_casting(arg_idxs=(0,1))
+@handle_extract_transpose()
 def interpz3d(data3d,zdata,desiredloc,missingval):
-    res = f_interpz3d(data3d.T, 
-                      zdata.T, 
+    res = f_interpz3d(data3d, 
+                      zdata, 
                       desiredloc, 
                       missingval)
-    return res.T
+    return res
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1))
+@handle_extract_transpose()
 def interp2dxy(data3d,xy):
-    res = f_interp2dxy(data3d.T,
-                       xy.T)
-    return res.T
+    res = f_interp2dxy(data3d,
+                       xy)
+    return res
 
 @handle_casting(arg_idxs=(0,1,2))
+@handle_extract_transpose()
 def interp1d(v_in,z_in,z_out,missingval):
     res = f_interp1d(v_in,
                      z_in,
@@ -51,113 +54,121 @@ def interp1d(v_in,z_in,z_out,missingval):
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
+@handle_extract_transpose()
 def computeslp(z,t,p,q):
-    t_surf = n.zeros((z.shape[-2], z.shape[-1]), "float64")
-    t_sea_level = n.zeros((z.shape[-2], z.shape[-1]), "float64")
-    level = n.zeros((z.shape[-2], z.shape[-1]), "int32")
+    t_surf = n.zeros((z.shape[-2], z.shape[-1]), "float64", order="F")
+    t_sea_level = n.zeros((z.shape[-2], z.shape[-1]), "float64", order="F")
+    level = n.zeros((z.shape[-2], z.shape[-1]), "int32", order="F")
     
-    res = f_computeslp(z.T, 
-                       t.T, 
-                       p.T, 
-                       q.T,
-                       t_sea_level.T, 
-                       t_surf.T, 
-                       level.T,
+    res = f_computeslp(z, 
+                       t, 
+                       p, 
+                       q,
+                       t_sea_level, # Should come in with fortran ordering
+                       t_surf, 
+                       level,
                        FortranException())
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1))
+@handle_extract_transpose()
 def computetk(pres, theta):
     # No need to transpose here since operations on 1D array
     shape = pres.shape
-    res = f_computetk(pres.flatten("A"), 
-                      theta.flatten("A"))
-    res = n.reshape(res, shape, "A")
+    res = f_computetk(pres.ravel(order="A"), 
+                      theta.ravel(order="A"))
+    res = n.reshape(res, shape)
     return res
 
 # Note: No left iteration decorator needed with 1D arrays
 @handle_casting(arg_idxs=(0,1))
+@handle_extract_transpose()
 def computetd(pressure,qv_in):
     shape = pressure.shape
-    res = f_computetd(pressure.flatten("A"), 
-                      qv_in.flatten("A"))
-    res = n.reshape(res, shape, "A")
+    res = f_computetd(pressure.ravel(order="A"), 
+                      qv_in.ravel(order="A"))
+    res = n.reshape(res, shape)
     return res
 
 # Note:  No decorator needed with 1D arrays
 @handle_casting(arg_idxs=(0,1,2))
+@handle_extract_transpose()
 def computerh(qv,q,t):
     shape = qv.shape
-    res = f_computerh(qv.flatten("A"),
-                      q.flatten("A"),
-                      t.flatten("A"))
-    res = n.reshape(res, shape, "A")
+    res = f_computerh(qv.ravel(order="A"),
+                      q.ravel(order="A"),
+                      t.ravel(order="A"))
+    res = n.reshape(res, shape)
     return res
 
 @handle_left_iter(3,0, ignore_args=(6,7))
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
+@handle_extract_transpose()
 def computeavo(u,v,msfu,msfv,msfm,cor,dx,dy):
-    res = f_computeabsvort(u.T,
-                           v.T,
-                           msfu.T,
-                           msfv.T,
-                           msfm.T,
-                           cor.T,
+    res = f_computeabsvort(u,
+                           v,
+                           msfu,
+                           msfv,
+                           msfm,
+                           cor,
                            dx,
                            dy)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,2, ignore_args=(8,9))
 @handle_casting(arg_idxs=(0,1,2,3,4,5,6,7))
+@handle_extract_transpose()
 def computepvo(u,v,theta,prs,msfu,msfv,msfm,cor,dx,dy):
     
-    res = f_computepvo(u.T,
-                       v.T,
-                       theta.T,
-                       prs.T,
-                       msfu.T,
-                       msfv.T,
-                       msfm.T,
-                       cor.T,
+    res = f_computepvo(u,
+                       v,
+                       theta,
+                       prs,
+                       msfu,
+                       msfv,
+                       msfm,
+                       cor,
                        dx,
                        dy)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2))
+@handle_extract_transpose()
 def computeeth(qv, tk, p):
     
-    res = f_computeeth(qv.T,
-                       tk.T,
-                       p.T)
+    res = f_computeeth(qv,
+                       tk,
+                       p)
     
-    return res.T
+    return res
 
 @uvmet_left_iter()
 @handle_casting(arg_idxs=(0,1,2,3))
+@handle_extract_transpose()
 def computeuvmet(u,v,lat,lon,cen_long,cone):
-    longca = n.zeros((lat.shape[-2], lat.shape[-1]), "float64")
-    longcb = n.zeros((lon.shape[-2], lon.shape[-1]), "float64")
+    longca = n.zeros((lat.shape[-2], lat.shape[-1]), "float64", order="F")
+    longcb = n.zeros((lon.shape[-2], lon.shape[-1]), "float64", order="F")
     rpd = Constants.PI/180.
     
     
     # Make the 2D array a 3D array with 1 dimension
     if u.ndim < 3:
-        u = u.reshape((1,u.shape[-2], u.shape[-1]))
-        v = v.reshape((1,v.shape[-2], v.shape[-1]))
+        u = u.reshape((u.shape[-2], u.shape[-1], 1), order="F")
+        v = v.reshape((v.shape[-2], v.shape[-1], 1), order="F")
 
     # istag will always be false since winds are destaggered already
     # Missing values don't appear to be used, so setting to 0
-    res = f_computeuvmet(u.T,
-               v.T,
-               longca.T,
-               longcb.T,
-               lon.T,
-               lat.T,
+    res = f_computeuvmet(u,
+               v,
+               longca,
+               longcb,
+               lon,
+               lat,
                cen_long,
                cone,
                rpd,
@@ -168,113 +179,123 @@ def computeuvmet(u,v,lat,lon,cen_long,cone):
                0)
 
     
-    return n.squeeze(res.T)
+    return n.squeeze(res)
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
+@handle_extract_transpose()
 def computeomega(qv, tk, w, p):
     
-    res = f_computeomega(qv.T,
-                    tk.T,
-                    w.T,
-                    p.T)
+    res = f_computeomega(qv,
+                    tk,
+                    w,
+                    p)
     
     #return res.T
-    return res.T
+    return res
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1))
+@handle_extract_transpose()
 def computetv(tk,qv):
-    res = f_computetv(tk.T,
-                      qv.T)
+    res = f_computetv(tk,
+                      qv)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2))
+@handle_extract_transpose()
 def computewetbulb(p,tk,qv):
     PSADITHTE, PSADIPRS, PSADITMK = get_lookup_tables()
+    PSADITMK = PSADITMK.T
     
-    res = f_computewetbulb(p.T,
-                     tk.T,
-                     qv.T,
+    res = f_computewetbulb(p,
+                     tk,
+                     qv,
                      PSADITHTE,
                      PSADIPRS,
-                     PSADITMK.T,
+                     PSADITMK,
                      FortranException())
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0, ignore_args=(4,))
 @handle_casting(arg_idxs=(0,1,2,3))
+@handle_extract_transpose()
 def computesrh(u, v, z, ter, top):
 
-    res = f_computesrh(u.T, 
-                       v.T, 
-                       z.T, 
-                       ter.T, 
+    res = f_computesrh(u, 
+                       v, 
+                       z, 
+                       ter, 
                        top)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,2, ignore_args=(5,6,7,8))
 @handle_casting(arg_idxs=(0,1,2,3,4))
+@handle_extract_transpose()
 def computeuh(zp, mapfct, u, v, wstag, dx, dy, bottom, top):
     
-    tem1 = n.zeros((u.shape[-3],u.shape[-2],u.shape[-1]), "float64")
-    tem2 = n.zeros((u.shape[-3],u.shape[-2],u.shape[-1]), "float64")
+    tem1 = n.zeros((u.shape[-3],u.shape[-2],u.shape[-1]), "float64", order="F")
+    tem2 = n.zeros((u.shape[-3],u.shape[-2],u.shape[-1]), "float64", order="F")
     
-    res = f_computeuh(zp.T,
-                      mapfct.T,
+    res = f_computeuh(zp,
+                      mapfct,
                       dx,
                       dy,
                       bottom,
                       top,
-                      u.T,
-                      v.T,
-                      wstag.T,
-                      tem1.T,
-                      tem2.T)
+                      u,
+                      v,
+                      wstag,
+                      tem1,
+                      tem2)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
+@handle_extract_transpose()
 def computepw(p,tv,qv,ht):
     # Note, dim -3 is height, we only want y and x
-    zdiff = n.zeros((p.shape[-2], p.shape[-1]), "float64")
-    res = f_computepw(p.T,
-                      tv.T,
-                      qv.T,
-                      ht.T,
-                      zdiff.T)
+    zdiff = n.zeros((p.shape[-2], p.shape[-1]), "float64", order="F")
+    res = f_computepw(p,
+                      tv,
+                      qv,
+                      ht,
+                      zdiff)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0, ignore_args=(6,7,8))
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
+@handle_extract_transpose()
 def computedbz(p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin):
     
-    res = f_computedbz(p.T,
-                       tk.T,
-                       qv.T,
-                       qr.T,
-                       qs.T,
-                       qg.T,
+    res = f_computedbz(p,
+                       tk,
+                       qv,
+                       qr,
+                       qs,
+                       qg,
                        sn0,
                        ivarint,
                        iliqskin)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0,ignore_args=(6,7,8))
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
+@handle_extract_transpose()
 def computecape(p_hpa,tk,qv,ht,ter,sfp,missing,i3dflag,ter_follow):
     flip_cape = n.zeros((p_hpa.shape[-3],p_hpa.shape[-2],p_hpa.shape[-1]), 
-                        "float64")
+                        "float64", order="F")
     flip_cin = n.zeros((p_hpa.shape[-3],p_hpa.shape[-2],p_hpa.shape[-1]), 
-                       "float64")
+                       "float64", order="F")
     PSADITHTE, PSADIPRS, PSADITMK = get_lookup_tables()
+    PSADITMK = PSADITMK.T
     
     # The fortran routine needs pressure to be ascending in z-direction, 
     # along with tk,qv,and ht.
@@ -283,17 +304,17 @@ def computecape(p_hpa,tk,qv,ht,ter,sfp,missing,i3dflag,ter_follow):
     flip_qv = qv[::-1,:,:]
     flip_ht = ht[::-1,:,:]
     
-    f_computecape(flip_p.T,
-                  flip_tk.T,
-                  flip_qv.T,
-                  flip_ht.T,
-                  ter.T,
-                  sfp.T,
-                  flip_cape.T,
-                  flip_cin.T,
+    f_computecape(flip_p,
+                  flip_tk,
+                  flip_qv,
+                  flip_ht,
+                  ter,
+                  sfp,
+                  flip_cape,
+                  flip_cin,
                   PSADITHTE,
                   PSADIPRS,
-                  PSADITMK.T,
+                  PSADITMK,
                   missing,
                   i3dflag,
                   ter_follow,
@@ -303,7 +324,6 @@ def computecape(p_hpa,tk,qv,ht,ter,sfp,missing,i3dflag,ter_follow):
     # Remember to flip cape and cin back to descending p coordinates
     cape = flip_cape[::-1,:,:]
     cin = flip_cin[::-1,:,:]
-    
     
     return (cape, cin)
 
@@ -333,37 +353,40 @@ def computell(map_proj,truelat1,truelat2,stdlon,lat1,lon1,
 
 @handle_left_iter(3,0, ignore_args=(3,))
 @handle_casting(arg_idxs=(0,1,2))
+@handle_extract_transpose()
 def computeeta(full_t, znu, psfc, ptop):
-    pcalc = n.zeros(full_t.shape, "float64")
-    mean_t = n.zeros(full_t.shape, "float64")
-    temp_t = n.zeros(full_t.shape, "float64")
+    pcalc = n.zeros(full_t.shape, "float64", order="F")
+    mean_t = n.zeros(full_t.shape, "float64", order="F")
+    temp_t = n.zeros(full_t.shape, "float64", order="F")
     
-    res = f_converteta(full_t.T, 
-                       znu.T, 
-                       psfc.T, 
+    res = f_converteta(full_t, 
+                       znu, 
+                       psfc, 
                        ptop, 
-                       pcalc.T, 
-                       mean_t.T, 
-                       temp_t.T)
+                       pcalc, 
+                       mean_t, 
+                       temp_t)
     
-    return res.T
+    return res
 
 @handle_left_iter(3,0,ignore_args=(7,))
 @handle_casting(arg_idxs=(0,1,2,3,4,5,6))
+@handle_extract_transpose()
 def computectt(p_hpa,tk,qice,qcld,qv,ght,ter,haveqci):
-    res = f_computectt(p_hpa.T,
-                    tk.T,
-                    qice.T,
-                    qcld.T,
-                    qv.T,
-                    ght.T,
-                    ter.T,
+    res = f_computectt(p_hpa,
+                    tk,
+                    qice,
+                    qcld,
+                    qv,
+                    ght,
+                    ter,
                     haveqci)
     
-    return res.T
+    return res
 
 @handle_left_iter(2,0,ignore_args=(1,))
 @handle_casting(arg_idxs=(0,))
+@handle_extract_transpose()
 def smooth2d(field, passes):
     # Unlike NCL, this routine will not modify the values in place, but 
     # copies the original data before modifying it.  This allows the decorator
@@ -375,10 +398,10 @@ def smooth2d(field, passes):
         missing = Constants.DEFAULT_FILL
     
     field_copy = field.copy()
-    field_tmp = n.zeros(field_copy.shape, field_copy.dtype)  
+    field_tmp = n.zeros(field_copy.shape, field_copy.dtype, order="F")  
     
-    f_filter2d(field_copy.T, 
-               field_tmp.T, 
+    f_filter2d(field_copy, 
+               field_tmp, 
                missing,
                passes)
     
@@ -388,32 +411,33 @@ def smooth2d(field, passes):
     
 @handle_left_iter(3,0,ignore_args=(3,4,5))
 @handle_casting(arg_idxs=(0,1,2))
+@handle_extract_transpose()
 def monotonic(var,lvprs,coriolis,idir,delta,icorsw):
-    res = f_monotonic(var.T,
-                      lvprs.T,
-                      coriolis.T,
+    res = f_monotonic(var,
+                      lvprs,
+                      coriolis,
                       idir,
                       delta,
                       icorsw)
     
-    return res.T
+    return res
 
-# TODO:  Check those decorators, they might be wrong
 @handle_left_iter(3,0,ignore_args=(9,10,11,12,13,14))
 @handle_casting(arg_idxs=(0,1,2,3,4,5,6,7,8,9))
+@handle_extract_transpose()
 def vintrp(field,pres,tk,qvp,ght,terrain,sfp,smsfp,
            vcarray,interp_levels,icase,extrap,vcor,logp,
            missing):
     
-    res = f_vintrp(field.T,
-             pres.T,
-             tk.T,
-             qvp.T,
-             ght.T,
-             terrain.T,
-             sfp.T,
-             smsfp.T,
-             vcarray.T,
+    res = f_vintrp(field,
+             pres,
+             tk,
+             qvp,
+             ght,
+             terrain,
+             sfp,
+             smsfp,
+             vcarray,
              interp_levels,
              icase,
              extrap,
@@ -421,7 +445,7 @@ def vintrp(field,pres,tk,qvp,ght,terrain,sfp,smsfp,
              logp,
              missing)
     
-    return res.T
+    return res
     
 
     

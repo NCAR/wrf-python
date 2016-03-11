@@ -8,10 +8,10 @@ __all__ = ["get_pressure", "get_pressure_hpa"]
 def get_pressure(wrfnc, timeidx=0, units="pa"):
 
     try:
-        p_vars = extract_vars(wrfnc, timeidx, vars=("P", "PB"))
+        p_vars = extract_vars(wrfnc, timeidx, varnames=("P", "PB"))
     except KeyError:
         try:
-            pres_vars = extract_vars(wrfnc, timeidx, vars="PRES")
+            pres_vars = extract_vars(wrfnc, timeidx, varnames="PRES")
         except:
             raise RuntimeError("pressure variable not found in NetCDF file")
         else:

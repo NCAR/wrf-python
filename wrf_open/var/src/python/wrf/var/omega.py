@@ -7,7 +7,8 @@ from wrf.var.util import extract_vars
 __all__ = ["get_omega"]
 
 def get_omega(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "W", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "W", 
+                                                    "PB", "QVAPOR"))
     t = ncvars["T"]
     p = ncvars["P"]
     w = ncvars["W"]

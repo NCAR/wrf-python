@@ -1,5 +1,7 @@
 import warnings
 
+from config import *
+import config
 from extension import *
 import extension
 from util import *
@@ -54,35 +56,39 @@ from times import *
 import times
 from units import *
 import units
+from projection import *
+import projection
 
 __all__ = ["getvar"]
-__all__ += extension.__all__
-__all__ += util.__all__
-__all__ += cape.__all__
-__all__ += constants.__all__
-__all__ += ctt.__all__
-__all__ += dbz.__all__
-__all__ += destag.__all__
-__all__ += dewpoint.__all__
-__all__ += etaconv.__all__
-__all__ += geoht.__all__
-__all__ += helicity.__all__
-__all__ += interp.__all__
-__all__ += latlon.__all__
-__all__ += omega.__all__
-__all__ += precip.__all__
-__all__ += psadlookup.__all__
-__all__ += pw.__all__
-__all__ += rh.__all__
-__all__ += slp.__all__
-__all__ += temp.__all__
-__all__ += terrain.__all__
-__all__ += uvmet.__all__
-__all__ += vorticity.__all__
-__all__ += wind.__all__
-__all__ += times.__all__
-__all__ += pressure.__all__
-__all__ += units.__all__
+__all__.extend(config.__all__)
+__all__.extend( extension.__all__)
+__all__.extend(util.__all__)
+__all__.extend(cape.__all__)
+__all__.extend(constants.__all__)
+__all__.extend(ctt.__all__)
+__all__.extend(dbz.__all__)
+__all__.extend(destag.__all__)
+__all__.extend(dewpoint.__all__)
+__all__.extend(etaconv.__all__)
+__all__.extend(geoht.__all__)
+__all__.extend(helicity.__all__)
+__all__.extend(interp.__all__)
+__all__.extend(latlon.__all__)
+__all__.extend(omega.__all__)
+__all__.extend(precip.__all__)
+__all__.extend(psadlookup.__all__)
+__all__.extend(pw.__all__)
+__all__.extend(rh.__all__)
+__all__.extend(slp.__all__)
+__all__.extend(temp.__all__)
+__all__.extend(terrain.__all__)
+__all__.extend(uvmet.__all__)
+__all__.extend(vorticity.__all__)
+__all__.extend(wind.__all__)
+__all__.extend(times.__all__)
+__all__.extend(pressure.__all__)
+__all__.extend(units.__all__)
+__all__.extend(projection.__all__)
 
 # func is the function to call.  kargs are required arguments that should 
 # not be altered by the user

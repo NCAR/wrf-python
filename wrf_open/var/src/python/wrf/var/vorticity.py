@@ -4,7 +4,7 @@ from wrf.var.util import extract_vars, extract_global_attrs
 __all__ = ["get_avo", "get_pvo"]
 
 def get_avo(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("U", "V", "MAPFAC_U",
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("U", "V", "MAPFAC_U",
                                               "MAPFAC_V", "MAPFAC_M",
                                               "F"))
     
@@ -23,7 +23,7 @@ def get_avo(wrfnc, timeidx=0):
 
 
 def get_pvo(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("U", "V", "T", "P",
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("U", "V", "T", "P",
                                               "PB", "MAPFAC_U",
                                               "MAPFAC_V", "MAPFAC_M",
                                               "F"))

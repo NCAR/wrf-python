@@ -6,8 +6,8 @@ from wrf.var.util import extract_vars
 __all__ = ["get_pw"]
 
 def get_pw(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "PH", "PHB", 
-                                              "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "PH", 
+                                                    "PHB", "QVAPOR"))
     
     t = ncvars["T"]
     p = ncvars["P"]

@@ -440,7 +440,7 @@ if __name__ == "__main__":
             if var in ignore_vars:
                 continue
             
-            test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE,pynio=True)
+            test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE, pynio=True)
             test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True,
                                    pynio=True)
             setattr(WRFVarsTest, 'test_pynio_{0}'.format(var), test_func1)

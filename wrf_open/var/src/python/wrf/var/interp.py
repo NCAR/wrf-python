@@ -324,7 +324,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     
     # Extract vriables
     timeidx = -1 # Should this be an argument?
-    ncvars = extract_vars(wrfnc, timeidx, vars=("PSFC", "QVAPOR", "F"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("PSFC", "QVAPOR", "F"))
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]

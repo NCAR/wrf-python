@@ -1,15 +1,16 @@
 
 from wrf.var.constants import Constants
 from wrf.var.extension import computetk, computeeth, computetv, computewetbulb
-from wrf.var.decorators import convert_units
+from wrf.var.decorators import convert_units, set_metadata
 from wrf.var.util import extract_vars
 
 __all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw",
            "get_tk", "get_tc"]
 
+@set_metadata()
 @convert_units("temp", "k")
 def get_theta(wrfnc, timeidx=0, units="k"):
-    ncvars = extract_vars(wrfnc, timeidx, vars="T")
+    ncvars = extract_vars(wrfnc, timeidx, varnames="T")
     t = ncvars["T"]
     full_t = t + Constants.T_BASE
 
@@ -19,7 +20,7 @@ def get_theta(wrfnc, timeidx=0, units="k"):
 def get_temp(wrfnc, timeidx=0, units="k"):
     """Return the temperature in Kelvin or Celsius"""
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB"))
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -34,7 +35,7 @@ def get_temp(wrfnc, timeidx=0, units="k"):
 def get_eth(wrfnc, timeidx=0, units="k"):
     "Return equivalent potential temperature (Theta-e) in Kelvin"
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR"))
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -52,7 +53,7 @@ def get_eth(wrfnc, timeidx=0, units="k"):
 def get_tv(wrfnc, timeidx=0, units="k"):
     "Return the virtual temperature (tv) in Kelvin or Celsius"
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR"))
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -72,7 +73,7 @@ def get_tv(wrfnc, timeidx=0, units="k"):
 def get_tw(wrfnc, timeidx=0, units="k"):
     "Return the wetbulb temperature (tw)"
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR"))
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]

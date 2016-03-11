@@ -14,10 +14,10 @@ def _get_geoht(wrfnc, timeidx, height=True, msl=True):
     """
     
     try:
-        ph_vars = extract_vars(wrfnc, timeidx, ("PH", "PHB", "HGT"))
+        ph_vars = extract_vars(wrfnc, timeidx, varnames=("PH", "PHB", "HGT"))
     except KeyError:
         try:
-            ght_vars = extract_vars(wrfnc, timeidx, ("GHT", "HGT_U"))
+            ght_vars = extract_vars(wrfnc, timeidx, varnames=("GHT", "HGT_U"))
         except KeyError:
             raise RuntimeError("Cannot calculate height with variables in "
                                "NetCDF file")

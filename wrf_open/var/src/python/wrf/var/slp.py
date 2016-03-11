@@ -8,7 +8,7 @@ __all__ = ["get_slp"]
 
 @convert_units("pressure", "hpa")
 def get_slp(wrfnc, timeidx=0, units="hpa"):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR",
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR",
                                               "PH", "PHB"))
 
     t = ncvars["T"]

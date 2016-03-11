@@ -8,10 +8,10 @@ __all__ = ["get_terrain"]
 def get_terrain(wrfnc, timeidx=0, units="m"):
     
     try:
-        hgt_vars = extract_vars(wrfnc, timeidx, vars="HGT")
+        hgt_vars = extract_vars(wrfnc, timeidx, varnames="HGT")
     except KeyError:
         try:
-            hgt_m_vars = extract_vars(wrfnc, timeidx, vars="HGT_M")
+            hgt_m_vars = extract_vars(wrfnc, timeidx, varnames="HGT_M")
         except KeyError:
             raise RuntimeError("height variable not found in NetCDF file")
         else:

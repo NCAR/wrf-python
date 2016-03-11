@@ -16,10 +16,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
     
     if not ten_m:
         try:
-            u_vars = extract_vars(wrfnc, timeidx, vars="U")
+            u_vars = extract_vars(wrfnc, timeidx, varnames="U")
         except KeyError:
             try:
-                uu_vars = extract_vars(wrfnc, timeidx, vars="UU")
+                uu_vars = extract_vars(wrfnc, timeidx, varnames="UU")
             except KeyError:
                 raise RuntimeError("No valid wind data found in NetCDF file")
             else:
@@ -28,10 +28,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
             u = destagger(u_vars["U"], -1)   
         
         try:
-            v_vars = extract_vars(wrfnc, timeidx, vars="V")
+            v_vars = extract_vars(wrfnc, timeidx, varnames="V")
         except KeyError:
             try:
-                vv_vars = extract_vars(wrfnc, timeidx, vars="VV")
+                vv_vars = extract_vars(wrfnc, timeidx, varnames="VV")
             except KeyError:
                 raise RuntimeError("No valid wind data found in NetCDF file")
             else:
@@ -41,10 +41,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
             
     else:
         try:
-            u_vars = extract_vars(wrfnc, timeidx, vars="U10")
+            u_vars = extract_vars(wrfnc, timeidx, varnames="U10")
         except KeyError:
             try:
-                uu_vars = extract_vars(wrfnc, timeidx, vars="UU")
+                uu_vars = extract_vars(wrfnc, timeidx, varnames="UU")
             except KeyError:
                 raise RuntimeError("No valid wind data found in NetCDF file")
             else:
@@ -55,10 +55,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
             u = u_vars["U10"] 
         
         try:
-            v_vars = extract_vars(wrfnc, timeidx, vars="V10")
+            v_vars = extract_vars(wrfnc, timeidx, varnames="V10")
         except KeyError:
             try:
-                vv_vars = extract_vars(wrfnc, timeidx, vars="VV")
+                vv_vars = extract_vars(wrfnc, timeidx, varnames="VV")
             except KeyError:
                 raise RuntimeError("No valid wind data found in NetCDF file")
             else:
@@ -82,12 +82,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
         # No rotation needed for Mercator and Lat/Lon
         return u,v
     elif map_proj in (1,2):
-        lat_attrs = extract_global_attrs(wrfnc, attrs=("CEN_LAT",
-                                                        "TRUELAT1",
-                                                        "TRUELAT2"))
+        lat_attrs = extract_global_attrs(wrfnc, attrs=("TRUELAT1",
+                                                       "TRUELAT2"))
         radians_per_degree = Constants.PI/180.0
         # Rotation needed for Lambert and Polar Stereographic
-        cen_lat  = lat_attrs["CEN_LAT"]
         true_lat1 = lat_attrs["TRUELAT1"]
         true_lat2 = lat_attrs["TRUELAT2"]
         
@@ -104,10 +102,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
             cen_lon = lon_attrs["STAND_LON"]
               
         try:
-            xlat_m_vars = extract_vars(wrfnc, timeidx, vars="XLAT_M")
+            xlat_m_vars = extract_vars(wrfnc, timeidx, varnames="XLAT_M")
         except KeyError:
             try:
-                xlat_vars = extract_vars(wrfnc, timeidx, vars="XLAT")
+                xlat_vars = extract_vars(wrfnc, timeidx, varnames="XLAT")
             except KeyError:
                 raise RuntimeError("xlat not found in NetCDF file")
             else:
@@ -116,10 +114,10 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps"):
             lat = xlat_m_vars["XLAT_M"]
             
         try:
-            xlon_m_vars = extract_vars(wrfnc, timeidx, vars="XLONG_M")
+            xlon_m_vars = extract_vars(wrfnc, timeidx, varnames="XLONG_M")
         except KeyError:
             try:
-                xlon_vars = extract_vars(wrfnc, timeidx, vars="XLONG")
+                xlon_vars = extract_vars(wrfnc, timeidx, varnames="XLONG")
             except KeyError:
                 raise RuntimeError("xlong not found in NetCDF file")
             else:

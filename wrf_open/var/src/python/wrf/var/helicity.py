@@ -9,17 +9,17 @@ __all__ = ["get_srh", "get_uh"]
 def get_srh(wrfnc, timeidx=0, top=3000.0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("HGT", "PH", "PHB"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("HGT", "PH", "PHB"))
     
     ter = ncvars["HGT"]
     ph = ncvars["PH"]
     phb = ncvars["PHB"]
     
     try:
-        u_vars = extract_vars(wrfnc, timeidx, vars="U")
+        u_vars = extract_vars(wrfnc, timeidx, varnames="U")
     except KeyError:
         try:
-            uu_vars = extract_vars(wrfnc, timeidx, vars="UU")
+            uu_vars = extract_vars(wrfnc, timeidx, varnames="UU")
         except KeyError:
             raise RuntimeError("No valid wind data found in NetCDF file")
         else:
@@ -28,10 +28,10 @@ def get_srh(wrfnc, timeidx=0, top=3000.0):
         u = destagger(u_vars["U"], -1)   
         
     try:
-        v_vars = extract_vars(wrfnc, timeidx, vars="V")
+        v_vars = extract_vars(wrfnc, timeidx, varnames="V")
     except KeyError:
         try:
-            vv_vars = extract_vars(wrfnc, timeidx, vars="VV")
+            vv_vars = extract_vars(wrfnc, timeidx, varnames="VV")
         except KeyError:
             raise RuntimeError("No valid wind data found in NetCDF file")
         else:
@@ -55,7 +55,7 @@ def get_srh(wrfnc, timeidx=0, top=3000.0):
 
 def get_uh(wrfnc, timeidx=0, bottom=2000.0, top=5000.0):
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("W", "PH", "PHB", "MAPFAC_M"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("W", "PH", "PHB", "MAPFAC_M"))
     
     wstag = ncvars["W"]
     ph = ncvars["PH"]
@@ -67,10 +67,10 @@ def get_uh(wrfnc, timeidx=0, bottom=2000.0, top=5000.0):
     dy = attrs["DY"]
     
     try:
-        u_vars = extract_vars(wrfnc, timeidx, vars="U")
+        u_vars = extract_vars(wrfnc, timeidx, varnames="U")
     except KeyError:
         try:
-            uu_vars = extract_vars(wrfnc, timeidx, vars="UU")
+            uu_vars = extract_vars(wrfnc, timeidx, varnames="UU")
         except KeyError:
             raise RuntimeError("No valid wind data found in NetCDF file")
         else:
@@ -79,10 +79,10 @@ def get_uh(wrfnc, timeidx=0, bottom=2000.0, top=5000.0):
         u = destagger(u_vars["U"], -1)   
         
     try:
-        v_vars = extract_vars(wrfnc, timeidx, vars="V")
+        v_vars = extract_vars(wrfnc, timeidx, varnames="V")
     except KeyError:
         try:
-            vv_vars = extract_vars(wrfnc, timeidx, vars="VV")
+            vv_vars = extract_vars(wrfnc, timeidx, varnames="VV")
         except KeyError:
             raise RuntimeError("No valid wind data found in NetCDF file")
         else:

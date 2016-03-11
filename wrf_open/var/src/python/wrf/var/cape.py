@@ -10,7 +10,7 @@ __all__ = ["get_2dcape", "get_3dcape"]
 
 def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", "PH",
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR", "PH",
                                               "PHB", "HGT", "PSFC"))
     
     t = ncvars["T"]
@@ -63,7 +63,7 @@ def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL):
 def get_3dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL):
     """Return the 3d fields of cape and cin"""
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR", 
                                                 "PH", "PHB", "HGT", "PSFC"))
     t = ncvars["T"]
     p = ncvars["P"]

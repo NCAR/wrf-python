@@ -6,7 +6,7 @@ from wrf.var.util import extract_vars
 __all__ = ["get_rh", "get_rh_2m"]
 
 def get_rh(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR"))
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -21,7 +21,7 @@ def get_rh(wrfnc, timeidx=0):
     return rh
 
 def get_rh_2m(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T2", "PSFC", "Q2"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T2", "PSFC", "Q2"))
     t2 = ncvars["T2"]
     psfc = ncvars["PSFC"]
     q2 = ncvars["Q2"]

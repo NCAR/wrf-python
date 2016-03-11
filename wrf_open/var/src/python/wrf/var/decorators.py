@@ -7,10 +7,51 @@ import numpy.ma as ma
 from wrf.var.units import do_conversion, check_units
 from wrf.var.destag import destagger
 from wrf.var.util import iter_left_indexes
+from wrf.var.config import xarray_enabled
+
+if xarray_enabled():
+    from xarray import DataArray
+
+
 
 __all__ = ["convert_units", "handle_left_iter", "uvmet_left_iter", 
-           "handle_casting"]
+           "handle_casting" "set_metadata"]
 
+# TODO:  In python 3.x, getargspec is deprecated
+class from_args(object):
+    def __init__(self, argname):
+        self.argname
+        
+    def __call__(self, func, *args, **kargs):
+        """Parses the function args and kargs looking for the desired argument 
+        value. Otherwise, the value is taken from the default keyword argument 
+        using the arg spec.
+        
+        """
+        # If units are provided to the method call, use them.  
+        # Otherwise, need to parse the argspec to find what the default 
+        # value is since wraps does not preserve this.
+        argspec = getargspec(func)
+        
+        if self.argname not in argspec.args and self.argname not in kargs:
+            return None
+            
+        try:
+            result_idx = argspec.args.index(self.argname)
+        except ValueError:
+            result_idx = None
+            
+        if (self.argname in kargs):
+            result = kargs[self.argname]
+        elif (len(args) > result_idx and result_idx is not None):
+            result = args[result_idx]
+        else:    
+            arg_idx_from_right = (len(argspec.args) - 
+                                  argspec.args.index(self.argname))
+            result = argspec.defaults[-arg_idx_from_right]
+            
+        return result
+    
 def convert_units(unit_type, alg_unit):
     """A decorator that applies unit conversion to a function's output array.
     
@@ -23,25 +64,8 @@ def convert_units(unit_type, alg_unit):
     def convert_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kargs):
-            # If units are provided to the method call, use them.  
-            # Otherwise, need to parse the argspec to find what the default 
-            # value is since wraps does not preserve this.
-            argspec = getargspec(func)
-            try:
-                unit_idx = argspec.args.index("units")
-            except ValueError:
-                unit_idx = None
-                
-            if ("units" in kargs):
-                desired_units = kargs["units"]
-            elif (len(args) > unit_idx and unit_idx is not None):
-                desired_units = args[unit_idx]
-            else:
-                
-                arg_idx_from_right = (len(argspec.args) 
-                                      - argspec.args.index("units"))
-                desired_units = argspec.defaults[-arg_idx_from_right]
-                
+            
+            desired_units = from_args("units")(func, *args, **kargs)
             check_units(desired_units, unit_type)
             
             # Unit conversion done here
@@ -59,7 +83,7 @@ def _calc_out_dims(outvar, left_dims):
 
 def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
                    ref_var_name=None,
-                   ignore_args=(), ignore_kargs=()):
+                   ignore_args=None, ignore_kargs=None):
     """Decorator to handle iterating over leftmost dimensions when using 
     multiple files and/or multiple times.
     
@@ -84,6 +108,8 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
     def indexing_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kargs):
+            ignore_args = ignore_args if ignore_args is not None else ()
+            ignore_kargs = ignore_kargs if ignore_kargs is not None else ()
             
             if ref_var_idx >= 0:
                 ref_var = args[ref_var_idx]
@@ -254,7 +280,7 @@ def uvmet_left_iter():
     
     return indexing_decorator
 
-def handle_casting(ref_idx=0, arg_idxs=(), karg_names=(),dtype=n.float64):
+def handle_casting(ref_idx=0, arg_idxs=None, karg_names=None, dtype=n.float64):
     """Decorator to handle casting to/from required dtype used in 
     numerical routine.
     
@@ -262,6 +288,9 @@ def handle_casting(ref_idx=0, arg_idxs=(), karg_names=(),dtype=n.float64):
     def cast_decorator(func):
         @wraps(func)
         def func_wrapper(*args, **kargs):
+            arg_idxs = arg_idxs if arg_idxs is not None else ()
+            karg_names = karg_names if karg_names is not None else ()
+            
             orig_type = args[ref_idx].dtype
             
             new_args = [arg.astype(dtype)
@@ -271,7 +300,6 @@ def handle_casting(ref_idx=0, arg_idxs=(), karg_names=(),dtype=n.float64):
             new_kargs = {key:(val.astype(dtype)
                         if key in karg_names else val)
                         for key,val in kargs.iteritems()}
-                
             
             res = func(*new_args, **new_kargs) 
             
@@ -287,5 +315,71 @@ def handle_casting(ref_idx=0, arg_idxs=(), karg_names=(),dtype=n.float64):
         return func_wrapper
     
     return cast_decorator
+
+def _extract_and_transpose(arg):
+    if xarray_enabled():
+        if isinstance(arg, DataArray):
+            arg = arg.values
+    
+    if isinstance(arg, n.ndarray):
+        if not arg.flags.F_CONTIGUOUS:
+            return arg.T
+        
+    return arg
+    
+def handle_extract_transpose():
+    """Decorator to extract the data array from a DataArray and also
+    transposes if the data is not fortran contiguous.
+    
+    """
+    def extract_transpose_decorator(func):
+        @wraps(func)
+        def func_wrapper(*args, **kargs):
+            
+            new_args = [_extract_and_transpose(arg) for arg in args]
+            
+            new_kargs = {key:_extract_and_transpose(val) 
+                         for key,val in kargs.iteritems()}
+                
+            res = func(*new_args, **new_kargs) 
+            
+            if isinstance(res, n.ndarray):
+                if res.flags.F_CONTIGUOUS:
+                    return res.T
+            else:
+                return tuple(x.T if x.flags.F_CONTIGUOUS else x for x in res)
+            
+            return res
+        
+        return func_wrapper
+    
+    return extract_transpose_decorator
+
+def set_metadata(copy_from=None, ignore=None, **fixed_kargs):
+    """Decorator to set the attributes for a WRF method.
+    
+    """
+    def attr_decorator(func):
+        @wraps(func)
+        def func_wrapper(*args, **kargs):
+            if not xarray_enabled():
+                return func(*args, **kargs)
+            
+            result = func(*args, **kargs)
+            
+            units = from_args("units")(func, *args, **kargs)
+            if units is not None:
+                result.attrs["units"] = units
+            
+            for argname, val in fixed_kargs.iteritems():
+                result[argname] = val
+            
+            return result
+        
+        return func_wrapper
+    
+    return attr_decorator
+    
+    
 
 

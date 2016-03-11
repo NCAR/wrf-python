@@ -17,7 +17,7 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
     as liquid)
     
     """
-    ncvars = extract_vars(wrfnc, timeidx, vars=("T", "P", "PB", "QVAPOR", 
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR", 
                                               "QRAIN"))
     t = ncvars["T"]
     p = ncvars["P"]

@@ -7,7 +7,7 @@ __all__ = ["get_dp", "get_dp_2m"]
 @convert_units("temp", "c")
 def get_dp(wrfnc, timeidx=0, units="c"):
     
-    ncvars = extract_vars(wrfnc, timeidx, vars=("P", "PB", "QVAPOR"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("P", "PB", "QVAPOR"))
     
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -22,7 +22,7 @@ def get_dp(wrfnc, timeidx=0, units="c"):
     
 @convert_units("temp", "c")
 def get_dp_2m(wrfnc, timeidx=0, units="c"):
-    ncvars = extract_vars(wrfnc, timeidx, vars=("PSFC", "Q2"))
+    ncvars = extract_vars(wrfnc, timeidx, varnames=("PSFC", "Q2"))
 
     # Algorithm requires hPa
     psfc = .01*(ncvars["PSFC"])
