@@ -1,8 +1,8 @@
 import numpy as np
 import math
 
-from wrf.var.config import basemap_enabled, cartopy_enabled, pyngl_enabled
-from wrf.var.constants import Constants
+from .config import basemap_enabled, cartopy_enabled, pyngl_enabled
+from .constants import Constants
 
 if cartopy_enabled():
     from cartopy import crs

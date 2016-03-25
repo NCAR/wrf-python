@@ -1,6 +1,6 @@
 
 
-from wrf.var.util import extract_vars
+from .util import extract_vars
 
 __all__ = ["destagger", "destagger_windcomp", "destagger_winds"]
 
@@ -40,24 +40,25 @@ def destagger(var, stagger_dim):
     
     return result
 
-def destagger_windcomp(wrfnc, comp, timeidx=0):
-    if comp.lower() == "u":
-        wrfvar = "U"
-        stagdim = -1
-    elif comp.lower() == "v":
-        wrfvar = "V"
-        stagdim = -2
-    elif comp.lower() == "w":
-        wrfvar = "W"
-        stagdim = -3
-        
-    #wind_data = wrfnc.variables[wrfvar][timeidx,:,:,:]
-    ncvars = extract_vars(wrfnc, timeidx, vars=wrfvar)
-    wind_data = ncvars[wrfvar]
-    return destagger(wind_data, stagdim)
-
-def destagger_winds(wrfnc, timeidx=0):
-    return (destagger_windcomp(wrfnc, "u", timeidx),
-            destagger_windcomp(wrfnc, "v", timeidx),
-            destagger_windcomp(wrfnc, "w", timeidx))
+# def destagger_windcomp(wrfnc, comp, timeidx=0, 
+#                        method="cat", squeeze=True, cache=None):
+#     if comp.lower() == "u":
+#         wrfvar = "U"
+#         stagdim = -1
+#     elif comp.lower() == "v":
+#         wrfvar = "V"
+#         stagdim = -2
+#     elif comp.lower() == "w":
+#         wrfvar = "W"
+#         stagdim = -3
+#         
+#     ncvars = extract_vars(wrfnc, timeidx, wrfvar, method, squeeze, cache)
+#     wind_data = ncvars[wrfvar]
+#     
+#     return destagger(wind_data, stagdim)
+# 
+# def destagger_winds(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+#     return (destagger_windcomp(wrfnc, "u", timeidx, method, squeeze, cache),
+#             destagger_windcomp(wrfnc, "v", timeidx, method, squeeze, cache),
+#             destagger_windcomp(wrfnc, "w", timeidx, method, squeeze, cache))
     

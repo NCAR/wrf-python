@@ -1,21 +1,24 @@
 
 import numpy as n
 
-from wrf.var.extension import computectt, computetk
-from wrf.var.constants import Constants, ConversionFactors
-from wrf.var.destag import destagger
-from wrf.var.decorators import convert_units
-from wrf.var.util import extract_vars
+from .extension import computectt, computetk
+from .constants import Constants, ConversionFactors
+from .destag import destagger
+from .decorators import convert_units, copy_and_set_metadata
+from .util import extract_vars
 
 __all__ = ["get_ctt"]
 
+@copy_and_set_metadata(copy_varname="T", name="ctt", 
+                       description="cloud top temperature")
 @convert_units("temp", "c")
-def get_ctt(wrfnc, timeidx=0, units="c"):
+def get_ctt(wrfnc, timeidx=0, units="c", method="cat", squeeze=True, 
+              cache=None):
     """Return the cloud top temperature.
     
     """
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "PH" ,
-                                            "PHB", "HGT", "QVAPOR"))
+    varnames = ("T", "P", "PB", "PH", "PHB", "HGT", "QVAPOR")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -26,7 +29,7 @@ def get_ctt(wrfnc, timeidx=0, units="c"):
     
     haveqci = 1
     try:
-        icevars = extract_vars(wrfnc, timeidx, vars="QICE")
+        icevars = extract_vars(wrfnc, timeidx, "QICE", method, squeeze, cache)
     except KeyError:
         qice = n.zeros(qv.shape, qv.dtype)
         haveqci = 0
@@ -34,7 +37,7 @@ def get_ctt(wrfnc, timeidx=0, units="c"):
         qice = icevars["QICE"] * 1000.0 #g/kg
     
     try:
-        cldvars = extract_vars(wrfnc, timeidx, vars="QCLOUD")
+        cldvars = extract_vars(wrfnc, timeidx, "QCLOUD", method, squeeze, cache)
     except KeyError:
         raise RuntimeError("'QCLOUD' not found in NetCDF file")
     else:

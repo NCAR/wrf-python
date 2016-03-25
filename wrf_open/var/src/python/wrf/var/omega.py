@@ -1,14 +1,18 @@
 
-from wrf.var.constants import Constants
-from wrf.var.destag import destagger
-from wrf.var.extension import computeomega,computetk
-from wrf.var.util import extract_vars
+from .constants import Constants
+from .destag import destagger
+from .extension import computeomega,computetk
+from .util import extract_vars
+from .decorators import copy_and_set_metadata
 
 __all__ = ["get_omega"]
 
-def get_omega(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "W", 
-                                                    "PB", "QVAPOR"))
+@copy_and_set_metadata(copy_varname="T", name="omega", 
+                       description="omega",
+                       units="Pa/s")
+def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+    varnames=("T", "P", "W", "PB", "QVAPOR")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
     t = ncvars["T"]
     p = ncvars["P"]
     w = ncvars["W"]

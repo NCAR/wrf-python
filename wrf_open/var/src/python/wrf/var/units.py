@@ -1,5 +1,5 @@
 
-from wrf.var.constants import Constants, ConversionFactors
+from .constants import Constants, ConversionFactors
 
 __all__ = ["check_units", "do_conversion"]
 

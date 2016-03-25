@@ -3,20 +3,20 @@ from math import floor, ceil
 import numpy as n
 import numpy.ma as ma
 
-from wrf.var.extension import (interpz3d,interp2dxy,interp1d,
+from .extension import (interpz3d,interp2dxy,interp1d,
                                smooth2d,monotonic,vintrp)
-from wrf.var.decorators import handle_left_iter, handle_casting
-from wrf.var.util import extract_vars, is_staggered
-from wrf.var.constants import Constants, ConversionFactors
-from wrf.var.terrain import get_terrain
-from wrf.var.geoht import get_height
-from wrf.var.temp import get_theta, get_temp, get_eth
-from wrf.var.pressure import get_pressure
+from .decorators import handle_left_iter, handle_casting
+from .util import extract_vars, is_staggered
+from .constants import Constants, ConversionFactors
+from .terrain import get_terrain
+from .geoht import get_height
+from .temp import get_theta, get_temp, get_eth
+from .pressure import get_pressure
 
 __all__ = ["interplevel", "vertcross", "interpline", "vinterp"]
 
 #  Note:  Extension decorator is good enough to handle left dims
-def interplevel(data3d,zdata,desiredloc,missingval=Constants.DEFAULT_FILL):
+def interplevel(data3d, zdata, desiredloc, missingval=Constants.DEFAULT_FILL):
     """Return the horizontally interpolated data at the provided level
     
     data3d - the 3D field to interpolate
@@ -28,11 +28,13 @@ def interplevel(data3d,zdata,desiredloc,missingval=Constants.DEFAULT_FILL):
     """
     r1 = interpz3d(data3d, zdata, desiredloc, missingval)
     masked_r1 = ma.masked_values (r1, missingval)
+    
     return masked_r1
 
 def _to_positive_idxs(shape, coord):
-    if (coord[-2] >= 0 and coord[-1] >=0):
+    if (coord[-2] >= 0 and coord[-1] >= 0):
         return coord
+    
     return [x if (x >= 0) else shape[i]+x for (i,x) in enumerate(coord) ]
 
 def _get_xy(xdim, ydim, pivot_point=None, angle=None, 
@@ -41,7 +43,8 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
     
     xdim - maximum x-dimension
     ydim - maximum y-dimension
-    pivot_point - a pivot point of (south_north, west_east) (must be used with angle)
+    pivot_point - a pivot point of (south_north, west_east) 
+                  (must be used with angle)
     angle - the angle through the pivot point in degrees
     start_point - a start_point sequence of [south_north1, west_east1]
     end_point - an end point sequence of [south_north2, west_east2]
@@ -148,15 +151,16 @@ def _get_xy(xdim, ydim, pivot_point=None, angle=None,
                                 "start_point", "end_point"))
 @handle_casting(arg_idxs=(0,1))
 def vertcross(data3d, z, missingval=Constants.DEFAULT_FILL, 
-              pivot_point=None,angle=None,
-              start_point=None,end_point=None):
+              pivot_point=None, angle=None,
+              start_point=None, end_point=None):
     """Return the vertical cross section for a 3D field, interpolated 
     to a verical plane defined by a horizontal line.
     
     Arguments:
         data3d - a 3D data field
         z - 3D height field
-        pivot_point - a pivot point of (south_north,west_east) (must be used with angle)
+        pivot_point - a pivot point of (south_north,west_east) 
+                      (must be used with angle)
         angle - the angle through the pivot point in degrees
         start_point - a start_point tuple of (south_north1,west_east1)
         end_point - an end point tuple of (south_north2,west_east2)
@@ -362,7 +366,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         
         p_hpa = p * ConversionFactors.PA_TO_HPA
         
-        vcord_array = monotonic(t,p_hpa,coriolis,idir,delta,icorsw)
+        vcord_array = monotonic(t, p_hpa, coriolis, idir, delta, icorsw)
         
         # We only extrapolate temperature fields below ground 
         # if we are interpolating to pressure or height vertical surfaces.
@@ -379,7 +383,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         
         p_hpa = p * ConversionFactors.PA_TO_HPA
         
-        vcord_array = monotonic(eth,p_hpa,coriolis,idir,delta,icorsw)
+        vcord_array = monotonic(eth, p_hpa, coriolis, idir, delta, icorsw)
         # We only extrapolate temperature fields below ground if we are
         # interpolating to pressure or height vertical surfaces
         icase = 0
@@ -390,11 +394,11 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     else:
         missing = Constants.DEFAULT_FILL
         
-    res = vintrp(field,p,tk,qv,ght,terht,sfp,smsfp,
-                 vcord_array,interp_levels,
-                 icase,extrap,vcor,log_p_int,missing)
+    res = vintrp(field, p, tk, qv, ght, terht, sfp, smsfp,
+                 vcord_array, interp_levels,
+                 icase, extrap, vcor, log_p_int, missing)
     
-    return ma.masked_values(res,missing)
+    return ma.masked_values(res, missing)
 
     
     

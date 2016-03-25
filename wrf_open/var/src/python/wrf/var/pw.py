@@ -1,13 +1,17 @@
 
-from wrf.var.extension import computepw,computetv,computetk
-from wrf.var.constants import Constants
-from wrf.var.util import extract_vars
+from .extension import computepw,computetv,computetk
+from .constants import Constants
+from .util import extract_vars
+from .decorators import copy_and_set_metadata
 
 __all__ = ["get_pw"]
 
-def get_pw(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "PH", 
-                                                    "PHB", "QVAPOR"))
+@copy_and_set_metadata(copy_varname="T", name="pw", 
+                       description="precipitable water",
+                       units="kg m-2")
+def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+    varnames=("T", "P", "PB", "PH", "PHB", "QVAPOR")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -22,9 +26,9 @@ def get_pw(wrfnc, timeidx=0):
     full_t  =  t + Constants.T_BASE
     
     tk = computetk(full_p, full_t)
-    tv = computetv(tk,qv)
+    tv = computetv(tk, qv)
     
-    return computepw(full_p,tv,qv,ht)
+    return computepw(full_p, tv, qv, ht)
     
     
     

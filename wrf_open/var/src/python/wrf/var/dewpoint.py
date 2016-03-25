@@ -1,13 +1,17 @@
-from wrf.var.extension import computetd
-from wrf.var.decorators import convert_units
-from wrf.var.util import extract_vars
+from .extension import computetd
+from .decorators import convert_units, copy_and_set_metadata
+from .util import extract_vars
 
 __all__ = ["get_dp", "get_dp_2m"]
 
+@copy_and_set_metadata(copy_varname="QVAPOR", name="td", 
+                       description="dew point temperature")
 @convert_units("temp", "c")
-def get_dp(wrfnc, timeidx=0, units="c"):
+def get_dp(wrfnc, timeidx=0, units="c",
+           method="cat", squeeze=True, cache=None):
     
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("P", "PB", "QVAPOR"))
+    varnames=("P", "PB", "QVAPOR")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
     
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -19,10 +23,14 @@ def get_dp(wrfnc, timeidx=0, units="c"):
     
     td = computetd(full_p, qvapor)
     return td
-    
+
+@copy_and_set_metadata(copy_varname="Q2", name="td2", 
+                       description="2m dew point temperature")
 @convert_units("temp", "c")
-def get_dp_2m(wrfnc, timeidx=0, units="c"):
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("PSFC", "Q2"))
+def get_dp_2m(wrfnc, timeidx=0, units="c",
+              method="cat", squeeze=True, cache=None):
+    varnames=("PSFC", "Q2")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
 
     # Algorithm requires hPa
     psfc = .01*(ncvars["PSFC"])

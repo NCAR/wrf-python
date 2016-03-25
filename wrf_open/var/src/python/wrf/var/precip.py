@@ -1,6 +1,6 @@
 
 
-from wrf.var.util import extract_vars
+from .util import extract_vars
 
 __all__ = ["get_accum_precip", "get_precip_diff"]
 

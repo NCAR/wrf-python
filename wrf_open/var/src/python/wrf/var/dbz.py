@@ -1,12 +1,17 @@
 import numpy as n
 
-from wrf.var.extension import computedbz,computetk
-from wrf.var.constants import Constants
-from wrf.var.util import extract_vars
+from .extension import computedbz,computetk
+from .constants import Constants
+from .util import extract_vars, combine_with
+from .decorators import copy_and_set_metadata
 
 __all__ = ["get_dbz", "get_max_dbz"]
 
-def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
+@copy_and_set_metadata(copy_varname="T", name="dbz", 
+                       description="radar reflectivity",
+                       units="dBz")
+def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
+            method="cat", squeeze=True, cache=None):
     """ Return the dbz
     
     do_varint - do variable intercept (if False, constants are used.  Otherwise, 
@@ -17,8 +22,8 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
     as liquid)
     
     """
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR", 
-                                              "QRAIN"))
+    varnames = ("T", "P", "PB", "QVAPOR", "QRAIN")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -26,14 +31,16 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
     qr = ncvars["QRAIN"]
     
     try:
-        snowvars = extract_vars(wrfnc, timeidx, vars="QSNOW")
+        snowvars = extract_vars(wrfnc, timeidx, "QSNOW", 
+                                method, squeeze, cache)
     except KeyError:
         qs = n.zeros(qv.shape, "float")
     else:
         qs = snowvars["QSNOW"]
     
     try:
-        graupvars = extract_vars(wrfnc, timeidx, vars="QGRAUP")
+        graupvars = extract_vars(wrfnc, timeidx, "QGRAUP", 
+                                 method, squeeze, cache)
     except KeyError:
         qg = n.zeros(qv.shape, "float")
     else:
@@ -58,7 +65,13 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
     
     return computedbz(full_p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin)
 
-def get_max_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False):
-    return n.amax(get_dbz(wrfnc, do_varint, do_liqskin, timeidx), 
+@copy_and_set_metadata(copy_varname="T", name="dbz", 
+                       dimnames=combine_with("T", remove_dims=("bottom_top",)),
+                       description="maximum radar reflectivity",
+                       units="dBz")
+def get_max_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
+                method="cat", squeeze=True, cache=None):
+    return n.amax(get_dbz(wrfnc, do_varint, do_liqskin, timeidx, method, 
+                          method, squeeze, cache), 
                   axis=-3)
 

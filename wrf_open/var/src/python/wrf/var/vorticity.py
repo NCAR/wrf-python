@@ -1,12 +1,17 @@
-from wrf.var.extension import computeavo, computepvo
-from wrf.var.util import extract_vars, extract_global_attrs
+from .extension import computeavo, computepvo
+from .util import extract_vars, extract_global_attrs
+from .decorators import copy_and_set_metadata
 
 __all__ = ["get_avo", "get_pvo"]
 
-def get_avo(wrfnc, timeidx=0):
+@copy_and_set_metadata(copy_varname="F", name="avo", 
+                       description="absolute vorticity",
+                       units="10-5 s-1")
+def get_avo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
     ncvars = extract_vars(wrfnc, timeidx, varnames=("U", "V", "MAPFAC_U",
                                               "MAPFAC_V", "MAPFAC_M",
-                                              "F"))
+                                              "F"),
+                          method, squeeze, cache)
     
     attrs = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     u = ncvars["U"]
@@ -22,11 +27,15 @@ def get_avo(wrfnc, timeidx=0):
     return computeavo(u,v,msfu,msfv,msfm,cor,dx,dy)
 
 
-def get_pvo(wrfnc, timeidx=0):
+@copy_and_set_metadata(copy_varname="T", name="pvo", 
+                       description="potential vorticity",
+                       units="PVU")
+def get_pvo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
     ncvars = extract_vars(wrfnc, timeidx, varnames=("U", "V", "T", "P",
                                               "PB", "MAPFAC_U",
                                               "MAPFAC_V", "MAPFAC_M",
-                                              "F"))
+                                              "F"),
+                          method, squeeze, cache)
     attrs = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     
     u = ncvars["U"]

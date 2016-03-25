@@ -1,5 +1,5 @@
 
-from wrf.var.util import extract_times
+from .util import extract_times
 
 __all__ = ["get_times"]
 

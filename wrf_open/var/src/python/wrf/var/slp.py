@@ -1,15 +1,19 @@
-from wrf.var.extension import computeslp, computetk
-from wrf.var.constants import Constants
-from wrf.var.destag import destagger
-from wrf.var.decorators import convert_units
-from wrf.var.util import extract_vars
+from .extension import computeslp, computetk
+from .constants import Constants
+from .destag import destagger
+from .decorators import convert_units, copy_and_set_metadata
+from .util import extract_vars
 
 __all__ = ["get_slp"]
 
+@copy_and_set_metadata(copy_varname="T", name="slp",
+                       remove_dims=("bottom_top",), 
+                       description="sea level pressure")
 @convert_units("pressure", "hpa")
-def get_slp(wrfnc, timeidx=0, units="hpa"):
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("T", "P", "PB", "QVAPOR",
-                                              "PH", "PHB"))
+def get_slp(wrfnc, timeidx=0, units="hpa", 
+            method="cat", squeeze=True, cache=None):
+    varnames=("T", "P", "PB", "QVAPOR", "PH", "PHB")
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
 
     t = ncvars["T"]
     p = ncvars["P"]

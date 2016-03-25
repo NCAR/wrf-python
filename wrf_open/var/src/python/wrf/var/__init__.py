@@ -1,63 +1,61 @@
 import warnings
 
-from config import *
-import config
-from extension import *
-import extension
-from util import *
-import util
-from cape import *
-import cape
-from constants import *
-import constants
-from ctt import *
-import ctt
-from dbz import *
-import dbz
-from destag import *
-import destag
-from dewpoint import *
-import dewpoint
-from etaconv import *
-import etaconv
-from geoht import *
-import geoht
-from helicity import *
-import helicity
-from interp import *
-import interp
-from latlon import *
-import latlon
-from omega import *
-import omega
-from precip import *
-import precip
-from pressure import *
-import pressure
-from psadlookup import *
-import psadlookup
-from pw import *
-import pw
-from rh import *
-import rh
-from slp import *
-import slp
-from temp import *
-import temp
-from terrain import *
-import terrain
-from uvmet import *
-import uvmet
-from vorticity import *
-import vorticity
-from wind import *
-import wind
-from times import *
-import times
-from units import *
-import units
-from projection import *
-import projection
+from . import config
+from .config import *
+from . import extension
+from .extension import *
+from . import util
+from .util import *
+from . import cape
+from .cape import *
+from . import constants
+from .constants import *
+from . import ctt
+from .ctt import *
+from . import dbz
+from .dbz import *
+from . import destag
+from .destag import *
+from . import dewpoint
+from .dewpoint import *
+from . import geoht
+from .geoht import *
+from . import helicity
+from .helicity import *
+from . import interp
+from .interp import *
+from . import latlon
+from .latlon import *
+from . import omega
+from .omega import *
+from . import precip
+from .precip import *
+from . import pressure
+from .pressure import *
+from . import psadlookup
+from .psadlookup import *
+from . import pw
+from .pw import *
+from . import rh
+from .rh import *
+from . import slp
+from .slp import *
+from . import temp
+from .temp import *
+from . import terrain
+from .terrain import *
+from . import uvmet
+from .uvmet import *
+from . import vorticity
+from .vorticity import *
+from . import wind
+from .wind import *
+from . import times
+from .times import *
+from . import units
+from .units import *
+from . import projection
+from .projection import *
 
 __all__ = ["getvar"]
 __all__.extend(config.__all__)
@@ -69,7 +67,6 @@ __all__.extend(ctt.__all__)
 __all__.extend(dbz.__all__)
 __all__.extend(destag.__all__)
 __all__.extend(dewpoint.__all__)
-__all__.extend(etaconv.__all__)
 __all__.extend(geoht.__all__)
 __all__.extend(helicity.__all__)
 __all__.extend(interp.__all__)
@@ -127,9 +124,10 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "lon" : get_lon,
              "pressure" : get_pressure_hpa,
              "pres" : get_pressure,
-             "wspddir" : get_destag_wspd_wdir,
-             "wspddir_uvmet" : get_uvmet_wspd_wdir,
-             "wspddir_uvmet10" : get_uvmet10_wspd_wdir,
+             "wspd_wdir" : get_destag_wspd_wdir,
+             "wspd_wdir10" : get_destag_wspd_wdir10,
+             "wspd_wdir_uvmet" : get_uvmet_wspd_wdir,
+             "wspd_wdir_uvmet10" : get_uvmet10_wspd_wdir,
              "ctt" : get_ctt
              }
 
@@ -214,9 +212,11 @@ def _check_kargs(var, kargs):
                           "argument for '%s'" % (arg, var))
             
 
-def getvar(wrfnc, var, timeidx=0, **kargs):
+def getvar(wrfnc, var, timeidx=0, 
+           method="cat", squeeze=True, cache=None, 
+           **kargs):
     if is_standard_wrf_var(wrfnc, var):
-        return extract_vars(wrfnc, timeidx, var)[var]
+        return extract_vars(wrfnc, timeidx, var, method, squeeze, cache)[var]
     
     actual_var = _undo_alias(var)
     if actual_var not in _VALID_KARGS:
