@@ -1,3 +1,6 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 import warnings
 
 from . import config
@@ -56,7 +59,7 @@ from . import units
 from .units import *
 from . import projection
 from .projection import *
-
+  
 __all__ = ["getvar"]
 __all__.extend(config.__all__)
 __all__.extend( extension.__all__)
@@ -86,7 +89,7 @@ __all__.extend(times.__all__)
 __all__.extend(pressure.__all__)
 __all__.extend(units.__all__)
 __all__.extend(projection.__all__)
-
+  
 # func is the function to call.  kargs are required arguments that should 
 # not be altered by the user
 _FUNC_MAP = {"cape2d" : get_2dcape,
@@ -130,7 +133,7 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "wspd_wdir_uvmet10" : get_uvmet10_wspd_wdir,
              "ctt" : get_ctt
              }
-
+  
 _VALID_KARGS = {"cape2d" : ["missing"],
              "cape3d" : ["missing"],
              "dbz" : ["do_variant", "do_liqskin"],
@@ -172,7 +175,7 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "ctt" : [],
              "default" : []
             }
-
+  
 _ALIASES = {"cape_2d" : "cape2d",
             "cape_3d" : "cape3d",
             "eth" : "theta_e",
@@ -190,41 +193,41 @@ _ALIASES = {"cape_2d" : "cape2d",
             "td" : "dp",
             "td2" : "dp2m"
             }
-
+  
 class ArgumentError(Exception):
     def __init__(self, msg):
         self.msg = msg
-        
+          
     def __str__(self):
         return self.msg
-
+  
 def _undo_alias(alias):
     actual = _ALIASES.get(alias, None)
     if actual is None:
         return alias
     else:
         return actual
-
+  
 def _check_kargs(var, kargs):
     for arg in kargs.iterkeys():
         if arg not in _VALID_KARGS[var]:
             raise ArgumentError("'%s' is an invalid keyword "
                           "argument for '%s'" % (arg, var))
-            
-
+              
+  
 def getvar(wrfnc, var, timeidx=0, 
            method="cat", squeeze=True, cache=None, 
            **kargs):
     if is_standard_wrf_var(wrfnc, var):
         return extract_vars(wrfnc, timeidx, var, method, squeeze, cache)[var]
-    
+      
     actual_var = _undo_alias(var)
     if actual_var not in _VALID_KARGS:
         raise ArgumentError("'%s' is not a valid variable name" % (var))
-    
+      
     _check_kargs(actual_var, kargs)
     return _FUNC_MAP[actual_var](wrfnc,timeidx,**kargs)
-    
+      
 
     
     

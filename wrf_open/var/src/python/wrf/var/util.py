@@ -1,11 +1,17 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 from collections import Iterable, Mapping, OrderedDict
 from itertools import product
+from inspect import getargspec
 import datetime as dt
 
 import numpy as np
+import numpy.ma as ma
 
 from .config import xarray_enabled
 from .projection import getproj
+
 
 if xarray_enabled():
     from xarray import DataArray
@@ -14,33 +20,61 @@ __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
            "combine_files", "is_standard_wrf_var", "extract_times",
            "iter_left_indexes", "get_left_indexes", "get_right_slices",
            "is_staggered", "get_proj_params", "viewitems", "viewkeys",
-           "viewvalues"]
+           "viewvalues", "combine_with", "from_args", "arg_location",
+           "args_to_list", "npvalues", "XYCoord"]
 
-def _is_multi_time(timeidx):
-    if timeidx == -1:
-        return True
-    return False
+
+_COORD_PAIR_MAP = {"XLAT" : ("XLAT", "XLONG"),
+                "XLONG" : ("XLAT", "XLONG"),
+                "XLAT_M" : ("XLAT_M", "XLONG_M"),
+                "XLONG_M" : ("XLAT_M", "XLONG_M"),
+                "XLAT_U" : ("XLAT_U", "XLONG_U"),
+                "XLONG_U" : ("XLAT_U", "XLONG_U"),
+                "XLAT_V" : ("XLAT_V", "XLONG_V"),
+                "XLONG_V" : ("XLAT_V", "XLONG_V"),
+                "CLAT" : ("CLAT", "CLONG"),
+                "CLONG" : ("CLAT", "CLONG")}
+
+
+_COORD_VARS = ("XLAT", "XLONG", "XLAT_M", "XLONG_M", "XLAT_U", "XLONG_U",
+                   "XLAT_V", "XLONG_V", "CLAT", "CLONG")
+
+
+
+
+def _is_coord_var(varname):
+    return varname in _COORD_VARS
+
+
+def _get_coord_pairs(varname):
+    return _COORD_PAIR_MAP[varname]
+
+
+def _is_multi_time_req(timeidx):
+    return timeidx == -1
+
 
 def _is_multi_file(wrfnc):
-    if isinstance(wrfnc, Iterable) and not isinstance(wrfnc, str):
-        return True
-    return False
+    return (isinstance(wrfnc, Iterable) and not isstr(wrfnc))
+
 
 def _is_mapping(wrfnc):
-    if isinstance(wrfnc, Mapping):
-        return True
-    return False
+    return isinstance(wrfnc, Mapping)
+
 
 def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     lats = wrfnc.variables[latvar]
     lons = wrfnc.variables[lonvar]
+    
     # Need to check all times
     for i in xrange(lats.shape[-3]):
-        start_idxs = [0]*lats.ndim
+        start_idxs = [0]*len(lats.shape) # PyNIO does not support ndim
         start_idxs[-3] = i
+        start_idxs = tuple(start_idxs)
         
-        end_idxs = [-1]*lats.ndim
+        end_idxs = [-1]*len(lats.shape)
         end_idxs[-3] = i
+        end_idxs = tuple(end_idxs)
         
         if (first_ll_corner[0] != lats[start_idxs] or 
             first_ll_corner[1] != lons[start_idxs] or 
@@ -62,10 +96,17 @@ def _is_moving_domain(wrfseq, varname=None, latvar="XLAT", lonvar="XLONG"):
     first_wrfnc = next(wrf_iter)
     
     if varname is not None:
-        coord_names = getattr(first_wrfnc.variables[varname], 
+        try:
+            coord_names = getattr(first_wrfnc.variables[varname], 
                               "coordinates").split()
-        lon_coord = coord_names[0]
-        lat_coord = coord_names[1]
+        except AttributeError:
+            # Variable doesn't have a coordinates attribute, use the 
+            # arguments
+            lon_coord = lonvar
+            lat_coord = latvar
+        else:
+            lon_coord = coord_names[0]
+            lat_coord = coord_names[1]
     else:
         lon_coord = lonvar
         lat_coord = latvar
@@ -73,9 +114,13 @@ def _is_moving_domain(wrfseq, varname=None, latvar="XLAT", lonvar="XLONG"):
     lats = first_wrfnc.variables[lat_coord]
     lons = first_wrfnc.variables[lon_coord]
     
-    zero_idxs = [0] * first_wrfnc.variables[lat_coord].ndim
+    
+    zero_idxs = [0]*len(lats.shape)  # PyNIO doesn't have ndim
     last_idxs = list(zero_idxs)
     last_idxs[-2:] = [-1]*2
+    
+    zero_idxs = tuple(zero_idxs)
+    last_idxs = tuple(last_idxs)
     
     lat0 = lats[zero_idxs]
     lat1 = lats[last_idxs]
@@ -107,7 +152,7 @@ def _get_global_attr(wrfnc, attr):
     return val
         
 def extract_global_attrs(wrfnc, attrs):
-    if isinstance(attrs, str):
+    if isstr(attrs):
         attrlist = [attrs]
     else:
         attrlist = attrs
@@ -134,7 +179,7 @@ def extract_dim(wrfnc, dim):
         return len(d) #netCDF4
     return d # PyNIO
         
-def _combine_dict(wrfdict, varname, timeidx, method):
+def _combine_dict(wrfdict, varname, timeidx, method, nometa):
     """Dictionary combination creates a new left index for each key, then 
     does a cat or join for the list of files for that key"""
     keynames = []
@@ -145,7 +190,8 @@ def _combine_dict(wrfdict, varname, timeidx, method):
     keynames.append(first_key)
     
     first_array = _extract_var(wrfdict[first_key], varname, 
-                              timeidx, method, squeeze=False)
+                              timeidx, method, squeeze=False,
+                              nometa=nometa)
     
     
     # Create the output data numpy array based on the first array
@@ -170,11 +216,9 @@ def _combine_dict(wrfdict, varname, timeidx, method):
                                    "same size for all dictionary keys")
             outdata[idx,:] = vardata.values[:]
             idx += 1
-    
-    if not xarray_enabled():
-        outarr = outdata
-    else:
-        outname = str(first_array.name)
+      
+    if xarray_enabled() and not nometa:
+        outname = unicode(first_array.name)
         # Note: assumes that all entries in dict have same coords
         outcoords = OrderedDict(first_array.coords)
         outdims = ["key"] + list(first_array.dims)
@@ -183,31 +227,37 @@ def _combine_dict(wrfdict, varname, timeidx, method):
         
         outarr = DataArray(outdata, name=outname, coords=outcoords, 
                            dims=outdims, attrs=outattrs)
+    else:
+        outarr = outdata
         
     return outarr
 
 # TODO:  implement in C
-def _cat_files(wrfseq, varname, timeidx):
+def _cat_files(wrfseq, varname, timeidx, squeeze, nometa):
     is_moving = _is_moving_domain(wrfseq, varname)
     
     file_times = extract_times(wrfseq, timeidx)
     
-    multitime = _is_multi_time(timeidx) 
+    multitime = _is_multi_time_req(timeidx) 
 
-    time_idx_or_slice = timeidx if not multitime else slice(None, None, None)
+    time_idx_or_slice = timeidx if not multitime else slice(None)
     
     # wrfseq might be a generator
     wrf_iter = iter(wrfseq)
     
-    first_var = (_build_data_array(next(wrf_iter), varname, timeidx, is_moving)
-                 if xarray_enabled() else 
-                 wrfseq[0].variables[varname][time_idx_or_slice, :])
+    if xarray_enabled() and not nometa:
+        first_var = _build_data_array(next(wrf_iter), varname, 
+                                      timeidx, is_moving)
+    else:
+        first_var = (next(wrf_iter)).variables[varname][time_idx_or_slice, :]
+        if not multitime:
+            first_var = first_var[np.newaxis,:]
     
     outdims = [len(file_times)]
     
     # Making a new time dim, so ignore this one
     outdims += first_var.shape[1:]
-        
+    
     outdata = np.empty(outdims, first_var.dtype)
     
     numtimes = first_var.shape[0]
@@ -236,13 +286,16 @@ def _cat_files(wrfseq, varname, timeidx):
             
             startidx = endidx
     
-    if xarray_enabled():
+    if xarray_enabled() and not nometa:
         # FIXME:  If it's a moving nest, then the coord arrays need to have same
         # time indexes as the whole data set
-        outname = str(first_var.name)
+        outname = unicode(first_var.name)
         outattrs = OrderedDict(first_var.attrs)
         outcoords = OrderedDict(first_var.coords)
         outdimnames = list(first_var.dims)
+        if "Time" not in outdimnames:
+            outdimnames.insert(0, "Time")
+            
         outcoords[outdimnames[0]] = file_times # New time dimension values
         
         outarr = DataArray(outdata, name=outname, coords=outcoords, 
@@ -254,24 +307,23 @@ def _cat_files(wrfseq, varname, timeidx):
     return outarr
 
 # TODO:  implement in C
-def _join_files(wrfseq, varname, timeidx):
+def _join_files(wrfseq, varname, timeidx, nometa):
     is_moving = _is_moving_domain(wrfseq, varname)
-    multitime = _is_multi_time(timeidx)
+    multitime = _is_multi_time_req(timeidx)
     numfiles = len(wrfseq)  
     
-    if not multitime:
-        time_idx_or_slice = timeidx
-    else:
-        time_idx_or_slice = slice(None, None, None)
-    
+    time_idx_or_slice = timeidx if not multitime else slice(None)
+
     # wrfseq might be a generator
     wrf_iter = iter(wrfseq)
     
-    if xarray_enabled():
+    if xarray_enabled() and not nometa:
         first_var = _build_data_array(next(wrf_iter), varname, 
                                       timeidx, is_moving)
     else:
         first_var = (next(wrf_iter)).variables[varname][time_idx_or_slice, :]
+        if not multitime:
+            first_var = first_var[np.newaxis, :]
     
     # Create the output data numpy array based on the first array
     outdims = [numfiles]
@@ -287,11 +339,14 @@ def _join_files(wrfseq, varname, timeidx):
         except StopIteration:
             break
         else:
-            outdata[idx,:] = wrfnc.variables[varname][time_idx_or_slice, :]
+            outvar = wrfnc.variables[varname][time_idx_or_slice, :]
+            if not multitime:
+                outvar = outvar[np.newaxis, :]
+            outdata[idx,:] = outvar[:]
             idx += 1
         
-    if xarray_enabled():
-        outname = str(first_var.name)
+    if xarray_enabled() and not nometa:
+        outname = unicode(first_var.name)
         outcoords = OrderedDict(first_var.coords)
         outattrs = OrderedDict(first_var.attrs)
         # New dimensions
@@ -306,43 +361,54 @@ def _join_files(wrfseq, varname, timeidx):
         
     return outarr
 
-def combine_files(wrfseq, varname, timeidx, method="cat", squeeze=True):
+def combine_files(wrfseq, varname, timeidx, method="cat", squeeze=True,
+                  nometa=False):
     # Dictionary is unique
     if _is_mapping(wrfseq):
-        outarr = _combine_dict(wrfseq, varname, timeidx, method)
+        outarr = _combine_dict(wrfseq, varname, timeidx, method, nometa)
     elif method.lower() == "cat":
-        outarr = _cat_files(wrfseq, varname, timeidx)
+        outarr = _cat_files(wrfseq, varname, timeidx, squeeze, nometa)
     elif method.lower() == "join":
-        outarr = _join_files(wrfseq, varname, timeidx)
+        outarr = _join_files(wrfseq, varname, timeidx, nometa)
     else:
         raise ValueError("method must be 'cat' or 'join'")
     
     return outarr.squeeze() if squeeze else outarr
 
-# Note, always returns the full data set with the time dimension included
+
 def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
-    multitime = _is_multi_time(timeidx)
+    multitime = _is_multi_time_req(timeidx)
+    time_idx_or_slice = timeidx if not multitime else slice(None)
     var = wrfnc.variables[varname]
-    data = var[:]
+    data = var[time_idx_or_slice, :]
+    
+    # Want to preserve the time dimension
+    if not multitime:
+        data = data[np.newaxis, :]
+    
     attrs = OrderedDict(var.__dict__)
-    dimnames = var.dimensions
+    dimnames = var.dimensions[-data.ndim:]
     
     # WRF variables will have a coordinates attribute.  MET_EM files have 
     # a stagger attribute which indicates the coordinate variable.
     try:
         # WRF files
         coord_attr = getattr(var, "coordinates")
-    except KeyError:
-        try:
-            # met_em files
-            stag_attr = getattr(var, "stagger")
-        except KeyError:
-            lon_coord = None
-            lat_coord = None
+    except AttributeError:
+        if _is_coord_var(varname):
+            # Coordinate variable (most likely XLAT or XLONG)
+            lat_coord, lon_coord = _get_coord_pairs(varname)
         else:
-            # For met_em files, use the stagger name to get the lat/lon var
-            lat_coord = "XLAT_{}".format(stag_attr)
-            lon_coord = "XLONG_{}".format(stag_attr)
+            try:
+                # met_em files
+                stag_attr = getattr(var, "stagger")
+            except AttributeError:
+                lon_coord = None
+                lat_coord = None
+            else:
+                # For met_em files, use the stagger name to get the lat/lon var
+                lat_coord = "XLAT_{}".format(stag_attr)
+                lon_coord = "XLONG_{}".format(stag_attr)
     else:
         coord_names = coord_attr.split()
         lon_coord = coord_names[0]
@@ -393,54 +459,66 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
     if dimnames[0] == "Time":
         coords[dimnames[0]] = extract_times(wrfnc, timeidx)
     
+    
     data_array = DataArray(data, name=varname, dims=dimnames, coords=coords,
                            attrs=attrs)
+    
     
     return data_array
 
 # Cache is a dictionary of already extracted variables
-def _extract_var(wrfnc, varname, timeidx, method, squeeze, cache):
+def _extract_var(wrfnc, varname, timeidx, method, squeeze, cache, nometa):
     # Mainly used internally so variables don't get extracted multiple times,
     # particularly to copy metadata.  This can be slow.
     if cache is not None:
         try:
-            return cache[varname]
+            cache_var = cache[varname]
         except KeyError:
             pass
+        else:
+            if nometa:
+                if isinstance(cache_var, DataArray):
+                    return cache_var.values
+            
+            return cache_var
+                
     
     is_moving = _is_moving_domain(wrfnc, varname)
-    multitime = _is_multi_time(timeidx)
+    multitime = _is_multi_time_req(timeidx)
     multifile = _is_multi_file(wrfnc)
     
     if not multifile:
-        if xarray_enabled():
+        if xarray_enabled() and not nometa:
             result = _build_data_array(wrfnc, varname, timeidx, is_moving)
         else:
             if not multitime:
                 result = wrfnc.variables[varname][timeidx,:]
+                result = result[np.newaxis, :] # So that no squeeze works
+
             else:
                 result = wrfnc.variables[varname][:]
     else:
         # Squeeze handled in this routine, so just return it
-        return combine_files(wrfnc, varname, timeidx, method, squeeze)
+        return combine_files(wrfnc, varname, timeidx, method, squeeze, nometa)
         
     return result.squeeze() if squeeze else result
 
 def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True, 
-                 cache=None):
-    if isinstance(varnames, str):
+                 cache=None, nometa=False):
+    if isstr(varnames):
         varlist = [varnames]
     else:
         varlist = varnames
     
-    return {var:_extract_var(wrfnc, var, timeidx, method, squeeze, cache)
+    return {var:_extract_var(wrfnc, var, timeidx, 
+                             method, squeeze, cache, nometa)
             for var in varlist}
 
 def _make_time(timearr):
     return dt.datetime.strptime("".join(timearr[:]), "%Y-%m-%d_%H:%M:%S")
 
 def _file_times(wrfnc, timeidx):
-    multitime = _is_multi_time(timeidx)
+    multitime = _is_multi_time_req(timeidx)
     if multitime:
         times = wrfnc.variables["Times"][:,:]
         for i in xrange(times.shape[0]):
@@ -468,6 +546,7 @@ def is_standard_wrf_var(wrfnc, var):
         wrfnc = wrfnc[0]
     return var in wrfnc.variables
 
+
 def is_staggered(var, wrfnc):
     we = extract_dim(wrfnc, "west_east")
     sn = extract_dim(wrfnc, "south_north")
@@ -477,6 +556,8 @@ def is_staggered(var, wrfnc):
         return True
     
     return False
+
+
 
 def get_left_indexes(ref_var, expected_dims):
     """Returns the extra left side dimensions for a variable with an expected
@@ -491,7 +572,7 @@ def get_left_indexes(ref_var, expected_dims):
     if (extra_dim_num == 0):
         return []
     
-    return [ref_var.shape[x] for x in xrange(extra_dim_num)] 
+    return tuple([ref_var.shape[x] for x in xrange(extra_dim_num)]) 
 
 def iter_left_indexes(dims):
     """A generator which yields the iteration tuples for a sequence of 
@@ -513,9 +594,10 @@ def iter_left_indexes(dims):
 def get_right_slices(var, right_ndims, fixed_val=0):
     extra_dim_num = var.ndim - right_ndims
     if extra_dim_num == 0:
-        return [slice(None,None,None)] * right_ndims
+        return [slice(None)] * right_ndims
     
-    return [fixed_val]*extra_dim_num + [slice(None,None,None)]*right_ndims
+    return tuple([fixed_val]*extra_dim_num + 
+                 [slice(None)]*right_ndims)
 
 def get_proj_params(wrfnc, timeidx=0, varname=None):
     proj_params = extract_global_attrs(wrfnc, attrs=("MAP_PROJ", 
@@ -523,16 +605,20 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
                                                 "TRUELAT1", "TRUELAT2",
                                                 "MOAD_CEN_LAT", "STAND_LON", 
                                                 "POLE_LAT", "POLE_LON"))
-    multitime = _is_multi_time(timeidx)
+    multitime = _is_multi_time_req(timeidx)
     if not multitime:
         time_idx_or_slice = timeidx
     else:
-        time_idx_or_slice = slice(None, None, None)
+        time_idx_or_slice = slice(None)
     
     if varname is not None:
-        coord_names = getattr(wrfnc.variables[varname], "coordinates").split()
-        lon_coord = coord_names[0]
-        lat_coord = coord_names[1]
+        if not _is_coord_var(varname):
+            coord_names = getattr(wrfnc.variables[varname], 
+                                  "coordinates").split()
+            lon_coord = coord_names[0]
+            lat_coord = coord_names[1]
+        else:
+            lat_coord, lon_coord = _get_coord_pairs(varname)
     else:
         lat_coord = "XLAT"
         lon_coord = "XLONG"
@@ -562,6 +648,28 @@ def viewvalues(d):
         func = d.values
     return func()
 
+def isstr(s):
+    try:
+        return isinstance(s, basestring)
+    except NameError:
+        return isinstance(s, str)
+    
+# Helper to extract masked arrays from DataArrays that convert to NaN
+def npvalues(da):
+    if not isinstance(da, DataArray):
+        result = da
+    else:
+        try:
+            fill_value = da.attrs["_FillValue"]
+        except KeyError:
+            result = da.values
+        else:
+            result = ma.masked_invalid(da.values, copy=False)
+            result.set_fill_value(fill_value)
+    
+    return result
+            
+
 # Helper utilities for metadata
 class either(object):
     def __init__(self, *varnames):
@@ -572,7 +680,7 @@ class either(object):
             wrfnc = next(iter(wrfnc))
             
         for varname in self.varnames:
-            if varname in wrfnc:
+            if varname in wrfnc.variables:
                 return varname
         
         raise ValueError("{} are not valid variable names".format(
@@ -585,8 +693,9 @@ class combine_with:
         self.varname = varname
         self.remove_dims = remove_dims
         self.insert_before = insert_before
-        self.new_dimnames = new_dimnames
-        self.new_coords = new_coords
+        self.new_dimnames = new_dimnames if new_dimnames is not None else []
+        self.new_coords = (new_coords if new_coords is not None 
+                           else OrderedDict())
     
     def __call__(self, var):
         new_dims = list(var.dims)
@@ -608,7 +717,76 @@ class combine_with:
             new_coords.update(self.new_coords)
         
         return new_dims, new_coords
+    
+class XYCoord(object):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
         
+    def __repr__(self):
+        return "{}({}, {})".format(self.__class__.__name__, self.x, self.y)
+    
+def from_args(func, argnames, *args, **kwargs):
+        """Parses the function args and kargs looking for the desired argument 
+        value. Otherwise, the value is taken from the default keyword argument 
+        using the arg spec.
+        
+        """
+        if isstr(argnames):
+            arglist = [argnames]
+        else:
+            arglist = argnames
+        
+        result = {}
+        for argname in arglist:
+            arg_loc = arg_location(func, argname, args, kwargs)
+            
+            if arg_loc is not None:
+                result[argname] = arg_loc[0][arg_loc[1]] 
+            else:
+                result[argname] = None
+        
+        return result
+
+def args_to_list(func, args, kwargs):
+    """Converts the mixed args/kwargs to a single list of args"""
+    argspec = getargspec(func)
+    
+    # Build the full tuple with defaults filled in
+    outargs = [None]*len(argspec.args)
+    for i,default in enumerate(argspec.defaults[::-1], 1):
+        outargs[-i] = default
+    
+    # Add the supplied args
+    for i,arg in enumerate(args):
+        outargs[i] = arg
+    
+    # Fill in the supplied kargs 
+    for argname,val in viewitems(kwargs):
+        argidx = argspec.args.index(argname)
+        outargs[argidx] = val
+        
+    return outargs
+
+def arg_location(func, argname, args, kwargs):
+    """Parses the function args, kargs and signature looking for the desired 
+    argument location (either in args, kargs, or argspec.defaults), 
+    and returns a list containing representing all arguments in the 
+    correct order with defaults filled in.
+    
+    """
+    argspec = getargspec(func)
+    list_args = args_to_list(func, args, kwargs)
+    
+    # Return the new sequence and location
+    if argname not in argspec.args and argname not in kwargs:
+        return None
+    
+    result_idx = argspec.args.index(argname)
+    
+    return list_args, result_idx
+    
+    
         
 
 

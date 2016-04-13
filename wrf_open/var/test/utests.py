@@ -5,11 +5,13 @@ import numpy.ma as ma
 import os, sys
 import subprocess
 
-from wrf.var import getvar, interplevel, interpline, vertcross, vinterp
+from wrf.var import (getvar, interplevel, interpline, vertcross, vinterp,
+                     disable_xarray, xarray_enabled, npvalues)
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
 OUT_NC_FILE = "/tmp/wrftest.nc"
+
 
 def setUpModule():
     ncarg_root = os.environ.get("NCARG_ROOT", None)
@@ -101,28 +103,28 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             my_vals = getvar(in_wrfnc, "temp", units="c")
             tol = 0
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
+            nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
         elif (varname == "pw"):
             my_vals = getvar(in_wrfnc, "pw")
             tol = .5/100.0
             atol = 0 # NCL uses different constants and doesn't use same
                      # handrolled virtual temp in method
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
+            nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
         elif (varname == "cape_2d"):
             cape_2d = getvar(in_wrfnc, varname)
             tol = 0/100.    # Not sure why different, F77 vs F90?
-            atol = .1
-            nt.assert_allclose(cape_2d, ref_vals, tol, atol)
+            atol = .2
+            nt.assert_allclose(npvalues(cape_2d), ref_vals, tol, atol)
         elif (varname == "cape_3d"):
             cape_3d = getvar(in_wrfnc, varname)
             tol = 0/100.  # Not sure why different, F77 vs F90?
             atol = .01
-            nt.assert_allclose(cape_3d, ref_vals, tol, atol)
+            nt.assert_allclose(npvalues(cape_3d), ref_vals, tol, atol)
         else:
             my_vals = getvar(in_wrfnc, varname)
             tol = 0/100.
             atol = 0.0001
-            nt.assert_allclose(my_vals, ref_vals, tol, atol)
+            nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
     
     
     return test
@@ -199,7 +201,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             p = getvar(in_wrfnc, "pressure")
             hts_500 = interplevel(hts, p, 500)
             
-            nt.assert_allclose(hts_500, ref_ht_500)
+            nt.assert_allclose(npvalues(hts_500), ref_ht_500)
             
         elif (varname == "vertcross"):
             ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)
@@ -209,14 +211,14 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             p = getvar(in_wrfnc, "pressure")
             
             pivot_point = (hts.shape[-2] / 2, hts.shape[-1] / 2) 
-            ht_cross = vertcross(hts, p, pivot_point=pivot_point,angle=90.)
-            
-            nt.assert_allclose(ht_cross, ref_ht_cross, rtol=.01)
+            ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
+
+            nt.assert_allclose(npvalues(ht_cross), ref_ht_cross, rtol=.01)
             
             # Test opposite
             p_cross1 = vertcross(p,hts,pivot_point=pivot_point, angle=90.0)
-
-            nt.assert_allclose(p_cross1, 
+ 
+            nt.assert_allclose(npvalues(p_cross1), 
                                ref_p_cross, 
                                rtol=.01)
             # Test point to point
@@ -225,10 +227,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             p_cross2 = vertcross(p,hts,start_point=start_point, 
                                 end_point=end_point)
-            
-            nt.assert_allclose(p_cross1, p_cross2)
-            
+             
+            nt.assert_allclose(npvalues(p_cross1), 
+                               npvalues(p_cross2))
+              
         elif (varname == "interpline"):
+            
             ref_t2_line = _get_refvals(referent, "t2_line", repeat, multi)
             
             t2 = getvar(in_wrfnc, "T2")
@@ -236,7 +240,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
-            nt.assert_allclose(t2_line1, ref_t2_line)
+            nt.assert_allclose(npvalues(t2_line1), ref_t2_line)
             
             # Test point to point
             start_point = (t2.shape[-2]/2, 0)
@@ -245,7 +249,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             t2_line2 = interpline(t2, start_point=start_point, 
                                   end_point=end_point)
             
-            nt.assert_allclose(t2_line1, t2_line2)
+            nt.assert_allclose(npvalues(t2_line1), npvalues(t2_line2))
         elif (varname == "vinterp"):
             # Tk to theta
             fld_tk_theta = _get_refvals(referent, "fld_tk_theta", repeat, multi)
@@ -267,7 +271,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             atol = 0.0001
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_tk_theta, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_tk_theta, tol, atol)
             
             # Tk to theta-e
             fld_tk_theta_e = _get_refvals(referent, "fld_tk_theta_e", repeat, multi)
@@ -287,7 +291,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             atol = 0.0001
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_tk_theta_e, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_tk_theta_e, tol, atol)
             
             # Tk to pressure
             fld_tk_pres = _get_refvals(referent, "fld_tk_pres", repeat, multi)
@@ -304,7 +308,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_tk_pres, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_tk_pres, tol, atol)
             
             # Tk to geoht_msl
             fld_tk_ght_msl = _get_refvals(referent, "fld_tk_ght_msl", repeat, multi)
@@ -320,7 +324,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_tk_ght_msl, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_tk_ght_msl, tol, atol)
             
             # Tk to geoht_agl
             fld_tk_ght_agl = _get_refvals(referent, "fld_tk_ght_agl", repeat, multi)
@@ -336,7 +340,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_tk_ght_agl, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_tk_ght_agl, tol, atol)
             
             # Hgt to pressure
             fld_ht_pres = _get_refvals(referent, "fld_ht_pres", repeat, multi)
@@ -353,7 +357,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_ht_pres, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_ht_pres, tol, atol)
             
             # Pressure to theta
             fld_pres_theta = _get_refvals(referent, "fld_pres_theta", repeat, multi)
@@ -370,7 +374,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_pres_theta, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_pres_theta, tol, atol)
             
             # Theta-e to pres
             fld_thetae_pres = _get_refvals(referent, "fld_thetae_pres", repeat, multi)
@@ -387,7 +391,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
-            nt.assert_allclose(field, fld_thetae_pres, tol, atol)
+            nt.assert_allclose(npvalues(field), fld_thetae_pres, tol, atol)
     
     return test
 

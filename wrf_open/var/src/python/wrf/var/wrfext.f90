@@ -85,7 +85,7 @@ SUBROUTINE f_interp1d(v_in,z_in,z_out,vmsg,v_out,nz_in,nz_out)
 
     IMPLICIT NONE
 
-    INTEGER,INTENT(IN) :: NZ_IN,NZ_OUT
+    INTEGER,INTENT(IN) :: nz_in, nz_out
     REAL(KIND=8),DIMENSION(nz_in),INTENT(IN) :: v_in,z_in
     REAL(KIND=8),DIMENSION(nz_out),INTENT(IN) :: z_out
     REAL(KIND=8),DIMENSION(nz_out),INTENT(OUT) :: v_out

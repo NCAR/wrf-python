@@ -1,6 +1,10 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 from .constants import Constants
 from .destag import destagger
-from .decorators import convert_units, set_height_metadata
+from .decorators import convert_units
+from .metadecorators import set_height_metadata
 from .util import extract_vars, either
 
 __all__ = ["get_geopt", "get_height"]
@@ -16,14 +20,16 @@ def _get_geoht(wrfnc, timeidx, height=True, msl=True,
     
     varname = either("PH", "GHT")(wrfnc)
     if varname == "PH":
-        ph_vars = extract_vars(wrfnc, timeidx, varnames=("PH", "PHB", "HGT"))
+        ph_vars = extract_vars(wrfnc, timeidx, ("PH", "PHB", "HGT"),
+                               method, squeeze, cache, nometa=True)
         ph = ph_vars["PH"]
         phb = ph_vars["PHB"]
         hgt = ph_vars["HGT"]
         geopt = ph + phb
         geopt_unstag = destagger(geopt, -3)
     else:
-        ght_vars = extract_vars(wrfnc, timeidx, varnames=("GHT", "HGT_M"))
+        ght_vars = extract_vars(wrfnc, timeidx, ("GHT", "HGT_M"),
+                                method, squeeze, cache, nometa=True)
         geopt_unstag = ght_vars["GHT"] * Constants.G
         hgt = ght_vars["HGT_M"]
     

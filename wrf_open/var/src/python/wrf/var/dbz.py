@@ -1,9 +1,12 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 import numpy as n
 
 from .extension import computedbz,computetk
 from .constants import Constants
-from .util import extract_vars, combine_with
-from .decorators import copy_and_set_metadata
+from .util import extract_vars
+from .metadecorators import copy_and_set_metadata
 
 __all__ = ["get_dbz", "get_max_dbz"]
 
@@ -23,7 +26,8 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
     
     """
     varnames = ("T", "P", "PB", "QVAPOR", "QRAIN")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -65,13 +69,15 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
     
     return computedbz(full_p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin)
 
-@copy_and_set_metadata(copy_varname="T", name="dbz", 
-                       dimnames=combine_with("T", remove_dims=("bottom_top",)),
+
+@copy_and_set_metadata(copy_varname="T", name="max_dbz", 
+                       remove_dims=("bottom_top",),
                        description="maximum radar reflectivity",
-                       units="dBz")
+                       units="dBz",
+                       MemoryOrder="XY")
 def get_max_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
                 method="cat", squeeze=True, cache=None):
-    return n.amax(get_dbz(wrfnc, do_varint, do_liqskin, timeidx, method, 
+    return n.amax(get_dbz(wrfnc, timeidx, do_varint, do_liqskin, 
                           method, squeeze, cache), 
                   axis=-3)
 

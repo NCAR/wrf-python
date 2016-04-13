@@ -1,37 +1,46 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 from math import fabs, log, tan, sin, cos
 
 from .extension import computeuvmet
 from .destag import destagger
 from .constants import Constants
 from .wind import _calc_wspd_wdir
-from .decorators import convert_units, set_wind_metadata
+from .decorators import convert_units
+from .metadecorators import set_wind_metadata
 from .util import extract_vars, extract_global_attrs, either
 
 __all__=["get_uvmet", "get_uvmet10", "get_uvmet_wspd_wdir", 
          "get_uvmet10_wspd_wdir"]
 
-@set_wind_metadata(wspd_wdir=False)
+
 @convert_units("wind", "mps")
-def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps", 
+def _get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps", 
               method="cat", squeeze=True, cache=None):
     """ Return a tuple of u,v with the winds rotated in to earth space"""
     
     if not ten_m:
         varname = either("U", "UU")(wrfnc)
-        u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+        u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                              nometa=True)
+        
         u = destagger(u_vars[varname], -1)
         
         varname = either("V", "VV")(wrfnc)
-        v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+        v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                              nometa=True)
         v = destagger(v_vars[varname], -2)
     else:
-        varname = either("U10", "UU")
-        u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+        varname = either("U10", "UU")(wrfnc)
+        u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                              nometa=True)
         u = (u_vars[varname] if varname == "U10" else 
              destagger(u_vars[varname][...,0,:,:], -1)) 
         
-        varname = either("V10", "VV")
-        v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+        varname = either("V10", "VV")(wrfnc)
+        v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                              nometa=True)
         v = (v_vars[varname] if varname == "V10" else 
              destagger(v_vars[varname][...,0,:,:], -2))
     
@@ -71,12 +80,12 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps",
         
         varname = either("XLAT_M", "XLAT")(wrfnc)
         xlat_var = extract_vars(wrfnc, timeidx, varname, 
-                                method, squeeze, cache)
+                                method, squeeze, cache, nometa=True)
         lat = xlat_var[varname]
         
-        varname = either("XLONG_M", "XLONG")
+        varname = either("XLONG_M", "XLONG")(wrfnc)
         xlon_var = extract_vars(wrfnc, timeidx, varname, 
-                                method, squeeze, cache)
+                                method, squeeze, cache, nometa=True)
         lon = xlon_var[varname]
         
         if map_proj == 1:
@@ -92,31 +101,57 @@ def get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps",
         else:
             cone = 1
         
-        res = computeuvmet(u,v,lat,lon,cen_lon,cone)
+        res = computeuvmet(u, v ,lat, lon, cen_lon, cone)
         
         return res
-            
 
+    
+@set_wind_metadata(copy_varname=either("P", "PRES"), 
+                   name="uvmet",
+                   description="earth rotated u,v",
+                   two_d=False, 
+                   wspd_wdir=False)      
+def get_uvmet(wrfnc, timeidx=0, units="mps",
+              method="cat", squeeze=True, cache=None):
+    
+    return _get_uvmet(wrfnc, timeidx, False, units, method, squeeze, cache)
+
+
+@set_wind_metadata(copy_varname=either("PSFC", "F"), 
+                   name="uvmet10",
+                   description="10m earth rotated u,v",
+                   two_d=True, 
+                   wspd_wdir=False)
 def get_uvmet10(wrfnc, timeidx=0, units="mps",
                 method="cat", squeeze=True, cache=None):
-    return get_uvmet(wrfnc, timeidx, True, units)
+    
+    return _get_uvmet(wrfnc, timeidx, True, units, method, squeeze, cache)
 
-@set_wind_metadata(wspd_wdir=True)
+
+@set_wind_metadata(copy_varname=either("P", "PRES"), 
+                   name="uvmet_wspd_wdir",
+                   description="earth rotated wspd,wdir",
+                   two_d=False, 
+                   wspd_wdir=True)
 def get_uvmet_wspd_wdir(wrfnc, timeidx=0, units="mps",
                         method="cat", squeeze=True, cache=None):
     
-    uvmet = get_uvmet(wrfnc, timeidx, False, units, method, squeeze, cache)
+    uvmet = _get_uvmet(wrfnc, timeidx, False, units, method, squeeze, cache)
     
-    return _calc_wspd_wdir(uvmet[0,:], uvmet[1,:], False, units)
+    return _calc_wspd_wdir(uvmet[...,0,:,:,:], uvmet[...,1,:,:,:], False, units)
     
 
-@set_wind_metadata(wspd_wdir=True)
+@set_wind_metadata(copy_varname=either("PSFC", "F"), 
+                   name="uvmet10_wspd_wdir",
+                   description="10m earth rotated wspd,wdir",
+                   two_d=True, 
+                   wspd_wdir=True)
 def get_uvmet10_wspd_wdir(wrfnc, timeidx=0, units="mps",
                           method="cat", squeeze=True, cache=None):
     
-    uvmet10 = get_uvmet10(wrfnc, timeidx, units="mps", method, squeeze, cache)
+    uvmet10 = _get_uvmet(wrfnc, timeidx, True, units, method, squeeze, cache)
     
-    return _calc_wspd_wdir(uvmet10[0,:], uvmet10[1,:], True, units)
+    return _calc_wspd_wdir(uvmet10[...,0,:,:], uvmet10[...,1,:,:], True, units)
     
 
             

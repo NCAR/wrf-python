@@ -1,17 +1,22 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
 
 from .extension import computepw,computetv,computetk
 from .constants import Constants
 from .util import extract_vars
-from .decorators import copy_and_set_metadata
+from .metadecorators import copy_and_set_metadata
 
 __all__ = ["get_pw"]
 
 @copy_and_set_metadata(copy_varname="T", name="pw", 
+                       remove_dims=("bottom_top",),
                        description="precipitable water",
+                       MemoryOrder="XY",
                        units="kg m-2")
 def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
     varnames=("T", "P", "PB", "PH", "PHB", "QVAPOR")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     
     t = ncvars["T"]
     p = ncvars["P"]

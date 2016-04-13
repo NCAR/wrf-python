@@ -1,9 +1,11 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
 
+from .decorators import handle_extract_transpose
 
-from .util import extract_vars
+__all__ = ["destagger"]
 
-__all__ = ["destagger", "destagger_windcomp", "destagger_winds"]
-
+@handle_extract_transpose(do_transpose=False)
 def destagger(var, stagger_dim):
     """ De-stagger the variable.  
     
@@ -21,10 +23,11 @@ def destagger(var, stagger_dim):
     # Dynamically building the range slices to create the appropriate 
     # number of ':'s in the array accessor lists.
     # For example, for a 3D array, the calculation would be 
-    # result = .5 * (var[:,:,0:stagger_dim_size-2] + var[:,:,1:stagger_dim_size-1])
+    # result = .5 * (var[:,:,0:stagger_dim_size-2] 
+    #                    + var[:,:,1:stagger_dim_size-1])
     # for stagger_dim=2.  So, full slices would be used for dims 0 and 1, but 
     # dim 2 needs the special slice.  
-    full_slice = slice(None, None, None)
+    full_slice = slice(None)
     slice1 = slice(0, stagger_dim_size - 1, 1)
     slice2 = slice(1, stagger_dim_size, 1)
     
@@ -40,25 +43,4 @@ def destagger(var, stagger_dim):
     
     return result
 
-# def destagger_windcomp(wrfnc, comp, timeidx=0, 
-#                        method="cat", squeeze=True, cache=None):
-#     if comp.lower() == "u":
-#         wrfvar = "U"
-#         stagdim = -1
-#     elif comp.lower() == "v":
-#         wrfvar = "V"
-#         stagdim = -2
-#     elif comp.lower() == "w":
-#         wrfvar = "W"
-#         stagdim = -3
-#         
-#     ncvars = extract_vars(wrfnc, timeidx, wrfvar, method, squeeze, cache)
-#     wind_data = ncvars[wrfvar]
-#     
-#     return destagger(wind_data, stagdim)
-# 
-# def destagger_winds(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
-#     return (destagger_windcomp(wrfnc, "u", timeidx, method, squeeze, cache),
-#             destagger_windcomp(wrfnc, "v", timeidx, method, squeeze, cache),
-#             destagger_windcomp(wrfnc, "w", timeidx, method, squeeze, cache))
     

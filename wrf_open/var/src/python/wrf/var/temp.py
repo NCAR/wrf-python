@@ -1,7 +1,10 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
 
 from .constants import Constants
 from .extension import computetk, computeeth, computetv, computewetbulb
-from .decorators import convert_units, copy_and_set_metadata
+from .decorators import convert_units
+from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
 
 __all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw",
@@ -14,7 +17,8 @@ def get_theta(wrfnc, timeidx=0, units="k",
               method="cat", squeeze=True, cache=None):
     varnames = ("T",)
     
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     full_t = t + Constants.T_BASE
 
@@ -28,7 +32,8 @@ def get_temp(wrfnc, timeidx=0, units="k", method="cat", squeeze=True,
     """Return the temperature in Kelvin or Celsius"""
     
     varnames=("T", "P", "PB")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -47,7 +52,8 @@ def get_eth(wrfnc, timeidx=0, units="k", method="cat", squeeze=True,
     "Return equivalent potential temperature (Theta-e) in Kelvin"
     
     varnames=("T", "P", "PB", "QVAPOR")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -69,7 +75,8 @@ def get_tv(wrfnc, timeidx=0, units="k", method="cat", squeeze=True,
     "Return the virtual temperature (tv) in Kelvin or Celsius"
     
     varnames=("T", "P", "PB", "QVAPOR")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -92,7 +99,8 @@ def get_tw(wrfnc, timeidx=0, units="k", method="cat", squeeze=True,
     "Return the wetbulb temperature (tw)"
     
     varnames=("T", "P", "PB", "QVAPOR")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]

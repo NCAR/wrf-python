@@ -19,5 +19,6 @@ numpy.distutils.core.setup(
     packages = setuptools.find_packages("src/python"),   
     ext_modules = [ext1,ext2],
     package_dir={"":"src/python"},
+    namespace_packages=["wrf"],
     scripts=[],
 )  

@@ -1,9 +1,11 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
 
 from .constants import Constants
 from .destag import destagger
 from .extension import computeomega,computetk
 from .util import extract_vars
-from .decorators import copy_and_set_metadata
+from .metadecorators import copy_and_set_metadata
 
 __all__ = ["get_omega"]
 
@@ -12,7 +14,8 @@ __all__ = ["get_omega"]
                        units="Pa/s")
 def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
     varnames=("T", "P", "W", "PB", "QVAPOR")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     p = ncvars["P"]
     w = ncvars["W"]

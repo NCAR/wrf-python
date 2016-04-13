@@ -1,3 +1,6 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 from collections import Iterable
 
 import numpy as np
@@ -6,18 +9,18 @@ from .config import xarray_enabled
 from .constants import Constants
 from .extension import computeij, computell
 from .util import (extract_vars, extract_global_attrs, 
-                   either, _is_moving_domain, _is_multi_time,
+                   either, _is_moving_domain, _is_multi_time_req,
                    iter_left_indexes)
-from .decorators import set_latlon_metadata
+from .metadecorators import set_latlon_metadata
 
 if xarray_enabled():
     from xarray import DataArray
 
 __all__ = ["get_lat", "get_lon", "get_ij", "get_ll"]
 
-def _lat_varname(stagger):
+def _lat_varname(wrfnc, stagger):
     if stagger is None or stagger.lower() == "m":
-        varname = either("XLAT", "XLAT_M")
+        varname = either("XLAT", "XLAT_M")(wrfnc)
     elif stagger.lower() == "u" or stagger.lower() == "v":
         varname = "XLAT_{}".format(stagger.upper())
     else:
@@ -25,9 +28,9 @@ def _lat_varname(stagger):
     
     return varname
     
-def _lon_varname(stagger):
+def _lon_varname(wrfnc, stagger):
     if stagger is None or stagger.lower() == "m":
-        varname = either("XLONG", "XLONG_M")
+        varname = either("XLONG", "XLONG_M")(wrfnc)
     elif stagger.lower() == "u" or stagger.lower() == "v":
         varname = "XLONG_{}".format(stagger.upper())
     else:
@@ -38,16 +41,18 @@ def _lon_varname(stagger):
 def get_lat(wrfnc, timeidx=0, stagger=None,
             method="cat", squeeze=True, cache=None):
     
-    varname = _lat_varname(stagger)
-    lat_var = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+    varname = _lat_varname(wrfnc, stagger)
+    lat_var = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                           nometa=False)
     
     return lat_var[varname]
         
 def get_lon(wrfnc, timeidx=0, stagger=None,
             method="cat", squeeze=True, cache=None):
     
-    varname = _lon_varname(stagger)
-    lon_var = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+    varname = _lon_varname(wrfnc, stagger)
+    lon_var = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                           nometa=False)
     
     return lon_var[varname]
 
@@ -83,7 +88,7 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache):
     
     lat_timeidx = timeidx
     # Only need all the lats/lons if it's a moving domain file/files
-    if _is_multi_time(timeidx):
+    if _is_multi_time_req(timeidx):
         if not _is_moving_domain(wrfnc, latvar=latvar, lonvar=lonvar):
             lat_timeidx = 0
         

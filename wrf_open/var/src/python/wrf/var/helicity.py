@@ -1,9 +1,12 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 from .constants import Constants
 
 from .extension import computesrh, computeuh
 from .destag import destagger
 from .util import extract_vars, extract_global_attrs, either
-from .decorators import copy_and_set_metadata
+from .metadecorators import copy_and_set_metadata
 
 __all__ = ["get_srh", "get_uh"]
 
@@ -15,7 +18,7 @@ def get_srh(wrfnc, timeidx=0, top=3000.0,
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
     ncvars = extract_vars(wrfnc, timeidx, ("HGT", "PH", "PHB"),
-                          method, squeeze, cache)
+                          method, squeeze, cache, nometa=True)
     
     ter = ncvars["HGT"]
     ph = ncvars["PH"]
@@ -23,11 +26,13 @@ def get_srh(wrfnc, timeidx=0, top=3000.0,
     
     # As coded in NCL, but not sure this is possible
     varname = either("U", "UU")(wrfnc)
-    u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+    u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                          nometa=True)
     u = destagger(u_vars[varname], -1) 
     
     varname = either("V", "VV")(wrfnc)
-    v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+    v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                          nometa=True)
     v = destagger(v_vars[varname], -2)
 
     geopt = ph + phb
@@ -64,11 +69,13 @@ def get_uh(wrfnc, timeidx=0, bottom=2000.0, top=5000.0,
     
     # As coded in NCL, but not sure this is possible
     varname = either("U", "UU")(wrfnc)
-    u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+    u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                          nometa=True)
     u = destagger(u_vars[varname], -1) 
     
     varname = either("V", "VV")(wrfnc)
-    v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache)
+    v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
+                          nometa=True)
     v = destagger(v_vars[varname], -2) 
     
     zp = ph + phb

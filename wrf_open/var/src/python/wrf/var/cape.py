@@ -1,3 +1,6 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 import numpy as n
 import numpy.ma as ma
 
@@ -5,22 +8,24 @@ from .extension import computetk,computecape
 from .destag import destagger
 from .constants import Constants, ConversionFactors
 from .util import extract_vars, combine_with
-from .decorators import copy_and_set_metadata
+from .metadecorators import copy_and_set_metadata
 
 __all__ = ["get_2dcape", "get_3dcape"]
+
 @copy_and_set_metadata(copy_varname="T", 
                        name="cape_2d",
                        dimnames=combine_with("T", remove_dims=("bottom_top",),
                                         insert_before="south_north",
-                                        new_dimnames=("mcape_mcin_lcl_lfc",)), 
+                                        new_dimnames=["mcape_mcin_lcl_lfc"]), 
                        description="mcape ; mcin ; lcl ; lfc",
                        units="J/kg ; J/kg ; m ; m",
-                       MemoryOrder = "XY")
+                       MemoryOrder="XY")
 def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL, 
                method="cat", squeeze=True, cache=None):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
     varnames = ("T", "P", "PB", "QVAPOR", "PH","PHB", "HGT", "PSFC")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -48,7 +53,7 @@ def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL,
     
     cape_res,cin_res = computecape(p_hpa,tk,qv,z,ter,psfc_hpa,
                                    missing,i3dflag,ter_follow)
-     
+    
     cape = cape_res[...,0,:,:]
     cin = cin_res[...,0,:,:]
     lcl = cin_res[...,1,:,:]
@@ -69,18 +74,20 @@ def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL,
     
     return ma.masked_values(res, missing)
 
+
 @copy_and_set_metadata(copy_varname="T", name="cape_3d",
                        dimnames=combine_with("T",
                                              insert_before="bottom_top",
-                                             new_dimnames=("cape_cin",)),
+                                             new_dimnames=["cape_cin"]),
                        description="cape ; cin",
                        units="J kg-1 ; J kg-1",
-                       MemoryOrder = "XY")
+                       MemoryOrder="XY")
 def get_3dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL,
                method="cat", squeeze=True, cache=None):
     """Return the 3d fields of cape and cin"""
     varnames = ("T", "P", "PB", "QVAPOR", "PH", "PHB", "HGT", "PSFC")
-    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache)
+    ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
+                          nometa=True)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -119,7 +126,6 @@ def get_3dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL,
     res[...,0,:,:,:] = cape[:]
     res[...,1,:,:,:] = cin[:]
     
-    #return res
     return ma.masked_values(res, missing)
     
     
