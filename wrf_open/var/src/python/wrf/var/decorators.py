@@ -93,7 +93,7 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
             # Make the left indexes plus a single slice object
             # The single slice will handle all the dimensions to
             # the right (e.g. [1,1,:])
-            left_and_slice_idxs = tuple([x for x in left_idxs] + [slice(None)])
+            left_and_slice_idxs = left_idxs + (slice(None), )
             
             # Slice the args if applicable
             new_args = [arg[left_and_slice_idxs] 

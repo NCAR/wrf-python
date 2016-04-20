@@ -7,8 +7,7 @@ import numpy.ma as ma
 from .extension import (interpz3d, interp2dxy, interp1d,
                         smooth2d, monotonic, vintrp, computevertcross,
                         computeinterpline)
-from .decorators import (handle_left_iter, handle_casting, 
-                         handle_extract_transpose)
+
 from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered
 from .interputils import get_xy, get_xy_z_params

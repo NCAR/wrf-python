@@ -3,6 +3,8 @@ from __future__ import (absolute_import, division, print_function,
 
 from math import fabs, log, tan, sin, cos
 
+import numpy as np
+
 from .extension import computeuvmet
 from .destag import destagger
 from .constants import Constants
@@ -55,8 +57,24 @@ def _get_uvmet(wrfnc, timeidx=0, ten_m=False, units ="mps",
     # don't appear to be supported any longer
     
     if map_proj in (0,3,6):
-        # No rotation needed for Mercator and Lat/Lon
-        return u,v
+        # No rotation needed for Mercator and Lat/Lon, but still need
+        # u,v aggregated in to one array
+        
+        end_idx = -3 if not ten_m else -2
+        resdim = list(u.shape[0:end_idx]) + [2] + list(u.shape[end_idx:])
+    
+        # Make a new output array for the result
+        res = np.empty(resdim, u.dtype)
+        
+        # For 2D array, this makes (...,0,:,:) and (...,1,:,:)
+        # For 3D array, this makes (...,0,:,:,:) and (...,1,:,:,:)
+        idx0 = tuple([Ellipsis] + [0] + [slice(None)]*(-end_idx))
+        idx1 = tuple([Ellipsis] + [1] + [slice(None)]*(-end_idx))
+    
+        res[idx0] = u[:]
+        res[idx1] = v[:]
+        
+        return res
     elif map_proj in (1,2):
         lat_attrs = extract_global_attrs(wrfnc, attrs=("TRUELAT1",
                                                        "TRUELAT2"))

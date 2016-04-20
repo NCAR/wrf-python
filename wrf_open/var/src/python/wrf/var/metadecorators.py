@@ -9,8 +9,9 @@ import numpy.ma as ma
 
 from .util import (viewkeys, viewitems, extract_vars, 
                    combine_with, either, from_args, arg_location,
-                   _is_coord_var, XYCoord, npvalues)
+                   _is_coord_var, CoordPair, npvalues)
 from .interputils import get_xy_z_params, get_xy
+from .latlonutils import ij_to_ll, ll_to_ij
 from .config import xarray_enabled
 
 if xarray_enabled():
@@ -211,34 +212,52 @@ def set_wind_metadata(copy_varname, name, description,
 def set_latlon_metadata(ij=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
+        
         if not xarray_enabled():
             return wrapped(*args, **kwargs)
         
         res = wrapped(*args, **kwargs)
         
-        argnames = ("latitude", "longitude") if not ij else ("i", "j")
+        # Want to preserve the input coordinate pair in metadata
+        if res.ndim == 1:
+            res = res[np.newaxis, :]
+        
+        argnames = ["i", "j"] if not ij else ["latitude", "longitude"]
+        argnames.append("squeeze")
         outname = "latlon" if not ij else "ij"
         
-        if res.ndim <= 2:
-            dimnames = (["lat_lon", "i_j"] if not ij 
-                        else ["i_j", "lat_lon"])
+        if res.ndim == 2:
+            dimnames = (["ij", "lat_lon"] if not ij 
+                        else ["latlon", "i_j"])
         else:
-            dimnames = (["lat_lon", "domain", "i_j"] if not ij 
-                        else ["i_j", "domain", "lat_lon"])
-            
+            dimnames = (["ij", "domain", "lat_lon"] if not ij 
+                        else ["latlon", "domain", "i_j"])
         
         argvars = from_args(wrapped, argnames, *args, **kwargs)
         
         var1 = argvars[argnames[0]]
         var2 = argvars[argnames[1]]
+        squeeze = argvars["squeeze"]
         
         arr1 = np.asarray(var1).ravel()
         arr2 = np.asarray(var2).ravel()
         
         coords = {}
-        coords[dimnames[0]] = [x for x in zip(arr1, arr2)]
+        if not ij:
+            coords["coord_pair"] = (dimnames[0], [CoordPair(i=x[0], j=x[1]) 
+                               for x in zip(arr1, arr2)])
+            coords[dimnames[-1]] = ["lat", "lon"]
+        else:
+            coords["coord_pair"] = (dimnames[0], [CoordPair(lat=x[0], lon=x[1]) 
+                               for x in zip(arr1, arr2)])
+            coords[dimnames[-1]] = ["i", "j"]
         
-        return DataArray(res, name=outname, dims=dimnames, coords=coords)
+        da = DataArray(res, name=outname, dims=dimnames, coords=coords)
+        
+        if squeeze:
+            da = da.squeeze()
+        
+        return da
     
     return func_wrapper
     
@@ -329,6 +348,10 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
                 if vert_units is not None 
                 else "{0}".format(desiredloc))
     
+    name_levelstr = ("{0}_{1}".format(desiredloc, vert_units) 
+                if vert_units is not None 
+                else "{0}".format(desiredloc))
+    
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
         outattrs = OrderedDict()
@@ -337,7 +360,7 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         outdimnames.remove(field3d.dims[-3])
         del outcoords[field3d.dims[-3]]
         outattrs.update(field3d.attrs)
-        outname = "{0}_{1}".format(field3d.name, levelstr)
+        outname = "{0}_{1}".format(field3d.name, name_levelstr)
         
     else:
         outname = "field3d_{0}".format(levelstr)
@@ -436,8 +459,8 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
             except KeyError:
                 pass
             
-        outcoords["xy"] = [XYCoord(xy[i,0], xy[i,1]) 
-                           for i in xrange(xy.shape[-2])]
+        outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
+                           for i in xrange(xy.shape[-2])])
         
         outcoords["vertical"] = z_var2d[:]
         
@@ -525,8 +548,8 @@ def _set_line_meta(wrapped, instance, args, kwargs):
             except KeyError:
                 pass
             
-        outcoords["xy"] = [XYCoord(xy[i,0], xy[i,1]) 
-                           for i in xrange(xy.shape[-2])]
+        outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
+                           for i in xrange(xy.shape[-2])])
         
     else:
         outname = "field2d_line"
@@ -617,8 +640,8 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
         
         outname = "{0}_xy".format(field3d.name)
         
-        outcoords["xy"] = [XYCoord(xy[i,0], xy[i,1]) 
-                           for i in xrange(xy.shape[-2])]
+        outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
+                           for i in xrange(xy.shape[-2])])
         
         for key in ("MemoryOrder",):
             try:

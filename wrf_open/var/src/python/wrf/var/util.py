@@ -20,8 +20,8 @@ __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
            "combine_files", "is_standard_wrf_var", "extract_times",
            "iter_left_indexes", "get_left_indexes", "get_right_slices",
            "is_staggered", "get_proj_params", "viewitems", "viewkeys",
-           "viewvalues", "combine_with", "from_args", "arg_location",
-           "args_to_list", "npvalues", "XYCoord"]
+           "viewvalues", "combine_with", "either", "from_args", "arg_location",
+           "args_to_list", "npvalues", "CoordPair"]
 
 
 _COORD_PAIR_MAP = {"XLAT" : ("XLAT", "XLONG"),
@@ -38,9 +38,6 @@ _COORD_PAIR_MAP = {"XLAT" : ("XLAT", "XLONG"),
 
 _COORD_VARS = ("XLAT", "XLONG", "XLAT_M", "XLONG_M", "XLAT_U", "XLONG_U",
                    "XLAT_V", "XLONG_V", "CLAT", "CLONG")
-
-
-
 
 def _is_coord_var(varname):
     return varname in _COORD_VARS
@@ -60,6 +57,123 @@ def _is_multi_file(wrfnc):
 
 def _is_mapping(wrfnc):
     return isinstance(wrfnc, Mapping)
+
+def _unpack_sequence(wrfseq):
+    """Unpacks generators in to lists or dictionaries if applicable, otherwise
+    returns the original object.  
+    
+    This is apparently the easiest and 
+    fastest way of being able to re-iterate through generators when used 
+    more than once.
+    
+    """
+    if not _is_multi_file(wrfseq):
+        return wrfseq
+    else:
+        if not _is_mapping(wrfseq):
+            if isinstance(wrfseq, (list, tuple)):
+                return wrfseq
+            else:
+                return list(wrfseq) # generator/custom iterable class
+        else:
+            if isinstance(wrfseq, dict):
+                return wrfseq
+            else:
+                return dict(wrfseq) # generator/custom iterable class
+
+# Dictionary python 2-3 compatibility stuff
+def viewitems(d):
+    func = getattr(d, "viewitems", None)
+    if func is None:
+        func = d.items
+    return func()
+
+
+def viewkeys(d):
+    func = getattr(d, "viewkeys", None)
+    if func is None:
+        func = d.keys
+    return func()
+
+
+def viewvalues(d):
+    func = getattr(d, "viewvalues", None)
+    if func is None:
+        func = d.values
+    return func()
+
+def isstr(s):
+    try:
+        return isinstance(s, basestring)
+    except NameError:
+        return isinstance(s, str)
+    
+# Helper to extract masked arrays from DataArrays that convert to NaN
+def npvalues(da):
+    if not isinstance(da, DataArray):
+        result = da
+    else:
+        try:
+            fill_value = da.attrs["_FillValue"]
+        except KeyError:
+            result = da.values
+        else:
+            result = ma.masked_invalid(da.values, copy=False)
+            result.set_fill_value(fill_value)
+    
+    return result
+
+# Helper utilities for metadata
+class either(object):
+    def __init__(self, *varnames):
+        self.varnames = varnames
+    
+    def __call__(self, wrfnc):
+        if _is_multi_file(wrfnc):
+            if not _is_mapping(wrfnc):
+                wrfnc = next(iter(wrfnc))
+            else:
+                entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+                return self(entry)
+            
+        for varname in self.varnames:
+            if varname in wrfnc.variables:
+                return varname
+        
+        raise ValueError("{} are not valid variable names".format(
+                                                            self.varnames))
+
+class combine_with:
+    # Remove remove_idx first, then insert_idx is applied to removed set
+    def __init__(self, varname, remove_dims=None, insert_before=None, 
+                 new_dimnames=None, new_coords=None):
+        self.varname = varname
+        self.remove_dims = remove_dims
+        self.insert_before = insert_before
+        self.new_dimnames = new_dimnames if new_dimnames is not None else []
+        self.new_coords = (new_coords if new_coords is not None 
+                           else OrderedDict())
+    
+    def __call__(self, var):
+        new_dims = list(var.dims)
+        new_coords = OrderedDict(var.coords)
+        
+        if self.remove_dims is not None:
+            for dim in self.remove_dims:
+                new_dims.remove(dim)
+                del new_coords[dim]
+        
+        if self.insert_before is not None:     
+            insert_idx = new_dims.index(self.insert_before)
+            new_dims = (new_dims[0:insert_idx] + self.new_dimnames + 
+                    new_dims[insert_idx:])
+        elif self.new_dimnames is not None:
+            new_dims = self.new_dimnames
+        
+        if self.new_coords is not None:
+            new_coords.update(self.new_coords)
+        
+        return new_dims, new_coords
 
 
 def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
@@ -84,17 +198,28 @@ def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     
     return False
 
-def _is_moving_domain(wrfseq, varname=None, latvar="XLAT", lonvar="XLONG"):
+def _is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"), 
+                      lonvar=either("XLONG", "XLONG_M")):
+    
+    if isinstance(latvar, either):
+        latvar = latvar(wrfseq)
+        
+    if isinstance(lonvar, either):
+        lonvar = lonvar(wrfseq)
+        
     # In case it's just a single file
     if not _is_multi_file(wrfseq):
         wrfseq = [wrfseq]
-        
+    
     # Slow, but safe. Compare the corner points to the first item and see
     # any move.  User iterator protocol in case wrfseq is not a list/tuple.
-    wrf_iter = iter(wrfseq)
-    
-    first_wrfnc = next(wrf_iter)
-    
+    if not _is_mapping(wrfseq):
+        wrf_iter = iter(wrfseq)
+        first_wrfnc = next(wrf_iter)
+    else:
+        entry = wrfseq[next(iter(viewkeys(wrfseq)))]
+        return _is_moving_domain(entry, varname, latvar, lonvar)
+        
     if varname is not None:
         try:
             coord_names = getattr(first_wrfnc.variables[varname], 
@@ -146,7 +271,7 @@ def _get_global_attr(wrfnc, attr):
     val = getattr(wrfnc, attr, None)
     
     # PyNIO puts single values in to an array
-    if isinstance(val,np.ndarray):
+    if isinstance(val, np.ndarray):
         if len(val) == 1:
             return val[0] 
     return val
@@ -161,18 +286,20 @@ def extract_global_attrs(wrfnc, attrs):
     
     if multifile:
         if not _is_mapping(wrfnc):
-            wrfnc = wrfnc[0]
+            wrfnc = next(iter(wrfnc))
         else:
-            wrfnc = wrfnc[next(wrfnc.iterkeys())]
+            entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+            return extract_global_attrs(entry, attrs)
         
     return {attr:_get_global_attr(wrfnc, attr) for attr in attrlist}
 
 def extract_dim(wrfnc, dim):
     if _is_multi_file(wrfnc):
         if not _is_mapping(wrfnc):
-            wrfnc = wrfnc[0]
+            wrfnc = next(iter(wrfnc))
         else:
-            wrfnc = wrfnc[next(wrfnc.iterkeys())]
+            entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+            return extract_dim(entry, dim)
     
     d = wrfnc.dimensions[dim]
     if not isinstance(d, int):
@@ -189,9 +316,11 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
     first_key = next(key_iter)
     keynames.append(first_key)
     
+    is_moving = _is_moving_domain(wrfdict, varname)
+    
     first_array = _extract_var(wrfdict[first_key], varname, 
-                              timeidx, method, squeeze=False,
-                              nometa=nometa)
+                              timeidx, is_moving=is_moving, method=method, 
+                              squeeze=False, cache=None, nometa=nometa)
     
     
     # Create the output data numpy array based on the first array
@@ -209,12 +338,13 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
         else:
             keynames.append(key)
             vardata = _extract_var(wrfdict[key], varname, timeidx, 
-                                   method, squeeze=False)
+                                   is_moving=is_moving, method=method, 
+                                   squeeze=False, cache=None, nometa=nometa)
             
             if outdata.shape[1:] != vardata.shape:
                 raise ValueError("data sequences must have the "
                                    "same size for all dictionary keys")
-            outdata[idx,:] = vardata.values[:]
+            outdata[idx,:] = npvalues(vardata)[:]
             idx += 1
       
     if xarray_enabled() and not nometa:
@@ -233,8 +363,10 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
     return outarr
 
 # TODO:  implement in C
-def _cat_files(wrfseq, varname, timeidx, squeeze, nometa):
-    is_moving = _is_moving_domain(wrfseq, varname)
+# Note:  is moving argument needed for dictionary combination
+def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, nometa):
+    if is_moving is None:
+        is_moving = _is_moving_domain(wrfseq, varname)
     
     file_times = extract_times(wrfseq, timeidx)
     
@@ -307,8 +439,9 @@ def _cat_files(wrfseq, varname, timeidx, squeeze, nometa):
     return outarr
 
 # TODO:  implement in C
-def _join_files(wrfseq, varname, timeidx, nometa):
-    is_moving = _is_moving_domain(wrfseq, varname)
+def _join_files(wrfseq, varname, timeidx, is_moving, nometa):
+    if is_moving is None:
+        is_moving = _is_moving_domain(wrfseq, varname)
     multitime = _is_multi_time_req(timeidx)
     numfiles = len(wrfseq)  
     
@@ -361,15 +494,20 @@ def _join_files(wrfseq, varname, timeidx, nometa):
         
     return outarr
 
-def combine_files(wrfseq, varname, timeidx, method="cat", squeeze=True,
-                  nometa=False):
+def combine_files(wrfseq, varname, timeidx, is_moving=None,
+                  method="cat", squeeze=True, nometa=False):
+    
+    # Handles generators, single files, lists, tuples, custom classes
+    wrfseq = _unpack_sequence(wrfseq)
+    
     # Dictionary is unique
     if _is_mapping(wrfseq):
         outarr = _combine_dict(wrfseq, varname, timeidx, method, nometa)
     elif method.lower() == "cat":
-        outarr = _cat_files(wrfseq, varname, timeidx, squeeze, nometa)
+        outarr = _cat_files(wrfseq, varname, timeidx, is_moving, 
+                            squeeze, nometa)
     elif method.lower() == "join":
-        outarr = _join_files(wrfseq, varname, timeidx, nometa)
+        outarr = _join_files(wrfseq, varname, timeidx, is_moving, nometa)
     else:
         raise ValueError("method must be 'cat' or 'join'")
     
@@ -467,7 +605,8 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
     return data_array
 
 # Cache is a dictionary of already extracted variables
-def _extract_var(wrfnc, varname, timeidx, method, squeeze, cache, nometa):
+def _extract_var(wrfnc, varname, timeidx, is_moving, 
+                 method, squeeze, cache, nometa):
     # Mainly used internally so variables don't get extracted multiple times,
     # particularly to copy metadata.  This can be slow.
     if cache is not None:
@@ -481,27 +620,28 @@ def _extract_var(wrfnc, varname, timeidx, method, squeeze, cache, nometa):
                     return cache_var.values
             
             return cache_var
-                
     
-    is_moving = _is_moving_domain(wrfnc, varname)
     multitime = _is_multi_time_req(timeidx)
     multifile = _is_multi_file(wrfnc)
     
     if not multifile:
         if xarray_enabled() and not nometa:
+            if is_moving is None:
+                is_moving = _is_moving_domain(wrfnc, varname)
             result = _build_data_array(wrfnc, varname, timeidx, is_moving)
         else:
             if not multitime:
                 result = wrfnc.variables[varname][timeidx,:]
                 result = result[np.newaxis, :] # So that no squeeze works
-
             else:
                 result = wrfnc.variables[varname][:]
     else:
         # Squeeze handled in this routine, so just return it
-        return combine_files(wrfnc, varname, timeidx, method, squeeze, nometa)
+        return combine_files(wrfnc, varname, timeidx, is_moving, 
+                             method, squeeze, nometa)
         
     return result.squeeze() if squeeze else result
+
 
 def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True, 
                  cache=None, nometa=False):
@@ -510,7 +650,7 @@ def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True,
     else:
         varlist = varnames
     
-    return {var:_extract_var(wrfnc, var, timeidx, 
+    return {var:_extract_var(wrfnc, var, timeidx, None,
                              method, squeeze, cache, nometa)
             for var in varlist}
 
@@ -543,7 +683,12 @@ def extract_times(wrfnc, timeidx):
 def is_standard_wrf_var(wrfnc, var):
     multifile = _is_multi_file(wrfnc)
     if multifile:
-        wrfnc = wrfnc[0]
+        if not _is_mapping(wrfnc):
+            wrfnc = next(iter(wrfnc))
+        else:
+            entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+            return is_standard_wrf_var(entry, var)
+                
     return var in wrfnc.variables
 
 
@@ -627,104 +772,37 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
             wrfnc.variables[lon_coord][time_idx_or_slice,:],
             proj_params)
     
-# Dictionary python 2-3 compatibility stuff
-def viewitems(d):
-    func = getattr(d, "viewitems", None)
-    if func is None:
-        func = d.items
-    return func()
 
-
-def viewkeys(d):
-    func = getattr(d, "viewkeys", None)
-    if func is None:
-        func = d.keys
-    return func()
-
-
-def viewvalues(d):
-    func = getattr(d, "viewvalues", None)
-    if func is None:
-        func = d.values
-    return func()
-
-def isstr(s):
-    try:
-        return isinstance(s, basestring)
-    except NameError:
-        return isinstance(s, str)
-    
-# Helper to extract masked arrays from DataArrays that convert to NaN
-def npvalues(da):
-    if not isinstance(da, DataArray):
-        result = da
-    else:
-        try:
-            fill_value = da.attrs["_FillValue"]
-        except KeyError:
-            result = da.values
-        else:
-            result = ma.masked_invalid(da.values, copy=False)
-            result.set_fill_value(fill_value)
-    
-    return result
-            
-
-# Helper utilities for metadata
-class either(object):
-    def __init__(self, *varnames):
-        self.varnames = varnames
-    
-    def __call__(self, wrfnc):
-        if _is_multi_file(wrfnc):
-            wrfnc = next(iter(wrfnc))
-            
-        for varname in self.varnames:
-            if varname in wrfnc.variables:
-                return varname
-        
-        raise ValueError("{} are not valid variable names".format(
-                                                            self.varnames))
-
-class combine_with:
-    # Remove remove_idx first, then insert_idx is applied to removed set
-    def __init__(self, varname, remove_dims=None, insert_before=None, 
-                 new_dimnames=None, new_coords=None):
-        self.varname = varname
-        self.remove_dims = remove_dims
-        self.insert_before = insert_before
-        self.new_dimnames = new_dimnames if new_dimnames is not None else []
-        self.new_coords = (new_coords if new_coords is not None 
-                           else OrderedDict())
-    
-    def __call__(self, var):
-        new_dims = list(var.dims)
-        new_coords = OrderedDict(var.coords)
-        
-        if self.remove_dims is not None:
-            for dim in self.remove_dims:
-                new_dims.remove(dim)
-                del new_coords[dim]
-        
-        if self.insert_before is not None:     
-            insert_idx = new_dims.index(self.insert_before)
-            new_dims = (new_dims[0:insert_idx] + self.new_dimnames + 
-                    new_dims[insert_idx:])
-        elif self.new_dimnames is not None:
-            new_dims = self.new_dimnames
-        
-        if self.new_coords is not None:
-            new_coords.update(self.new_coords)
-        
-        return new_dims, new_coords
-    
-class XYCoord(object):
-    def __init__(self, x, y):
+class CoordPair(object):
+    def __init__(self, x=None, y=None, i=None, j=None, lat=None, lon=None):
         self.x = x
         self.y = y
+        self.i = i
+        self.j = j
+        self.lat = lat
+        self.lon = lon
         
     def __repr__(self):
-        return "{}({}, {})".format(self.__class__.__name__, self.x, self.y)
+        args = []
+        if self.x is not None:
+            args.append("x={}".format(self.x))
+            args.append("y={}".format(self.y))
+            
+        if self.i is not None:
+            args.append("i={}".format(self.i))
+            args.append("j={}".format(self.j))
+        
+        if self.lat is not None:
+            args.append("lat={}".format(self.lat))
+            args.append("lon={}".format(self.lon))
+            
+        argstr = ", ".join(args)
+        
+        return "{}({})".format(self.__class__.__name__, argstr)
+    
+    def __str__(self):
+        return self.__repr__()
+    
     
 def from_args(func, argnames, *args, **kwargs):
         """Parses the function args and kargs looking for the desired argument 

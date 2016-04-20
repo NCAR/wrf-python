@@ -15,13 +15,13 @@ if basemap_enabled():
 if pyngl_enabled():
     from Ngl import Resources
 
-__all__ = ["WrfProj", "LambertConformalProj", "MercatorProj",
-           "PolarStereographicProj", "LatLonProj", "RotLatLonProj",
+__all__ = ["WrfProj", "LambertConformal", "Mercator",
+           "PolarStereographic", "LatLon", "RotatedLatLon",
            "getproj"]
 
 
 if cartopy_enabled():
-    class MercatorWithLatTsProj(crs.Mercator):
+    class MercatorWithLatTS(crs.Mercator):
         def __init__(self, central_longitude=0.0,
                      latitude_true_scale=0.0,
                      min_latitude=-80.0, 
@@ -181,10 +181,10 @@ class WrfProj(object):
         return self._cf_params
     
     
-class LambertConformalProj(WrfProj):
+class LambertConformal(WrfProj):
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
-        super(LambertConformalProj, self).__init__(bottom_left, 
+        super(LambertConformal, self).__init__(bottom_left, 
                     top_right, lats, lons, **proj_params)
         
         self._std_parallels = [self.truelat1]
@@ -287,10 +287,10 @@ class LambertConformalProj(WrfProj):
                                             self.stand_lon))
         return _proj4
             
-class MercatorProj(WrfProj):
+class Mercator(WrfProj):
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
-        super(MercatorProj, self).__init__(bottom_left, top_right, 
+        super(Mercator, self).__init__(bottom_left, top_right, 
                                            lats, lons, **proj_params)
         
         self._lat_ts = (None 
@@ -354,7 +354,7 @@ class MercatorProj(WrfProj):
                                 globe = self._globe)
         
         else:
-            _cartopy = MercatorWithLatTsProj(
+            _cartopy = MercatorWithLatTS(
                 central_longitude = self.stand_lon,
                 latitude_true_scale = self._lat_ts,
                 globe = self._globe)
@@ -387,10 +387,10 @@ class MercatorProj(WrfProj):
         
         return _proj4
         
-class PolarStereographicProj(WrfProj):
+class PolarStereographic(WrfProj):
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
-        super(PolarStereographicProj, self).__init__(bottom_left, 
+        super(PolarStereographic, self).__init__(bottom_left, 
                         top_right, lats, lons, **proj_params)
         self._hemi = -90. if self.truelat1 < 0 else 90.
         self._lat_ts = (None 
@@ -486,10 +486,10 @@ class PolarStereographicProj(WrfProj):
             
                   
 
-class LatLonProj(WrfProj):
+class LatLon(WrfProj):
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
-        super(LatLonProj, self).__init__(bottom_left, top_right, 
+        super(LatLon, self).__init__(bottom_left, top_right, 
                                          lats, lons, **proj_params)
     
     @property
@@ -588,10 +588,10 @@ class LatLonProj(WrfProj):
 #     this reason, the proj4 string for this class will use cartopy's values
 #     to keep things in the -180 to 180, -90 to 90 range.
 # 12) This projection makes me sad.           
-class RotLatLonProj(WrfProj):
+class RotatedLatLon(WrfProj):
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
-        super(RotLatLonProj, self).__init__(bottom_left, top_right, 
+        super(RotatedLatLon, self).__init__(bottom_left, top_right, 
                                     lats, lons, **proj_params)
         
         # Need to determine hemisphere, typically pole_lon is 0 for southern
@@ -726,21 +726,21 @@ def getproj(bottom_left=None, top_right=None,
     
     proj_type = proj_params.get("MAP_PROJ", 0)
     if proj_type == 1:
-        return LambertConformalProj(bottom_left, top_right, 
+        return LambertConformal(bottom_left, top_right, 
                                     lats, lons, **proj_params)
     elif proj_type == 2:
-        return PolarStereographicProj(bottom_left, top_right, 
+        return PolarStereographic(bottom_left, top_right, 
                                       lats, lons, **proj_params)
     elif proj_type == 3:
-        return MercatorProj(bottom_left, top_right, 
+        return Mercator(bottom_left, top_right, 
                             lats, lons, **proj_params)
     elif proj_type == 0 or proj_type == 6:
         if (proj_params.get("POLE_LAT", None) == 90. 
             and proj_params.get("POLE_LON", None) == 0.):
-            return LatLonProj(bottom_left, top_right, 
+            return LatLon(bottom_left, top_right, 
                               lats, lons, **proj_params)
         else:
-            return RotLatLonProj(bottom_left, top_right, 
+            return RotatedLatLon(bottom_left, top_right, 
                                  lats, lons, **proj_params)
     else:
         # Unknown projection

@@ -408,7 +408,7 @@ if __name__ == "__main__":
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "ctt", "cape_2d", "cape_3d"]
+                "wa", "uvmet10", "uvmet", "z", "ctt"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     
     try:
