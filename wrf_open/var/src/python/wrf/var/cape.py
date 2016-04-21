@@ -20,12 +20,13 @@ __all__ = ["get_2dcape", "get_3dcape"]
                        description="mcape ; mcin ; lcl ; lfc",
                        units="J/kg ; J/kg ; m ; m",
                        MemoryOrder="XY")
-def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL, 
-               method="cat", squeeze=True, cache=None):
+def get_2dcape(wrfnc, timeidx=0, method="cat", 
+               squeeze=True, cache=None, meta=True,
+               missing=Constants.DEFAULT_FILL):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
     varnames = ("T", "P", "PB", "QVAPOR", "PH","PHB", "HGT", "PSFC")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -82,12 +83,13 @@ def get_2dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL,
                        description="cape ; cin",
                        units="J kg-1 ; J kg-1",
                        MemoryOrder="XY")
-def get_3dcape(wrfnc, timeidx=0, missing=Constants.DEFAULT_FILL,
-               method="cat", squeeze=True, cache=None):
+def get_3dcape(wrfnc, timeidx=0, method="cat", 
+               squeeze=True, cache=None, meta=True,
+               missing=Constants.DEFAULT_FILL):
     """Return the 3d fields of cape and cin"""
     varnames = ("T", "P", "PB", "QVAPOR", "PH", "PHB", "HGT", "PSFC")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]

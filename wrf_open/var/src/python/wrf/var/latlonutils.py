@@ -80,9 +80,9 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache):
                                         method, squeeze, cache)
             
     xlat = extract_vars(wrfnc, lat_timeidx, (latvar,), method, squeeze, cache,
-                           nometa=True)[latvar]
+                           meta=False)[latvar]
     xlon = extract_vars(wrfnc, lat_timeidx, (lonvar,), method, squeeze, cache,
-                           nometa=True)[lonvar]
+                           meta=False)[lonvar]
     
     ref_lat = np.ravel(xlat[...,0,0])
     ref_lon = np.ravel(xlon[...,0,0])

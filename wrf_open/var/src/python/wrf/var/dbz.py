@@ -13,8 +13,9 @@ __all__ = ["get_dbz", "get_max_dbz"]
 @copy_and_set_metadata(copy_varname="T", name="dbz", 
                        description="radar reflectivity",
                        units="dBz")
-def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
-            method="cat", squeeze=True, cache=None):
+def get_dbz(wrfnc, timeidx=0, method="cat", 
+            squeeze=True, cache=None, meta=True,
+            do_varint=False, do_liqskin=False):
     """ Return the dbz
     
     do_varint - do variable intercept (if False, constants are used.  Otherwise, 
@@ -27,7 +28,7 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
     """
     varnames = ("T", "P", "PB", "QVAPOR", "QRAIN")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -36,7 +37,7 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
     
     try:
         snowvars = extract_vars(wrfnc, timeidx, "QSNOW", 
-                                method, squeeze, cache)
+                                method, squeeze, cache, meta=False)
     except KeyError:
         qs = n.zeros(qv.shape, "float")
     else:
@@ -44,7 +45,7 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
     
     try:
         graupvars = extract_vars(wrfnc, timeidx, "QGRAUP", 
-                                 method, squeeze, cache)
+                                 method, squeeze, cache, meta=False)
     except KeyError:
         qg = n.zeros(qv.shape, "float")
     else:
@@ -75,9 +76,11 @@ def get_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
                        description="maximum radar reflectivity",
                        units="dBz",
                        MemoryOrder="XY")
-def get_max_dbz(wrfnc, timeidx=0, do_varint=False, do_liqskin=False,
-                method="cat", squeeze=True, cache=None):
-    return n.amax(get_dbz(wrfnc, timeidx, do_varint, do_liqskin, 
-                          method, squeeze, cache), 
+def get_max_dbz(wrfnc, timeidx=0, method="cat", 
+                squeeze=True, cache=None, meta=True,
+                do_varint=False, do_liqskin=False):
+    return n.amax(get_dbz(wrfnc, timeidx, method, 
+                          squeeze, cache, meta,
+                          do_varint, do_liqskin), 
                   axis=-3)
 

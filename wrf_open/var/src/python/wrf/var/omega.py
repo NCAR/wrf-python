@@ -12,10 +12,11 @@ __all__ = ["get_omega"]
 @copy_and_set_metadata(copy_varname="T", name="omega", 
                        description="omega",
                        units="Pa/s")
-def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
+              meta=True):
     varnames=("T", "P", "W", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     t = ncvars["T"]
     p = ncvars["P"]
     w = ncvars["W"]

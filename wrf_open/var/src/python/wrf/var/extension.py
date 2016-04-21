@@ -226,7 +226,6 @@ def computeomega(qv, tk, w, p):
                     w,
                     p)
     
-    #return res.T
     return res
 
 @handle_left_iter(3,0)
@@ -337,8 +336,8 @@ def computecape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow):
     # The fortran routine needs pressure to be ascending in z-direction, 
     # along with tk,qv,and ht.
     # The extra mumbo-jumbo is so that the view created by numpy is fortran
-    # contiguous.  'ascontiguousarray' only works in C ordering, hence the extra
-    # transposes.
+    # contiguous.  'ascontiguousarray' only works in C ordering, hence the 
+    # extra transposes.
     flip_p = np.ascontiguousarray(p_hpa[:,:,::-1].T).T
     flip_tk = np.ascontiguousarray(tk[:,:,::-1].T).T
     flip_qv = np.ascontiguousarray(qv[:,:,::-1].T).T
@@ -370,9 +369,21 @@ def computeij(map_proj, truelat1, truelat2, stdlon,
                lat1, lon1, pole_lat, pole_lon,
                knowni, knownj, dx, latinc, loninc, lat, lon):
     
-    res = f_lltoij(map_proj,truelat1,truelat2,stdlon,
-                   lat1,lon1,pole_lat,pole_lon,
-                   knowni,knownj,dx,latinc,loninc,lat,lon,
+    res = f_lltoij(map_proj,
+                   truelat1,
+                   truelat2,
+                   stdlon,
+                   lat1,
+                   lon1,
+                   pole_lat,
+                   pole_lon,
+                   knowni,
+                   knownj,
+                   dx,
+                   latinc,
+                   loninc,
+                   lat,
+                   lon,
                    FortranException())
     
     return res
@@ -381,9 +392,22 @@ def computell(map_proj, truelat1, truelat2, stdlon, lat1, lon1,
              pole_lat, pole_lon, knowni, knownj, dx, latinc,
              loninc, i, j):
     
-    res = f_ijtoll(map_proj,truelat1,truelat2,stdlon,lat1,lon1,
-                   pole_lat,pole_lon,knowni,knownj,dx,latinc,
-                   loninc,i,j,FortranException())
+    res = f_ijtoll(map_proj,
+                   truelat1,
+                   truelat2,
+                   stdlon,
+                   lat1,
+                   lon1,
+                   pole_lat,
+                   pole_lon,
+                   knowni,
+                   knownj,
+                   dx,
+                   latinc,
+                   loninc,
+                   i,
+                   j,
+                   FortranException())
     
     return res
 

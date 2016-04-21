@@ -158,7 +158,8 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
         
     return xy, var2dz, z_var2d
 
-def get_xy(var, pivot_point=None, angle=None, start_point=None, end_point=None):
+def get_xy(var, pivot_point=None, angle=None, 
+           start_point=None, end_point=None):
     if pivot_point is not None:
         pos_pivot = to_positive_idxs(var.shape[-2:], pivot_point)
     else:

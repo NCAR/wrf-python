@@ -10,11 +10,12 @@ __all__ = ["get_avo", "get_pvo"]
 @copy_and_set_metadata(copy_varname="T", name="avo", 
                        description="absolute vorticity",
                        units="10-5 s-1")
-def get_avo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+def get_avo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
+            meta=True):
     ncvars = extract_vars(wrfnc, timeidx, ("U", "V", "MAPFAC_U",
                                            "MAPFAC_V", "MAPFAC_M",
                                            "F"),
-                          method, squeeze, cache, nometa=True)
+                          method, squeeze, cache, meta=False)
     
     attrs = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     u = ncvars["U"]
@@ -33,12 +34,13 @@ def get_avo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
 @copy_and_set_metadata(copy_varname="T", name="pvo", 
                        description="potential vorticity",
                        units="PVU")
-def get_pvo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+def get_pvo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
+            meta=True):
     ncvars = extract_vars(wrfnc, timeidx, ("U", "V", "T", "P",
                                            "PB", "MAPFAC_U",
                                            "MAPFAC_V", "MAPFAC_M",
                                            "F"),
-                          method, squeeze, cache, nometa=True)
+                          method, squeeze, cache, meta=False)
     attrs = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     
     u = ncvars["U"]

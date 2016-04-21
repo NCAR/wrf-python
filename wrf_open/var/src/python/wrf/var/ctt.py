@@ -17,14 +17,15 @@ __all__ = ["get_ctt"]
                        description="cloud top temperature",
                        MemoryOrder="XY")
 @convert_units("temp", "c")
-def get_ctt(wrfnc, timeidx=0, units="c", method="cat", squeeze=True, 
-              cache=None):
+def get_ctt(wrfnc, timeidx=0, method="cat", 
+            squeeze=True, cache=None, meta=True,
+            units="c"):
     """Return the cloud top temperature.
     
     """
     varnames = ("T", "P", "PB", "PH", "PHB", "HGT", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -36,7 +37,7 @@ def get_ctt(wrfnc, timeidx=0, units="c", method="cat", squeeze=True,
     haveqci = 1
     try:
         icevars = extract_vars(wrfnc, timeidx, "QICE", 
-                               method, squeeze, cache)
+                               method, squeeze, cache, meta=False)
     except KeyError:
         qice = n.zeros(qv.shape, qv.dtype)
         haveqci = 0
@@ -45,7 +46,7 @@ def get_ctt(wrfnc, timeidx=0, units="c", method="cat", squeeze=True,
     
     try:
         cldvars = extract_vars(wrfnc, timeidx, "QCLOUD", 
-                               method, squeeze, cache)
+                               method, squeeze, cache, meta=False)
     except KeyError:
         raise RuntimeError("'QCLOUD' not found in NetCDF file")
     else:

@@ -306,7 +306,7 @@ def extract_dim(wrfnc, dim):
         return len(d) #netCDF4
     return d # PyNIO
         
-def _combine_dict(wrfdict, varname, timeidx, method, nometa):
+def _combine_dict(wrfdict, varname, timeidx, method, meta):
     """Dictionary combination creates a new left index for each key, then 
     does a cat or join for the list of files for that key"""
     keynames = []
@@ -320,7 +320,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
     
     first_array = _extract_var(wrfdict[first_key], varname, 
                               timeidx, is_moving=is_moving, method=method, 
-                              squeeze=False, cache=None, nometa=nometa)
+                              squeeze=False, cache=None, meta=meta)
     
     
     # Create the output data numpy array based on the first array
@@ -339,7 +339,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
             keynames.append(key)
             vardata = _extract_var(wrfdict[key], varname, timeidx, 
                                    is_moving=is_moving, method=method, 
-                                   squeeze=False, cache=None, nometa=nometa)
+                                   squeeze=False, cache=None, meta=meta)
             
             if outdata.shape[1:] != vardata.shape:
                 raise ValueError("data sequences must have the "
@@ -347,7 +347,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
             outdata[idx,:] = npvalues(vardata)[:]
             idx += 1
       
-    if xarray_enabled() and not nometa:
+    if xarray_enabled() and meta:
         outname = unicode(first_array.name)
         # Note: assumes that all entries in dict have same coords
         outcoords = OrderedDict(first_array.coords)
@@ -364,7 +364,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, nometa):
 
 # TODO:  implement in C
 # Note:  is moving argument needed for dictionary combination
-def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, nometa):
+def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta):
     if is_moving is None:
         is_moving = _is_moving_domain(wrfseq, varname)
     
@@ -377,7 +377,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, nometa):
     # wrfseq might be a generator
     wrf_iter = iter(wrfseq)
     
-    if xarray_enabled() and not nometa:
+    if xarray_enabled() and meta:
         first_var = _build_data_array(next(wrf_iter), varname, 
                                       timeidx, is_moving)
     else:
@@ -418,7 +418,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, nometa):
             
             startidx = endidx
     
-    if xarray_enabled() and not nometa:
+    if xarray_enabled() and meta:
         # FIXME:  If it's a moving nest, then the coord arrays need to have same
         # time indexes as the whole data set
         outname = unicode(first_var.name)
@@ -439,7 +439,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, nometa):
     return outarr
 
 # TODO:  implement in C
-def _join_files(wrfseq, varname, timeidx, is_moving, nometa):
+def _join_files(wrfseq, varname, timeidx, is_moving, meta):
     if is_moving is None:
         is_moving = _is_moving_domain(wrfseq, varname)
     multitime = _is_multi_time_req(timeidx)
@@ -450,7 +450,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, nometa):
     # wrfseq might be a generator
     wrf_iter = iter(wrfseq)
     
-    if xarray_enabled() and not nometa:
+    if xarray_enabled() and meta:
         first_var = _build_data_array(next(wrf_iter), varname, 
                                       timeidx, is_moving)
     else:
@@ -478,7 +478,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, nometa):
             outdata[idx,:] = outvar[:]
             idx += 1
         
-    if xarray_enabled() and not nometa:
+    if xarray_enabled() and meta:
         outname = unicode(first_var.name)
         outcoords = OrderedDict(first_var.coords)
         outattrs = OrderedDict(first_var.attrs)
@@ -495,19 +495,19 @@ def _join_files(wrfseq, varname, timeidx, is_moving, nometa):
     return outarr
 
 def combine_files(wrfseq, varname, timeidx, is_moving=None,
-                  method="cat", squeeze=True, nometa=False):
+                  method="cat", squeeze=True, meta=True):
     
     # Handles generators, single files, lists, tuples, custom classes
     wrfseq = _unpack_sequence(wrfseq)
     
     # Dictionary is unique
     if _is_mapping(wrfseq):
-        outarr = _combine_dict(wrfseq, varname, timeidx, method, nometa)
+        outarr = _combine_dict(wrfseq, varname, timeidx, method, meta)
     elif method.lower() == "cat":
         outarr = _cat_files(wrfseq, varname, timeidx, is_moving, 
-                            squeeze, nometa)
+                            squeeze, meta)
     elif method.lower() == "join":
-        outarr = _join_files(wrfseq, varname, timeidx, is_moving, nometa)
+        outarr = _join_files(wrfseq, varname, timeidx, is_moving, meta)
     else:
         raise ValueError("method must be 'cat' or 'join'")
     
@@ -606,7 +606,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
 
 # Cache is a dictionary of already extracted variables
 def _extract_var(wrfnc, varname, timeidx, is_moving, 
-                 method, squeeze, cache, nometa):
+                 method, squeeze, cache, meta):
     # Mainly used internally so variables don't get extracted multiple times,
     # particularly to copy metadata.  This can be slow.
     if cache is not None:
@@ -615,7 +615,7 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
         except KeyError:
             pass
         else:
-            if nometa:
+            if not meta:
                 if isinstance(cache_var, DataArray):
                     return cache_var.values
             
@@ -625,7 +625,7 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
     multifile = _is_multi_file(wrfnc)
     
     if not multifile:
-        if xarray_enabled() and not nometa:
+        if xarray_enabled() and meta:
             if is_moving is None:
                 is_moving = _is_moving_domain(wrfnc, varname)
             result = _build_data_array(wrfnc, varname, timeidx, is_moving)
@@ -638,20 +638,20 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
     else:
         # Squeeze handled in this routine, so just return it
         return combine_files(wrfnc, varname, timeidx, is_moving, 
-                             method, squeeze, nometa)
+                             method, squeeze, meta)
         
     return result.squeeze() if squeeze else result
 
 
 def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True, 
-                 cache=None, nometa=False):
+                 cache=None, meta=True):
     if isstr(varnames):
         varlist = [varnames]
     else:
         varlist = varnames
     
     return {var:_extract_var(wrfnc, var, timeidx, None,
-                             method, squeeze, cache, nometa)
+                             method, squeeze, cache, meta)
             for var in varlist}
 
 def _make_time(timearr):

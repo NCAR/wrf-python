@@ -32,13 +32,19 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
     
     """
     @wrapt.decorator
-    def func_wrapper(wrapped, instance, args, kwargs):
-        if not xarray_enabled():
+    def func_wrapper(wrapped, instance, args, kwargs): 
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", 
-                                      "squeeze", "cache", "units"), 
+                                      "squeeze", "cache", "units", "meta"), 
                             *args, **kwargs)
+        
         wrfnc = argvars["wrfnc"]
         timeidx = argvars["timeidx"]
         units = argvars["units"]
@@ -62,7 +68,7 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
         if var_to_copy is None:
             var_to_copy = extract_vars(wrfnc, timeidx, (_copy_varname,), 
                                        method, squeeze, cache,
-                                       nometa=False)[_copy_varname]
+                                       meta=True)[_copy_varname]
         
         # Make a copy so we don't modify a user supplied cache
         new_cache = dict(cache) 
@@ -136,7 +142,12 @@ def set_wind_metadata(copy_varname, name, description,
                       two_d=False, wspd_wdir=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        if not xarray_enabled():
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "units", 
@@ -159,7 +170,7 @@ def set_wind_metadata(copy_varname, name, description,
         
         copy_var = extract_vars(wrfnc, timeidx, _copy_varname, 
                                 method, squeeze, cache, 
-                                nometa=False)[_copy_varname]
+                                meta=True)[_copy_varname]
         
         # Make a copy so we don't modify a user supplied cache
         new_cache = dict(cache) 
@@ -213,7 +224,12 @@ def set_latlon_metadata(ij=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
         
-        if not xarray_enabled():
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
         res = wrapped(*args, **kwargs)
@@ -264,7 +280,12 @@ def set_latlon_metadata(ij=False):
 def set_height_metadata(geopt=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        if not xarray_enabled():
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", 
@@ -285,7 +306,7 @@ def set_height_metadata(geopt=False):
         # pressure (which has the same dims as destaggered height)
         ht_metadata_varname = either("P", "GHT")(wrfnc)
         ht_var = extract_vars(wrfnc, timeidx, ht_metadata_varname, 
-                              method, squeeze, cache, nometa=False)
+                              method, squeeze, cache, meta=True)
         ht_metadata_var = ht_var[ht_metadata_varname]
         
         # Make a copy so we don't modify a user supplied cache
@@ -695,12 +716,15 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
                      coords=outcoords, attrs=outattrs)
     
     
-          
-
 def set_interp_metadata(interp_type):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        if not xarray_enabled():
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
         if interp_type == "horiz":
@@ -715,4 +739,5 @@ def set_interp_metadata(interp_type):
             return _set_2dxy_meta(wrapped, instance, args, kwargs)
         elif interp_type == "1d":
             return _set_1d_meta(wrapped, instance, args, kwargs)
+        
     return func_wrapper

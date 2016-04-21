@@ -13,10 +13,11 @@ __all__ = ["get_pw"]
                        description="precipitable water",
                        MemoryOrder="XY",
                        units="kg m-2")
-def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
+           meta=True):
     varnames=("T", "P", "PB", "PH", "PHB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     
     t = ncvars["T"]
     p = ncvars["P"]

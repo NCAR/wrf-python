@@ -150,17 +150,19 @@ def _check_kargs(var, kargs):
               
   
 def getvar(wrfnc, var, timeidx=0, 
-           method="cat", squeeze=True, cache=None, 
+           method="cat", squeeze=True, cache=None, meta=True, 
            **kargs):
     
     wrfnc = _unpack_sequence(wrfnc)
     
     if is_standard_wrf_var(wrfnc, var):
-        return extract_vars(wrfnc, timeidx, var, method, squeeze, cache)[var]
+        return extract_vars(wrfnc, timeidx, var, 
+                            method, squeeze, cache, meta)[var]
       
     actual_var = _undo_alias(var)
     if actual_var not in _VALID_KARGS:
         raise ArgumentError("'%s' is not a valid variable name" % (var))
       
     _check_kargs(actual_var, kargs)
-    return _FUNC_MAP[actual_var](wrfnc,timeidx,**kargs)
+    return _FUNC_MAP[actual_var](wrfnc, timeidx, 
+                                 method, squeeze, cache, meta, **kargs)

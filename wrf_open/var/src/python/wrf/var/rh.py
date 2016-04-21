@@ -11,10 +11,11 @@ __all__ = ["get_rh", "get_rh_2m"]
 @copy_and_set_metadata(copy_varname="T", name="rh", 
                        description="relative humidity",
                        delete_attrs=("units",))
-def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
+           meta=True):
     varnames=("T", "P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -31,10 +32,11 @@ def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
 @copy_and_set_metadata(copy_varname="T2", name="rh2", 
                        description="2m relative humidity",
                        delete_attrs=("units",))
-def get_rh_2m(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None):
+def get_rh_2m(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
+              meta=True):
     varnames=("T2", "PSFC", "Q2")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     t2 = ncvars["T2"]
     psfc = ncvars["PSFC"]
     q2 = ncvars["Q2"]

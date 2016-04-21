@@ -15,11 +15,12 @@ __all__ = ["get_slp"]
                        description="sea level pressure",
                        MemoryOrder="XY")
 @convert_units("pressure", "hpa")
-def get_slp(wrfnc, timeidx=0, units="hpa", 
-            method="cat", squeeze=True, cache=None):
+def get_slp(wrfnc, timeidx=0, method="cat", squeeze=True, 
+            cache=None, meta=True,
+            units="hpa"):
     varnames=("T", "P", "PB", "QVAPOR", "PH", "PHB")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
 
     t = ncvars["T"]
     p = ncvars["P"]

@@ -11,12 +11,12 @@ __all__ = ["get_dp", "get_dp_2m"]
 @copy_and_set_metadata(copy_varname="QVAPOR", name="td", 
                        description="dew point temperature")
 @convert_units("temp", "c")
-def get_dp(wrfnc, timeidx=0, units="c",
-           method="cat", squeeze=True, cache=None):
+def get_dp(wrfnc, timeidx=0, method="cat", squeeze=True, 
+           cache=None, meta=True, units="c"):
     
     varnames=("P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
     
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -32,11 +32,12 @@ def get_dp(wrfnc, timeidx=0, units="c",
 @copy_and_set_metadata(copy_varname="Q2", name="td2", 
                        description="2m dew point temperature")
 @convert_units("temp", "c")
-def get_dp_2m(wrfnc, timeidx=0, units="c",
-              method="cat", squeeze=True, cache=None):
+def get_dp_2m(wrfnc, timeidx=0, method="cat", squeeze=True, 
+              cache=None, meta=True, 
+              units="c"):
     varnames=("PSFC", "Q2")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          nometa=True)
+                          meta=False)
 
     # Algorithm requires hPa
     psfc = .01*(ncvars["PSFC"])

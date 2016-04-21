@@ -10,25 +10,27 @@ __all__ = ["get_pressure", "get_pressure_hpa"]
 @copy_and_set_metadata(copy_varname=either("P", "PRES"), name="pressure", 
                        description="pressure")
 @convert_units("pressure", "pa")
-def get_pressure(wrfnc, timeidx=0, units="pa",
-                 method="cat", squeeze=True, cache=None):
+def get_pressure(wrfnc, timeidx=0, method="cat", squeeze=True, 
+                 cache=None, meta=True,
+                 units="pa"):
     
     varname = either("P", "PRES")(wrfnc)
     if varname == "P":
         p_vars = extract_vars(wrfnc, timeidx, ("P", "PB"), 
-                              method, squeeze, cache, nometa=True)
+                              method, squeeze, cache, meta=False)
         p = p_vars["P"]
         pb = p_vars["PB"]
         pres = p + pb
     else:
         pres = extract_vars(wrfnc, timeidx, "PRES", 
-                            method, squeeze, cache, nometa=True)["PRES"]
+                            method, squeeze, cache, meta=False)["PRES"]
     
     return pres
 
-def get_pressure_hpa(wrfnc, timeidx=0, units="hpa", 
-                     method="cat", squeeze=True, cache=None):
-    return get_pressure(wrfnc, timeidx, units, method, squeeze, cache)
+def get_pressure_hpa(wrfnc, timeidx=0, method="cat", squeeze=True, 
+                     cache=None, meta=True,
+                     units="hpa"):
+    return get_pressure(wrfnc, timeidx, method, squeeze, cache, meta, units)
 
 
     

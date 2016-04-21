@@ -21,7 +21,8 @@ __all__ = ["interplevel", "vertcross", "interpline", "vinterp"]
 
 #  Note:  Extension decorator is good enough to handle left dims
 @set_interp_metadata("horiz")
-def interplevel(field3d, z, desiredloc, missingval=Constants.DEFAULT_FILL):
+def interplevel(field3d, z, desiredloc, missingval=Constants.DEFAULT_FILL, 
+                meta=True):
     """Return the horizontally interpolated data at the provided level
     
     field3d - the 3D field to interpolate
@@ -40,7 +41,7 @@ def interplevel(field3d, z, desiredloc, missingval=Constants.DEFAULT_FILL):
 def vertcross(field3d, z, missingval=Constants.DEFAULT_FILL, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
-              cache=None):
+              cache=None, meta=True):
     """Return the vertical cross section for a 3D field, interpolated 
     to a verical plane defined by a horizontal line.
     
@@ -71,7 +72,7 @@ def vertcross(field3d, z, missingval=Constants.DEFAULT_FILL,
 @set_interp_metadata("line")
 def interpline(field2d, pivot_point=None, 
                  angle=None, start_point=None,
-                 end_point=None, cache=None):
+                 end_point=None, cache=None, meta=True):
     """Return the 2D field interpolated along a line.
     
     Arguments:
@@ -94,7 +95,7 @@ def interpline(field2d, pivot_point=None,
 @set_interp_metadata("vinterp")
 def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False, 
             field_type=None, log_p=False, timeidx=-1, method="cat", 
-            squeeze=True, cache=None):
+            squeeze=True, cache=None, meta=True):
     # Remove case sensitivity
     field_type = field_type.lower() if field_type is not None else "none"
     vert_coord = vert_coord.lower() if vert_coord is not None else "none"
@@ -154,7 +155,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     # Extract vriables
     #timeidx = -1 # Should this be an argument?
     ncvars = extract_vars(wrfnc, timeidx, ("PSFC", "QVAPOR", "F"), 
-                          method, squeeze, cache, nometa=True)
+                          method, squeeze, cache, meta=False)
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]
@@ -236,17 +237,17 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
 # Move to the new routines module
 # TODO:  Rename after the extensions are renamed
 @set_interp_metadata("horiz")
-def wrap_interpz3d(field3d, z, desiredloc, missingval):
+def wrap_interpz3d(field3d, z, desiredloc, missingval, meta=True):
     return interpz3d(field3d, z, desiredloc, missingval)
 
 
 @set_interp_metadata("2dxy")
-def wrap_interp2dxy(field3d, xy):
+def wrap_interp2dxy(field3d, xy, meta=True):
     return interp2dxy(field3d, xy)
 
 
 @set_interp_metadata("1d")
-def wrap_interp1d(v_in, z_in, z_out, missingval):
+def wrap_interp1d(v_in, z_in, z_out, missingval, meta=True):
     return interp1d(v_in, z_in, z_out, missingval)
 
     
