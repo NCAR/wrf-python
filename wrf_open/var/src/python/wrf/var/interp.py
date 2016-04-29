@@ -94,7 +94,7 @@ def interpline(field2d, pivot_point=None,
 
 @set_interp_metadata("vinterp")
 def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False, 
-            field_type=None, log_p=False, timeidx=-1, method="cat", 
+            field_type=None, log_p=False, timeidx=0, method="cat", 
             squeeze=True, cache=None, meta=True):
     # Remove case sensitivity
     field_type = field_type.lower() if field_type is not None else "none"

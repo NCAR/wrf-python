@@ -1,6 +1,6 @@
 
 
-from .util import _unpack_sequence, is_standard_wrf_var, extract_vars
+from .util import _get_iterable, is_standard_wrf_var, extract_vars
 from .cape import get_2dcape, get_3dcape
 from .ctt import get_ctt
 from .dbz import get_dbz, get_max_dbz
@@ -153,7 +153,7 @@ def getvar(wrfnc, var, timeidx=0,
            method="cat", squeeze=True, cache=None, meta=True, 
            **kargs):
     
-    wrfnc = _unpack_sequence(wrfnc)
+    wrfnc = _get_iterable(wrfnc)
     
     if is_standard_wrf_var(wrfnc, var):
         return extract_vars(wrfnc, timeidx, var, 

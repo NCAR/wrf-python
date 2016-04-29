@@ -591,12 +591,222 @@ begin
 end
 
 ;--------------------------------------------------------------------------------
+; This private function was added in Feb 2016 to clean up the code in
+; wrf_user_getvar for reading variables off a file, given a time index.
+;
+; Note that the time dimension is always assumed to be the leftmost
+; dimension. If this is not the case, then don't use this function!
+;
+; It handles four cases:
+;   Case 1. Reading a var from a single file, single time step
+;   Case 2. Reading a var from a single file, all time steps
+;   Case 3. Reading a var from a list of files, single time step
+;   Case 4. Reading a var from a list of files, all time steps
+;
+; If nt = -1, then all timesteps are read.
+;
+; See _get_wrf_var_level for a function that allows you to specify the
+; level index as well.
+;--------------------------------------------------------------------------------
+undef("_get_wrf_var")
+function _get_wrf_var(file_id[1], vname[1]:string, nt[1])
+local ISFILE, nc_file, dims, rank
+begin
+  if(typeof(file_id).eq."file") then
+    ISFILE  = True
+    nc_file = file_id
+  else if(typeof(file_id).eq."list") then
+    ISFILE  = False
+    nc_file = file_id[0]
+  else
+    print("_get_wrf_var: Invalid file id. Cannot extract requested variable.")
+    exit
+  end if
+  end if
+
+  dims = getfilevardimsizes(nc_file,vname)
+  rank = dimsizes(dims)
+  if(rank.gt.6) then
+    print("_get_wrf_var: Cannot extract requested variable " + vname + " with rank="+rank)
+    exit
+  end if
+
+  if ( nt .eq. -1 ) then
+    if(ISFILE) then
+      var = nc_file->$vname$          ; Case 2
+    else
+      var = file_id[:]->$vname$       ; Case 4
+    end if
+  else
+    if(ISFILE) then                   ; Case 1
+      if(rank.eq.1) then
+        var = nc_file->$vname$(nt)
+      else if(rank.eq.2) then
+        var = nc_file->$vname$(nt,:)
+      else if(rank.eq.3) then
+        var = nc_file->$vname$(nt,:,:)
+      else if(rank.eq.4) then
+        var = nc_file->$vname$(nt,:,:,:)
+      else if(rank.eq.5) then
+        var = nc_file->$vname$(nt,:,:,:,:)
+      else if(rank.eq.6) then
+        var = nc_file->$vname$(nt,:,:,:,:,:)
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+    else                              ; Case 3
+      if(rank.eq.1) then
+        var = file_id[:]->$vname$(nt)
+      else if(rank.eq.2) then
+        var = file_id[:]->$vname$(nt,:)
+      else if(rank.eq.3) then
+        var = file_id[:]->$vname$(nt,:,:)
+      else if(rank.eq.4) then
+        var = file_id[:]->$vname$(nt,:,:,:)
+      else if(rank.eq.5) then
+        var = file_id[:]->$vname$(nt,:,:,:,:)
+      else if(rank.eq.6) then
+        var = file_id[:]->$vname$(nt,:,:,:,:,:)
+      end if
+      end if
+      end if
+      end if
+      end if
+      end if
+    end if
+  end if
+  return(var)
+end
+
+;--------------------------------------------------------------------------------
+; This private function was added in Feb 2016 to clean up the code in
+; wrf_user_getvar for reading variables off a file.  It's very close
+; to _get_wrf_var, except it extracts the given level as well.
+;
+; Note that the time dimension is always assumed to be the leftmost
+; dimension, and the level the second leftmost dimemsion. If this
+; is not the case, then don't use this function!
+;
+; It handles four cases:
+;   Case 1. Reading a var from a single file, single time step
+;   Case 2. Reading a var from a single file, all time steps
+;   Case 3. Reading a var from a list of files, single time step
+;   Case 4. Reading a var from a list of files, all time steps
+;
+; If nt = -1, then all timesteps are read.
+;
+; See _get_wrf_var for a function that doesn't require a level index.
+;--------------------------------------------------------------------------------
+undef("_get_wrf_var_level")
+function _get_wrf_var_level(file_id[1], vname[1]:string, nt[1], nl[1])
+local ISFILE, nc_file, dims, rank
+begin
+  if(typeof(file_id).eq."file") then
+    ISFILE  = True
+    nc_file = file_id
+  else if(typeof(file_id).eq."list") then
+    ISFILE  = False
+    nc_file = file_id[0]
+  else
+    print("_get_wrf_var_level: Invalid file id. Cannot extract requested variable.")
+    exit
+  end if
+  end if
+
+  dims = getfilevardimsizes(nc_file,vname)
+  rank = dimsizes(dims)
+  if(rank.lt.2.or.rank.gt.6) then
+    print("_get_wrf_var_level: Cannot extract requested variable " + vname + " with rank="+rank)
+    exit
+  end if
+
+  if ( nt .eq. -1 ) then
+    if(ISFILE) then                        ; Case 2 
+      if(rank.eq.2) then
+        var = nc_file->$vname$(:,nl)
+      else if(rank.eq.3) then
+        var = nc_file->$vname$(:,nl,:)
+      else if(rank.eq.4) then
+        var = nc_file->$vname$(:,nl,:,:)
+      else if(rank.eq.5) then
+        var = nc_file->$vname$(:,nl,:,:,:)
+      else if(rank.eq.6) then
+        var = nc_file->$vname$(:,nl,:,:,:,:)
+      end if
+      end if
+      end if
+      end if
+      end if
+    else                                   ; Case 4 
+      if(rank.eq.2) then
+        var = file_id[:]->$vname$(:,nl)
+      else if(rank.eq.3) then
+        var = file_id[:]->$vname$(:,nl,:)
+      else if(rank.eq.4) then
+        var = file_id[:]->$vname$(:,nl,:,:)
+      else if(rank.eq.5) then
+        var = file_id[:]->$vname$(:,nl,:,:,:)
+      else if(rank.eq.6) then
+        var = file_id[:]->$vname$(:,nl,:,:,:,:)
+      end if
+      end if
+      end if
+      end if
+      end if
+    end if
+  else
+    if(ISFILE) then                       ; Case 1 
+      if(rank.eq.2) then
+        var = nc_file->$vname$(nt,nl)
+      else if(rank.eq.3) then
+        var = nc_file->$vname$(nt,nl,:)
+      else if(rank.eq.4) then
+        var = nc_file->$vname$(nt,nl,:,:)
+      else if(rank.eq.5) then
+        var = nc_file->$vname$(nt,nl,:,:,:)
+      else if(rank.eq.6) then
+        var = nc_file->$vname$(nt,nl,:,:,:,:)
+      end if
+      end if
+      end if
+      end if
+      end if
+    else                                  ; Case 3
+      if(rank.eq.2) then
+        var = file_id[:]->$vname$(nt,nl)
+      else if(rank.eq.3) then
+        var = file_id[:]->$vname$(nt,nl,:)
+      else if(rank.eq.4) then
+        var = file_id[:]->$vname$(nt,nl,:,:)
+      else if(rank.eq.5) then
+        var = file_id[:]->$vname$(nt,nl,:,:,:)
+      else if(rank.eq.6) then
+        var = file_id[:]->$vname$(nt,nl,:,:,:,:)
+      end if
+      end if
+      end if
+      end if
+      end if
+    end if
+  end if
+  return(var)
+end
+
+;--------------------------------------------------------------------------------
 ; This function was modified in May 2011 to allow a list of files.
 ;
+; It was overhauled in Feb/Mar 2016 to clean up the subscripting of variables
+; based on the type of "file_handle". You can now use the _get_wrf_var
+; (or _get_wrf_var_level) function to retrieve the requested variable, without
+; a bunch of "if" statements.
+;--------------------------------------------------------------------------------
 undef("wrf_user_getvar")
 function wrf_user_getvar( file_handle, varin[*]:string, time_in:integer )
 local variable, time, var, u, v, u_in, v_in, pii, radians_per_degree, \
-dims, nd, latitude, longitude, rank
+dims, nd, latitude, longitude, rank, nc_file
 begin
 
 ;---As of NCL V6.0.0, wrf_user_getvar can now handle a file or a list of files.
@@ -630,80 +840,32 @@ begin
              getV = "VV"
            end if
          end if
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             u_in = nc_file->$getU$
-             v_in = nc_file->$getV$
-           else
-             u_in = file_handle[:]->$getU$
-             v_in = file_handle[:]->$getV$
-           end if
-           u = wrf_user_unstagger(u_in,u_in@stagger)
-           v = wrf_user_unstagger(v_in,v_in@stagger)
-       else
-           if(ISFILE) then
-             u_in   = nc_file->$getU$(time_in,:,:,:)
-             v_in   = nc_file->$getV$(time_in,:,:,:)
-           else
-             u_in   = file_handle[:]->$getU$(time_in,:,:,:)
-             v_in   = file_handle[:]->$getV$(time_in,:,:,:)
-           end if
-           u = wrf_user_unstagger(u_in,u_in@stagger)
-           v = wrf_user_unstagger(v_in,v_in@stagger)
-         end if
+         u_in = _get_wrf_var(file_handle,getU,time)
+         v_in = _get_wrf_var(file_handle,getV,time)
+         u    = wrf_user_unstagger(u_in,u_in@stagger)
+         v    = wrf_user_unstagger(v_in,v_in@stagger)
        end if  
 
        if( (variable .eq. "uvmet10") )  then
          if(isfilevar(nc_file,"U10")) then
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               u_in   = nc_file->U10
-               v_in   = nc_file->V10
-             else
-               u_in   = file_handle[:]->U10
-               v_in   = file_handle[:]->V10
-             end if
-             u = wrf_user_unstagger(u_in,u_in@stagger)
-             v = wrf_user_unstagger(v_in,v_in@stagger)
-           else
-             if(ISFILE) then
-               u_in  = nc_file->U10(time_in,:,:)
-               v_in  = nc_file->V10(time_in,:,:)
-             else
-               u_in  = file_handle[:]->U10(time_in,:,:)
-               v_in  = file_handle[:]->V10(time_in,:,:)
-             end if
-             u = wrf_user_unstagger(u_in,u_in@stagger)
-             v = wrf_user_unstagger(v_in,v_in@stagger)
-           end if
+           u_in = _get_wrf_var(file_handle,"U10",time)
+           v_in = _get_wrf_var(file_handle,"V10",time)
+           u    = wrf_user_unstagger(u_in,u_in@stagger)
+           v    = wrf_user_unstagger(v_in,v_in@stagger)
          else  ; may be a met file, so get lowest level of UU and VV
            if(isfilevar(nc_file,"UU")) then
              print("wrf_user_getvar: Assume this is a met_em file - getting lowest level from UU and VV fields")
-             if ( time .eq. -1 ) then
-               if(ISFILE) then
-                 u_in  = nc_file->UU(:,0,:,:)
-                 v_in  = nc_file->VV(:,0,:,:)
-               else
-                 u_in  = file_handle[:]->UU(:,0,:,:)
-                 v_in  = file_handle[:]->VV(:,0,:,:)
-               end if
-               u = wrf_user_unstagger(u_in,u_in@stagger)
-               v = wrf_user_unstagger(v_in,v_in@stagger)
-             else
-               if(ISFILE) then
-                 u_in  = nc_file->UU(time_in,0,:,:)
-                 v_in  = nc_file->VV(time_in,0,:,:)
-               else
-                 u_in  = file_handle[:]->UU(time_in,0,:,:)
-                 v_in  = file_handle[:]->VV(time_in,0,:,:)
-               end if
-               u = wrf_user_unstagger(u_in,u_in@stagger)
-               v = wrf_user_unstagger(v_in,v_in@stagger)
-             end if
+             u_in  = _get_wrf_var_level(file_handle,"UU",time,0)
+             v_in  = _get_wrf_var_level(file_handle,"VV",time,0)
+             u     = wrf_user_unstagger(u_in,u_in@stagger)
+             v     = wrf_user_unstagger(v_in,v_in@stagger)
            end if
          end if  
        end if  
-
+       if(.not.all(isvar((/"u","v","u_in","v_in"/)))) then
+         print("wrf_user_getvar: error: couldn't find variables needed to calculate 'uvmet'")
+         return
+       end if
 
        map_projection = nc_file@MAP_PROJ
 
@@ -713,28 +875,32 @@ begin
          nd = dimsizes(dims)
          if ( nd .eq. 5 ) then
            uvmet = new( (/ 2, dims(0), dims(1), dims(2), dims(3), dims(4) /), typeof(u))
-           uvmet(0,:,:,:,:,:) = u(:,:,:,:,:) 
-           uvmet(1,:,:,:,:,:) = v(:,:,:,:,:)
+           uvmet(0,:,:,:,:,:) = (/u(:,:,:,:,:)/)
+           uvmet(1,:,:,:,:,:) = (/v(:,:,:,:,:)/)
          end if
          if ( nd .eq. 4 ) then
            uvmet = new( (/ 2, dims(0), dims(1), dims(2), dims(3) /), typeof(u))
-           uvmet(0,:,:,:,:) = u(:,:,:,:) 
-           uvmet(1,:,:,:,:) = v(:,:,:,:)
+           uvmet(0,:,:,:,:) = (/u(:,:,:,:)/)
+           uvmet(1,:,:,:,:) = (/v(:,:,:,:)/)
          end if
          if ( nd .eq. 3 ) then
            uvmet = new( (/ 2, dims(0), dims(1), dims(2) /), typeof(u))
-           uvmet(0,:,:,:) = u(:,:,:) 
-           uvmet(1,:,:,:) = v(:,:,:)
+           uvmet(0,:,:,:) = (/u(:,:,:)/)
+           uvmet(1,:,:,:) = (/v(:,:,:)/)
          end if
          if ( nd .eq. 2 ) then
            uvmet = new( (/ 2, dims(0), dims(1) /), typeof(u))
-           uvmet(0,:,:) = u(:,:) 
-           uvmet(1,:,:) = v(:,:)
+           uvmet(0,:,:) = (/u(:,:)/)
+           uvmet(1,:,:) = (/v(:,:)/)
          end if
-         delete_VarAtts(u,(/"description","units"/))
-         copy_VarAtts(u,uvmet)
+         copy_VarAtts_except(u,uvmet,(/"description","units"/))
          uvmet@description = " u,v met velocity"
          uvmet!0 = "u_v"
+         do n=0,dimsizes(dims)-1           ; Copy dimension names
+           if(isdimnamed(u,n))
+             uvmet!(n+1) = u!n
+           end if
+         end do
        end if
 
 
@@ -756,23 +922,8 @@ begin
              getLON = "XLONG_M"
            end if
          end if
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             latitude  = nc_file->$getLAT$
-             longitude = nc_file->$getLON$
-           else
-             latitude  = file_handle[:]->$getLAT$
-             longitude = file_handle[:]->$getLON$
-           end if
-         else
-           if(ISFILE) then
-             latitude  = nc_file->$getLAT$(time_in,:,:)
-             longitude = nc_file->$getLON$(time_in,:,:)
-           else
-             latitude  = file_handle[:]->$getLAT$(time_in,:,:)
-             longitude = file_handle[:]->$getLON$(time_in,:,:)
-           end if
-         end if
+         latitude  = _get_wrf_var(file_handle,getLAT,time)
+         longitude = _get_wrf_var(file_handle,getLON,time)
 
          cone = 1.
          if( map_projection .eq. 1) then    ; Lambert Conformal mapping
@@ -794,14 +945,14 @@ begin
          end if
 
          uvmet = wrf_uvmet( u, v, latitude, longitude, cen_long, cone )
-         delete_VarAtts(u,(/"description","units"/))
-         copy_VarAtts(u,uvmet)
+         copy_VarAtts_except(u,uvmet,(/"description","units"/))
 
        end if  
        
        if( (variable .eq. "uvmet10") )  then
          uvmet@description = " u10,v10 met velocity"
        end if
+
        return(uvmet)
 
   end if
@@ -810,27 +961,17 @@ begin
 
   if( variable .eq. "ua" ) then
        ;  U interpolated to mass points
-       getTHIS = "U" 
-       if(.not. isfilevar(nc_file,"U")) then
-         if(isfilevar(nc_file,"UU")) then
-           getTHIS = "UU"
-         end if
-       end if
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           var = nc_file->$getTHIS$
-         else
-           var = file_handle[:]->$getTHIS$
-         end if
+       if(isfilevar(nc_file,"U")) then
+         getTHIS = "U"
+       else if(isfilevar(nc_file,"UU")) then
+         getTHIS = "UU"
        else
-         if(ISFILE) then
-           var = nc_file->$getTHIS$(time_in,:,:,:)
-         else
-           var = file_handle[:]->$getTHIS$(time_in,:,:,:)
-         end if
+         print("wrf_user_getvar: error: cannot find 'U' or 'UU' on the file")
+         return
        end if
-
-       ua = wrf_user_unstagger(var,var@stagger)
+       end if
+       var = _get_wrf_var(file_handle,getTHIS,time)
+       ua  = wrf_user_unstagger(var,var@stagger)
 
        return(ua)
   end if
@@ -838,28 +979,17 @@ begin
 
 
   if( variable .eq. "va" ) then
-       ; V interpolated to mass points
-       getTHIS = "V" 
-       if(.not. isfilevar(nc_file,"V")) then
-         if(isfilevar(nc_file,"VV")) then
-           getTHIS = "VV"
-         end if
-       end if
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           var = nc_file->$getTHIS$
-         else
-           var = file_handle[:]->$getTHIS$
-         end if
+       if(isfilevar(nc_file,"V")) then
+         getTHIS = "V" 
+       else if(isfilevar(nc_file,"VV")) then
+         getTHIS = "VV"
        else
-         if(ISFILE) then
-           var = nc_file->$getTHIS$(time_in,:,:,:)
-         else
-           var = file_handle[:]->$getTHIS$(time_in,:,:,:)
-         end if
+         print("wrf_user_getvar: error: cannot find 'V' or 'VV' on the file")
+         return
        end if
-
-       va = wrf_user_unstagger(var,var@stagger)
+       end if
+       var = _get_wrf_var(file_handle,getTHIS,time)
+       va  = wrf_user_unstagger(var,var@stagger)
 
        return(va)
   end if
@@ -868,21 +998,8 @@ begin
 
   if( variable .eq. "wa" ) then
        ; W interpolated to mass points
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           var = nc_file->W
-         else
-           var = file_handle[:]->W
-         end if
-       else
-         if(ISFILE) then
-           var = nc_file->W(time_in,:,:,:)
-         else
-           var = file_handle[:]->W(time_in,:,:,:)
-         end if
-       end if
-
-       wa = wrf_user_unstagger(var,var@stagger)
+       var = _get_wrf_var(file_handle,"W",time)
+       wa  = wrf_user_unstagger(var,var@stagger)
 
        return(wa)
   end if
@@ -892,41 +1009,16 @@ begin
   if( any( variable .eq. (/"p","pres","pressure"/) ) ) then
        ; Full model pressure [=base pressure (PB) + pertubation pressure (P)]
        if(isfilevar(nc_file,"P")) then
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             var = nc_file->P
-             PB  = nc_file->PB
-           else
-             var = file_handle[:]->P
-             PB  = file_handle[:]->PB
-           end if
-         else
-           if(ISFILE) then
-             var = nc_file->P(time_in,:,:,:)
-             PB  = nc_file->PB(time_in,:,:,:)
-           else
-             var = file_handle[:]->P(time_in,:,:,:)
-             PB  = file_handle[:]->PB(time_in,:,:,:)
-           end if
-         end if
+         var = _get_wrf_var(file_handle,"P",time)
+         PB  = _get_wrf_var(file_handle,"PB",time)
          var = var + PB
-       else
+       else if(isfilevar(nc_file,"PRES")) then
          ;; may be a met_em file - see if we can get PRES
-         if(isfilevar(nc_file,"PRES")) then
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               var = nc_file->PRES
-             else
-               var = file_handle[:]->PRES
-             end if
-           else
-             if(ISFILE) then
-               var = nc_file->PRES(time_in,:,:,:)
-             else
-               var = file_handle[:]->PRES(time_in,:,:,:)
-             end if
-           end if
-         end if
+         var = _get_wrf_var(file_handle,"PRES",time)
+       else
+         print("wrf_user_getvar: error: cannot find 'P' or 'PRES' on the file")
+         return
+       end if
        end if
        var@description = "Pressure"
        if( variable .eq. "pressure" ) then
@@ -941,48 +1033,21 @@ begin
   if( any( variable .eq. (/"geopt","geopotential","z","height"/) ) ) then
        ; Height [=full geopotentail height / 9.81]
        if(isfilevar(nc_file,"PH")) then
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             var = nc_file->PH
-             PHB = nc_file->PHB
-           else
-             var = file_handle[:]->PH
-             PHB = file_handle[:]->PHB
-           end if
-         else
-           if(ISFILE) then
-             var = nc_file->PH(time,:,:,:)
-             PHB = nc_file->PHB(time,:,:,:)
-           else
-             var = file_handle[:]->PH(time,:,:,:)
-             PHB = file_handle[:]->PHB(time,:,:,:)
-           end if
-         end if
-
+         var = _get_wrf_var(file_handle,"PH",time)
+         PHB = _get_wrf_var(file_handle,"PHB",time)
          var = var + PHB
          z = wrf_user_unstagger(var,var@stagger)
          z@description = "Geopotential"
-
-       else
+       else if(isfilevar(nc_file,"GHT")) then
          ;; may be a met_em file - see if we can get GHT - data in met_em file is Height in M
-         if(isfilevar(nc_file,"GHT")) then
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               z = nc_file->GHT
-             else
-               z = file_handle[:]->GHT
-             end if
-           else
-             if(ISFILE) then
-               z = nc_file->GHT(time,:,:,:)
-             else
-               z = file_handle[:]->GHT(time,:,:,:)
-             end if
-           end if
-           z = z * 9.81
-           z@description = "Geopotential"
-           z@units       = "m2 s-2"
-         end if
+         z = _get_wrf_var(file_handle,"GHT",time)
+         z = z * 9.81
+         z@description = "Geopotential"
+         z@units       = "m2 s-2"
+       else
+         print("wrf_user_getvar: error: cannot find 'PH' or 'GHT' on the file")
+         return
+       end if
        end if
 
        if( any( variable .eq. (/"z","height"/) ) ) then
@@ -996,22 +1061,10 @@ begin
 
 
   if( any( variable .eq. (/"th","theta"/) ) ) then
-       ; Potentail Temperature is model output T + 300K
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           var = nc_file->T
-         else
-           var = file_handle[:]->T
-         end if
-       else
-         if(ISFILE) then
-           var = nc_file->T(time_in,:,:,:)
-         else
-           var = file_handle[:]->T(time_in,:,:,:)
-         end if
-       end if  
+       ; Potential Temperature is model output T + 300K
+       var = _get_wrf_var(file_handle,"T",time)
        var = var + 300.
-       var@description = "Potential Temperature (theta) "
+       var@description = "Potential Temperature (theta)"
        return(var)
   end if
 
@@ -1020,49 +1073,20 @@ begin
   if( any( variable .eq. (/"tk","tc"/) ) ) then
        ;; function wrf_tk needs theta and pressure (Pa) on input and returns temperature in K on return
        if(isfilevar(nc_file,"T")) then
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             T  = nc_file->T
-             P  = nc_file->P
-             PB = nc_file->PB
-           else
-             T  = file_handle[:]->T
-             P  = file_handle[:]->P
-             PB = file_handle[:]->PB
-           end if
-         else
-           if(ISFILE) then
-             T  = nc_file->T(time_in,:,:,:)
-             P  = nc_file->P(time_in,:,:,:)
-             PB = nc_file->PB(time_in,:,:,:)
-           else
-             T  = file_handle[:]->T(time_in,:,:,:)
-             P  = file_handle[:]->P(time_in,:,:,:)
-             PB = file_handle[:]->PB(time_in,:,:,:)
-           end if
-         end if  
+         T  = _get_wrf_var(file_handle,"T",time)
+         P  = _get_wrf_var(file_handle,"P",time)
+         PB = _get_wrf_var(file_handle,"PB",time)
          T = T + 300.
          P = P + PB
          t = wrf_tk( P , T )
-         delete_VarAtts(T,(/"description"/))
-         copy_VarAtts(T,t)
-       else
+         copy_VarAtts_except(T,t,"description")
          ;; may be a met_em file - see if we can get TT
-         if(isfilevar(nc_file,"TT")) then
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               t = nc_file->TT
-             else
-               t = file_handle[:]->TT
-             end if
-           else
-             if(ISFILE) then
-               t = nc_file->TT(time_in,:,:,:)
-             else
-               t = file_handle[:]->TT(time_in,:,:,:)
-             end if
-           end if  
-         end if  
+       else if(isfilevar(nc_file,"TT")) then
+         t = _get_wrf_var(file_handle,"TT",time)
+       else
+         print("wrf_user_getvar: error: cannot find 'T' or 'TT' on the file")
+         return
+       end if  
        end if  
        if( variable .eq. "tc" ) then
          t = t - 273.16
@@ -1076,37 +1100,15 @@ begin
    if( variable .eq. "eth" ) then
    ;Equivalent Potential Temperature in degrees K
        if(isfilevar(nc_file,"T")) then
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             T  = nc_file->T
-             P  = nc_file->P
-             PB = nc_file->PB
-             QV = nc_file->QVAPOR
-           else
-             T  = file_handle[:]->T
-             P  = file_handle[:]->P
-             PB = file_handle[:]->PB
-             QV = file_handle[:]->QVAPOR
-           end if
-         else
-           if(ISFILE) then
-             T  = nc_file->T(time_in,:,:,:)
-             P  = nc_file->P(time_in,:,:,:)
-             PB = nc_file->PB(time_in,:,:,:)
-             QV = nc_file->QVAPOR(time_in,:,:,:)
-           else
-             T  = file_handle[:]->T(time_in,:,:,:)
-             P  = file_handle[:]->P(time_in,:,:,:)
-             PB = file_handle[:]->PB(time_in,:,:,:)
-             QV = file_handle[:]->QVAPOR(time_in,:,:,:)
-           end if
-         end if  
-         T  = T + 300.        ; potential temperature in K.
-         P  = P + PB          ; full pressure in Pa.   
-         tk = wrf_tk( P , T ) ; temperature in K.
+         T  = _get_wrf_var(file_handle,"T",time)
+         P  = _get_wrf_var(file_handle,"P",time)
+         PB = _get_wrf_var(file_handle,"PB",time)
+         QV = _get_wrf_var(file_handle,"QVAPOR",time)
+         T  = T + 300.         ; potential temperature in K.
+         P  = P + PB           ; full pressure in Pa.   
+         tk  = wrf_tk( P , T ) ; temperature in K.
          eth = wrf_eth ( QV, tk, P )
-         delete_VarAtts(T,(/"description"/))
-         copy_VarAtts(T,eth)
+         copy_VarAtts_except(T,eth,(/"description"/))
          return(eth)
        else
          print("This diagnostic only for with WRF data file and not for WPS files")
@@ -1119,31 +1121,12 @@ begin
 
   if( variable .eq. "td" ) then
        ;; function wrf_td needs qv and pressure (Pa) on input and returns dewpoint temperature on return
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           P      = nc_file->P
-           PB     = nc_file->PB
-           QVAPOR = nc_file->QVAPOR
-         else
-           P      = file_handle[:]->P
-           PB     = file_handle[:]->PB
-           QVAPOR = file_handle[:]->QVAPOR
-         end if
-       else
-         if(ISFILE) then
-           P      = nc_file->P(time_in,:,:,:)
-           PB     = nc_file->PB(time_in,:,:,:)
-           QVAPOR = nc_file->QVAPOR(time_in,:,:,:)
-         else
-           P      = file_handle[:]->P(time_in,:,:,:)
-           PB     = file_handle[:]->PB(time_in,:,:,:)
-           QVAPOR = file_handle[:]->QVAPOR(time_in,:,:,:)
-         end if
-       end if
-       P = P + PB
-       td  = wrf_td( P , QVAPOR )
-       delete_VarAtts(QVAPOR,(/"description","units"/))
-       copy_VarAtts(QVAPOR,td)
+       P      = _get_wrf_var(file_handle,"P",time)
+       PB     = _get_wrf_var(file_handle,"PB",time)
+       QVAPOR = _get_wrf_var(file_handle,"QVAPOR",time)
+       P      = P + PB
+       td     = wrf_td( P , QVAPOR )
+       copy_VarAtts_except(QVAPOR,td,(/"description","units"/))
        return(td)
   end if
 
@@ -1151,26 +1134,10 @@ begin
 
   if( variable .eq. "td2" ) then
        ;; function wrf_td needs qv and pressure (Pa) on input and returns dewpoint temperature on return
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           PSFC = nc_file->PSFC
-           Q2   = nc_file->Q2
-         else
-           PSFC = file_handle[:]->PSFC
-           Q2   = file_handle[:]->Q2
-         end if
-       else
-         if(ISFILE) then
-           PSFC = nc_file->PSFC(time_in,:,:) 
-           Q2   = nc_file->Q2(time_in,:,:)
-         else
-           PSFC = file_handle[:]->PSFC(time_in,:,:) 
-           Q2   = file_handle[:]->Q2(time_in,:,:)
-         end if
-       end if
-       td = wrf_td( PSFC , Q2 )
-       delete_VarAtts(Q2,(/"description","units"/))
-       copy_VarAtts(Q2,td)
+       PSFC = _get_wrf_var(file_handle,"PSFC",time)
+       Q2   = _get_wrf_var(file_handle,"Q2",time)
+       td   = wrf_td( PSFC , Q2 )
+       copy_VarAtts_except(Q2,td,(/"description","units"/))
        td@description = "2m Dewpoint Temperature"   ; Overwrite return description
        return(td)
   end if
@@ -1181,66 +1148,27 @@ begin
        if(isfilevar(nc_file,"T")) then
          ;; first compute theta - function wrf_tk needs theta and pressure (Pa) on input
          ;; THEN compute sea level pressure, from qv, p (Pa), tk, z
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             T      = nc_file->T
-             P      = nc_file->P
-             PB     = nc_file->PB
-             QVAPOR = nc_file->QVAPOR
-             PH     = nc_file->PH
-             PHB    = nc_file->PHB
-           else
-             T      = file_handle[:]->T
-             P      = file_handle[:]->P
-             PB     = file_handle[:]->PB
-             QVAPOR = file_handle[:]->QVAPOR
-             PH     = file_handle[:]->PH
-             PHB    = file_handle[:]->PHB
-           end if
-         else
-           if(ISFILE) then
-             T      = nc_file->T(time_in,:,:,:)
-             P      = nc_file->P(time_in,:,:,:)
-             PB     = nc_file->PB(time_in,:,:,:)
-             QVAPOR = nc_file->QVAPOR(time_in,:,:,:)
-             PH     = nc_file->PH(time_in,:,:,:)
-             PHB    = nc_file->PHB(time_in,:,:,:)
-           else
-             T      = file_handle[:]->T(time_in,:,:,:)
-             P      = file_handle[:]->P(time_in,:,:,:)
-             PB     = file_handle[:]->PB(time_in,:,:,:)
-             QVAPOR = file_handle[:]->QVAPOR(time_in,:,:,:)
-             PH     = file_handle[:]->PH(time_in,:,:,:)
-             PHB    = file_handle[:]->PHB(time_in,:,:,:)
-           end if
-         end if
-         T = T + 300.
-         P = P + PB
+         T      = _get_wrf_var(file_handle,"T",time)
+         P      = _get_wrf_var(file_handle,"P",time)
+         PB     = _get_wrf_var(file_handle,"PB",time)
+         QVAPOR = _get_wrf_var(file_handle,"QVAPOR",time)
+         PH     = _get_wrf_var(file_handle,"PH",time)
+         PHB    = _get_wrf_var(file_handle,"PHB",time)
+         T      = T + 300.
+         P      = P + PB
          QVAPOR = QVAPOR > 0.000
-         PH    = ( PH + PHB ) / 9.81
-         z = wrf_user_unstagger(PH,PH@stagger)
-
-         tk = wrf_tk( P , T )    ; calculate TK
-         slp   = wrf_slp( z, tk, P, QVAPOR )  ; calculate slp
-         delete_VarAtts(T,(/"description","units"/))
-         copy_VarAtts(T,slp)
-       else
+         PH     = ( PH + PHB ) / 9.81
+         z      = wrf_user_unstagger(PH,PH@stagger)
+         tk     = wrf_tk( P , T )    ; calculate TK
+         slp    = wrf_slp( z, tk, P, QVAPOR )  ; calculate slp
+         copy_VarAtts_except(T,slp,(/"description","units"/))
+       else if(isfilevar(nc_file,"PMSL")) then
          ;; may be a met_em file - see if we can get PMSL
-         if(isfilevar(nc_file,"PMSL")) then
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               slp = nc_file->PMSL
-             else
-               slp = file_handle[:]->PMSL
-             end if
-           else
-             if(ISFILE) then
-               slp = nc_file->PMSL(time_in,:,:)
-             else
-               slp = file_handle[:]->PMSL(time_in,:,:)
-             end if
-           end if
-         end if
+         slp = _get_wrf_var(file_handle,"PMSL",time)
+       else
+         print("wrf_user_getvar: error: cannot find 'PMSL' or 'T' on the file")
+         return
+       end if  
        end if  
 
        return(slp)
@@ -1252,55 +1180,23 @@ begin
        if(isfilevar(nc_file,"T")) then
          ;; first compute theta - function wrf_tk needs theta and pressure (Pa) on input
          ;; THEN compute rh, using tk, p (Pa), QVAPOR
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             T      = nc_file->T
-             P      = nc_file->P
-             PB     = nc_file->PB
-             QVAPOR = nc_file->QVAPOR
-           else
-             T      = file_handle[:]->T
-             P      = file_handle[:]->P
-             PB     = file_handle[:]->PB
-             QVAPOR = file_handle[:]->QVAPOR
-           end if
-         else
-           if(ISFILE) then
-             T      = nc_file->T(time_in,:,:,:)
-             P      = nc_file->P(time_in,:,:,:)
-             PB     = nc_file->PB(time_in,:,:,:)
-             QVAPOR = nc_file->QVAPOR(time_in,:,:,:)
-           else
-             T      = file_handle[:]->T(time_in,:,:,:)
-             P      = file_handle[:]->P(time_in,:,:,:)
-             PB     = file_handle[:]->PB(time_in,:,:,:)
-             QVAPOR = file_handle[:]->QVAPOR(time_in,:,:,:)
-           end if
-         end if  
-         T = T + 300.
-         P  = P + PB
+         T      = _get_wrf_var(file_handle,"T",time)
+         P      = _get_wrf_var(file_handle,"P",time)
+         PB     = _get_wrf_var(file_handle,"PB",time)
+         QVAPOR = _get_wrf_var(file_handle,"QVAPOR",time)
+         T      = T + 300.
+         P      = P + PB
          QVAPOR = QVAPOR > 0.000
-         tk = wrf_tk( P , T )
-         rh = wrf_rh( QVAPOR, P, tk )
-         delete_VarAtts(T,(/"description","units"/))
-         copy_VarAtts(T,rh)
-       else
+         tk     = wrf_tk( P , T )
+         rh     = wrf_rh( QVAPOR, P, tk )
+         copy_VarAtts_except(T,rh,(/"description","units"/))
+       else if(isfilevar(nc_file,"RH")) then
          ;; may be a met_em file - see if we can get RH
-         if(isfilevar(nc_file,"RH")) then
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               rh = nc_file->RH
-             else
-               rh = file_handle[:]->RH
-             end if
-           else
-             if(ISFILE) then
-               rh = nc_file->RH(time_in,:,:,:)
-             else
-               rh = file_handle[:]->RH(time_in,:,:,:)
-             end if
-           end if
-         end if
+         rh = _get_wrf_var(file_handle,"RH",time)
+       else
+         print("wrf_user_getvar: error: cannot find 'T' or 'RH' on the file")
+         return
+       end if  
        end if  
        return(rh)
   end if
@@ -1310,157 +1206,63 @@ begin
   if( variable .eq. "rh2" ) then
        if(isfilevar(nc_file,"T2")) then
          ;; Compute rh2, using T2, PSFC, Q2
-         if ( time .eq. -1 ) then
-           if(ISFILE) then
-             T2   = nc_file->T2
-             PSFC = nc_file->PSFC
-             Q2   = nc_file->Q2
-           else
-             T2   = file_handle[:]->T2
-             PSFC = file_handle[:]->PSFC
-             Q2   = file_handle[:]->Q2
-           end if
-         else
-           if(ISFILE) then
-             T2   = nc_file->T2(time_in,:,:)
-             PSFC = nc_file->PSFC(time_in,:,:)
-             Q2   = nc_file->Q2(time_in,:,:)
-           else
-             T2   = file_handle[:]->T2(time_in,:,:)
-             PSFC = file_handle[:]->PSFC(time_in,:,:)
-             Q2   = file_handle[:]->Q2(time_in,:,:)
-           end if
-         end if  
-         Q2 = Q2 > 0.000
-         rh = wrf_rh( Q2, PSFC, T2 )
-         delete_VarAtts(T2,(/"description","units"/))
-         copy_VarAtts(T2,rh)
-         rh@description = "2m Relative Humidity"           
-       else
+         T2   = _get_wrf_var(file_handle,"T2",time)
+         PSFC = _get_wrf_var(file_handle,"PSFC",time)
+         Q2   = _get_wrf_var(file_handle,"Q2",time)
+         Q2   = Q2 > 0.000
+         rh2  = wrf_rh( Q2, PSFC, T2 )
+         copy_VarAtts_except(T2,rh2,(/"description","units"/))
+         rh2@description = "2m Relative Humidity"           
+       else if(isfilevar(nc_file,"RH")) then
          ;; may be a met_em file - see if we can get RH
-         if(isfilevar(nc_file,"RH")) then
-           print("Probably a met_em file - get lowerst level from RH field")
-           if ( time .eq. -1 ) then
-             if(ISFILE) then
-               rh2 = nc_file->RH(:,0,:,:)
-             else
-               rh2 = file_handle[:]->RH(:,0,:,:)
-             end if
-           else
-             if(ISFILE) then
-               rh2 = nc_file->RH(time_in,0,:,:)
-             else
-               rh2 = file_handle[:]->RH(time_in,0,:,:)
-             end if
-           end if
-         end if
+         print("Probably a met_em file - get lowest level from RH field")
+         rh2 = _get_wrf_var_level(file_handle,"RH",time,0)
+       else
+         print("wrf_user_getvar: error: cannot find 'T2' or 'RH' on the file")
+         return
+       end if
        end if  
-       return(rh)
+       return(rh2)
   end if
 
 
 
   if( variable .eq. "pvo" ) then
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           U    = nc_file->U
-           V    = nc_file->V
-           T    = nc_file->T
-           P    = nc_file->P
-           PB   = nc_file->PB
-           MSFU = nc_file->MAPFAC_U
-           MSFV = nc_file->MAPFAC_V
-           MSFM = nc_file->MAPFAC_M
-           COR  = nc_file->F
-         else
-           U    = file_handle[:]->U
-           V    = file_handle[:]->V
-           T    = file_handle[:]->T
-           P    = file_handle[:]->P
-           PB   = file_handle[:]->PB
-           MSFU = file_handle[:]->MAPFAC_U
-           MSFV = file_handle[:]->MAPFAC_V
-           MSFM = file_handle[:]->MAPFAC_M
-           COR  = file_handle[:]->F
-         end if
-       else
-         if(ISFILE) then
-           U    = nc_file->U(time_in,:,:,:)
-           V    = nc_file->V(time_in,:,:,:)
-           T    = nc_file->T(time_in,:,:,:)
-           P    = nc_file->P(time_in,:,:,:)
-           PB   = nc_file->PB(time_in,:,:,:)
-           MSFU = nc_file->MAPFAC_U(time_in,:,:)
-           MSFV = nc_file->MAPFAC_V(time_in,:,:)
-           MSFM = nc_file->MAPFAC_M(time_in,:,:)
-           COR  = nc_file->F(time_in,:,:)
-         else
-           U    = file_handle[:]->U(time_in,:,:,:)
-           V    = file_handle[:]->V(time_in,:,:,:)
-           T    = file_handle[:]->T(time_in,:,:,:)
-           P    = file_handle[:]->P(time_in,:,:,:)
-           PB   = file_handle[:]->PB(time_in,:,:,:)
-           MSFU = file_handle[:]->MAPFAC_U(time_in,:,:)
-           MSFV = file_handle[:]->MAPFAC_V(time_in,:,:)
-           MSFM = file_handle[:]->MAPFAC_M(time_in,:,:)
-           COR  = file_handle[:]->F(time_in,:,:)
-         end if
-       end if  
-       T = T + 300.
-       P = P + PB
-       DX = nc_file@DX
-       DY = nc_file@DY
+       U    = _get_wrf_var(file_handle,"U",time)
+       V    = _get_wrf_var(file_handle,"V",time)
+       T    = _get_wrf_var(file_handle,"T",time)
+       P    = _get_wrf_var(file_handle,"P",time)
+       PB   = _get_wrf_var(file_handle,"PB",time)
+       MSFU = _get_wrf_var(file_handle,"MAPFAC_U",time)
+       MSFV = _get_wrf_var(file_handle,"MAPFAC_V",time)
+       MSFM = _get_wrf_var(file_handle,"MAPFAC_M",time)
+       COR  = _get_wrf_var(file_handle,"F",time)
+       T    = T + 300.
+       P    = P + PB
+       DX   = nc_file@DX
+       DY   = nc_file@DY
 
        pvo = wrf_pvo( U, V, T, P, MSFU, MSFV, MSFM, COR, DX, DY, 0)
 
-       delete_VarAtts(T,(/"description","units"/))
-       copy_VarAtts(T,pvo)
+       copy_VarAtts_except(T,pvo,(/"description","units"/))
        return(pvo)
   end if
 
 
 
   if( variable .eq. "avo" ) then
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           U    = nc_file->U
-           V    = nc_file->V
-           MSFU = nc_file->MAPFAC_U
-           MSFV = nc_file->MAPFAC_V
-           MSFM = nc_file->MAPFAC_M
-           COR  = nc_file->F
-         else
-           U    = file_handle[:]->U
-           V    = file_handle[:]->V
-           MSFU = file_handle[:]->MAPFAC_U
-           MSFV = file_handle[:]->MAPFAC_V
-           MSFM = file_handle[:]->MAPFAC_M
-           COR  = file_handle[:]->F
-         end if
-       else
-         if(ISFILE) then
-           U    = nc_file->U(time_in,:,:,:)
-           V    = nc_file->V(time_in,:,:,:)
-           MSFU = nc_file->MAPFAC_U(time_in,:,:)
-           MSFV = nc_file->MAPFAC_V(time_in,:,:)
-           MSFM = nc_file->MAPFAC_M(time_in,:,:)
-           COR  = nc_file->F(time_in,:,:)
-         else
-           U    = file_handle[:]->U(time_in,:,:,:)
-           V    = file_handle[:]->V(time_in,:,:,:)
-           MSFU = file_handle[:]->MAPFAC_U(time_in,:,:)
-           MSFV = file_handle[:]->MAPFAC_V(time_in,:,:)
-           MSFM = file_handle[:]->MAPFAC_M(time_in,:,:)
-           COR  = file_handle[:]->F(time_in,:,:)
-         end if
-       end if  
-       DX = nc_file@DX
-       DY = nc_file@DY
+       U    = _get_wrf_var(file_handle,"U",time)
+       V    = _get_wrf_var(file_handle,"V",time)
+       MSFU = _get_wrf_var(file_handle,"MAPFAC_U",time)
+       MSFV = _get_wrf_var(file_handle,"MAPFAC_V",time)
+       MSFM = _get_wrf_var(file_handle,"MAPFAC_M",time)
+       COR  = _get_wrf_var(file_handle,"F",time)
+       DX   = nc_file@DX
+       DY   = nc_file@DY
 
-       avo = wrf_avo( U, V, MSFU, MSFV, MSFM, COR, DX, DY, 0)
+       avo  = wrf_avo( U, V, MSFU, MSFV, MSFM, COR, DX, DY, 0)
 
-       delete_VarAtts(COR,(/"description","units"/))
-       copy_VarAtts(COR,avo)
+       copy_VarAtts_except(COR,avo,(/"description","units"/))
        return(avo)
   end if
 
@@ -1484,82 +1286,31 @@ begin
          end if
        end do
 
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           T  = nc_file->T
-           P  = nc_file->P
-           PB = nc_file->PB
-           qv = nc_file->QVAPOR
-           qr = nc_file->QRAIN
-         else
-           T  = file_handle[:]->T
-           P  = file_handle[:]->P
-           PB = file_handle[:]->PB
-           qv = file_handle[:]->QVAPOR
-           qr = file_handle[:]->QRAIN
-         end if
-         if(isfilevar(nc_file,"QSNOW"))
-           if(ISFILE) then
-             qs = nc_file->QSNOW
-           else
-             qs = file_handle[:]->QSNOW
-           end if
-         end if
-         if(isfilevar(nc_file,"QGRAUP"))
-           if(ISFILE) then
-             qg = nc_file->QGRAUP
-           else
-             qg = file_handle[:]->QGRAUP
-           end if
-         end if
+       T  = _get_wrf_var(file_handle,"T",time)
+       P  = _get_wrf_var(file_handle,"P",time)
+       PB = _get_wrf_var(file_handle,"PB",time)
+       qv = _get_wrf_var(file_handle,"QVAPOR",time)
+       qr = _get_wrf_var(file_handle,"QRAIN",time)
+       if(isfilevar(nc_file,"QSNOW"))
+         qs = _get_wrf_var(file_handle,"QSNOW",time)
        else
-         if(ISFILE) then
-           T  = nc_file->T(time_in,:,:,:)
-           P  = nc_file->P(time_in,:,:,:)
-           PB = nc_file->PB(time_in,:,:,:)
-           qv = nc_file->QVAPOR(time_in,:,:,:)
-           qr = nc_file->QRAIN(time_in,:,:,:)
-         else
-           T  = file_handle[:]->T(time_in,:,:,:)
-           P  = file_handle[:]->P(time_in,:,:,:)
-           PB = file_handle[:]->PB(time_in,:,:,:)
-           qv = file_handle[:]->QVAPOR(time_in,:,:,:)
-           qr = file_handle[:]->QRAIN(time_in,:,:,:)
-         end if
-         if(isfilevar(nc_file,"QSNOW"))
-           if(ISFILE) then
-             qs = nc_file->QSNOW(time_in,:,:,:)
-           else
-             qs = file_handle[:]->QSNOW(time_in,:,:,:)
-           end if
-         end if
-         if(isfilevar(nc_file,"QGRAUP"))
-           if(ISFILE) then
-             qg = nc_file->QGRAUP(time_in,:,:,:)
-           else
-             qg = file_handle[:]->QGRAUP(time_in,:,:,:)
-           end if
-         end if
-       end if
-       T  = T + 300.
-       P  = P + PB
-       tk = wrf_tk( P , T )
-
-       if ( .not. isvar("qs") ) then
          qs = qv
          qs = 0.0
        end if
-       if ( .not. isvar("qg") ) then
+       if(isfilevar(nc_file,"QGRAUP"))
+         qg = _get_wrf_var(file_handle,"QGRAUP",time)
+       else
          qg = qv
          qg = 0.0
        end if
-
+       T   = T + 300.
+       P   = P + PB
+       tk  = wrf_tk( P , T )
        dbz = wrf_dbz ( P, tk, qv, qr, qs, qg, ivarint, iliqskin)
        delete(qs)
        delete(qg)
 
-       delete_VarAtts(T,(/"description","units"/))
-       copy_VarAtts(T,dbz)
+       copy_VarAtts_except(T,dbz,(/"description","units"/))
 
 
        if ( variable .eq. "mdbz") then
@@ -1595,66 +1346,33 @@ begin
 
 
   if( any( variable .eq. (/"cape_3d","cape_2d"/) ) ) then
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           T  = nc_file->T
-           P  = nc_file->P
-           PB = nc_file->PB
-           QV = nc_file->QVAPOR
-           PH  = nc_file->PH
-           PHB = nc_file->PHB
-           HGT = nc_file->HGT
-           PSFC = nc_file->PSFC
-         else
-           T  = file_handle[:]->T
-           P  = file_handle[:]->P
-           PB = file_handle[:]->PB
-           QV = file_handle[:]->QVAPOR
-           PH  = file_handle[:]->PH
-           PHB = file_handle[:]->PHB
-           HGT = file_handle[:]->HGT
-           PSFC = file_handle[:]->PSFC
-         end if
-       else
-         if(ISFILE) then
-           T  = nc_file->T(time_in,:,:,:)
-           P  = nc_file->P(time_in,:,:,:)
-           PB = nc_file->PB(time_in,:,:,:)
-           QV = nc_file->QVAPOR(time_in,:,:,:)
-           PH  = nc_file->PH(time_in,:,:,:)
-           PHB = nc_file->PHB(time_in,:,:,:)
-           HGT = nc_file->HGT(time_in,:,:)
-           PSFC = nc_file->PSFC(time_in,:,:)
-         else
-           T  = file_handle[:]->T(time_in,:,:,:)
-           P  = file_handle[:]->P(time_in,:,:,:)
-           PB = file_handle[:]->PB(time_in,:,:,:)
-           QV = file_handle[:]->QVAPOR(time_in,:,:,:)
-           PH  = file_handle[:]->PH(time_in,:,:,:)
-           PHB = file_handle[:]->PHB(time_in,:,:,:)
-           HGT = file_handle[:]->HGT(time_in,:,:)
-           PSFC = file_handle[:]->PSFC(time_in,:,:)
-         end if
-       end if
-       T = T + 300.
-       P  = P + PB 
-       tk = wrf_tk( P , T )
-       PH =  PH + PHB 
-       z = wrf_user_unstagger(PH,PH@stagger)
-       z = z/9.81
+       T    = _get_wrf_var(file_handle,"T",time)
+       P    = _get_wrf_var(file_handle,"P",time)
+       PB   = _get_wrf_var(file_handle,"PB",time)
+       QV   = _get_wrf_var(file_handle,"QVAPOR",time)
+       PH   = _get_wrf_var(file_handle,"PH",time)
+       PHB  = _get_wrf_var(file_handle,"PHB",time)
+       HGT  = _get_wrf_var(file_handle,"HGT",time)
+       PSFC = _get_wrf_var(file_handle,"PSFC",time)
+       T    = T + 300.
+       P    = P + PB 
+       tk   = wrf_tk( P , T )
+       PH   =  PH + PHB 
+       PSFC = PSFC / 100.
+       z    = wrf_user_unstagger(PH,PH@stagger)
+       z    = z/9.81
 
        if( variable .eq. "cape_3d" ) then
          cape = wrf_cape_3d( P, tk, QV, z, HGT, PSFC, True )
+         copy_VarAtts_except(T,cape,(/"description","units"/))
          cape@description = "cape ; cin"
        end if
        if( variable .eq. "cape_2d" ) then
          cape = wrf_cape_2d( P, tk, QV, z, HGT, PSFC, True )
-         delete_VarAtts(T,(/"MemoryOrder"/))
+         copy_VarAtts_except(T,cape,(/"MemoryOrder","description","units"/))
          cape@MemoryOrder = "XY"
          cape@description = "mcape ; mcin ; lcl ; lfc"
        end if
-       delete_VarAtts(T,(/"description","units"/))
-       copy_VarAtts(T,cape)
 
        return(cape)
   end if
@@ -1663,42 +1381,15 @@ begin
 
   if( any( variable .eq. (/"pw"/) ) ) then
        ;Precipitable Water 
-        print("calculating precipitable water")
-        gas_const = 287.  ; J/K/kg
-        Cp        = 1004. ; J/K/kg     
-       if ( time .eq. -1 ) then
-        if(ISFILE) then
-          T   = nc_file->T
-          P   = nc_file->P
-          PB  = nc_file->PB
-          PH  = nc_file->PH
-          PHB = nc_file->PHB
-          QV  = nc_file->QVAPOR
-        else
-          T   = file_handle[:]->T
-          P   = file_handle[:]->P
-          PB  = file_handle[:]->PB
-          PH  = file_handle[:]->PH
-          PHB = file_handle[:]->PHB
-          QV  = file_handle[:]->QVAPOR
-        end if
-       else
-        if(ISFILE) then
-          T   = nc_file->T(time_in,:,:,:)
-          P   = nc_file->P(time_in,:,:,:)
-          PB  = nc_file->PB(time_in,:,:,:)
-          PH  = nc_file->PH(time_in,:,:,:)
-          PHB = nc_file->PHB(time_in,:,:,:)
-          QV  = nc_file->QVAPOR(time_in,:,:,:)
-        else
-          T   = file_handle[:]->T(time_in,:,:,:)
-          P   = file_handle[:]->P(time_in,:,:,:)
-          PB  = file_handle[:]->PB(time_in,:,:,:)
-          PH  = file_handle[:]->PH(time_in,:,:,:)
-          PHB = file_handle[:]->PHB(time_in,:,:,:)
-          QV  = file_handle[:]->QVAPOR(time_in,:,:,:)
-        end if
-       end if  
+       print("calculating precipitable water")
+       gas_const = 287.  ; J/K/kg
+       Cp        = 1004. ; J/K/kg     
+       T      = _get_wrf_var(file_handle,"T",time)
+       P      = _get_wrf_var(file_handle,"P",time)
+       PB     = _get_wrf_var(file_handle,"PB",time)
+       PH     = _get_wrf_var(file_handle,"PH",time)
+       PHB    = _get_wrf_var(file_handle,"PHB",time)
+       QV     = _get_wrf_var(file_handle,"QVAPOR",time)
        
        pres   =  P + PB
        height = (PH + PHB)/9.8           ; height at full levels 
@@ -1730,6 +1421,19 @@ begin
          end do
        end if
 
+;---Dimension names added in NCL V6.4.0
+       rank_ph = dimsizes(dimsizes(PH))
+       if(any(rank_ph.eq.(/3,4/)).and..not.any(ismissing(getvardims(PH)))) then
+         if(rank_ph.eq.3) then
+           pw_sfc_ptop!0 = PH!1
+           pw_sfc_ptop!1 = PH!2
+         else if(rank_ph.eq.4) then
+           pw_sfc_ptop!0 = PH!0
+           pw_sfc_ptop!1 = PH!2
+           pw_sfc_ptop!2 = PH!3
+         end if
+         end if
+       end if
        pw_sfc_ptop@description = "Precipitable Water"
        return(pw_sfc_ptop)
   end if
@@ -1737,53 +1441,38 @@ begin
 
 
   if( any( variable .eq. (/"helicity"/) ) ) then
-       getU = "U" 
-       getV = "V" 
-       if(.not. isfilevar(nc_file,"U")) then
-         if(isfilevar(nc_file,"UU")) then
-           getU = "UU"
-           getV = "VV"
-        end if
-       end if
-       if ( time .eq. -1 ) then
-        if(ISFILE) then
-          u_in  = nc_file->$getU$
-          v_in  = nc_file->$getV$
-          PH    = nc_file->PH
-          geopt = nc_file->PHB 
-          ter   = nc_file->HGT
-        else
-          u_in  = file_handle[:]->$getU$
-          v_in  = file_handle[:]->$getV$
-          PH    = file_handle[:]->PH
-          geopt = file_handle[:]->PHB 
-          ter   = file_handle[:]->HGT
-        end if
+       if(isfilevar(nc_file,"U")) then
+         getU = "U" 
+         getV = "V" 
+        else if(isfilevar(nc_file,"UU")) then
+         getU = "UU"
+         getV = "VV"
        else
-        if(ISFILE) then
-          u_in  = nc_file->$getU$(time_in,:,:,:)
-          v_in  = nc_file->$getV$(time_in,:,:,:)
-          PH    = nc_file->PH(time_in,:,:,:)
-          geopt = nc_file->PHB(time_in,:,:,:)
-          ter   = nc_file->HGT(time_in,:,:)
-        else
-          u_in  = file_handle[:]->$getU$(time_in,:,:,:)
-          v_in  = file_handle[:]->$getV$(time_in,:,:,:)
-          PH    = file_handle[:]->PH(time_in,:,:,:)
-          geopt = file_handle[:]->PHB(time_in,:,:,:)
-          ter   = file_handle[:]->HGT(time_in,:,:)
-        end if
+         print("wrf_user_getvar: error: cannot find 'U' or 'UU' on the file")
+         return
        end if
-
-       ua    = wrf_user_unstagger(u_in,u_in@stagger)
-       va    = wrf_user_unstagger(v_in,v_in@stagger)
+       end if
+       u_in   = _get_wrf_var(file_handle,getU,time)
+       v_in   = _get_wrf_var(file_handle,getV,time)
+       PH     = _get_wrf_var(file_handle,"PH",time)
+       geopt  = _get_wrf_var(file_handle,"PHB",time)
+       ter    = _get_wrf_var(file_handle,"HGT",time)
+       ua     = wrf_user_unstagger(u_in,u_in@stagger)
+       va     = wrf_user_unstagger(v_in,v_in@stagger)
        geopt  = geopt + PH
        za     = wrf_user_unstagger(geopt,geopt@stagger)
        za     = za / 9.81  ; change to height
 
-       ua1    = ua(::-1,:,:)
-       va1    = va(::-1,:,:)
-       za1    = za(::-1,:,:)
+       nd = dimsizes(dimsizes(ua))
+       if(nd.eq.3) then
+         ua1    = ua(::-1,:,:)
+         va1    = va(::-1,:,:)
+         za1    = za(::-1,:,:)
+       else
+         ua1    = ua(:,::-1,:,:)
+         va1    = va(:,::-1,:,:)
+         za1    = za(:,::-1,:,:)
+       end if
 
        top_ok = 0
        top = 3000.
@@ -1814,49 +1503,28 @@ begin
 
 
   if( any(variable .eq. (/"updraft_helicity"/) ) )then
-       getU = "U"
-       getV = "V"
-       if(.not. isfilevar(nc_file,"U")) then
-         if(isfilevar(nc_file,"UU")) then
-           getU = "UU"
-           getV = "VV"
-         end if
-       end if
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-            u_in = nc_file->$getU$
-            v_in = nc_file->$getV$
-            w    = nc_file->W
-            ph   = nc_file->PH
-            phb  = nc_file->PHB
-         else
-            u_in = file_handle[:]->$getU$
-            v_in = file_handle[:]->$getV$
-            w    = file_handle[:]->W
-            ph   = file_handle[:]->PH
-            phb  = file_handle[:]->PHB
-         end if
+       if(isfilevar(nc_file,"U")) then
+         getU = "U" 
+         getV = "V" 
+        else if(isfilevar(nc_file,"UU")) then
+         getU = "UU"
+         getV = "VV"
        else
-         if(ISFILE) then
-            u_in = nc_file->$getU$(time_in,:,:,:)
-            v_in = nc_file->$getV$(time_in,:,:,:)
-            w    = nc_file->W(time_in,:,:,:)
-            ph   = nc_file->PH(time_in,:,:,:)
-            phb  = nc_file->PHB(time_in,:,:,:)
-         else
-            u_in = file_handle[:]->$getU$(time_in,:,:,:)
-            v_in = file_handle[:]->$getV$(time_in,:,:,:)
-            w    = file_handle[:]->W(time_in,:,:,:)
-            ph   = file_handle[:]->PH(time_in,:,:,:)
-            phb  = file_handle[:]->PHB(time_in,:,:,:)
-         end if
+         print("wrf_user_getvar: error: cannot find 'U' or 'UU' on the file")
+         return
        end if
-       ua   = wrf_user_unstagger(u_in,u_in@stagger)
-       va   = wrf_user_unstagger(v_in,v_in@stagger)
+       end if
+       u_in   = _get_wrf_var(file_handle,getU,time)
+       v_in   = _get_wrf_var(file_handle,getV,time)
+       w      = _get_wrf_var(file_handle,"W",time)
+       ph     = _get_wrf_var(file_handle,"PH",time)
+       phb    = _get_wrf_var(file_handle,"PHB",time)
+       ua     = wrf_user_unstagger(u_in,u_in@stagger)
+       va     = wrf_user_unstagger(v_in,v_in@stagger)
        mapfct = nc_file->MAPFAC_M(0,:,:)
-       zp = ph + phb
-       dx = nc_file@DX
-       dy = nc_file@DY
+       zp     = ph + phb
+       dx     = nc_file@DX
+       dy     = nc_file@DY
 
        uh_opt = True
        uh_opt@uhmnhgt = 2000.
@@ -1894,260 +1562,101 @@ begin
 
   if( variable .eq. "twb" ) then
        ; Wet bulb temperature
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           T  = nc_file->T
-           P  = nc_file->P
-           PB = nc_file->PB
-           QV = nc_file->QVAPOR
-         else
-           T  = file_handle[:]->T
-           P  = file_handle[:]->P
-           PB = file_handle[:]->PB
-           QV = file_handle[:]->QVAPOR
-         end if
-       else
-         if(ISFILE) then
-           T  = nc_file->T(time_in,:,:,:)
-           P  = nc_file->P(time_in,:,:,:)
-           PB = nc_file->PB(time_in,:,:,:)
-           QV = nc_file->QVAPOR(time_in,:,:,:)
-         else
-           T  = file_handle[:]->T(time_in,:,:,:)
-           P  = file_handle[:]->P(time_in,:,:,:)
-           PB = file_handle[:]->PB(time_in,:,:,:)
-           QV = file_handle[:]->QVAPOR(time_in,:,:,:)
-         end if
-       end if
-       T = T + 300.
-       P = P + PB
-       t = wrf_tk(P,T)
+       T   = _get_wrf_var(file_handle,"T",time)
+       P   = _get_wrf_var(file_handle,"P",time)
+       PB  = _get_wrf_var(file_handle,"PB",time)
+       QV  = _get_wrf_var(file_handle,"QVAPOR",time)
+       T   = T + 300.
+       P   = P + PB
+       t   = wrf_tk(P,T)
 
        twb = wrf_wetbulb(P,t,QV)
 
-       delete_VarAtts(T,(/"description"/))
-       copy_VarAtts(T,twb)
+       copy_VarAtts_except(T,twb,(/"description"/))
        return(twb)
   end if
 
 
   if( variable .eq. "omg" ) then
        ; Omega
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           T  = nc_file->T
-           P  = nc_file->P
-           W  = nc_file->W
-           PB = nc_file->PB
-           QV = nc_file->QVAPOR
-         else
-           T  = file_handle[:]->T
-           P  = file_handle[:]->P
-           W  = file_handle[:]->W
-           PB = file_handle[:]->PB
-           QV = file_handle[:]->QVAPOR
-         end if
-       else
-         if(ISFILE) then
-           T  = nc_file->T(time_in,:,:,:)
-           P  = nc_file->P(time_in,:,:,:)
-           W  = nc_file->W(time_in,:,:,:)
-           PB = nc_file->PB(time_in,:,:,:)
-           QV = nc_file->QVAPOR(time_in,:,:,:)
-         else
-           T  = file_handle[:]->T(time_in,:,:,:)
-           P  = file_handle[:]->P(time_in,:,:,:)
-           W  = file_handle[:]->W(time_in,:,:,:)
-           PB = file_handle[:]->PB(time_in,:,:,:)
-           QV = file_handle[:]->QVAPOR(time_in,:,:,:)
-         end if
-       end if
-       T = T + 300.
-       P = P + PB
-       t = wrf_tk(P,T)
-       wa = wrf_user_unstagger(W,W@stagger)
+       T   = _get_wrf_var(file_handle,"T",time)
+       P   = _get_wrf_var(file_handle,"P",time)
+       W   = _get_wrf_var(file_handle,"W",time)
+       PB  = _get_wrf_var(file_handle,"PB",time)
+       QV  = _get_wrf_var(file_handle,"QVAPOR",time)
+       T   = T + 300.
+       P   = P + PB
+       t   = wrf_tk(P,T)
+       wa  = wrf_user_unstagger(W,W@stagger)
 
        omg = wrf_omega(QV,t,wa,P)
 
-       delete_VarAtts(T,(/"description","units"/))
-       copy_VarAtts(T,omg)
+       copy_VarAtts_except(T,omg,(/"description","units"/))
        return(omg)
   end if
 
 
   if( variable .eq. "tv" ) then
        ; Virtual temperature
-       if ( time .eq. -1 ) then
-         if(ISFILE) then
-           T  = nc_file->T
-           P  = nc_file->P
-           PB = nc_file->PB
-           QV = nc_file->QVAPOR
-         else
-           T  = file_handle[:]->T
-           P  = file_handle[:]->P
-           PB = file_handle[:]->PB
-           QV = file_handle[:]->QVAPOR
-         end if
-       else
-         if(ISFILE) then
-           T  = nc_file->T(time_in,:,:,:)
-           P  = nc_file->P(time_in,:,:,:)
-           PB = nc_file->PB(time_in,:,:,:)
-           QV = nc_file->QVAPOR(time_in,:,:,:)
-         else
-           T  = file_handle[:]->T(time_in,:,:,:)
-           P  = file_handle[:]->P(time_in,:,:,:)
-           PB = file_handle[:]->PB(time_in,:,:,:)
-           QV = file_handle[:]->QVAPOR(time_in,:,:,:)
-         end if
-       end if
-       T = T + 300.
-       P = P + PB
-       t = wrf_tk(P,T)
+       T  = _get_wrf_var(file_handle,"T",time)
+       P  = _get_wrf_var(file_handle,"P",time)
+       PB = _get_wrf_var(file_handle,"PB",time)
+       QV = _get_wrf_var(file_handle,"QVAPOR",time)
+       T  = T + 300.
+       P  = P + PB
+       t  = wrf_tk(P,T)
 
        tv = wrf_virtual_temp(t,QV)
 
-       delete_VarAtts(T,(/"description"/))
-       copy_VarAtts(T,tv)
+       copy_VarAtts_except(T,tv,(/"description"/))
        return(tv)
   end if
 
   if( variable .eq. "ctt") then
-      if ( time .eq. -1 ) then
-         explicit_time = 0
-         if(ISFILE) then
-            P     = nc_file->P
-            PB    = nc_file->PB
-            T     = nc_file->T
+      if(isfilevar(nc_file,"QICE")) then
+        have_qci = 1
+      else
+        have_qci = 0
+      end if
+      ter = nc_file->HGT(0,:,:)
 
-;geopotential height
-            PHB   = nc_file->PHB
-            PH    = nc_file->PH
+      required_vars = (/"QVAPOR","QCLOUD"/)
+      do nrv=0,dimsizes(required_vars)-1
+        if(.not.isfilevar(nc_file,required_vars(nrv))) then
+           print("wrf_user_getvar: " + required_vars(nrv) + \
+                 " is needed to calculate the cloud top temperature.")
+           print("It has not been found in the data set.")
+           exit
+        end if
+      end do
+      P     = _get_wrf_var(file_handle,"P",time)
+      PB    = _get_wrf_var(file_handle,"PB",time)
+      T     = _get_wrf_var(file_handle,"T",time)
+      PHB   = _get_wrf_var(file_handle,"PHB",time)
+      PH    = _get_wrf_var(file_handle,"PH",time)
+      qvp   = _get_wrf_var(file_handle,"QVAPOR",time) * 1000.  ; kg/kg -> g/kg
+      qcw   = _get_wrf_var(file_handle,"QCLOUD",time) * 1000.
+      if(have_qci.eq.1) then
+        qci = _get_wrf_var(file_handle,"QICE",time) * 1000.  ; kg/kg -> g/kg
+      else
+        qci = new(dimsizes(P),float)
+      end if
 
-            if(isfilevar(nc_file,"QVAPOR")) then
-               qvp =  nc_file->QVAPOR * 1000.  ; kg/kg -> g/kg
-            else
-               print("wrf_user_getvar: QVAPOR is needed to calculate the cloud top temperature.")
-               print("It has not been found in the data set.")
-               exit
-            end if
-
-
-            haveqci = 1
-            if(isfilevar(nc_file,"QICE")) then
-               qci = nc_file->QICE * 1000.  ; kg/kg -> g/kg
-            else
-               qci = new( (/Pdims(0),Pdims(1),Pdims(2),Pdims(3)/),float)
-               haveqci = 0
-            end if
-
-
-            if(isfilevar(nc_file,"QCLOUD")) then
-               qcw = nc_file->QCLOUD * 1000.  ; kg/kg -> g/kg
-            else
-               print("wrf_user_getvar: QCLOUD is needed to calculate the cloud top temperature.")
-               print("It has not been found in the data set.")
-               exit
-            end if
-
-            ter = nc_file->HGT(0,:,:)
-
-         else ; the else for ISFILE
-            P      = file_handle[:]->P
-            PB     = file_handle[:]->PB
-            T      = file_handle[:]->T
-            PHB    = file_handle[:]->PHB
-            PH     = file_handle[:]->PH
-            nc_file =  file_handle[0]
-            ter    = nc_file->HGT(0,:,:)
-            if(isfilevar(nc_file,"QVAPOR")) then
-               qvp = file_handle[:]->QVAPOR * 1000.  ; kg/kg -> g/kg
-            else
-               print("wrf_user_getvar: QVAPOR is needed to calculate the cloud top temperature.")
-               print("It has not been found in the data set.")
-               exit
-            end if 
- 
-            haveqci = 1
-            if(isfilevar(nc_file,"QICE")) then
-               qci = file_handle[:]->QICE * 1000.  ; kg/kg -> g/kg
-            else
-               qci = new( (/Pdims(0),Pdims(1),Pdims(2),Pdims(3)/),float)
-               haveqci = 0
-            end if
-
-
-            if(isfilevar(nc_file,"QCLOUD")) then
-               qcw = file_handle[:]->QCLOUD * 1000.  ; kg/kg -> g/kg
-            else
-               print("wrf_user_getvar: QCLOUD is needed to calculate the cloud top temperature.")
-               print("It has not been found in the data set.")
-               exit
-            end if
-
-         end if ;if ISFILE
-       else     ;the else for time = -1
-          if(ISFILE) then
-            explicit_time = 1
-            P     = nc_file->P(time_in,:,:,:)
-            PB    = nc_file->PB(time_in,:,:,:)
-            T     = nc_file->T(time_in,:,:,:)
-
-;geopotential height
-            PHB   = nc_file->PHB(time_in,:,:,:)
-            PH    = nc_file->PH(time_in,:,:,:)
-
-            if(isfilevar(nc_file,"QVAPOR")) then
-               qvp =  nc_file->QVAPOR(time_in,:,:,:) * 1000.  ; kg/kg -> g/kg
-            else
-               print("wrf_user_getvar: QVAPOR is needed to calculate the cloud top temperature.")
-               print("It has not been found in the data set")
-               exit
-            end if
-
-
-            haveqci = 1
-            if(isfilevar(nc_file,"QICE")) then
-               qci = nc_file->QICE(time_in,:,:,:) * 1000.  ; kg/kg -> g/kg
-            else
-               qci = new( (/Pdims(0),Pdims(1),Pdims(2),Pdims(3)/),float)
-               haveqci = 0
-            end if
-
-
-            if(isfilevar(nc_file,"QCLOUD")) then
-               qcw = nc_file->QCLOUD(time_in,:,:,:) * 1000.  ; kg/kg -> g/kg
-            else
-               print("wrf_user_getvar: QCLOUD is needed to calculate the cloud top temperature.")
-               print("It has not been found in the data set.")
-               exit
-            end if
-
-            ter = nc_file->HGT(0,:,:)
-          end if ;end if for ISFILE
-       end if   ;time = -1
-
-
-;Get total pressure
-         Pdims = dimsizes(P)
-         pres  = P + PB
-         pres  = pres * 0.01
-
-;Get temperature in degrees K
-         T     = T +300.
-         tk    = wrf_tk( pres , T )
+;Get total pressure and temperature in degrees K
+      pres  = P + PB
+      T     = T + 300.
+      tk    = wrf_tk(pres, T)
+      pres  = pres * 0.01
 
 ;Get geopotential height on mass points
-         stag_ght   = PH
-         stag_ght   = (PHB + PH)/9.81
-         ght        =  wrf_user_unstagger(stag_ght,PHB@stagger)
+      stag_ght   = PH
+      stag_ght   = (PHB + PH)/9.81
+      ght        =  wrf_user_unstagger(stag_ght,PHB@stagger)
 
-         fctt = wrf_ctt(pres,tk,qci,qcw,qvp,ght,ter,haveqci)
+      fctt = wrf_ctt(pres,tk,qci,qcw,qvp,ght,ter,have_qci)
 ; fctt will have description, units, and dimension names attached
-       delete_VarAtts(T,(/"description","units"/))
-       copy_VarAtts(T,fctt)
-       return(fctt)
+      copy_VarAtts_except(T,fctt,(/"description","units"/))
+      return(fctt)
   end if         ;variable is ctt
  
 
@@ -2176,20 +1685,8 @@ begin
 
 
   if( any( variable .eq. (/"times"/) ) ) then
-    if ( time .eq. -1 ) then
-      if(ISFILE) then
-        var = nc_file->Times
-      else
-        var = file_handle[:]->Times
-      end if
-    else
-      if(ISFILE) then
-        var = nc_file->Times(time_in,:)
-      else
-        var = file_handle[:]->Times(time_in,:)
-      end if
-    end if
-    dims = dimsizes(var)
+    var   = _get_wrf_var(file_handle,"Times",time)
+    dims  = dimsizes(var)
     times = new(dims(0),string)
     do i=0,dims(0)-1
       times(i) = chartostring(var(i,:))
@@ -2201,45 +1698,7 @@ begin
 
 
 ;  end of diagnostic variable list - we must want a variable already in the file.  
-
-  if ( time .eq. -1 ) then
-    if(ISFILE) then
-      var = nc_file->$variable$
-    else
-      var = file_handle[:]->$variable$
-    end if
-  else
-    ;  check variable dimensionality and pull proper time  out of file
-    ndims = dimsizes(filevardimsizes(nc_file,variable))
-    if( ndims .eq. 4) then
-      if(ISFILE) then
-        var = nc_file->$variable$(time_in,:,:,:)
-      else
-        var = file_handle[:]->$variable$(time_in,:,:,:)
-      end if
-    end if
-    if( ndims .eq. 3) then
-      if(ISFILE) then
-        var = nc_file->$variable$(time_in,:,:)
-      else
-        var = file_handle[:]->$variable$(time_in,:,:)
-      end if
-    end if
-    if( ndims .eq. 2) then
-      if(ISFILE) then
-        var = nc_file->$variable$(time_in,:)
-      else
-        var = file_handle[:]->$variable$(time_in,:)
-      end if
-    end if
-    if( ndims .eq. 1) then
-      if(ISFILE) then
-      var = nc_file->$variable$(time_in)
-      else
-      var = file_handle[:]->$variable$(time_in)
-      end if
-    end if
-  end if
+  var = _get_wrf_var(file_handle,variable,time)
 
   return(var)
 
@@ -2425,13 +1884,9 @@ begin
     return
   end if
 
-  if(typeof(nc_file).eq."file") then
-    times_in_file = nc_file->Times
-  else
-    times_in_file = nc_file[:]->Times
-  end if
-  dims = dimsizes(times_in_file)
-  times = new(dims(0),string)
+  times_in_file = _get_wrf_var(nc_file,"Times",-1)
+  dims          = dimsizes(times_in_file)
+  times         = new(dims(0),string)
   do i=0,dims(0)-1
     times(i) = chartostring(times_in_file(i,:))
   end do
@@ -2782,17 +2237,15 @@ begin
 ;We will need some basic fields for the interpolation
 ;regardless of the field requested. Get all time periods
 ;of the fields.
+  P     = _get_wrf_var(file_handle,"P",-1) + _get_wrf_var(file_handle,"PB",-1)
+  qvp   = _get_wrf_var(file_handle,"QVAPOR",-1)
+  terht = _get_wrf_var(file_handle,"HGT",-1)
+  sfp   = _get_wrf_var(file_handle,"PSFC",-1) * 0.01
+  Pdims = dimsizes(P)
   if(ISFILE) then
-      P     = nc_file->P + nc_file->PB
-      Pdims = dimsizes(P)
       ght   = wrf_user_getvar(nc_file,"height",-1)
       tk    = wrf_user_getvar(nc_file,"tk",-1)
-      qvp   = nc_file->QVAPOR
-      terht = nc_file->HGT
-      sfp   = nc_file->PSFC * 0.01
     else
-      P     = file_handle[:]->P + file_handle[:]->PB
-      Pdims = dimsizes(P)
       tmpz  = file_handle[:]->PH
       PHB   = file_handle[:]->PHB
       tmpz  = (tmpz + PHB)/9.81
@@ -2800,16 +2253,13 @@ begin
       T     = file_handle[:]->T
       T     = T + 300.
       tk    = wrf_tk( P , T )
-      qvp   = file_handle[:]->QVAPOR
-      terht = file_handle[:] ->HGT
-      sfp   = file_handle[:] ->PSFC * 0.01
     end if
     smsfp = sfp
     wrf_smooth_2d(smsfp,3)  
 
       
 ;Initialize an array for the vertical coordinate
- ntimes  = Pdims(0)
+  ntimes  = Pdims(0)
 
 ;Get the vertical coordinate type
   vcor  = 0
@@ -3684,12 +3134,55 @@ begin
         projection          = "CylindricalEquidistant"
         opts@mpProjection = projection
         opts@mpGridSpacingF = 45
-        opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF",in_file@CEN_LON)
-        if( isatt(in_file,"POLE_LAT") ) then
-          opts@mpCenterRotF = get_res_value_keep(opts, "mpCenterRotF", 90.0 - in_file@POLE_LAT) 
-          delete(opts@mpCenterLonF)
-          calcen = -190.
-          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF", calcen )
+
+        if (isatt(in_file,"POLE_LON") .and. isatt(in_file,"POLE_LAT") .and. isatt(in_file,"STAND_LON")) then
+
+          if (in_file@POLE_LON .eq. 0 .and. in_file@POLE_LAT .eq. 90) then
+            ; not rotated
+
+            opts@mpCenterLatF   = get_res_value_keep(opts, "mpCenterLatF", 0.0)
+            opts@mpCenterLonF   = get_res_value_keep(opts, "mpCenterLonF",180 - in_file@STAND_LON)
+
+          else 
+            ; rotated
+
+            southern = False ; default to northern hemisphere
+            if (in_file@POLE_LON .eq. 0.0) then
+              southern = True
+            else if (in_file@POLE_LON .ne. 180) then
+              if (isatt(in_file,"CEN_LAT") .and. in_file@CEN_LAT .lt. 0.0) then
+                southern = True  ; probably but not necessarily true -- no way to tell for sure
+              end if
+            end if
+            end if
+
+            if (.not. southern) then
+              opts@mpCenterLatF = get_res_value_keep(opts, "mpCenterLatF", 90.0 - in_file@POLE_LAT) 
+              opts@mpCenterLonF = get_res_value_keep(opts, "mpCenterLonF", -in_file@STAND_LON) 
+            else 
+              opts@mpCenterLatF = get_res_value_keep(opts, "mpCenterLatF", in_file@POLE_LAT - 90) 
+              opts@mpCenterLonF = get_res_value_keep(opts, "mpCenterLonF", 180 - in_file@STAND_LON) 
+            end if
+
+          end if
+
+        else if (isatt(in_file,"ref_lon") .and. isatt(in_file,"ref_lat")) then
+          ;; this is definitely true for NMM grids but unlikely for ARW grids especially if ref_x and ref_y are set
+          opts@mpCenterLatF = get_res_value_keep(opts, "mpCenterLatF", in_file@REF_LAT) 
+          opts@mpCenterLonF = get_res_value_keep(opts, "mpCenterLonF", in_file@REF_LON) 
+
+        else if (isatt(in_file,"cen_lat") .and. isatt(in_file,"cen_lon")) then
+          ;; these usually specifiy the center of the coarse domain --- not necessarily the center of the projection
+          opts@mpCenterLatF  = get_res_value_keep(opts, "mpCenterLatF",in_file@CEN_LAT)
+          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF",in_file@CEN_LON)
+
+        else 
+          ;; default values for global grid
+          opts@mpCenterLatF  = get_res_value_keep(opts, "mpCenterLatF", 0.0)
+          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF", 180.0)
+
+        end if
+        end if
         end if
       end if
   
@@ -4100,17 +3593,55 @@ begin
       if(opts@map_proj .eq. 6)
         projection          = "CylindricalEquidistant"
         opts@mpGridSpacingF = 45
-        if( isatt(opts,"cenlon") ) then
-          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF",opts@cenlon)
-        else
-          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF",opts@ref_lon)
+
+        if (isatt(opts,"pole_lon") .and. isatt(opts,"pole_lat") .and. isatt(opts,"stand_lon")) then
+
+          if (opts@pole_lon .eq. 0 .and. opts@pole_lat .eq. 90) then
+            ; not rotated
+
+            opts@mpCenterLatF   = get_res_value_keep(opts, "mpCenterLatF", 0.0)
+            opts@mpCenterLonF   = get_res_value_keep(opts, "mpCenterLonF",180 - opts@stand_lon)
+
+          else 
+            ; rotated
+
+            southern = False ; default to northern hemisphere
+            if (opts@pole_lon .eq. 0.0) then
+              southern = True
+            else if (opts@pole_lon .ne. 180) then
+              if (isatt(opts,"cen_lat") .and. opts@cen_lat .lt. 0.0) then
+                southern = True  ; probably but not necessarily true -- no way to tell for sure
+              end if
+            end if
+            end if
+
+            if (.not. southern) then
+              opts@mpCenterLatF = get_res_value_keep(opts, "mpCenterLatF", 90.0 - opts@pole_lat) 
+              opts@mpCenterLonF = get_res_value_keep(opts, "mpCenterLonF", -opts@stand_lon) 
+            else 
+              opts@mpCenterLatF = get_res_value_keep(opts, "mpCenterLatF", opts@pole_lat - 90) 
+              opts@mpCenterLonF = get_res_value_keep(opts, "mpCenterLonF", 180 - opts@stand_lon) 
+            end if
+
+          end if
+
+        else if (isatt(opts,"ref_lon") .and. isatt(opts,"ref_lat")) then
+          ;; this is definitely true for NMM grids but unlikely for ARW grids especially if ref_x and ref_y are set
+          opts@mpCenterLatF = get_res_value_keep(opts, "mpCenterLatF", opts@ref_lat) 
+          opts@mpCenterLonF = get_res_value_keep(opts, "mpCenterLonF", opts@ref_lon) 
+
+        else if (isatt(opts,"cen_lat") .and. isatt(opts,"cen_lon")) then
+          ;; these usually specifiy the center of the coarse domain --- not necessarily the center of the projection
+          opts@mpCenterLatF  = get_res_value_keep(opts, "mpCenterLatF",opts@cen_lat)
+          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF",opts@cen_lon)
+
+        else 
+          ;; default values for global grid
+          opts@mpCenterLatF  = get_res_value_keep(opts, "mpCenterLatF", 0.0)
+          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF", 180.0)
+
         end if
-        if( isatt(opts,"pole_lat") ) then
-          delete(opts@mpCenterLonF)
-          opts@mpCenterLonF  = get_res_value_keep(opts, "mpCenterLonF", - 190. )
-          opts@mpCenterRotF = get_res_value_keep(opts, "mpCenterRotF", 90.0 - opts@pole_lat) 
-        else
-          opts@mpCenterRotF = get_res_value_keep(opts, "mpCenterRotF", 0.0) 
+        end if
         end if
       end if
 
@@ -4421,7 +3952,7 @@ end
 ;--------------------------------------------------------------------------------
 undef("wrf_map_resources")
 function wrf_map_resources(in_file[1]:file,map_args[1]:logical)   
-local lat, lon, x1, x2, y1, y2, dims, ii, jj
+local lat, lon, x1, x2, y1, y2, dims, ii, jj, southern
 begin
 ;
 ; This function sets resources for a WRF map plot, basing the projection on
@@ -4504,17 +4035,69 @@ begin
   
 ;    global WRF CylindricalEquidistant
       if(in_file@MAP_PROJ .eq. 6)
-        map_args@mpProjection          = "CylindricalEquidistant"
+        projection          = "CylindricalEquidistant"
+        map_args@mpProjection = projection
         map_args@mpGridSpacingF = 45
-        map_args@mpCenterLonF  = get_res_value_keep(map_args, "mpCenterLonF",in_file@CEN_LON)
-        if( isatt(in_file,"POLE_LAT") ) then
-          map_args@mpCenterRotF = get_res_value_keep(map_args, "mpCenterRotF", 90.0 - in_file@POLE_LAT) 
-          delete(map_args@mpCenterLonF)
-          calcen = -190.
-          map_args@mpCenterLonF  = get_res_value_keep(map_args, "mpCenterLonF", calcen )
+        
+        ;; according to the docs if POLE_LON is 0 then the projection center is in the southern hemisphere
+        ;; if POLE_LON is 180 the projection center is in the northern hemisphere
+        ;; otherwise you can't tell for sure -- CEN_LAT does not have to be the projection center but hopefully
+        ;; it is in the same hemisphere. The same is true for REF_LAT except that if REF_Y is specified REF_LAT might
+        ;; be in a corner or somewhere else and therefore it is even less reliable
+        ;; 
+
+        if (isatt(in_file,"POLE_LON") .and. isatt(in_file,"POLE_LAT") .and. isatt(in_file,"STAND_LON")) then
+
+          if (in_file@POLE_LON .eq. 0 .and. in_file@POLE_LAT .eq. 90) then
+            ; not rotated
+
+            map_args@mpCenterLatF   = get_res_value_keep(map_args, "mpCenterLatF", 0.0)
+            map_args@mpCenterLonF   = get_res_value_keep(map_args, "mpCenterLonF",180 - in_file@STAND_LON)
+
+          else 
+            ; rotated
+
+            southern = False ; default to northern hemisphere
+            if (in_file@POLE_LON .eq. 0.0) then
+              southern = True
+            else if (in_file@POLE_LON .ne. 180) then
+              if (isatt(in_file,"CEN_LAT") .and. in_file@CEN_LAT .lt. 0.0) then
+                southern = True  ; probably but not necessarily true -- no way to tell for sure
+              end if
+            end if
+            end if
+
+            if (.not. southern) then
+              map_args@mpCenterLatF = get_res_value_keep(map_args, "mpCenterLatF", 90.0 - in_file@POLE_LAT) 
+              map_args@mpCenterLonF = get_res_value_keep(map_args, "mpCenterLonF", -in_file@STAND_LON) 
+            else 
+              map_args@mpCenterLatF = get_res_value_keep(map_args, "mpCenterLatF", in_file@POLE_LAT - 90) 
+              map_args@mpCenterLonF = get_res_value_keep(map_args, "mpCenterLonF", 180 - in_file@STAND_LON) 
+            end if
+
+          end if
+
+        else if (isatt(in_file,"ref_lon") .and. isatt(in_file,"ref_lat")) then
+          ;; this is definitely true for NMM grids but unlikely for ARW grids especially if ref_x and ref_y are set
+          map_args@mpCenterLatF = get_res_value_keep(map_args, "mpCenterLatF", in_file@REF_LAT) 
+          map_args@mpCenterLonF = get_res_value_keep(map_args, "mpCenterLonF", in_file@REF_LON) 
+
+        else if (isatt(in_file,"cen_lat") .and. isatt(in_file,"cen_lon")) then
+          ;; these usually specifiy the center of the coarse domain --- not necessarily the center of the projection
+          map_args@mpCenterLatF  = get_res_value_keep(map_args, "mpCenterLatF",in_file@CEN_LAT)
+          map_args@mpCenterLonF  = get_res_value_keep(map_args, "mpCenterLonF",in_file@CEN_LON)
+
+        else 
+          ;; default values for global grid
+          map_args@mpCenterLatF  = get_res_value_keep(map_args, "mpCenterLatF", 0.0)
+          map_args@mpCenterLonF  = get_res_value_keep(map_args, "mpCenterLonF", 180.0)
+
         end if
+        end if
+        end if
+
       end if
-  
+
     else
   
       return(map_args)
@@ -4544,6 +4127,11 @@ begin
       map_args@start_lon = lon(0,0)
       map_args@end_lat   = lat(dims(0)-1,dims(1)-1)
       map_args@end_lon   = lon(dims(0)-1,dims(1)-1)
+      
+      ; end_lon must be greater than start_lon, or errors are thrown
+      if (map_args@end_lon .le. map_args@start_lon) then
+          map_args@end_lon = map_args@end_lon + 360.0
+      end if
 
 
 ; Set some resources common to all map projections.
@@ -4579,10 +4167,14 @@ begin
         map_args@mpLeftCornerLonF      = lon(y1,x1)
         map_args@mpRightCornerLatF     = lat(y2,x2)
         map_args@mpRightCornerLonF     = lon(y2,x2)
-
+        
         if ( map_args@mpRightCornerLonF .lt. 0.0 ) then
           map_args@mpRightCornerLonF  = map_args@mpRightCornerLonF + 360.0
         end if 
+        
+        if ( map_args@mpRightCornerLonF .le. map_args@mpRightCornerLonF ) then
+          map_args@mpRightCornerLonF  = map_args@mpRightCornerLonF + 360.0
+        end if
 
         delete(map_args@ZoomIn)
       end if

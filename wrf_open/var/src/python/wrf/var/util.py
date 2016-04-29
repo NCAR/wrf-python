@@ -1,9 +1,11 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
+from copy import copy
 from collections import Iterable, Mapping, OrderedDict
 from itertools import product
-from inspect import getargspec
+from inspect import getargspec, getargvalues, getmodule
+from types import GeneratorType
 import datetime as dt
 
 import numpy as np
@@ -58,23 +60,71 @@ def _is_multi_file(wrfnc):
 def _is_mapping(wrfnc):
     return isinstance(wrfnc, Mapping)
 
-def _unpack_sequence(wrfseq):
-    """Unpacks generators in to lists or dictionaries if applicable, otherwise
-    returns the original object.  
+def _generator_copy(gen):
+    funcname = gen.__name__
+    argvals = getargvalues(gen.gi_frame)
+    module = getmodule(gen.gi_frame)
     
-    This is apparently the easiest and 
-    fastest way of being able to re-iterate through generators when used 
-    more than once.
+    if module is not None:
+        res = module.get(funcname)(**argvals.locals)
+    else:
+        # Created in jupyter or the python interpreter
+        import __main__
+        res = getattr(__main__, funcname)(**argvals.locals)
+        
+    return res
+
+def test():
+    q = [1,2,3]
+    for i in q:
+        yield i
+        
+class TestGen(object):
+    def __init__(self, count=3):
+        self._total = count
+        self._i = 0
+        
+    def __iter__(self):
+        return self
     
-    """
+    def next(self):
+        if self._i >= self._total:
+            raise StopIteration
+        else:
+            val = self._i
+            self._i += 1
+            return val
+    
+    # Python 3
+    def __next__(self):
+        return self.next()
+
+class IterWrapper(Iterable):
+    """A wrapper class for generators and custom iterable classes which returns
+    a new iterator from the start of the sequence when __iter__ is called"""
+    def __init__(self, wrapped):
+        self._wrapped = wrapped
+        
+    def __iter__(self):
+        if isinstance(self._wrapped, GeneratorType):
+            return _generator_copy(self._wrapped)
+        else:
+            obj_copy = copy(self._wrapped)
+            return obj_copy.__iter__()
+            
+            
+def _get_iterable(wrfseq):
+    """Returns a resetable iterable object."""
     if not _is_multi_file(wrfseq):
         return wrfseq
     else:
         if not _is_mapping(wrfseq):
-            if isinstance(wrfseq, (list, tuple)):
+            
+            if isinstance(wrfseq, (list, tuple, IterWrapper)):
                 return wrfseq
             else:
-                return list(wrfseq) # generator/custom iterable class
+                return IterWrapper(wrfseq) # generator/custom iterable class
+            
         else:
             if isinstance(wrfseq, dict):
                 return wrfseq
@@ -498,7 +548,7 @@ def combine_files(wrfseq, varname, timeidx, is_moving=None,
                   method="cat", squeeze=True, meta=True):
     
     # Handles generators, single files, lists, tuples, custom classes
-    wrfseq = _unpack_sequence(wrfseq)
+    wrfseq = _get_iterable(wrfseq)
     
     # Dictionary is unique
     if _is_mapping(wrfseq):
