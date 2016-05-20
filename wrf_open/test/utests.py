@@ -104,7 +104,6 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
             tol = 0
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
-            print my_vals.shape, ref_vals.shape
             nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
         elif (varname == "pw"):
             my_vals = getvar(in_wrfnc, "pw", timeidx=timeidx)
