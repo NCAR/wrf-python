@@ -5,7 +5,7 @@ import numpy.ma as ma
 import os, sys
 import subprocess
 
-from wrf.var import (getvar, interplevel, interpline, vertcross, vinterp,
+from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                      disable_xarray, xarray_enabled, npvalues)
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
