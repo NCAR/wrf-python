@@ -15,7 +15,7 @@ if basemap_enabled():
 if pyngl_enabled():
     from Ngl import Resources
 
-__all__ = ["WrfProj", "LambertConformal", "Mercator",
+__all__ = ["WrfProj", "NullProjection", "LambertConformal", "Mercator",
            "PolarStereographic", "LatLon", "RotatedLatLon",
            "getproj"]
 
@@ -179,6 +179,15 @@ class WrfProj(object):
         """Return a dictionary with the NetCDF CF parameters for the 
         projection"""
         return self._cf_params
+    
+
+# Used for 'missing' projection values during the 'join' method
+class NullProjection(WrfProj):
+    def __init__(self):
+        pass 
+    
+    def __repr__(self):
+        return "{}()".format(self.__class__.__name__)
     
     
 class LambertConformal(WrfProj):

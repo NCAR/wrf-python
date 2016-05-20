@@ -226,7 +226,13 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         missing = field.fill_value
     else:
         missing = Constants.DEFAULT_FILL
-        
+    
+    if (field.shape != p.shape):
+        raise ValueError("'field' shape does not match other variable shapes. "
+                         "Verify that the 'timeidx' parameter matches the "
+                         "same value used when extracting the 'field' "
+                         "variable.")
+            
     res = vintrp(field, p, tk, qv, ght, terht, sfp, smsfp,
                  vcord_array, interp_levels,
                  icase, extrap, vcor, log_p_int, missing)

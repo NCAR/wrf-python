@@ -1,7 +1,9 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-__all__ = ["Constants", "ConversionFactors"]
+__all__ = ["ALL_TIMES", "Constants", "ConversionFactors"]
+
+ALL_TIMES = None
 
 class Constants(object):
     R = 287.06

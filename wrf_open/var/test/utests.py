@@ -12,7 +12,6 @@ NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
 OUT_NC_FILE = "/tmp/wrftest.nc"
 
-
 def setUpModule():
     ncarg_root = os.environ.get("NCARG_ROOT", None)
     if ncarg_root is None:
@@ -55,6 +54,7 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             pass
         
         if not multi:
+            timeidx = 0
             if not pynio:
                 in_wrfnc = NetCDF(wrf_in)
             else:
@@ -66,6 +66,7 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                     wrf_file = wrf_in
                 in_wrfnc = Nio.open_file(wrf_file)
         else:
+            timeidx = None
             if not pynio:
                 nc = NetCDF(wrf_in)
                 in_wrfnc = [nc for i in xrange(repeat)]
@@ -100,28 +101,29 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                     ref_vals.mask[i,:] = data.mask[:]
         
         if (varname == "tc"):
-            my_vals = getvar(in_wrfnc, "temp", units="c")
+            my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
             tol = 0
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
+            print my_vals.shape, ref_vals.shape
             nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
         elif (varname == "pw"):
-            my_vals = getvar(in_wrfnc, "pw")
+            my_vals = getvar(in_wrfnc, "pw", timeidx=timeidx)
             tol = .5/100.0
             atol = 0 # NCL uses different constants and doesn't use same
                      # handrolled virtual temp in method
             nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
         elif (varname == "cape_2d"):
-            cape_2d = getvar(in_wrfnc, varname)
+            cape_2d = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 0/100.    # Not sure why different, F77 vs F90?
             atol = .2
             nt.assert_allclose(npvalues(cape_2d), ref_vals, tol, atol)
         elif (varname == "cape_3d"):
-            cape_3d = getvar(in_wrfnc, varname)
+            cape_3d = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 0/100.  # Not sure why different, F77 vs F90?
             atol = .01
             nt.assert_allclose(npvalues(cape_3d), ref_vals, tol, atol)
         else:
-            my_vals = getvar(in_wrfnc, varname)
+            my_vals = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 0/100.
             atol = 0.0001
             nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
@@ -173,6 +175,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             pass
         
         if not multi:
+            timeidx = 0
             if not pynio:
                 in_wrfnc = NetCDF(wrf_in)
             else:
@@ -184,6 +187,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                     wrf_file = wrf_in
                 in_wrfnc = Nio.open_file(wrf_file)
         else:
+            timeidx = None
             if not pynio:
                 nc = NetCDF(wrf_in)
                 in_wrfnc = [nc for i in xrange(repeat)]
@@ -197,8 +201,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
         
         if (varname == "interplevel"):
             ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
-            hts = getvar(in_wrfnc, "z")
-            p = getvar(in_wrfnc, "pressure")
+            hts = getvar(in_wrfnc, "z", timeidx=timeidx)
+            p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             hts_500 = interplevel(hts, p, 500)
             
             nt.assert_allclose(npvalues(hts_500), ref_ht_500)
@@ -207,8 +211,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)
             ref_p_cross = _get_refvals(referent, "p_cross", repeat, multi)
             
-            hts = getvar(in_wrfnc, "z")
-            p = getvar(in_wrfnc, "pressure")
+            hts = getvar(in_wrfnc, "z", timeidx=timeidx)
+            p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
             pivot_point = (hts.shape[-2] / 2, hts.shape[-1] / 2) 
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
@@ -235,7 +239,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             ref_t2_line = _get_refvals(referent, "t2_line", repeat, multi)
             
-            t2 = getvar(in_wrfnc, "T2")
+            t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
             pivot_point = (t2.shape[-2] / 2, t2.shape[-1] / 2) 
             
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
@@ -255,7 +259,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             fld_tk_theta = _get_refvals(referent, "fld_tk_theta", repeat, multi)
             fld_tk_theta = n.squeeze(fld_tk_theta)
             
-            tk = getvar(in_wrfnc, "temp", units="k")
+            tk = getvar(in_wrfnc, "temp", timeidx=timeidx, units="k")
             
             interp_levels = [200,300,500,1000]
             
@@ -264,7 +268,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             vert_coord="theta", 
                             interp_levels=interp_levels, 
                             extrapolate=True, 
-                            field_type="tk", 
+                            field_type="tk",
+                            timeidx=timeidx, 
                             log_p=True)
             
             tol = 0/100.
@@ -285,6 +290,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             interp_levels=interp_levels, 
                             extrapolate=True, 
                             field_type="tk", 
+                            timeidx=timeidx, 
                             log_p=True)
             
             tol = 0/100.
@@ -304,7 +310,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             vert_coord="pressure", 
                             interp_levels=interp_levels, 
                             extrapolate=True, 
-                            field_type="tk", 
+                            field_type="tk",
+                            timeidx=timeidx,  
                             log_p=True)
             
             field = n.squeeze(field)
@@ -320,7 +327,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             vert_coord="ght_msl", 
                             interp_levels=interp_levels, 
                             extrapolate=True, 
-                            field_type="tk", 
+                            field_type="tk",
+                            timeidx=timeidx,  
                             log_p=True)
             
             field = n.squeeze(field)
@@ -337,6 +345,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             interp_levels=interp_levels, 
                             extrapolate=True, 
                             field_type="tk", 
+                            timeidx=timeidx, 
                             log_p=True)
             
             field = n.squeeze(field)
@@ -346,7 +355,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             fld_ht_pres = _get_refvals(referent, "fld_ht_pres", repeat, multi)
             fld_ht_pres = n.squeeze(fld_ht_pres)
             
-            z = getvar(in_wrfnc, "height", units="m")
+            z = getvar(in_wrfnc, "height", timeidx=timeidx, units="m")
             interp_levels = [500,50]
             field = vinterp(in_wrfnc, 
                             field=z, 
@@ -354,6 +363,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             interp_levels=interp_levels, 
                             extrapolate=True, 
                             field_type="ght", 
+                            timeidx=timeidx, 
                             log_p=True)
             
             field = n.squeeze(field)
@@ -363,7 +373,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             fld_pres_theta = _get_refvals(referent, "fld_pres_theta", repeat, multi)
             fld_pres_theta = n.squeeze(fld_pres_theta)
             
-            p = getvar(in_wrfnc, "pressure")
+            p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             interp_levels = [200,300,500,1000]
             field = vinterp(in_wrfnc, 
                             field=p, 
@@ -371,6 +381,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             interp_levels=interp_levels, 
                             extrapolate=True, 
                             field_type="pressure", 
+                            timeidx=timeidx, 
                             log_p=True)
             
             field = n.squeeze(field)
@@ -380,7 +391,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             fld_thetae_pres = _get_refvals(referent, "fld_thetae_pres", repeat, multi)
             fld_thetae_pres = n.squeeze(fld_thetae_pres)
             
-            eth = getvar(in_wrfnc, "eth")
+            eth = getvar(in_wrfnc, "eth", timeidx=timeidx)
             interp_levels = [850,500,5]
             field = vinterp(in_wrfnc, 
                             field=eth, 
@@ -388,6 +399,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             interp_levels=interp_levels, 
                             extrapolate=True, 
                             field_type="theta-e", 
+                            timeidx=timeidx, 
                             log_p=True)
             
             field = n.squeeze(field)
