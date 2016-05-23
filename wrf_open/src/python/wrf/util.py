@@ -8,13 +8,17 @@ from itertools import product
 from types import GeneratorType
 import datetime as dt
 from math import floor, copysign
+
 from inspect import getmodule
 try:
     from inspect import signature
 except ImportError:
-    from inspect import getargspec, getargvalues
+    from inspect import getargspec
 
-
+try:    
+    from inspect import getargvalues
+except ImportError:
+    from inspect import getgeneratorlocals
 
 import numpy as np
 import numpy.ma as ma
@@ -81,7 +85,10 @@ def _is_mapping(wrfnc):
 
 def _generator_copy(gen):
     funcname = gen.__name__
-    argvals = getargvalues(gen.gi_frame)
+    try:
+        argvals = getargvalues(gen.gi_frame)
+    except NameError:
+        argvals = getgeneratorlocals(gen)
     module = getmodule(gen.gi_frame)
     
     if module is not None:
@@ -177,17 +184,33 @@ def isstr(s):
     except NameError:
         return isinstance(s, str)
 
+
 # Python 2 rounding behavior  
 def _round2(x, d=0):
     p = 10 ** d
     return float(floor((x * p) + copysign(0.5, x)))/p
+
 
 def py2round(x, d=0):
     if version_info >= (3,):
         return _round2(x, d)
     
     return round(x, d)
+
+
+def range2(*args):
+    if version_info >= (3,):
+        return range(*args)
     
+    return xrange(*args)
+
+
+def ucode(*args, **kwargs):
+    if version_info >= (3, ):
+        return str(*args, **kwargs)
+    
+    return unicode(*args, **kwargs)
+
     
 # Helper to extract masked arrays from DataArrays that convert to NaN
 def npvalues(da):
@@ -262,7 +285,7 @@ def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     lons = wrfnc.variables[lonvar]
     
     # Need to check all times
-    for i in xrange(lats.shape[-3]):
+    for i in range2(lats.shape[-3]):
         start_idxs = [0]*len(lats.shape) # PyNIO does not support ndim
         start_idxs[-3] = i
         start_idxs = tuple(start_idxs)
@@ -459,7 +482,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta):
             idx += 1
       
     if xarray_enabled() and meta:
-        outname = unicode(first_array.name)
+        outname = str(first_array.name)
         # Note: assumes that all entries in dict have same coords
         outcoords = OrderedDict(first_array.coords)
         outdims = ["key"] + list(first_array.dims)
@@ -580,7 +603,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
                                                           varname)
                 proj = [getproj(lats=lats[i,:], 
                                 lons=lons[i,:],
-                                **proj_params) for i in xrange(lats.shape[0])]
+                                **proj_params) for i in range2(lats.shape[0])]
                 
                 if time_coord is not None:
                     coords[time_coord] = (lon_coord_var.dimensions[0], 
@@ -778,14 +801,14 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta):
                                                           varname)
                 projs = [getproj(lats=lats[i,:], 
                                 lons=lons[i,:],
-                                **proj_params) for i in xrange(lats.shape[0])]
+                                **proj_params) for i in range2(lats.shape[0])]
                 
                 outprojs[startidx:endidx] = np.asarray(projs, np.object)[:]
             
             startidx = endidx
     
     if xarray_enabled() and meta:
-        outname = unicode(first_var.name)
+        outname = ucode(first_var.name)
         outattrs = OrderedDict(first_var.attrs)
         outcoords = OrderedDict(first_var.coords)
         outdimnames = list(first_var.dims)
@@ -939,7 +962,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta):
                                                           varname)
                 projs = [getproj(lats=lats[i,:], 
                                 lons=lons[i,:],
-                                **proj_params) for i in xrange(lats.shape[0])]
+                                **proj_params) for i in range2(lats.shape[0])]
                 
                 outprojs[file_idx, 0:numtimes] = (
                                         np.asarray(projs, np.object)[:])
@@ -954,12 +977,12 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta):
         outdata = np.ma.masked_values(outdata, Constants.DEFAULT_FILL)
     
     if xarray_enabled() and meta:
-        outname = unicode(first_var.name)
+        outname = ucode(first_var.name)
         outcoords = OrderedDict(first_var.coords)
         outattrs = OrderedDict(first_var.attrs)
         # New dimensions
         outdimnames = ["file"] + list(first_var.dims)
-        outcoords["file"] = [i for i in xrange(numfiles)]
+        outcoords["file"] = [i for i in range2(numfiles)]
         
         # Time needs to be multi dimensional, so use the default dimension
         del outcoords["Time"]
@@ -1085,14 +1108,20 @@ def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True,
                              method, squeeze, cache, meta)
             for var in varlist}
 
+# Python 3 compatability
+def _npbytes_to_str(var):
+    return (bytes(c).decode("utf-8") for c in var[:])
+
+
 def _make_time(timearr):
-    return dt.datetime.strptime("".join(timearr[:]), "%Y-%m-%d_%H:%M:%S")
+    return dt.datetime.strptime("".join(_npbytes_to_str(timearr)), 
+                                "%Y-%m-%d_%H:%M:%S")
 
 def _file_times(wrfnc, timeidx):
     multitime = _is_multi_time_req(timeidx)
     if multitime:
         times = wrfnc.variables["Times"][:,:]
-        for i in xrange(times.shape[0]):
+        for i in range2(times.shape[0]):
             yield _make_time(times[i,:])
     else:
         times = wrfnc.variables["Times"][timeidx,:]
@@ -1148,7 +1177,7 @@ def get_left_indexes(ref_var, expected_dims):
     if (extra_dim_num == 0):
         return []
     
-    return tuple([ref_var.shape[x] for x in xrange(extra_dim_num)]) 
+    return tuple([ref_var.shape[x] for x in range2(extra_dim_num)]) 
 
 def iter_left_indexes(dims):
     """A generator which yields the iteration tuples for a sequence of 
@@ -1163,7 +1192,7 @@ def iter_left_indexes(dims):
         - dims - a sequence of dimensions sizes (e.g. ndarry.shape)
     
     """
-    arg = [xrange(dim) for dim in dims]
+    arg = [range2(dim) for dim in dims]
     for idxs in product(*arg):
         yield idxs
         
@@ -1236,26 +1265,26 @@ class CoordPair(object):
     
 
 def from_args(func, argnames, *args, **kwargs):
-        """Parses the function args and kargs looking for the desired argument 
-        value. Otherwise, the value is taken from the default keyword argument 
-        using the arg spec.
+    """Parses the function args and kargs looking for the desired argument 
+    value. Otherwise, the value is taken from the default keyword argument 
+    using the arg spec.
+    
+    """
+    if isstr(argnames):
+        arglist = [argnames]
+    else:
+        arglist = argnames
+    
+    result = {}
+    for argname in arglist:
+        arg_loc = arg_location(func, argname, args, kwargs)
         
-        """
-        if isstr(argnames):
-            arglist = [argnames]
+        if arg_loc is not None:
+            result[argname] = arg_loc[0][arg_loc[1]] 
         else:
-            arglist = argnames
-        
-        result = {}
-        for argname in arglist:
-            arg_loc = arg_location(func, argname, args, kwargs)
-            
-            if arg_loc is not None:
-                result[argname] = arg_loc[0][arg_loc[1]] 
-            else:
-                result[argname] = None
-        
-        return result
+            result[argname] = None
+    
+    return result
 
 def _args_to_list2(func, args, kwargs):
     argspec = getargspec(func)
@@ -1281,7 +1310,7 @@ def _args_to_list3(func, args, kwargs):
     bound = sig.bind(*args, **kwargs)
     bound.apply_defaults()
     
-    return [x for x in bound.arguments.values]
+    return [x for x in bound.arguments.values()]
     
 
 def args_to_list(func, args, kwargs):
@@ -1309,10 +1338,15 @@ def _arg_location2(func, argname, args, kwargs):
 
 def _arg_location3(func, argname, args, kwargs):
     sig = signature(func)
-    params = list(sig.params.keys())
-    list_args = _args_to_list3(func, args, kwargs)
-    result_idx = params.index(argname) 
+    params = list(sig.parameters.keys())
     
+    list_args = _args_to_list3(func, args, kwargs)
+    
+    try:
+        result_idx = params.index(argname) 
+    except ValueError:
+        return None
+        
     return list_args, result_idx
     
     

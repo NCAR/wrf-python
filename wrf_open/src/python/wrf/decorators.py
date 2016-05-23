@@ -8,7 +8,7 @@ import numpy as np
 import numpy.ma as ma
 
 from .units import do_conversion, check_units
-from .util import (iter_left_indexes, viewitems, from_args, npvalues)
+from .util import (iter_left_indexes, viewitems, from_args, npvalues, range2)
 from .config import xarray_enabled
 
 if xarray_enabled():
@@ -86,7 +86,7 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
             return wrapped(*args, **kwargs)
         
         # Start by getting the left-most 'extra' dims
-        extra_dims = [ref_var_shape[x] for x in xrange(extra_dim_num)]            
+        extra_dims = [ref_var_shape[x] for x in range2(extra_dim_num)]            
         
         out_inited = False
         for left_idxs in iter_left_indexes(extra_dims):
@@ -135,14 +135,14 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
                     outdims = _calc_out_dims(res[0], extra_dims)
                     if not isinstance(res[0], ma.MaskedArray):
                         output = [np.empty(outdims, ref_var.dtype) 
-                                  for i in xrange(len(res))]
+                                  for i in range2(len(res))]
                         masked = False
                     else:
                         output = [ma.MaskedArray(
                                     np.zeros(outdims, ref_var.dtype),
                                     mask=np.zeros(outdims, np.bool_),
                                     fill_value=res[0].fill_value) 
-                                  for i in xrange(len(res))]
+                                  for i in range2(len(res))]
                         masked = True
                     
                     out_inited = True

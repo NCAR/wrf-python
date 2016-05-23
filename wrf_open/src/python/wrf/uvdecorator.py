@@ -6,7 +6,7 @@ import numpy as np
 import wrapt 
 
 from .destag import destagger
-from .util import iter_left_indexes
+from .util import iter_left_indexes, range2
 
 __all__ = ["uvmet_left_iter"]
 
@@ -53,13 +53,13 @@ def uvmet_left_iter():
             return wrapped(u, v, lat, lon, cen_long, cone)
         
         # Start by getting the left-most 'extra' dims
-        outdims = [u.shape[x] for x in xrange(extra_dim_num)]
+        outdims = [u.shape[x] for x in range2(extra_dim_num)]
         extra_dims = list(outdims) # Copy the left-most dims for iteration
         
         # Append the right-most dimensions
         outdims += [2] # For u/v components
         
-        outdims += [u.shape[x] for x in xrange(-num_right_dims,0,1)]
+        outdims += [u.shape[x] for x in range2(-num_right_dims,0,1)]
         
         output = np.empty(outdims, u.dtype)
         

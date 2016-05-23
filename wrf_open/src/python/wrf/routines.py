@@ -1,6 +1,6 @@
 
 
-from .util import _get_iterable, is_standard_wrf_var, extract_vars
+from .util import _get_iterable, is_standard_wrf_var, extract_vars, viewkeys
 from .cape import get_2dcape, get_3dcape
 from .ctt import get_ctt
 from .dbz import get_dbz, get_max_dbz
@@ -143,7 +143,7 @@ def _undo_alias(alias):
         return actual
   
 def _check_kargs(var, kargs):
-    for arg in kargs.iterkeys():
+    for arg in viewkeys(kargs):
         if arg not in _VALID_KARGS[var]:
             raise ArgumentError("'%s' is an invalid keyword "
                           "argument for '%s'" % (arg, var))

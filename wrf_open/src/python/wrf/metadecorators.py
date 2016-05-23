@@ -9,7 +9,7 @@ import numpy.ma as ma
 
 from .util import (viewkeys, viewitems, extract_vars, 
                    combine_with, either, from_args, arg_location,
-                   _is_coord_var, CoordPair, npvalues)
+                   _is_coord_var, CoordPair, npvalues, range2, ucode)
 from .interputils import get_xy_z_params, get_xy
 from .latlonutils import ij_to_ll, ll_to_ij
 from .config import xarray_enabled
@@ -87,7 +87,7 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
         outattrs = OrderedDict()
         
         if copy_varname is not None:
-            outname = unicode(var_to_copy.name)
+            outname = ucode(var_to_copy.name)
             
             if dimnames is not None:
                 if isinstance(dimnames, combine_with):
@@ -458,15 +458,15 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
-        for i in xrange(-3,0,1):
+        for i in range2(-3,0,1):
             outdimnames.remove(field3d.dims[i])
             del outcoords[field3d.dims[i]]
         
         
         # Delete any lat,lon coords
-        for key in viewkeys(outcoords):
-            if _is_coord_var(key):
-                del outcoords[key]
+        delkeys = [key for key in viewkeys(outcoords) if _is_coord_var(key)]
+        for key in delkeys:
+            del outcoords[key]
         
         outdimnames.append("vertical")
         outdimnames.append("xy")
@@ -481,7 +481,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                 pass
             
         outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
-                           for i in xrange(xy.shape[-2])])
+                           for i in range2(xy.shape[-2])])
         
         outcoords["vertical"] = z_var2d[:]
         
@@ -549,14 +549,14 @@ def _set_line_meta(wrapped, instance, args, kwargs):
         outattrs = OrderedDict()
         outdimnames = list(field2d.dims)
         outcoords.update(field2d.coords)
-        for i in xrange(-2,0,1):
+        for i in range2(-2,0,1):
             outdimnames.remove(field2d.dims[i])
             del outcoords[field2d.dims[i]]
             
         # Delete any lat,lon coords
-        for key in viewkeys(outcoords):
-            if _is_coord_var(key):
-                del outcoords[key]
+        delkeys = [key for key in viewkeys(outcoords) if _is_coord_var(key)]
+        for key in delkeys:
+            del outcoords[key]
         
         outdimnames.append("xy")
         outattrs.update(field2d.attrs)
@@ -570,7 +570,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                 pass
             
         outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
-                           for i in xrange(xy.shape[-2])])
+                           for i in range2(xy.shape[-2])])
         
     else:
         outname = "field2d_line"
@@ -652,7 +652,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
         outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
-        for i in xrange(-2,0,1):
+        for i in range2(-2,0,1):
             outdimnames.remove(field3d.dims[i])
             del outcoords[field3d.dims[i]]
         
@@ -662,7 +662,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
         outname = "{0}_xy".format(field3d.name)
         
         outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
-                           for i in xrange(xy.shape[-2])])
+                           for i in range2(xy.shape[-2])])
         
         for key in ("MemoryOrder",):
             try:
