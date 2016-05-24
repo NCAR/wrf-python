@@ -36,7 +36,7 @@ __all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
            "combine_files", "is_standard_wrf_var", "extract_times",
            "iter_left_indexes", "get_left_indexes", "get_right_slices",
            "is_staggered", "get_proj_params", "viewitems", "viewkeys",
-           "viewvalues", "py2round", "combine_with", "either", 
+           "viewvalues", "py2round", "py3range", "combine_with", "either", 
            "from_args", "arg_location", "args_to_list", "npvalues", 
            "CoordPair"]
 
@@ -198,7 +198,7 @@ def py2round(x, d=0):
     return round(x, d)
 
 
-def range2(*args):
+def py3range(*args):
     if version_info >= (3,):
         return range(*args)
     
@@ -285,7 +285,7 @@ def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     lons = wrfnc.variables[lonvar]
     
     # Need to check all times
-    for i in range2(lats.shape[-3]):
+    for i in py3range(lats.shape[-3]):
         start_idxs = [0]*len(lats.shape) # PyNIO does not support ndim
         start_idxs[-3] = i
         start_idxs = tuple(start_idxs)
@@ -603,7 +603,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
                                                           varname)
                 proj = [getproj(lats=lats[i,:], 
                                 lons=lons[i,:],
-                                **proj_params) for i in range2(lats.shape[0])]
+                                **proj_params) for i in py3range(lats.shape[0])]
                 
                 if time_coord is not None:
                     coords[time_coord] = (lon_coord_var.dimensions[0], 
@@ -801,7 +801,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta):
                                                           varname)
                 projs = [getproj(lats=lats[i,:], 
                                 lons=lons[i,:],
-                                **proj_params) for i in range2(lats.shape[0])]
+                                **proj_params) for i in py3range(lats.shape[0])]
                 
                 outprojs[startidx:endidx] = np.asarray(projs, np.object)[:]
             
@@ -962,7 +962,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta):
                                                           varname)
                 projs = [getproj(lats=lats[i,:], 
                                 lons=lons[i,:],
-                                **proj_params) for i in range2(lats.shape[0])]
+                                **proj_params) for i in py3range(lats.shape[0])]
                 
                 outprojs[file_idx, 0:numtimes] = (
                                         np.asarray(projs, np.object)[:])
@@ -982,7 +982,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta):
         outattrs = OrderedDict(first_var.attrs)
         # New dimensions
         outdimnames = ["file"] + list(first_var.dims)
-        outcoords["file"] = [i for i in range2(numfiles)]
+        outcoords["file"] = [i for i in py3range(numfiles)]
         
         # Time needs to be multi dimensional, so use the default dimension
         del outcoords["Time"]
@@ -1121,7 +1121,7 @@ def _file_times(wrfnc, timeidx):
     multitime = _is_multi_time_req(timeidx)
     if multitime:
         times = wrfnc.variables["Times"][:,:]
-        for i in range2(times.shape[0]):
+        for i in py3range(times.shape[0]):
             yield _make_time(times[i,:])
     else:
         times = wrfnc.variables["Times"][timeidx,:]
@@ -1177,7 +1177,7 @@ def get_left_indexes(ref_var, expected_dims):
     if (extra_dim_num == 0):
         return []
     
-    return tuple([ref_var.shape[x] for x in range2(extra_dim_num)]) 
+    return tuple([ref_var.shape[x] for x in py3range(extra_dim_num)]) 
 
 def iter_left_indexes(dims):
     """A generator which yields the iteration tuples for a sequence of 
@@ -1192,7 +1192,7 @@ def iter_left_indexes(dims):
         - dims - a sequence of dimensions sizes (e.g. ndarry.shape)
     
     """
-    arg = [range2(dim) for dim in dims]
+    arg = [py3range(dim) for dim in dims]
     for idxs in product(*arg):
         yield idxs
         

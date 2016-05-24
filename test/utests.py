@@ -12,6 +12,10 @@ NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
 OUT_NC_FILE = "/tmp/wrftest.nc"
 
+# Python 3
+if sys.version_info > (3,):
+    xrange = range
+
 def setUpModule():
     ncarg_root = os.environ.get("NCARG_ROOT", None)
     if ncarg_root is None:

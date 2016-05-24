@@ -6,7 +6,7 @@ from math import floor, ceil
 import numpy as np
 
 from .extension import interp2dxy
-from .util import range2
+from .util import py3range
 
 __all__ = ["to_positive_idxs", "calc_xy", "get_xy_z_params", "get_xy"]
 
@@ -119,7 +119,7 @@ def calc_xy(xdim, ydim, pivot_point=None, angle=None,
     dx = dx/npts
     dy = dy/npts
     
-    for i in range2(npts):
+    for i in py3range(npts):
         xy[i,0] = x0 + i*dx
         xy[i,1] = y0 + i*dy
         
@@ -154,7 +154,7 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
         z_var2d = np.zeros((nlevels), dtype=z.dtype)
         z_var2d[0] = z_min
     
-    for i in range2(1,nlevels):
+    for i in py3range(1,nlevels):
         z_var2d[i] = z_var2d[0] + i*dz
         
     return xy, var2dz, z_var2d

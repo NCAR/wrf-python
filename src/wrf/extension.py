@@ -16,7 +16,7 @@ from ._wrfext import (f_interpz3d, f_interp2dxy,f_interp1d,
 from ._wrfcape import f_computecape
 from .decorators import (handle_left_iter, handle_casting, 
                          handle_extract_transpose)
-from .util import range2
+from .util import py3range
 from .uvdecorator import uvmet_left_iter
 
 __all__ = ["FortranException", "computeslp", "computetk", "computetd", 
@@ -68,7 +68,7 @@ def computevertcross(field3d, xy, var2dz, z_var2d, missingval):
     var2d = np.empty((z_var2d.size, xy.shape[0]), dtype=var2dz.dtype)
     var2dtmp = interp2dxy(field3d, xy)
     
-    for i in range2(xy.shape[0]):
+    for i in py3range(xy.shape[0]):
         var2d[:,i] = interp1d(var2dtmp[:,i], var2dz[:,i], z_var2d, missingval)
     
     return var2d
