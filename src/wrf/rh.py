@@ -2,7 +2,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from .constants import Constants   
-from .extension import computerh, computetk
+#from .extension import computerh, computetk
+from .extension import _rh, _tk
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
 
@@ -24,8 +25,8 @@ def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     full_t = t + Constants.T_BASE
     full_p = p + pb
     qvapor[qvapor < 0] = 0
-    tk = computetk(full_p, full_t)
-    rh = computerh(qvapor, full_p, tk)
+    tk = _tk(full_p, full_t)
+    rh = _rh(qvapor, full_p, tk)
     
     return rh
 
@@ -42,7 +43,7 @@ def get_rh_2m(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     q2 = ncvars["Q2"]
     
     q2[q2 < 0] = 0
-    rh = computerh(q2, psfc, t2)
+    rh = _rh(q2, psfc, t2)
     
     return rh
 

@@ -3,7 +3,8 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as n
 
-from .extension import computedbz,computetk
+#from .extension import computedbz,computetk
+from .extension import computedbz, _tk
 from .constants import Constants
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
@@ -58,7 +59,7 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     ivarint = 0
     if do_varint:

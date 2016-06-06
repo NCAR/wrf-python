@@ -4,9 +4,12 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 import numpy.ma as ma
 
-from .extension import (interpz3d, interp2dxy, interp1d,
-                        smooth2d, monotonic, vintrp, computevertcross,
-                        computeinterpline)
+# from .extension import (interpz3d, interp2dxy, interp1d,
+#                         smooth2d, monotonic, vintrp, computevertcross,
+#                         computeinterpline)
+
+from .extension import (_interpz3d, _interp2dxy, _interp1d, _vertcross,
+                        _interpline, _smooth2d, monotonic, vintrp)
 
 from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered
@@ -32,7 +35,7 @@ def interplevel(field3d, z, desiredloc, missingval=Constants.DEFAULT_FILL,
     missingval - the missing data value (which will be masked on return)
     
     """
-    r1 = interpz3d(field3d, z, desiredloc, missingval)
+    r1 = _interpz3d(field3d, z, desiredloc, missingval)
     masked_r1 = ma.masked_values (r1, missingval)
     
     return masked_r1
@@ -64,7 +67,7 @@ def vertcross(field3d, z, missingval=Constants.DEFAULT_FILL,
         xy, var2dz, z_var2d = get_xy_z_params(z, pivot_point, angle,
                                               start_point, end_point)
         
-    res = computevertcross(field3d, xy, var2dz, z_var2d, missingval)
+    res = _vertcross(field3d, xy, var2dz, z_var2d, missingval)
     
     return ma.masked_values(res, missingval)
 
@@ -89,7 +92,7 @@ def interpline(field2d, pivot_point=None,
     except (KeyError, TypeError):
         xy = get_xy(field2d, pivot_point, angle, start_point, end_point)
         
-    return computeinterpline(field2d, xy)
+    return _interpline(field2d, xy)
 
 
 @set_interp_metadata("vinterp")
@@ -174,9 +177,8 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     ht_agl = get_height(wrfnc, timeidx, msl=False, units="m",
                         method=method, squeeze=squeeze, cache=cache)
     
-    smsfp = smooth2d(sfp, 3)        
-        
-    # Vertical coordinate type
+    smsfp = _smooth2d(sfp, 3)        
+
     vcor = 0
     
     if vert_coord in ("pressure", "pres", "p"):
@@ -244,17 +246,17 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
 # TODO:  Rename after the extensions are renamed
 @set_interp_metadata("horiz")
 def wrap_interpz3d(field3d, z, desiredloc, missingval, meta=True):
-    return interpz3d(field3d, z, desiredloc, missingval)
+    return _interpz3d(field3d, z, desiredloc, missingval)
 
 
 @set_interp_metadata("2dxy")
 def wrap_interp2dxy(field3d, xy, meta=True):
-    return interp2dxy(field3d, xy)
+    return _interp2dxy(field3d, xy)
 
 
 @set_interp_metadata("1d")
 def wrap_interp1d(v_in, z_in, z_out, missingval, meta=True):
-    return interp1d(v_in, z_in, z_out, missingval)
+    return _interp1d(v_in, z_in, z_out, missingval)
 
     
     

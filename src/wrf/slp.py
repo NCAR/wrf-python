@@ -1,7 +1,8 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .extension import computeslp, computetk
+#from .extension import computeslp, computetk
+from .extension import _slp, _tk
 from .constants import Constants
 from .destag import destagger
 from .decorators import convert_units
@@ -37,8 +38,8 @@ def get_slp(wrfnc, timeidx=0, method="cat", squeeze=True,
     
     destag_ph = destagger(full_ph, -3)
     
-    tk = computetk(full_p, full_t)
-    slp = computeslp(destag_ph, tk, full_p, qvapor)
+    tk = _tk(full_p, full_t)
+    slp = _slp(destag_ph, tk, full_p, qvapor)
     
     return slp
 

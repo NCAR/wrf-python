@@ -275,7 +275,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            tol = 0/100.
+            tol = .5/100.
             atol = 0.0001
             
             field = n.squeeze(field)
@@ -296,7 +296,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            tol = 0/100.
+            tol = .5/100.
             atol = 0.0001
             
             field = n.squeeze(field)
@@ -318,6 +318,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             log_p=True)
             
             field = n.squeeze(field)
+            
             nt.assert_allclose(npvalues(field), fld_tk_pres, tol, atol)
             
             # Tk to geoht_msl

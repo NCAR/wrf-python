@@ -3,7 +3,8 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as n
 
-from .extension import computectt, computetk
+#from .extension import computectt, computetk
+from .extension import computectt, _tk
 from .constants import Constants, ConversionFactors
 from .destag import destagger
 from .decorators import convert_units 
@@ -55,7 +56,7 @@ def get_ctt(wrfnc, timeidx=0, method="cat",
     full_p = p + pb
     p_hpa = full_p * ConversionFactors.PA_TO_HPA
     full_t = t + Constants.T_BASE
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     geopt = ph + phb
     geopt_unstag = destagger(geopt, -3)

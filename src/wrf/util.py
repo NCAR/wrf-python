@@ -278,6 +278,27 @@ class combine_with(object):
             new_coords.update(self.new_coords)
         
         return new_dims, new_coords
+    
+# This should look like:
+# [(0, (-3,-2)), # variable 1
+# (1, -1)] # variable 2
+class combine_dims(object):
+    
+    def __init__(self, pairs):
+        self.pairs = pairs
+    
+    def __call__(self, *args):
+        result = []
+        for pair in self.pairs:
+            var = args[pair[0]]
+            dimidxs = pair[1]
+            if isinstance(dimidxs, Iterable):
+                for dimidx in dimidxs:
+                    result.append(var.shape[dimidx])
+            else:
+                result.append(var.shape[dimidxs])
+        
+        return tuple(result)
 
 
 def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
@@ -1291,8 +1312,9 @@ def _args_to_list2(func, args, kwargs):
     
     # Build the full tuple with defaults filled in
     outargs = [None]*len(argspec.args)
-    for i,default in enumerate(argspec.defaults[::-1], 1):
-        outargs[-i] = default
+    if argspec.defaults is not None:
+        for i,default in enumerate(argspec.defaults[::-1], 1):
+            outargs[-i] = default
     
     # Add the supplied args
     for i,arg in enumerate(args):

@@ -1,7 +1,8 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .extension import computetd
+#from .extension import computetd
+from .extension import _td
 from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
@@ -26,7 +27,7 @@ def get_dp(wrfnc, timeidx=0, method="cat", squeeze=True,
     full_p = .01*(p + pb)
     qvapor[qvapor < 0] = 0
     
-    td = computetd(full_p, qvapor)
+    td = _td(full_p, qvapor)
     return td
 
 @copy_and_set_metadata(copy_varname="Q2", name="td2", 
@@ -44,7 +45,7 @@ def get_dp_2m(wrfnc, timeidx=0, method="cat", squeeze=True,
     q2 = ncvars["Q2"]
     q2[q2 < 0] = 0
     
-    td = computetd(psfc, q2)
+    td = _td(psfc, q2)
     
     return td
 

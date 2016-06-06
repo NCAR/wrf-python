@@ -13,11 +13,18 @@ ext2 = numpy.distutils.core.Extension(
                "src/wrf/wrfcape.pyf"]
     )
 
+ext3 = numpy.distutils.core.Extension(
+    name = "wrf._wrffortran",
+    sources = ["fortran/constants.f90",
+               "fortran/wrf_user.f90",
+               "fortran/wrffortran.pyf"]
+    )
+
 numpy.distutils.core.setup( 
     name = "wrf",
     version = "0.0.1",        
     packages = setuptools.find_packages("src"),   
-    ext_modules = [ext1,ext2],
+    ext_modules = [ext1,ext2,ext3],
     package_dir={"":"src"},
     #namespace_packages=["wrf"],
     scripts=[],

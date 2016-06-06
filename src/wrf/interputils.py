@@ -5,7 +5,7 @@ from math import floor, ceil
 
 import numpy as np
 
-from .extension import interp2dxy
+from .extension import _interp2dxy
 from .util import py3range
 
 __all__ = ["to_positive_idxs", "calc_xy", "get_xy_z_params", "get_xy"]
@@ -131,7 +131,7 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
     xy = get_xy(z, pivot_point, angle, start_point, end_point)
     
     # Interp z
-    var2dz = interp2dxy(z, xy)
+    var2dz = _interp2dxy(z, xy)
     
     extra_dim_num = z.ndim - 3
     idx1 = tuple([0]*extra_dim_num + [0,0])

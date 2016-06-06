@@ -5,7 +5,8 @@ from math import fabs, log, tan, sin, cos
 
 import numpy as np
 
-from .extension import computeuvmet
+#from .extension import computeuvmet
+from .extension import _uvmet
 from .destag import destagger
 from .constants import Constants
 from .wind import _calc_wspd_wdir
@@ -120,9 +121,9 @@ def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
         else:
             cone = 1
         
-        res = computeuvmet(u, v ,lat, lon, cen_lon, cone)
+        result = _uvmet(u, v, lat, lon, cen_lon, cone)
         
-        return res
+        return result
 
     
 @set_wind_metadata(copy_varname=either("P", "PRES"), 

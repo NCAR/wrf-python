@@ -1,0 +1,183 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module _wrffortran ! in 
+    interface  ! in :_wrffortran
+        module constants ! in :_wrffortran:constants.f90
+            real(kind=8), parameter,optional :: p1000mb=100000.d0
+            real(kind=8), parameter,optional :: r=287.04d0
+            real(kind=8), parameter,optional :: g=9.81d0
+            real(kind=8), parameter,optional :: r_d=287.d0
+            real(kind=8), parameter,optional,depend(r_d) :: cp=7.d0*r_d/2.d0
+            integer, optional :: errlen=512
+            real(kind=8), parameter,optional :: gamma=0.0065d0
+        end module constants
+        subroutine dcomputepi(pi,pressure,nx,ny,nz) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            use constants, only: p1000mb,cp,r_d
+            real(kind=8) dimension(nx,ny,nz),intent(out,in) :: pi
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: pressure
+            integer, optional,intent(in),check(shape(pi,0)==nx),depend(pi) :: nx=shape(pi,0)
+            integer, optional,intent(in),check(shape(pi,1)==ny),depend(pi) :: ny=shape(pi,1)
+            integer, optional,intent(in),check(shape(pi,2)==nz),depend(pi) :: nz=shape(pi,2)
+        end subroutine dcomputepi
+        subroutine dcomputetk(tk,pressure,theta,nx) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            use constants, only: p1000mb,cp,r_d
+            real(kind=8) dimension(nx),intent(out,in) :: tk
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: pressure
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: theta
+            integer, optional,intent(in),check(len(tk)>=nx),depend(tk) :: nx=len(tk)
+        end subroutine dcomputetk
+        subroutine dinterp3dz(data3d,out2d,zdata,desiredloc,nx,ny,nz,missingval) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: data3d
+            real(kind=8) dimension(nx,ny),intent(out,in),depend(nx,ny) :: out2d
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: zdata
+            real(kind=8) intent(in) :: desiredloc
+            integer, optional,intent(in),check(shape(data3d,0)==nx),depend(data3d) :: nx=shape(data3d,0)
+            integer, optional,intent(in),check(shape(data3d,1)==ny),depend(data3d) :: ny=shape(data3d,1)
+            integer, optional,intent(in),check(shape(data3d,2)==nz),depend(data3d) :: nz=shape(data3d,2)
+            real(kind=8) intent(in) :: missingval
+        end subroutine dinterp3dz
+        subroutine dzstag(znew,nx,ny,nz,z,nxz,nyz,nzz,terrain) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny,nz),intent(out,in) :: znew
+            integer, optional,intent(in),check(shape(znew,0)==nx),depend(znew) :: nx=shape(znew,0)
+            integer, optional,intent(in),check(shape(znew,1)==ny),depend(znew) :: ny=shape(znew,1)
+            integer, optional,intent(in),check(shape(znew,2)==nz),depend(znew) :: nz=shape(znew,2)
+            real(kind=8) dimension(nxz,nyz,nzz),intent(in) :: z
+            integer, optional,intent(in),check(shape(z,0)==nxz),depend(z) :: nxz=shape(z,0)
+            integer, optional,intent(in),check(shape(z,1)==nyz),depend(z) :: nyz=shape(z,1)
+            integer, optional,intent(in),check(shape(z,2)==nzz),depend(z) :: nzz=shape(z,2)
+            real(kind=8) dimension(nxz,nyz),intent(in),depend(nxz,nyz) :: terrain
+        end subroutine dzstag
+        subroutine dinterp2dxy(v3d,v2d,xy,nx,ny,nz,nxy) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: v3d
+            real(kind=8) dimension(nxy,nz),intent(out,in),depend(nz) :: v2d
+            real(kind=8) dimension(2,nxy),intent(in),depend(nxy) :: xy
+            integer, optional,intent(in),check(shape(v3d,0)==nx),depend(v3d) :: nx=shape(v3d,0)
+            integer, optional,intent(in),check(shape(v3d,1)==ny),depend(v3d) :: ny=shape(v3d,1)
+            integer, optional,intent(in),check(shape(v3d,2)==nz),depend(v3d) :: nz=shape(v3d,2)
+            integer, optional,intent(in),check(shape(v2d,0)==nxy),depend(v2d) :: nxy=shape(v2d,0)
+        end subroutine dinterp2dxy
+        subroutine dinterp1d(v_in,v_out,z_in,z_out,vmsg,nz_in,nz_out) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nz_in),intent(in) :: v_in
+            real(kind=8) dimension(nz_out),intent(out,in) :: v_out
+            real(kind=8) dimension(nz_in),intent(in),depend(nz_in) :: z_in
+            real(kind=8) dimension(nz_out),intent(in),depend(nz_out) :: z_out
+            real(kind=8) intent(in) :: vmsg
+            integer, optional,intent(in),check(len(v_in)>=nz_in),depend(v_in) :: nz_in=len(v_in)
+            integer, optional,intent(in),check(len(v_out)>=nz_out),depend(v_out) :: nz_out=len(v_out)
+        end subroutine dinterp1d
+        subroutine dcomputeseaprs(nx,ny,nz,z,t,p,q,sea_level_pressure,t_sea_level,t_surf,level,errstat,errmsg) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            use constants, only: r,errlen,gamma,g
+            integer, optional,intent(in),check(shape(z,0)==nx),depend(z) :: nx=shape(z,0)
+            integer, optional,intent(in),check(shape(z,1)==ny),depend(z) :: ny=shape(z,1)
+            integer, optional,intent(in),check(shape(z,2)==nz),depend(z) :: nz=shape(z,2)
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: z
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: t
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: p
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: q
+            real(kind=8) dimension(nx,ny),intent(out,in),depend(nx,ny) :: sea_level_pressure
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: t_sea_level
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: t_surf
+            integer dimension(nx,ny),intent(inout),depend(nx,ny) :: level
+            integer, optional,intent(inout) :: errstat
+            character*errlen, optional,intent(inout) :: errmsg
+        end subroutine dcomputeseaprs
+        subroutine dfilter2d(a,b,nx,ny,it,missing) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny),intent(in,out) :: a
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: b
+            integer, optional,intent(in),check(shape(a,0)==nx),depend(a) :: nx=shape(a,0)
+            integer, optional,intent(in),check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
+            integer intent(in) :: it
+            real(kind=8) intent(in) :: missing
+        end subroutine dfilter2d
+        subroutine filter2d(a,b,nx,ny,it,missing) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=4) dimension(nx,ny),intent(in,out) :: a
+            real(kind=4) dimension(nx,ny),intent(inout),depend(nx,ny) :: b
+            integer, optional,intent(in),check(shape(a,0)==nx),depend(a) :: nx=shape(a,0)
+            integer, optional,intent(in),check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
+            integer intent(in) :: it
+            real(kind=4) intent(in) :: missing
+        end subroutine filter2d
+        subroutine dcomputerh(qv,p,t,rh,nx) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx),intent(in) :: qv
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: p
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: t
+            real(kind=8) dimension(nx),intent(out,in),depend(nx) :: rh
+            integer, optional,intent(in),check(len(qv)>=nx),depend(qv) :: nx=len(qv)
+        end subroutine dcomputerh
+        subroutine dgetijlatlong(lat_array,long_array,lat,longitude,ii,jj,nx,ny,imsg) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny),intent(in) :: lat_array
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: long_array
+            real(kind=8) :: lat
+            real(kind=8) :: longitude
+            integer intent(out,in) :: ii
+            integer intent(out,in) :: jj
+            integer, optional,intent(in),check(shape(lat_array,0)==nx),depend(lat_array) :: nx=shape(lat_array,0)
+            integer, optional,intent(in),check(shape(lat_array,1)==ny),depend(lat_array) :: ny=shape(lat_array,1)
+            integer intent(in) :: imsg
+        end subroutine dgetijlatlong
+        subroutine dcomputeuvmet(u,v,uvmet,longca,longcb,flong,flat,cen_long,cone,rpd,nx,ny,nz,nxp1,nyp1,istag,is_msg_val,umsg,vmsg,uvmetmsg) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nxp1,ny,nz),intent(in) :: u
+            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nz) :: v
+            real(kind=8) dimension(nx,ny,nz,2),intent(out,in),depend(nx,ny,nz) :: uvmet
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: longca
+            real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: longcb
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: flong
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: flat
+            real(kind=8) intent(in) :: cen_long
+            real(kind=8) intent(in) :: cone
+            real(kind=8) intent(in) :: rpd
+            integer, optional,intent(in),check(shape(v,0)==nx),depend(v) :: nx=shape(v,0)
+            integer, optional,intent(in),check(shape(u,1)==ny),depend(u) :: ny=shape(u,1)
+            integer, optional,intent(in),check(shape(u,2)==nz),depend(u) :: nz=shape(u,2)
+            integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
+            integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
+            integer intent(in) :: istag
+            logical intent(in) :: is_msg_val
+            real(kind=8) intent(in) :: umsg
+            real(kind=8) intent(in) :: vmsg
+            real(kind=8) intent(in) :: uvmetmsg
+        end subroutine dcomputeuvmet
+        subroutine dcomputetd(td,pressure,qv_in,nx) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx),intent(out,in) :: td
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: pressure
+            real(kind=8) dimension(nx),intent(in),depend(nx) :: qv_in
+            integer, optional,intent(in),check(len(td)>=nx),depend(td) :: nx=len(td)
+        end subroutine dcomputetd
+        subroutine dcomputeiclw(iclw,pressure,qc_in,nx,ny,nz) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny),intent(out,in) :: iclw
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny) :: pressure
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: qc_in
+            integer, optional,intent(in),check(shape(iclw,0)==nx),depend(iclw) :: nx=shape(iclw,0)
+            integer, optional,intent(in),check(shape(iclw,1)==ny),depend(iclw) :: ny=shape(iclw,1)
+            integer, optional,intent(in),check(shape(pressure,2)==nz),depend(pressure) :: nz=shape(pressure,2)
+        end subroutine dcomputeiclw
+        subroutine testfunc(a,b,nx,ny,nz,errstat,errstr) ! in :_wrffortran:wrf_user.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: a
+            real(kind=8) dimension(nx,ny,nz),intent(out,in),depend(nx,ny,nz) :: b
+            integer, optional,intent(in),check(shape(a,0)==nx),depend(a) :: nx=shape(a,0)
+            integer, optional,intent(in),check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
+            integer, optional,intent(in),check(shape(a,2)==nz),depend(a) :: nz=shape(a,2)
+            integer, optional,intent(inout) :: errstat
+            character*512, optional,intent(inout) :: errstr
+        end subroutine testfunc
+    end interface 
+end python module _wrffortran
+
+! This file was auto-generated with f2py (version:2).
+! See http://cens.ioc.ee/projects/f2py2e/

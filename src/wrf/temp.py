@@ -2,7 +2,8 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from .constants import Constants
-from .extension import computetk, computeeth, computetv, computewetbulb
+#from .extension import computetk, computeeth, computetv, computewetbulb
+from .extension import _tk, computeeth, computetv, computewetbulb
 from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
@@ -42,7 +43,7 @@ def get_temp(wrfnc, timeidx=0, method="cat", squeeze=True,
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     return tk
 
@@ -64,7 +65,7 @@ def get_eth(wrfnc, timeidx=0, method="cat", squeeze=True,
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     eth = computeeth(qv, tk, full_p)
     
@@ -89,7 +90,7 @@ def get_tv(wrfnc, timeidx=0, method="cat", squeeze=True,
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     tv = computetv(tk,qv)
     
@@ -114,7 +115,7 @@ def get_tw(wrfnc, timeidx=0, method="cat", squeeze=True,
     full_t = t + Constants.T_BASE
     full_p = p + pb
     
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     tw = computewetbulb(full_p,tk,qv)
     
     return tw

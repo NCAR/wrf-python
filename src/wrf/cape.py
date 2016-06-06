@@ -4,7 +4,8 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as n
 import numpy.ma as ma
 
-from .extension import computetk,computecape
+#from .extension import computetk,computecape
+from .extension import _tk,computecape
 from .destag import destagger
 from .constants import Constants, ConversionFactors
 from .util import extract_vars, combine_with
@@ -39,7 +40,7 @@ def get_2dcape(wrfnc, timeidx=0, method="cat",
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     geopt = ph + phb
     geopt_unstag = destagger(geopt, -3)
@@ -101,7 +102,7 @@ def get_3dcape(wrfnc, timeidx=0, method="cat",
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
-    tk = computetk(full_p, full_t)
+    tk = _tk(full_p, full_t)
     
     geopt = ph + phb
     geopt_unstag = destagger(geopt, -3)

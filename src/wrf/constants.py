@@ -14,6 +14,7 @@ class Constants(object):
     PI = 3.141592653589793
     DEFAULT_FILL = 9.9692099683868690e+36 # Value is from netcdf.h
     WRF_EARTH_RADIUS = 6370000.
+    ERRLEN = 512
 
 class ConversionFactors(object):
     PA_TO_HPA = .01
