@@ -275,7 +275,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            tol = .5/100.
+            tol = 0/100.
             atol = 0.0001
             
             field = n.squeeze(field)
@@ -296,7 +296,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            tol = .5/100.
+            tol = 0/100.
             atol = 0.0001
             
             field = n.squeeze(field)

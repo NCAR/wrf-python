@@ -703,12 +703,12 @@ def _smooth2d(field, passes, outview=None):
     else:
         outview[:] = field[:]
         
-    field_tmp = np.zeros(outview.shape, outview.dtype, order="F")  
-    
+    field_tmp = np.zeros(outview.shape, outview.dtype, order="F") 
+
     dfilter2d(outview, 
               field_tmp,               
-              missing,
-              passes)
+              passes,
+              missing)
     
     # Don't transpose here since the fortran routine is not returning an
     # array.  It's only modifying the existing array.
