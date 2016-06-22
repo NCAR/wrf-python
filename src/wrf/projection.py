@@ -15,10 +15,6 @@ if basemap_enabled():
 if pyngl_enabled():
     from Ngl import Resources
 
-__all__ = ["WrfProj", "NullProjection", "LambertConformal", "Mercator",
-           "PolarStereographic", "LatLon", "RotatedLatLon",
-           "getproj"]
-
 
 if cartopy_enabled():
     class MercatorWithLatTS(crs.Mercator):
@@ -98,31 +94,24 @@ class WrfProj(object):
         if self.stand_lon is None:
             self.stand_lon = self._cen_lon
             
-    @property
-    def _basemap(self):
+    def _basemap(self, resolution='l'):
         return None
     
-    @property
     def _cf_params(self):
         return None
     
-    @property
     def _cartopy(self):
         return None
     
-    @property
     def _cart_extents(self):
         return ([self.ll_lon, self.ur_lon], [self.ll_lat, self.ur_lat]) 
     
-    @property
     def _pyngl(self):
         return None
     
-    @property
     def _proj4(self):
         return None
     
-    @property
     def _globe(self):
         return (None if not cartopy_enabled() 
                 else crs.Globe(ellipse=None,
@@ -131,11 +120,11 @@ class WrfProj(object):
      
     def cartopy_xlim(self):
         """Return the x extents in projected coordinates (for cartopy)"""
-        return self._cart_extents[0]
+        return self._cart_extents()[0]
     
     def cartopy_ylim(self):
         """Return the y extents in projected coordinates (for cartopy)"""
-        return self._cart_extents[1]
+        return self._cart_extents()[1]
     
     def __repr__(self):
         args = ("bottom_left={}, top_right={}, "
@@ -148,13 +137,13 @@ class WrfProj(object):
                                                   self.pole_lon))
         return "{}({})".format(self.__class__.__name__, args)
     
-    def basemap(self):
+    def basemap(self, resolution='l'):
         """Return a mpl_toolkits.basemap.Basemap instance for the
         projection"""
         if not basemap_enabled():
             raise RuntimeError("'mpl_toolkits.basemap' is not "
                                "installed or is disabled")
-        return self._basemap
+        return self._basemap(resolution)
     
     def cartopy(self):
         """Return a cartopy.crs.Projection subclass for the
@@ -162,23 +151,23 @@ class WrfProj(object):
         if not cartopy_enabled():
             raise RuntimeError("'cartopy' is not "
                                "installed or is disabled")
-        return self._cartopy
+        return self._cartopy()
     
     def pyngl(self):
         """Return the PyNGL resources for the projection"""
         if not pyngl_enabled():
             raise RuntimeError("'pyngl' is not "
                                "installed or is disabled")
-        return self._pyngl
+        return self._pyngl()
     
     def proj4(self):
         """Return the proj4 string for the map projection"""
-        return self._proj4
+        return self._proj4()
     
     def cf(self):
         """Return a dictionary with the NetCDF CF parameters for the 
         projection"""
-        return self._cf_params
+        return self._cf_params()
     
 
 # Used for 'missing' projection values during the 'join' method
@@ -200,7 +189,7 @@ class LambertConformal(WrfProj):
         if self.truelat2 is not None:
             self._std_parallels.append(self.truelat2)
             
-    @property
+    
     def _cf_params(self):
         _cf_params = {}
         _cf_params["grid_mapping_name"] = "lambert_conformal_conic";
@@ -211,7 +200,7 @@ class LambertConformal(WrfProj):
         
         return _cf_params
     
-    @property
+    
     def _pyngl(self):
         if not pyngl_enabled():
             return None
@@ -234,8 +223,8 @@ class LambertConformal(WrfProj):
         
         return _pyngl
     
-    @property
-    def _basemap(self):
+    
+    def _basemap(self, resolution='l'):
         if not basemap_enabled():
             return None
         
@@ -249,11 +238,10 @@ class LambertConformal(WrfProj):
             llcrnrlon = self.ll_lon,
             urcrnrlon = self.ur_lon,
             rsphere = Constants.WRF_EARTH_RADIUS,
-            resolution = 'l')
+            resolution = resolution)
         
         return _basemap
     
-    @property
     def _cartopy(self):
         if not cartopy_enabled():
             return None
@@ -262,11 +250,10 @@ class LambertConformal(WrfProj):
             central_longitude = self.stand_lon,
             central_latitude = self.moad_cen_lat,
             standard_parallels = self._std_parallels,
-            globe = self._globe)
+            globe = self._globe())
         
         return _cartopy
             
-    @property
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
@@ -280,7 +267,6 @@ class LambertConformal(WrfProj):
         
         return (_xlimits, _ylimits)
     
-    @property
     def _proj4(self):
         truelat2 = (self.truelat1 
                     if _ismissing(self.truelat2) 
@@ -306,7 +292,7 @@ class Mercator(WrfProj):
             if self.truelat1 == 0. or _ismissing(self.truelat1) 
             else self.truelat1) 
         
-    @property
+    
     def _cf_params(self):
         
         _cf_params = {}
@@ -316,7 +302,7 @@ class Mercator(WrfProj):
         
         return _cf_params
     
-    @property
+    
     def _pyngl(self):
         if not pyngl_enabled():
             return None
@@ -334,8 +320,8 @@ class Mercator(WrfProj):
         
         return _pyngl
     
-    @property
-    def _basemap(self):
+    
+    def _basemap(self, resolution='l'):
         if not basemap_enabled():
             return None
                   
@@ -348,11 +334,11 @@ class Mercator(WrfProj):
                 llcrnrlon = self.ll_lon,
                 urcrnrlon = self.ur_lon,
                 rsphere = Constants.WRF_EARTH_RADIUS,
-                resolution = 'l')
+                resolution = resolution)
         
         return _basemap
     
-    @property
+    
     def _cartopy(self):
         if not cartopy_enabled():
             return None
@@ -360,17 +346,17 @@ class Mercator(WrfProj):
         if self._lat_ts == 0.0:
             _cartopy = crs.Mercator(
                                 central_longitude = self.stand_lon,
-                                globe = self._globe)
+                                globe = self._globe())
         
         else:
             _cartopy = MercatorWithLatTS(
                 central_longitude = self.stand_lon,
                 latitude_true_scale = self._lat_ts,
-                globe = self._globe)
+                globe = self._globe())
             
         return _cartopy
     
-    @property
+    
     def _cart_extents(self):
                 
         # Need to modify the extents for the new projection
@@ -384,7 +370,7 @@ class Mercator(WrfProj):
         
         return (_xlimits, _ylimits)
     
-    @property
+    
     def _proj4(self):
         
         _proj4 = ("+proj=merc +units=meters +a={} +b={} "
@@ -406,7 +392,7 @@ class PolarStereographic(WrfProj):
                   if _ismissing(self.truelat1) 
                   else self.truelat1)
     
-    @property
+    
     def _cf_params(self):
         _cf_params = {}
         _cf_params["grid_mapping_name"] = "polar_stereographic"
@@ -417,7 +403,7 @@ class PolarStereographic(WrfProj):
         
         return _cf_params
     
-    @property
+    
     def _pyngl(self):
         if not pyngl_enabled():
             return None
@@ -439,8 +425,8 @@ class PolarStereographic(WrfProj):
         
         return _pyngl
     
-    @property
-    def _basemap(self):
+    
+    def _basemap(self, resolution='l'):
         if not basemap_enabled():
             return None
 
@@ -453,11 +439,11 @@ class PolarStereographic(WrfProj):
             llcrnrlon = self.ll_lon,
             urcrnrlon = self.ur_lon,
             rsphere = Constants.WRF_EARTH_RADIUS,
-            resolution = 'l')
+            resolution = resolution)
         
         return _basemap
     
-    @property
+    
     def _cartopy(self):
         if not cartopy_enabled():
             return None
@@ -465,10 +451,10 @@ class PolarStereographic(WrfProj):
         _cartopy = crs.Stereographic(central_latitude=self._hemi, 
                                           central_longitude=self.stand_lon, 
                                           true_scale_latitude=self._lat_ts, 
-                                          globe=self._globe)
+                                          globe=self._globe())
         return _cartopy
     
-    @property
+    
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
@@ -481,7 +467,7 @@ class PolarStereographic(WrfProj):
         
         return (_xlimits, _ylimits)
     
-    @property
+    
     def _proj4(self):
         _proj4 = ("+proj=stere +units=meters +a={} +b={} "
                        "+lat0={} +lon_0={} +lat_ts={}".format(
@@ -501,13 +487,13 @@ class LatLon(WrfProj):
         super(LatLon, self).__init__(bottom_left, top_right, 
                                          lats, lons, **proj_params)
     
-    @property
+    
     def _cf_params(self):
         _cf_params = {}
         _cf_params["grid_mapping_name"] = "latitude_longitude"
         return _cf_params
     
-    @property
+    
     def _pyngl(self):
         if not pyngl_enabled():
             return None
@@ -525,8 +511,8 @@ class LatLon(WrfProj):
         
         return _pyngl
     
-    @property
-    def _basemap(self):
+    
+    def _basemap(self, resolution='l'):
         if not basemap_enabled():
             return None
         
@@ -538,25 +524,25 @@ class LatLon(WrfProj):
             llcrnrlon = self.ll_lon,
             urcrnrlon = self.ur_lon,
             rsphere = Constants.WRF_EARTH_RADIUS,
-            resolution = 'l')
+            resolution = resolution)
         
         return _basemap
     
-    @property
+    
     def _cartopy(self):
         if not cartopy_enabled():
             return None
         
         _cartopy = crs.PlateCarree(central_longitude=self.stand_lon,
-                                            globe=self._globe)
+                                            globe=self._globe())
         
         return _cartopy
     
-    @property
+    
     def _cart_extents(self):
         return ([self.ll_lon, self.ur_lon], [self.ll_lat, self.ur_lat])
     
-    @property
+    
     def _proj4(self):
         _proj4 = ("+proj=eqc +units=meters +a={} +b={} "
                        "+lon_0={}".format(Constants.WRF_EARTH_RADIUS,
@@ -568,8 +554,7 @@ class LatLon(WrfProj):
 # Each projection system handles this differently.
 # 1) In WRF, if following the WPS instructions, POLE_LON is mainly used to 
 #    determine north or south hemisphere.  In other words, it determines if 
-#    the globe is tipped toward or away from you.  If a non-0 or non-180 
-#    value is chosen, PyNGL cannot plot it.  
+#    the globe is tipped toward or away from you.
 # 2) In WRF, POLE_LAT is always positive, but should be negative in the 
 #    proj4 based systems when using the southern hemisphere projections.
 # 3) In cartopy, pole_longitude is used to describe the dateline, which 
@@ -645,7 +630,7 @@ class RotatedLatLon(WrfProj):
             self._cart_pole_lon = (-self.stand_lon - 180.0 if self._north 
                              else -self.stand_lon)
         
-    @property
+    
     def _cf_params(self):   
         _cf_params = {}
         # Assuming this follows the same guidelines as cartopy
@@ -656,7 +641,7 @@ class RotatedLatLon(WrfProj):
         
         return _cf_params
     
-    @property
+    
     def _pyngl(self):
         if not pyngl_enabled():
             return None
@@ -674,8 +659,8 @@ class RotatedLatLon(WrfProj):
         
         return _pyngl
     
-    @property
-    def _basemap(self):
+    
+    def _basemap(self, resolution='l'):
         if not basemap_enabled():
             return None
         
@@ -688,10 +673,10 @@ class RotatedLatLon(WrfProj):
                                 urcrnrlon = self.ur_lon,
                                 lon_0 = self._bm_lon_0,
                                 rsphere = Constants.WRF_EARTH_RADIUS,
-                                resolution = 'l')
+                                resolution = resolution)
         return _basemap
     
-    @property
+    
     def _cartopy(self):
         if not cartopy_enabled():
             return None
@@ -701,10 +686,10 @@ class RotatedLatLon(WrfProj):
                                 pole_latitude=self._bm_cart_pole_lat, 
                                 central_rotated_longitude=(
                                         180.0 - self.pole_lon), # Probably
-                                globe = self._globe)
+                                globe = self._globe())
         return _cartopy
     
-    @property
+    
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
@@ -717,21 +702,21 @@ class RotatedLatLon(WrfProj):
         
         return (_xlimits, _ylimits)
     
-    @property
+    
     def _proj4(self):
         _proj4 = ("+proj=ob_tran +o_proj=latlon "
-                       "+a={} +b={} +to_meter={} +o_lon_p={} +o_lat_p={} "
-                       "+lon_0={}".format(Constants.WRF_EARTH_RADIUS,
-                                          Constants.WRF_EARTH_RADIUS,
-                                          math.radians(1),
-                                          180.0 - self.pole_lon,
-                                          self._bm_cart_pole_lat,
-                                          180.0 + self._cart_pole_lon))
+                  "+a={} +b={} +to_meter={} +o_lon_p={} +o_lat_p={} "
+                  "+lon_0={}".format(Constants.WRF_EARTH_RADIUS,
+                                     Constants.WRF_EARTH_RADIUS,
+                                     math.radians(1),
+                                     180.0 - self.pole_lon,
+                                     self._bm_cart_pole_lat,
+                                     180.0 + self._cart_pole_lon))
         
         return _proj4
         
 def getproj(bottom_left=None, top_right=None, 
-                 lats=None, lons=None, **proj_params):
+            lats=None, lons=None, **proj_params):
     
     proj_type = proj_params.get("MAP_PROJ", 0)
     if proj_type == 1:

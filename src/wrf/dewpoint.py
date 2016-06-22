@@ -7,7 +7,6 @@ from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
 
-__all__ = ["get_dp", "get_dp_2m"]
 
 @copy_and_set_metadata(copy_varname="QVAPOR", name="td", 
                        description="dew point temperature")

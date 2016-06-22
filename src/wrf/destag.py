@@ -2,11 +2,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from .decorators import handle_extract_transpose
+from .metadecorators import set_destag_metadata
 
-__all__ = ["destagger"]
 
+@set_destag_metadata()
 @handle_extract_transpose(do_transpose=False)
-def destagger(var, stagger_dim):
+def destagger(var, stagger_dim, meta=False):
     """ De-stagger the variable.  
     
     Arguments:
@@ -14,6 +15,7 @@ def destagger(var, stagger_dim):
         - stagger_dim is the dimension of the numpy array to de-stagger 
         (e.g. 0, 1, 2).  Note:  negative values are acceptable to choose
         a dimensions from the right hand side (e.g. -1, -2, -3)
+        - meta - set to True to include 'var' metadata
     
     """
     var_shape = var.shape

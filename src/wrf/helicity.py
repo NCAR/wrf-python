@@ -8,8 +8,6 @@ from .destag import destagger
 from .util import extract_vars, extract_global_attrs, either
 from .metadecorators import copy_and_set_metadata
 
-__all__ = ["get_srh", "get_uh"]
-
 @copy_and_set_metadata(copy_varname="HGT", name="srh", 
                        description="storm relative helicity",
                        units="m-2/s-2")

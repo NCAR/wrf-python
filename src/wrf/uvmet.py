@@ -14,9 +14,6 @@ from .decorators import convert_units
 from .metadecorators import set_wind_metadata
 from .util import extract_vars, extract_global_attrs, either
 
-__all__=["get_uvmet", "get_uvmet10", "get_uvmet_wspd_wdir", 
-         "get_uvmet10_wspd_wdir"]
-
 
 @convert_units("wind", "mps")
 def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True, 
@@ -63,15 +60,15 @@ def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
         # u,v aggregated in to one array
         
         end_idx = -3 if not ten_m else -2
-        resdim = list(u.shape[0:end_idx]) + [2] + list(u.shape[end_idx:])
+        resdim = (2,) + u.shape[0:end_idx] + u.shape[end_idx:]
     
         # Make a new output array for the result
         res = np.empty(resdim, u.dtype)
         
-        # For 2D array, this makes (...,0,:,:) and (...,1,:,:)
-        # For 3D array, this makes (...,0,:,:,:) and (...,1,:,:,:)
-        idx0 = tuple([Ellipsis] + [0] + [slice(None)]*(-end_idx))
-        idx1 = tuple([Ellipsis] + [1] + [slice(None)]*(-end_idx))
+        # For 2D array, this makes (0,...,:,:) and (1,...,:,:)
+        # For 3D array, this makes (0,...,:,:,:) and (1,...,:,:,:)
+        idx0 = (0,) + (Ellipsis,) + (slice(None),)*(-end_idx)
+        idx1 = (1,) + (Ellipsis,) + (slice(None),)*(-end_idx)
     
         res[idx0] = u[:]
         res[idx1] = v[:]
@@ -123,7 +120,7 @@ def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
         
         result = _uvmet(u, v, lat, lon, cen_lon, cone)
         
-        return result
+        return result.squeeze()
 
     
 @set_wind_metadata(copy_varname=either("P", "PRES"), 
@@ -161,10 +158,11 @@ def get_uvmet_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True,
                         cache=None, meta=True,
                         units="mps"):
     
-    uvmet = _get_uvmet(wrfnc, timeidx, False, units, method, squeeze, cache,
-                       meta)
+    uvmet = _get_uvmet(wrfnc, timeidx, method, squeeze, 
+                       cache, meta, False, units)
     
-    return _calc_wspd_wdir(uvmet[...,0,:,:,:], uvmet[...,1,:,:,:], False, units)
+    return _calc_wspd_wdir(uvmet[0,...,:,:,:], uvmet[1,...,:,:,:], 
+                           False, units)
     
 
 @set_wind_metadata(copy_varname=either("PSFC", "F"), 
@@ -179,7 +177,7 @@ def get_uvmet10_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True,
     uvmet10 = _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, 
                          True, units)
     
-    return _calc_wspd_wdir(uvmet10[...,0,:,:], uvmet10[...,1,:,:], True, units)
+    return _calc_wspd_wdir(uvmet10[0,...,:,:], uvmet10[1,...,:,:], True, units)
     
 
             

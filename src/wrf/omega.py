@@ -8,7 +8,6 @@ from .extension import computeomega, _tk
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
 
-__all__ = ["get_omega"]
 
 @copy_and_set_metadata(copy_varname="T", name="omega", 
                        description="omega",

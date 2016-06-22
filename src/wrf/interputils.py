@@ -8,13 +8,12 @@ import numpy as np
 from .extension import _interp2dxy
 from .util import py3range
 
-__all__ = ["to_positive_idxs", "calc_xy", "get_xy_z_params", "get_xy"]
 
 def to_positive_idxs(shape, coord):
     if (coord[-2] >= 0 and coord[-1] >= 0):
         return coord
     
-    return [x if (x >= 0) else shape[i]+x for (i,x) in enumerate(coord) ]
+    return [x if (x >= 0) else shape[-i-1]+x for (i,x) in enumerate(coord) ]
 
 def calc_xy(xdim, ydim, pivot_point=None, angle=None, 
            start_point=None, end_point=None):
@@ -25,15 +24,15 @@ def calc_xy(xdim, ydim, pivot_point=None, angle=None,
     pivot_point - a pivot point of (south_north, west_east) 
                   (must be used with angle)
     angle - the angle through the pivot point in degrees
-    start_point - a start_point sequence of [south_north1, west_east1]
-    end_point - an end point sequence of [south_north2, west_east2]
+    start_point - a start_point sequence of (x, y)
+    end_point - an end point sequence of (x, y)
     
     """ 
     
     # Have a pivot point with an angle to find cross section
     if pivot_point is not None and angle is not None:
-        xp = pivot_point[-1]
-        yp = pivot_point[-2]
+        xp = pivot_point[-2]
+        yp = pivot_point[-1]
         
         if (angle > 315.0 or angle < 45.0 
             or ((angle > 135.0) and (angle < 225.0))):
@@ -97,10 +96,10 @@ def calc_xy(xdim, ydim, pivot_point=None, angle=None,
                 y1 = ydim-1
                 x1 =  (y1 - intercept)/slope
     elif start_point is not None and end_point is not None:
-        x0 = start_point[-1]
-        y0 = start_point[-2]
-        x1 = end_point[-1]
-        y1 = end_point[-2]
+        x0 = start_point[-2]
+        y0 = start_point[-1]
+        x1 = end_point[-2]
+        y1 = end_point[-1]
         if ( x1 > xdim-1 ): 
             x1 = xdim
         if ( y1 > ydim-1): 
@@ -174,7 +173,7 @@ def get_xy(var, pivot_point=None, angle=None,
     if end_point is not None:
         pos_end = to_positive_idxs(var.shape[-2:], end_point)
     else:
-        pos_end = start_point   
+        pos_end = start_point
         
     xdim = var.shape[-1]
     ydim = var.shape[-2]

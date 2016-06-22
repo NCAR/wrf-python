@@ -9,7 +9,6 @@ from .constants import Constants
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
 
-__all__ = ["get_dbz", "get_max_dbz"]
 
 @copy_and_set_metadata(copy_varname="T", name="dbz", 
                        description="radar reflectivity",

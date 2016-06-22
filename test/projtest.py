@@ -27,14 +27,17 @@ except ImportError:
     CARTOPY = False
     
 
-from wrf.var import (get_proj_params, getproj, RotLatLonProj, 
-                     PolarStereographicProj)
+from wrf import get_proj_params
+from wrf.projection import getproj, RotatedLatLon, PolarStereographic
 
 FILE_DIR = "/Users/ladwig/Documents/wrf_files/"
 WRF_FILES = [
+            join(FILE_DIR, "rotated_pole", "EAS_geo_em.d01.nc"),
+            join(FILE_DIR, "rotated_pole", "EUR_geo_em.d01.nc"),
             join(FILE_DIR,"wrfout_d01_2016-02-25_18_00_00"),
             join(FILE_DIR, "wrfout_d01_2008-09-29_23-30-00"),
             join(FILE_DIR, "wrfout_d01_2010-06-13_21:00:00")]
+
 
 def nz_proj():
     lats = np.array([[-47.824014, -47.824014],
@@ -142,7 +145,7 @@ def make_test(wrf_file=None, fixed_case=None):
         elif fixed_case == "dateline_rot":
             lats,lons,proj = dateline_rot_proj()
     
-    print "wrf proj4: {}".format(proj.proj4())
+    print ("wrf proj4: {}".format(proj.proj4()))
     if PYNGL:
         # PyNGL plotting
         wks_type = "png"
@@ -172,7 +175,7 @@ def make_test(wrf_file=None, fixed_case=None):
         bm.drawcoastlines(linewidth=.5)
         #bm.drawparallels(parallels,labels=[1,1,1,1],fontsize=10)
         #bm.drawmeridians(meridians,labels=[1,1,1,1],fontsize=10)
-        print "basemap proj4: {}".format(bm.proj4string) 
+        print ("basemap proj4: {}".format(bm.proj4string)) 
         plt.savefig("basemap_{}.png".format(name_suffix))
         plt.close(fig)
     
@@ -180,7 +183,7 @@ def make_test(wrf_file=None, fixed_case=None):
         # Cartopy plotting
         fig = plt.figure(figsize=(10,10))
         ax = plt.axes([0.1,0.1,0.8,0.8], projection=proj.cartopy())
-        print "cartopy proj4: {}".format(proj.cartopy().proj4_params)
+        print ("cartopy proj4: {}".format(proj.cartopy().proj4_params))
         
         ax.coastlines('50m', linewidth=0.8)
         #print proj.x_extents()

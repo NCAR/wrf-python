@@ -8,8 +8,8 @@ from itertools import product
 from types import GeneratorType
 import datetime as dt
 from math import floor, copysign
-
 from inspect import getmodule
+
 try:
     from inspect import signature
 except ImportError:
@@ -56,10 +56,11 @@ _COORD_PAIR_MAP = {"XLAT" : ("XLAT", "XLONG"),
 _COORD_VARS = ("XLAT", "XLONG", "XLAT_M", "XLONG_M", "XLAT_U", "XLONG_U",
                "XLAT_V", "XLONG_V", "CLAT", "CLONG")
 
-_TIME_COORD_VARS = ("XTIME",)
+_LAT_COORDS = ("XLAT",  "XLAT_M", "XLAT_U",  "XLAT_V",  "CLAT")
 
-def _is_coord_var(varname):
-    return varname in _COORD_VARS
+_LON_COORDS = ("XLONG", "XLONG_M", "XLONG_U","XLONG_V", "CLONG")
+
+_TIME_COORD_VARS = ("XTIME",)
 
 
 def _is_time_coord_var(varname):
@@ -124,6 +125,25 @@ class TestGen(object):
     # Python 3
     def __next__(self):
         return self.next()
+
+def latlon_coordvars(d):
+    lat_coord = None
+    lon_coord = None
+    
+    for name in _LAT_COORDS:
+        if name in viewkeys(d):
+            lat_coord = name
+            break
+        
+    for name in _LON_COORDS:
+        if name in viewkeys(d):
+            lon_coord = name
+            break
+        
+    return lat_coord, lon_coord
+
+def is_coordvar(varname):
+    return varname in _COORD_VARS
 
 class IterWrapper(Iterable):
     """A wrapper class for generators and custom iterable classes which returns
@@ -300,6 +320,24 @@ class combine_dims(object):
         
         return tuple(result)
 
+  
+class from_var(object):
+    def __init__(self, varname, attribute):
+        self.varname = varname
+        self.attribute = attribute
+        
+    def __call__(self, wrapped, *args, **kwargs):
+        vard = from_args(wrapped, (self.varname,), *args, **kwargs)
+        
+        var = None
+        if vard is not None:
+            var = vard[self.varname]
+            
+        if not isinstance(var, DataArray):
+            return None
+        
+        return var.attrs.get(self.attribute, None)
+        
 
 def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     lats = wrfnc.variables[latvar]
@@ -571,7 +609,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
         # WRF files
         coord_attr = getattr(var, "coordinates")
     except AttributeError:
-        if _is_coord_var(varname):
+        if is_coordvar(varname):
             # Coordinate variable (most likely XLAT or XLONG)
             lat_coord, lon_coord = _get_coord_pairs(varname)
             time_coord = None
@@ -1056,7 +1094,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta):
             outdata = outdata[:, np.newaxis, :]
             
         outarr = outdata
-        
+    
     return outarr
 
 def combine_files(wrfseq, varname, timeidx, is_moving=None,
@@ -1091,8 +1129,7 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
             pass
         else:
             if not meta:
-                if isinstance(cache_var, DataArray):
-                    return cache_var.values
+                return npvalues(cache_var)
             
             return cache_var
     
@@ -1238,7 +1275,7 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
         time_idx_or_slice = slice(None)
     
     if varname is not None:
-        if not _is_coord_var(varname):
+        if not is_coordvar(varname):
             coord_names = getattr(wrfnc.variables[varname], 
                                   "coordinates").split()
             lon_coord = coord_names[0]
@@ -1246,8 +1283,7 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
         else:
             lat_coord, lon_coord = _get_coord_pairs(varname)
     else:
-        lat_coord = "XLAT"
-        lon_coord = "XLONG"
+        lat_coord, lon_coord = latlon_coordvars(wrfnc.variables)
     
     return (wrfnc.variables[lat_coord][time_idx_or_slice,:],
             wrfnc.variables[lon_coord][time_idx_or_slice,:],
@@ -1283,6 +1319,24 @@ class CoordPair(object):
     
     def __str__(self):
         return self.__repr__()
+    
+    def xy_str(self, fmt="{:.4f}, {:.4f}"):
+        if self.x is None or self.y is None:
+            return None
+        
+        return fmt.format(self.x, self.y)
+    
+    def latlon_str(self, fmt="{:.4f}, {:.4f}"):
+        if self.lat is None or self.lon is None:
+            return None
+        
+        return fmt.format(self.lat, self.lon)
+    
+    def ij_str(self, fmt="{:.4f}, {:.4f}"):
+        if self.i is None or self.j is None:
+            return None
+        
+        return fmt.format(self.i, self.j)
     
 
 def from_args(func, argnames, *args, **kwargs):

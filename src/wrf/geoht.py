@@ -7,8 +7,6 @@ from .decorators import convert_units
 from .metadecorators import set_height_metadata
 from .util import extract_vars, either
 
-__all__ = ["get_geopt", "get_height"]
-
 def _get_geoht(wrfnc, timeidx, method="cat", squeeze=True, 
                cache=None, meta=True,
                height=True, msl=True):

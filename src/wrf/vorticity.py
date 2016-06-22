@@ -5,7 +5,6 @@ from .extension import computeavo, computepvo
 from .util import extract_vars, extract_global_attrs
 from .metadecorators import copy_and_set_metadata
 
-__all__ = ["get_avo", "get_pvo"]
 
 @copy_and_set_metadata(copy_varname="T", name="avo", 
                        description="absolute vorticity",

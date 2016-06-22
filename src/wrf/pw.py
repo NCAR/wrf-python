@@ -7,7 +7,6 @@ from .constants import Constants
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
 
-__all__ = ["get_pw"]
 
 @copy_and_set_metadata(copy_varname="T", name="pw", 
                        remove_dims=("bottom_top",),

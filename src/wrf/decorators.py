@@ -11,12 +11,10 @@ from .units import do_conversion, check_units
 from .util import (iter_left_indexes, viewitems, viewvalues, from_args, 
                    npvalues, py3range, combine_dims, isstr)
 from .config import xarray_enabled
+from .constants import Constants
 
 if xarray_enabled():
     from xarray import DataArray
-
-__all__ = ["convert_units", "handle_left_iter", "uvmet_left_iter", 
-           "handle_casting", "handle_extract_transpose"]
   
 def convert_units(unit_type, alg_unit):
     """A decorator that applies unit conversion to a function's output array.
@@ -89,6 +87,7 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
         # Start by getting the left-most 'extra' dims
         extra_dims = ref_var_shape[0:extra_dim_num]           
         
+        mask_output = False
         out_inited = False
         for left_idxs in iter_left_indexes(extra_dims):
             # Make the left indexes plus a single slice object
@@ -105,6 +104,32 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
             new_kargs = {key:(val[left_and_slice_idxs] 
                          if key not in _ignore_kargs else val)
                          for key,val in viewitems(kwargs)}
+            
+            # Skip the possible empty/missing arrays for the join method
+            skip_missing = False
+            if out_inited:
+                for i,arg in enumerate(new_args):
+                    if isinstance(arg, DataArray):
+                        arr = npvalues(arg)
+                    elif isinstance(arg, np.ndarray):
+                        arr = arg
+                    else:
+                        continue
+                    
+                    if isinstance(arr, np.ma.MaskedArray):
+                        if arr.mask.all():
+                            if isinstance(output, np.ndarray):
+                                output[left_and_slice_idxs] = (
+                                                    Constants.DEFAULT_FILL)
+                            else:
+                                for arr in output:
+                                    arr[left_and_slice_idxs] = (
+                                                    Constants.DEFAULT_FILL)
+                            skip_missing = True
+                            mask_output = True
+                        
+            if skip_missing:
+                continue
             
             # Call the numerical routine
             result = wrapped(*new_args, **new_kargs)
@@ -156,6 +181,13 @@ def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
                         output[i].mask[left_and_slice_idxs] = outarr.mask[:]
             
         
+        if mask_output:
+            if isinstance(output, np.ndarray):
+                output = ma.masked_values(output, Constants.DEFAULT_FILL)
+            else:
+                output = tuple(ma.masked_values(arr, Constants.DEFAULT_FILL) 
+                               for arr in output)
+                
         return output
     
     return func_wrapper
@@ -178,7 +210,7 @@ def left_iter_nocopy(ref_var_expected_dims,
     Arguments:
         - ref_var_expected_dims - the number of dimensions that the Fortran 
         algorithm is expecting for the reference variable
-        - ref_var_right_ndims - the number of ndims from the right to keep for
+        - ref_var_right_ndims - the number of dims from the right to keep for
         the reference variable when making the output.  Can also be a 
         combine_dims instance if the sizes are determined from multiple 
         variables.
@@ -236,8 +268,9 @@ def left_iter_nocopy(ref_var_expected_dims,
         
         if "outview" not in kwargs:
             outd = OrderedDict((outkey, np.empty(outdims, alg_dtype))
-                    for outkey in _outkeys)
+                                   for outkey in _outkeys)
         
+        mask_output = False
         for left_idxs in iter_left_indexes(extra_dims):
             # Make the left indexes plus a single slice object
             # The single slice will handle all the dimensions to
@@ -255,6 +288,28 @@ def left_iter_nocopy(ref_var_expected_dims,
                          if key not in _ignore_kargs else val)
                          for key,val in viewitems(kwargs)}
             
+            # Skip the possible empty/missing arrays for the join method
+            skip_missing = False
+            for arg in new_args:
+                if isinstance(arg, DataArray):
+                    arr = npvalues(arg)
+                elif isinstance(arg, np.ndarray):
+                    arr = arg
+                else:
+                    continue
+                
+                if isinstance(arr, np.ma.MaskedArray):
+                    if arr.mask.all():
+                        
+                        for output in viewvalues(outd):
+                            output[left_and_slice_idxs] = (
+                                            Constants.DEFAULT_FILL)
+                        skip_missing = True
+                        mask_output = True
+            
+            if skip_missing:
+                continue
+            
             
             # Insert the output views if one hasn't been provided
             if "outview" not in new_kargs:
@@ -269,17 +324,28 @@ def left_iter_nocopy(ref_var_expected_dims,
             if (result.__array_interface__["data"][0] != 
                 outview.__array_interface__["data"][0]):
                 raise RuntimeError("output array was copied")
-            
+        
+        
         if len(outd) == 1:
             output = next(iter(viewvalues(outd)))
         else:
             output = tuple(arr for arr in viewvalues(outd))
-            
+        
+        
+        
         if cast_output:
             if isinstance(output, np.ndarray):
                 output = output.astype(ref_var_dtype)
             else:
                 output = tuple(arr.astype(ref_var_dtype) for arr in output)
+        
+        # Mostly when used with join
+        if mask_output:
+            if isinstance(output, np.ndarray):
+                output = np.ma.masked_values(output, Constants.DEFAULT_FILL)
+            else:
+                output = tuple(masked_values(arr, Constants.DEFAULT_FILL) 
+                               for arr in output)
         
         return output
     
@@ -420,6 +486,42 @@ def handle_extract_transpose(do_transpose=True, outviews="outview"):
                          for x in result)
         
         return result
+    
+    return func_wrapper
+
+
+def check_args(refvaridx, refvarndim, rightdims):
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        
+        refvar = args[refvaridx]
+        extra_dims = refvar.ndim - refvarndim
+        ref_right_sizes = refvar.shape[extra_dims:]
+        
+        for i,ndim in enumerate(rightdims):
+            if ndim is None:
+                continue
+            
+            var = args[i]
+            
+            right_var_ndims = rightdims[i]
+            
+            # Check that the number of dims is correct
+            if (var.ndim - extra_dims != right_var_ndims):
+                raise ValueError("invalid number of dimensions for argument "
+                                 "{} (got {}, expected {}).".format(i, 
+                                                var.ndim,
+                                                right_var_ndims + extra_dims))
+            
+            # Check that right dimensions are lined up
+            if (var.shape[-right_var_ndims:] != 
+                ref_right_sizes[-right_var_ndims:]):
+                raise ValueError("invalid shape for argument "
+                                 "{} (got {}, expected {})".format(i, 
+                                        var.shape[-right_var_ndims:],
+                                        ref_right_sizes[-right_var_ndims:]))
+        
+        return wrapped(*args, **kwargs)
     
     return func_wrapper
     

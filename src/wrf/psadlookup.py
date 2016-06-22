@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as n
 
-__all__ = ["get_lookup_tables"]
 
 _THETA_DIM = 150
 _PRS_DIM = 150

@@ -11,7 +11,6 @@ from .constants import Constants, ConversionFactors
 from .util import extract_vars, combine_with
 from .metadecorators import copy_and_set_metadata
 
-__all__ = ["get_2dcape", "get_3dcape"]
 
 @copy_and_set_metadata(copy_varname="T", 
                        name="cape_2d",
@@ -25,6 +24,7 @@ def get_2dcape(wrfnc, timeidx=0, method="cat",
                squeeze=True, cache=None, meta=True,
                missing=Constants.DEFAULT_FILL):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
+
     varnames = ("T", "P", "PB", "QVAPOR", "PH","PHB", "HGT", "PSFC")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
                           meta=False)

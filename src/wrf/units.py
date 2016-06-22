@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
 
 from .constants import Constants, ConversionFactors
 
-__all__ = ["check_units", "do_conversion"]
 
 # Handles unit conversions that only differ by multiplication factors
 def _apply_conv_fact(var, vartype, var_unit, dest_unit):

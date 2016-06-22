@@ -691,7 +691,7 @@ END SUBROUTINE DGETIJLATLONG
 
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
-                        cen_long, cone, rpd, nx, ny, nz, nxp1, nyp1, &
+                        cen_long, cone, rpd, nx, ny, nxp1, nyp1, &
                         istag, is_msg_val, umsg, vmsg, uvmetmsg)
     IMPLICIT NONE
 
@@ -701,22 +701,22 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
     !f2py threadsafe
     !f2py intent(in,out) :: uvmet
 
-    INTEGER,INTENT(IN) :: nx,ny,nz,nxp1,nyp1,istag
+    INTEGER,INTENT(IN) :: nx,ny,nxp1,nyp1,istag
     LOGICAL,INTENT(IN) :: is_msg_val
-    REAL(KIND=8), DIMENSION(nxp1,ny,nz), INTENT(IN):: u
-    REAL(KIND=8), DIMENSION(nx,nyp1,nz), INTENT(IN) :: v
+    REAL(KIND=8), DIMENSION(nxp1,ny), INTENT(IN):: u
+    REAL(KIND=8), DIMENSION(nx,nyp1), INTENT(IN) :: v
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: flong
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: flat
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(INOUT) :: longca
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(INOUT) :: longcb
     REAL(KIND=8), INTENT(IN) :: cen_long,cone,rpd
     REAL(KIND=8), INTENT(IN) :: umsg,vmsg,uvmetmsg
-    REAL(KIND=8), DIMENSION(nx,ny,nz,2), INTENT(OUT) :: uvmet
+    REAL(KIND=8), DIMENSION(nx,ny,2), INTENT(OUT) :: uvmet
 
 
 ! NCLEND
 
-    INTEGER :: i,j,k
+    INTEGER :: i,j
     REAL(KIND=8) :: uk,vk
 
     ! msg stands for missing value in this code
@@ -745,32 +745,30 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
     END DO
 
     !      WRITE (6,FMT=*) ' computing velocities '
-    DO k = 1,nz
-        DO j = 1,ny
-            DO i = 1,nx
-                IF (istag.EQ.1) THEN
-                    IF (is_msg_val .AND. (u(i,j,k) .EQ. umsg .OR. v(i,j,k) .EQ. vmsg &
-                        .OR. u(i+1,j,k) .EQ. umsg .OR. v(i,j+1,k) .EQ. vmsg)) THEN
-                        uvmet(i,j,k,1) = uvmetmsg
-                        uvmet(i,j,k,2) = uvmetmsg
-                    ELSE
-                        uk = 0.5D0* (u(i,j,k)+u(i+1,j,k))
-                        vk = 0.5D0* (v(i,j,k)+v(i,j+1,k))
-                        uvmet(i,j,k,1) = vk*longcb(i,j) + uk*longca(i,j)
-                        uvmet(i,j,k,2) = vk*longca(i,j) - uk*longcb(i,j)
-                    END IF
+    DO j = 1,ny
+        DO i = 1,nx
+            IF (istag.EQ.1) THEN
+                IF (is_msg_val .AND. (u(i,j) .EQ. umsg .OR. v(i,j) .EQ. vmsg &
+                    .OR. u(i+1,j) .EQ. umsg .OR. v(i,j+1) .EQ. vmsg)) THEN
+                    uvmet(i,j,1) = uvmetmsg
+                    uvmet(i,j,2) = uvmetmsg
                 ELSE
-                    IF (is_msg_val .AND. (u(i,j,k) .EQ. umsg .OR. v(i,j,k) .EQ. vmsg)) THEN
-                        uvmet(i,j,k,1) = uvmetmsg
-                        uvmet(i,j,k,2) = uvmetmsg
-                    ELSE
-                        uk = u(i,j,k)
-                        vk = v(i,j,k)
-                        uvmet(i,j,k,1) = vk*longcb(i,j) + uk*longca(i,j)
-                        uvmet(i,j,k,2) = vk*longca(i,j) - uk*longcb(i,j)
-                    END IF
+                    uk = 0.5D0* (u(i,j)+u(i+1,j))
+                    vk = 0.5D0* (v(i,j)+v(i,j+1))
+                    uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
+                    uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
                 END IF
-            END DO
+            ELSE
+                IF (is_msg_val .AND. (u(i,j) .EQ. umsg .OR. v(i,j) .EQ. vmsg)) THEN
+                    uvmet(i,j,1) = uvmetmsg
+                    uvmet(i,j,2) = uvmetmsg
+                ELSE
+                    uk = u(i,j)
+                    vk = v(i,j)
+                    uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
+                    uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
+                END IF
+            END IF
         END DO
     END DO
 

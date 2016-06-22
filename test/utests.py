@@ -47,6 +47,7 @@ def setUpModule():
 # http://eli.thegreenplace.net/2014/04/02/dynamically-generating-python-test-cases
 def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
     def test(self):
+
         try:
             from netCDF4 import Dataset as NetCDF
         except:
@@ -88,7 +89,10 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             ref_vals = refnc.variables[varname][:]
         else:
             data = refnc.variables[varname][:]
-            new_dims = [repeat] + [x for x in data.shape]
+            if varname != "uvmet" and varname != "uvmet10":
+                new_dims = [repeat] + [x for x in data.shape]
+            else:
+                new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
             masked=False
             if (isinstance(data, ma.core.MaskedArray)):
                 masked=True
@@ -99,10 +103,20 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                 ref_vals = ma.asarray(n.zeros(new_dims, data.dtype))
                 
             for i in xrange(repeat):
-                ref_vals[i,:] = data[:]
+                if varname != "uvmet" and varname != "uvmet10":
+                    ref_vals[i,:] = data[:]
                 
-                if masked:
-                    ref_vals.mask[i,:] = data.mask[:]
+                    if masked:
+                        ref_vals.mask[i,:] = data.mask[:]
+                else:
+                    ref_vals[0, i, :] = data[0,:]
+                    ref_vals[1, i, :] = data[1,:]
+                    
+                    if masked:
+                        ref_vals.mask[0,i,:] = data.mask[:]
+                        ref_vals.mask[1,i,:] = data.mask[:]
+                    
+                    
         
         if (varname == "tc"):
             my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
@@ -217,7 +231,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
-            pivot_point = (hts.shape[-2] / 2, hts.shape[-1] / 2) 
+            pivot_point = (hts.shape[-1] / 2, hts.shape[-2] / 2) 
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
 
             nt.assert_allclose(npvalues(ht_cross), ref_ht_cross, rtol=.01)
@@ -229,8 +243,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                                ref_p_cross, 
                                rtol=.01)
             # Test point to point
-            start_point = (hts.shape[-2]/2, 0)
-            end_point = (hts.shape[-2]/2, -1)
+            start_point = (0,hts.shape[-2]/2)
+            end_point = (-1,hts.shape[-2]/2)
             
             p_cross2 = vertcross(p,hts,start_point=start_point, 
                                 end_point=end_point)
@@ -243,15 +257,15 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_t2_line = _get_refvals(referent, "t2_line", repeat, multi)
             
             t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
-            pivot_point = (t2.shape[-2] / 2, t2.shape[-1] / 2) 
+            pivot_point = (t2.shape[-1] / 2, t2.shape[-2] / 2)
             
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
             nt.assert_allclose(npvalues(t2_line1), ref_t2_line)
             
             # Test point to point
-            start_point = (t2.shape[-2]/2, 0)
-            end_point = (t2.shape[-2]/2, -1)
+            start_point = (0, t2.shape[-2]/2)
+            end_point = (-1, t2.shape[-2]/2)
             
             t2_line2 = interpline(t2, start_point=start_point, 
                                   end_point=end_point)

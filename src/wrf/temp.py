@@ -8,8 +8,6 @@ from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
 
-__all__ = ["get_theta", "get_temp", "get_eth", "get_tv", "get_tw",
-           "get_tk", "get_tc"]
 
 @copy_and_set_metadata(copy_varname="T", name="theta", 
                        description="potential temperature")

@@ -5,7 +5,6 @@ from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars, either
 
-__all__ = ["get_pressure", "get_pressure_hpa"]
 
 @copy_and_set_metadata(copy_varname=either("P", "PRES"), name="pressure", 
                        description="pressure")

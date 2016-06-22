@@ -9,9 +9,6 @@ from .util import extract_vars, either
 from .decorators import convert_units
 from .metadecorators import set_wind_metadata
 
-__all__ = ["get_u_destag", "get_v_destag", "get_w_destag",
-           "get_destag_wspd_wdir", "get_destag_wspd_wdir10"]
-
 
 @convert_units("wind", "mps")
 def _calc_wspd(u, v, units="mps"):
@@ -33,13 +30,13 @@ def _calc_wspd_wdir(u, v, two_d, units):
 
     res = np.zeros(outdims, wspd.dtype)
     
-    idxs0 = ((Ellipsis, 0, slice(None), slice(None), slice(None)) 
+    idxs0 = ((0,Ellipsis, slice(None), slice(None), slice(None)) 
             if not two_d else 
-            (Ellipsis, 0, slice(None), slice(None)))
+            (1,Ellipsis, slice(None), slice(None)))
     
-    idxs1 = ((Ellipsis, 1, slice(None), slice(None), slice(None)) 
+    idxs1 = ((1, Ellipsis, slice(None), slice(None), slice(None)) 
             if not two_d else 
-            (Ellipsis, 1, slice(None), slice(None)))
+            (0, Ellipsis, slice(None), slice(None)))
     
     res[idxs0] = wspd[:]
     res[idxs1] = wdir[:]

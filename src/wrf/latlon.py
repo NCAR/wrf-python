@@ -6,9 +6,6 @@ from .latlonutils import (_lat_varname, _lon_varname, ll_to_ij, ij_to_ll)
 from .metadecorators import set_latlon_metadata
 
 
-__all__ = ["get_lat", "get_lon", "get_ij", "get_ll"]
-
-
 def get_lat(wrfnc, timeidx=0, method="cat", squeeze=True, 
             cache=None, meta=True,
             stagger=None):
@@ -31,6 +28,7 @@ def get_lon(wrfnc, timeidx=0, method="cat", squeeze=True,
     return lon_var[varname]
 
 
+# TODO:  Rename these!
 @set_latlon_metadata(ij=True) 
 def get_ij(wrfnc, latitude, longitude, timeidx=0,
            stagger=None, method="cat", squeeze=True, cache=None, meta=True):

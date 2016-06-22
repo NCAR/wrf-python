@@ -9,7 +9,6 @@ from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
 
-__all__ = ["get_slp"]
 
 @copy_and_set_metadata(copy_varname="T", name="slp",
                        remove_dims=("bottom_top",), 

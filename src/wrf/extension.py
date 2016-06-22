@@ -23,9 +23,9 @@ from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
 
 from .decorators import (handle_left_iter, handle_casting, 
                          handle_extract_transpose)
-from .decorators import (left_iter_nocopy)
+from .decorators import (left_iter_nocopy, check_args)
 from .util import py3range, combine_dims, _npbytes_to_str
-from .uvdecorator import uvmet_left_iter, uvmet_left_iter_nocopy
+from .uvdecorator import uvmet_left_iter_nocopy
 
 __all__ = []
 # __all__ += ["FortranException", "computeslp", "computetk", "computetd", 
@@ -57,6 +57,7 @@ class FortranException(Exception):
 #                       missingval)
 #     return result
 
+@check_args(0, 3, (3, 3, None, None))
 @left_iter_nocopy(3, 2, ref_var_idx=0, ignore_args=(2,3))
 @handle_casting(arg_idxs=(0,1))
 @handle_extract_transpose()
@@ -79,6 +80,7 @@ def _interpz3d(field3d, z, desiredloc, missingval, outview=None):
 #                        xy)
 #     return result
 
+@check_args(0, 3, (3,))
 @left_iter_nocopy(3, combine_dims([(0,-3),(1,-2)]), ref_var_idx=0, 
                   ignore_args=(1,))
 @handle_casting(arg_idxs=(0,1))
@@ -104,14 +106,15 @@ def _interp2dxy(field3d, xy, outview=None):
 #     
 #     return result
 
-@left_iter_nocopy(1, 1, ref_var_idx=0, ignore_args=(2,3))
+@check_args(0, 1, (1,1,None,None))
+@left_iter_nocopy(1, combine_dims([(2,0)]), ref_var_idx=0, ignore_args=(2,3))
 @handle_casting(arg_idxs=(0,1,2))
 @handle_extract_transpose()
 def _interp1d(v_in, z_in, z_out, missingval, outview=None):
     
     if outview is None:
         outview = np.empty_like(z_out)
-        
+
     result = dinterp1d(v_in,
                        outview,
                        z_in,
@@ -201,7 +204,8 @@ def _interpline(field2d, xy, outview=None):
 #     
 #     return result
 
-                             
+
+@check_args(0, 3, (3,3,3,3))                         
 @left_iter_nocopy(3, 2, ref_var_idx=0)
 @handle_casting(arg_idxs=(0,1,2,3))
 @handle_extract_transpose()
@@ -246,7 +250,9 @@ def _slp(z, t, p, q, outview=None):
 #     return result
 
 
-# Note: No left iteration decorator needed with 1D arrays
+
+@check_args(0, 3, (3,3))
+@left_iter_nocopy(3, 3, ref_var_idx=0)
 @handle_casting(arg_idxs=(0,1))
 @handle_extract_transpose()
 def _tk(pressure, theta, outview=None):
@@ -259,7 +265,7 @@ def _tk(pressure, theta, outview=None):
                      theta.ravel(order="A"))
     result = np.reshape(result, shape, order="F")
     
-    return result
+    return result 
 
 # Note: No left iteration decorator needed with 1D arrays
 # @handle_casting(arg_idxs=(0,1))
@@ -271,13 +277,15 @@ def _tk(pressure, theta, outview=None):
 #     result = np.reshape(result, shape, order="F")
 #     return result
 
-# Note: No left iteration decorator needed with 1D arrays
+@check_args(0, 2, (2,2))
+@left_iter_nocopy(2, 2, ref_var_idx=0)
 @handle_casting(arg_idxs=(0,1))
 @handle_extract_transpose()
 def _td(pressure, qv_in, outview=None):
     shape = pressure.shape
     if outview is None:
         outview = np.empty_like(pressure)
+    
     result = dcomputetd(outview.ravel(order="A"),
                         pressure.ravel(order="A"), 
                         qv_in.ravel(order="A"))
@@ -297,6 +305,8 @@ def _td(pressure, qv_in, outview=None):
 #     return result
 
 # Note:  No left iteration decorator needed with 1D arrays
+@check_args(0, 2, (2,2,2))
+@left_iter_nocopy(2, 2, ref_var_idx=0)
 @handle_casting(arg_idxs=(0,1,2))
 @handle_extract_transpose()
 def _rh(qv, q, t, outview=None):
@@ -399,11 +409,6 @@ def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False,
     longca = np.zeros(lat.shape[0:2], np.float64, order="F")
     longcb = np.zeros(lon.shape[0:2], np.float64, order="F")
     rpd = Constants.PI/180.
-    
-    # Make the 2D array a 3D array with 1 dimension
-    if u.ndim < 3:
-        u = u[:, :, np.newaxis]
-        v = v[:, :, np.newaxis]
         
     if outview is None:
         outdims = u.shape + (2,)
@@ -425,7 +430,7 @@ def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False,
                            vmissing,
                            uvmetmissing)
     
-    return np.squeeze(result)
+    return result
 
 @handle_left_iter(3,0)
 @handle_casting(arg_idxs=(0,1,2,3))
@@ -543,10 +548,8 @@ def computedbz(p, tk, qv, qr, qs, qg, sn0, ivarint, iliqskin):
 @handle_casting(arg_idxs=(0,1,2,3,4,5))
 @handle_extract_transpose()
 def computecape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow):
-    flip_cape = np.zeros((p_hpa.shape[0], p_hpa.shape[1], p_hpa.shape[2]), 
-                        np.float64, order="F")
-    flip_cin = np.zeros((p_hpa.shape[0], p_hpa.shape[1], p_hpa.shape[2]), 
-                       np.float64, order="F")
+    flip_cape = np.zeros(p_hpa.shape[0:3], np.float64, order="F")
+    flip_cin = np.zeros(p_hpa.shape[0:3], np.float64, order="F")
     PSADITHTE, PSADIPRS, PSADITMK = get_lookup_tables()
     PSADITMK = PSADITMK.T
     

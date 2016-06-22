@@ -11,7 +11,6 @@ from .decorators import convert_units
 from .metadecorators import copy_and_set_metadata
 from .util import extract_vars
 
-__all__ = ["get_ctt"]
 
 @copy_and_set_metadata(copy_varname="T", name="ctt",
                        remove_dims=("bottom_top",),

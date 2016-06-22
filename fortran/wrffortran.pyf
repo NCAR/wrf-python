@@ -127,11 +127,11 @@ python module _wrffortran ! in
             integer, optional,intent(in),check(shape(lat_array,1)==ny),depend(lat_array) :: ny=shape(lat_array,1)
             integer intent(in) :: imsg
         end subroutine dgetijlatlong
-        subroutine dcomputeuvmet(u,v,uvmet,longca,longcb,flong,flat,cen_long,cone,rpd,nx,ny,nz,nxp1,nyp1,istag,is_msg_val,umsg,vmsg,uvmetmsg) ! in :_wrffortran:wrf_user.f90
+        subroutine dcomputeuvmet(u,v,uvmet,longca,longcb,flong,flat,cen_long,cone,rpd,nx,ny,nxp1,nyp1,istag,is_msg_val,umsg,vmsg,uvmetmsg) ! in :_wrffortran:wrf_user.f90
             threadsafe 
-            real(kind=8) dimension(nxp1,ny,nz),intent(in) :: u
-            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nz) :: v
-            real(kind=8) dimension(nx,ny,nz,2),intent(out,in),depend(nx,ny,nz) :: uvmet
+            real(kind=8) dimension(nxp1,ny),intent(in) :: u
+            real(kind=8) dimension(nx,nyp1),intent(in) :: v
+            real(kind=8) dimension(nx,ny,2),intent(out,in),depend(nx,ny) :: uvmet
             real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: longca
             real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: longcb
             real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: flong
@@ -141,7 +141,6 @@ python module _wrffortran ! in
             real(kind=8) intent(in) :: rpd
             integer, optional,intent(in),check(shape(v,0)==nx),depend(v) :: nx=shape(v,0)
             integer, optional,intent(in),check(shape(u,1)==ny),depend(u) :: ny=shape(u,1)
-            integer, optional,intent(in),check(shape(u,2)==nz),depend(u) :: nz=shape(u,2)
             integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
             integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
             integer intent(in) :: istag
