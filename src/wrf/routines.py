@@ -170,15 +170,15 @@ def getvar(wrfnc, varname, timeidx=0,
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
     | ctt                | Cloud Top Temperature                                         | C                   |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | dbz                | Reflectivity                                                  | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
-    |                    |                                                               |                     | do_liqskin : Set to True to enable liquid skin calculation. Default is False.                 |
+    | dbz                | Reflectivity                                                  | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
+    |                    |                                                               |                     | do_liqskin : Set to True to enable liquid skin calculation. Default is False.                 |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | mdbz               | Maximum Reflectivity                                          | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
-    |                    |                                                               |                     | do_liqskin: Set to True to enable liquid skin calculation. Default is False.                  |
+    | mdbz               | Maximum Reflectivity                                          | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
+    |                    |                                                               |                     | do_liqskin: Set to True to enable liquid skin calculation. Default is False.                  |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
     | geopt/geopotential | Full Model Geopotential                                       | m2 s-2              |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | helicity           | Storm Relative Helicity                                       | m-2/s-2             | top: The top level for the calculation in meters (float). Default is 3000.0.                  |
+    | helicity           | Storm Relative Helicity                                       | m-2/s-2             | top: The top level for the calculation in meters (float). Default is 3000.0.                  |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
     | lat                | Latitude                                                      | decimal degrees     |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
@@ -216,20 +216,20 @@ def getvar(wrfnc, varname, timeidx=0,
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
     | twb                | Wet Bulb Temperature                                          | K                   |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | updraft_helicity   | Updraft Helicity                                              | m-2/s-2             | bottom: The bottom level for the calculation in meters (float). Default is 2000.0.            |                                                              
-    |                    |                                                               |                     | top: The top level for the calculation in meters (float). Default is 5000.0.                  |
+    | updraft_helicity   | Updraft Helicity                                              | m-2/s-2             | bottom: The bottom level for the calculation in meters (float). Default is 2000.0.            |                                                              
+    |                    |                                                               |                     | top: The top level for the calculation in meters (float). Default is 5000.0.                  |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | ua                 | U-component of Wind on Mass Points                            | m/s                 |                                                                                               |
+    | ua                 | U-component of Wind on Mass Points                            | m/s                 |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | va                 | V-component of Wind on Mass Points                            | m/s                 |                                                                                               |
+    | va                 | V-component of Wind on Mass Points                            | m/s                 |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | wa                 | W-component of Wind on Mass Points                            | m/s                 |                                                                                               |
+    | wa                 | W-component of Wind on Mass Points                            | m/s                 |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | uvmet10            | 10 m U and V Components of Wind Rotated to Earth Coordinates  | m/s                 |                                                                                               |
+    | uvmet10            | 10 m U and V Components of Wind Rotated to Earth Coordinates  | m/s                 |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | uvmet              | U and V Components of Wind Rotated to Earth Coordinates       | m/s                 |                                                                                               |
+    | uvmet              | U and V Components of Wind Rotated to Earth Coordinates       | m/s                 |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | z/height           | Full Model Height                                             | m                   | msl: Set to False to return AGL values. Otherwise, MSL.  Default is True.                     |
+    | z/height           | Full Model Height                                             | m                   | msl: Set to False to return AGL values. Otherwise, MSL.  Default is True.                     |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
 
 
