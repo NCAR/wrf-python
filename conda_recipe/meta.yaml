@@ -3,11 +3,11 @@ package:
   version: "0.0.1"
 
 source:
-  git_url: https://github.com/NCAR/wrf-python.git
+  git_url: git@github.com:NCAR/wrf-python.git
   git_rev: WRF_Workshop_2016
 
 build:
-  number: 1
+  number: 5
   detect_binary_files_with_prefix: true
 
 requirements:
@@ -15,11 +15,13 @@ requirements:
     - numpy x.x
     - gcc
     - python
+    - libgcc 4.8.5
 
   run:
     - numpy x.x
     - python
     - wrapt 
+    - libgcc 4.8.5
 
 test:
   requires:
