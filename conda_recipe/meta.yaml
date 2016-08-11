@@ -4,7 +4,7 @@ package:
 
 source:
   git_url: git@github.com:NCAR/wrf-python.git
-  git_rev: WRF_Workshop_2016
+  git_rev: prebeta.0.1
 
 build:
   number: 5
