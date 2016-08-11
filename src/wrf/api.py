@@ -6,27 +6,31 @@ from .constants import ALL_TIMES, Constants, ConversionFactors
 from .destag import destagger
 from .routines import getvar
 from .computation import (xy, interp1d, interp2dxy, interpz3d, slp, tk, td, rh, 
-                          uvmet, smooth2d)
+                          uvmet, smooth2d, cape_2d, cape_3d, cloudfrac)
 from .interp import (interplevel, vertcross, interpline, vinterp)
-from .util import (viewitems, viewkeys, viewvalues, isstr, py2round, 
-                   py3range, ucode, npvalues, extract_global_attrs, 
+from .latlon import (xy_to_ll, ll_to_xy)
+from .py3compat import (viewitems, viewkeys, viewvalues, isstr, py2round, 
+                        py3range, ucode)
+from .util import (npvalues, extract_global_attrs, 
                    extract_dim, extract_vars, extract_times, combine_files, 
                    is_staggered, get_left_indexes, iter_left_indexes, 
                    get_right_slices, get_proj_params)
 
 __all__ = []
 __all__ += ["xarray_enabled", "disable_xarray", "enable_xarray",
-               "cartopy_enabled", "enable_cartopy", "enable_cartopy",
-               "basemap_enabled", "disable_basemap", "enable_basemap",
-               "pyngl_enabled", "enable_pyngl", "disable_pyngl"]
+            "cartopy_enabled", "enable_cartopy", "enable_cartopy",
+            "basemap_enabled", "disable_basemap", "enable_basemap",
+            "pyngl_enabled", "enable_pyngl", "disable_pyngl"]
 __all__ += ["ALL_TIMES", "Constants", "ConversionFactors"]
 __all__ += ["destagger"]
 __all__ += ["getvar"]
-__all__ += ["xy", "interp1d", "interp2dxy", "interpz3d", "slp", "tk", "td", "rh", 
-            "uvmet", "smooth2d"]
+__all__ += ["xy", "interp1d", "interp2dxy", "interpz3d", "slp", "tk", "td", 
+            "rh", "uvmet", "smooth2d", "cape_2d", "cape_3d", "cloudfrac"]
 __all__ += ["interplevel", "vertcross", "interpline", "vinterp"]
+__all__ += ["xy_to_ll", "ll_to_xy"]
 __all__ += ["viewitems", "viewkeys", "viewvalues", "isstr", "py2round", 
-            "py3range", "ucode", "npvalues", "extract_global_attrs", 
+            "py3range", "ucode"]
+__all__ += ["npvalues", "extract_global_attrs", 
             "extract_dim", "extract_vars", "extract_times", "combine_files", 
             "is_staggered", "get_left_indexes", "iter_left_indexes", 
             "get_right_slices", "get_proj_params"]

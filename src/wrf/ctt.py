@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as n
 
 #from .extension import computectt, computetk
-from .extension import computectt, _tk
+from .extension import _ctt, _tk
 from .constants import Constants, ConversionFactors
 from .destag import destagger
 from .decorators import convert_units 
@@ -61,6 +61,6 @@ def get_ctt(wrfnc, timeidx=0, method="cat",
     geopt_unstag = destagger(geopt, -3)
     ght = geopt_unstag / Constants.G
     
-    ctt = computectt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci)
+    ctt = _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci)
     
     return ctt

@@ -1,7 +1,7 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .util import _get_iterable, is_standard_wrf_var, extract_vars, viewkeys
+from .util import get_iterable, is_standard_wrf_var, extract_vars, viewkeys
 from .cape import get_2dcape, get_3dcape
 from .ctt import get_ctt
 from .dbz import get_dbz, get_max_dbz
@@ -22,6 +22,7 @@ from .vorticity import get_avo, get_pvo
 from .wind import (get_destag_wspd_wdir, get_destag_wspd_wdir10, 
                    get_u_destag, get_v_destag, get_w_destag)
 from .times import get_times
+from .cloudfrac import get_cloudfrac
 
 
 # func is the function to call.  kargs are required arguments that should 
@@ -65,7 +66,8 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "wspd_wdir10" : get_destag_wspd_wdir10,
              "wspd_wdir_uvmet" : get_uvmet_wspd_wdir,
              "wspd_wdir_uvmet10" : get_uvmet10_wspd_wdir,
-             "ctt" : get_ctt
+             "ctt" : get_ctt,
+             "cloudfrac" : get_cloudfrac
              }
   
 _VALID_KARGS = {"cape2d" : ["missing"],
@@ -108,6 +110,7 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "wspd_wdir_uvmet" : ["units"],
              "wspd_wdir_uvmet10" : ["units"],  
              "ctt" : [],
+             "cloudfrac" : [],
              "default" : []
             }
   
@@ -170,6 +173,8 @@ def getvar(wrfnc, varname, timeidx=0,
     | cape_3d            | 3D cape and cin                                               | J/kg                | missing: Fill value for output only (float)                                                   |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
     | ctt                | Cloud Top Temperature                                         | C                   |                                                                                               |
+    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
+    | cloudfrac          | Cloud Fraction                                                | %                   |                                                                                               |
     +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
     | dbz                | Reflectivity                                                  | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
     |                    |                                                               |                     | do_liqskin : Set to True to enable liquid skin calculation. Default is False.                 |
@@ -270,15 +275,15 @@ def getvar(wrfnc, varname, timeidx=0,
    
     Returns
     -------
-    out : 'xarray.DataArray` or `numpy.ndarray`
-        Returns the specififed diagnostics output.  If xarray is enabled and 
+    `xarray.DataArray` or `numpy.ndarray`
+        Returns the specified diagnostics output.  If xarray is enabled and 
         the meta parameter is True, then the result will be an 
         `xarray.DataArray` object.  Otherwise, the result will be a 
         `numpy.ndarray` object with no metadata.
     
     """
     
-    wrfnc = _get_iterable(wrfnc)
+    wrfnc = get_iterable(wrfnc)
     
     if is_standard_wrf_var(wrfnc, varname):
         return extract_vars(wrfnc, timeidx, varname, 

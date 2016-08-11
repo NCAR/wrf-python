@@ -9,7 +9,7 @@ import numpy.ma as ma
 #                         computeinterpline)
 
 from .extension import (_interpz3d, _interp2dxy, _interp1d, _vertcross,
-                        _interpline, _smooth2d, monotonic, vintrp)
+                        _interpline, _smooth2d, _monotonic, _vintrp)
 
 from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered
@@ -51,7 +51,7 @@ def interplevel(field3d, z, desiredlev, missing=Constants.DEFAULT_FILL,
         
     Returns
     -------
-    out : 'xarray.DataArray` or `numpy.ndarray`
+    `xarray.DataArray` or `numpy.ndarray`
         Returns the interpolated variable.  If xarray is enabled and 
         the meta parameter is True, then the result will be an 
         `xarray.DataArray` object.  Otherwise, the result will be a 
@@ -70,7 +70,7 @@ def vertcross(field3d, z, missing=Constants.DEFAULT_FILL,
               include_latlon=False, 
               cache=None, meta=True):
     """Return the vertical cross section for a 3D field, interpolated 
-    to a verical plane defined by a horizontal line.
+    to a vertical plane defined by a horizontal line.
     
     The horizontal line is defined by either including the 
     `pivot_point` and `angle` parameters, or the `start_point` and 
@@ -123,7 +123,7 @@ def vertcross(field3d, z, missing=Constants.DEFAULT_FILL,
         
     Returns
     -------
-    out : 'xarray.DataArray` or `numpy.ndarray`
+    `xarray.DataArray` or `numpy.ndarray`
         Returns the interpolated variable.  If xarray is enabled and 
         the meta parameter is True, then the result will be an 
         `xarray.DataArray` object.  Otherwise, the result will be a 
@@ -195,7 +195,7 @@ def interpline(field2d, pivot_point=None,
     
     Returns
     -------
-    out : 'xarray.DataArray` or `numpy.ndarray`
+    `xarray.DataArray` or `numpy.ndarray`
         Returns the interpolated variable.  If xarray is enabled and 
         the meta parameter is True, then the result will be an 
         `xarray.DataArray` object.  Otherwise, the result will be a 
@@ -227,16 +227,15 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     field2d : `xarray.DataArray` or `numpy.ndarray`
         A two-dimensional field.
         
-    vert_coord : {"pressure", "pres", "p", "ght_msl", 
-                  "ght_agl", "theta", "th", "theta-e", 
-                  "thetae", "eth"}
+    vert_coord : {'pressure', 'pres', 'p', 'ght_msl', 'ght_agl', 'theta', 'th', 'theta-e', 'thetae', 'eth'}
         A string indicating the vertical coordinate type to interpolate to.
+        
         Valid strings are: 
-            * "pressure", "pres", "p": pressure [hPa]
-            * "ght_msl": grid point height msl [km]
-            * "ght_agl": grid point height agl [km]
-            * "theta", "th": potential temperature [K]
-            * "theta-e", "thetae", "eth": equivalent potential temperature [K]
+            * 'pressure', 'pres', 'p': pressure [hPa]
+            * 'ght_msl': grid point height msl [km]
+            * 'ght_agl': grid point height agl [km]
+            * 'theta', 'th': potential temperature [K]
+            * 'theta-e', 'thetae', 'eth': equivalent potential temperature [K]
             
     interp_levels : sequence
         A 1D sequence of vertical levels to interpolate to.
@@ -244,8 +243,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     extrapolate : {True, False}, optional
         Set to True to extrapolate values below ground.  Default is False.
         
-    field_type : {"none", "pressure", "pres", "p", "z", "tc", "tk", "theta", 
-                  "th", "theta-e", "thetae", "eth", "ght"}, optional
+    field_type : {'none', 'pressure', 'pres', 'p', 'z', 'tc', 'tk', 'theta', 'th', 'theta-e', 'thetae', 'eth', 'ght'}, optional
         The type of field. Default is None.
         
     log_p : {True, False}
@@ -280,7 +278,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     
     Returns
     -------
-    out : 'xarray.DataArray` or `numpy.ndarray`
+    `xarray.DataArray` or `numpy.ndarray`
         Returns the interpolated variable.  If xarray is enabled and 
         the meta parameter is True, then the result will be an 
         `xarray.DataArray` object.  Otherwise, the result will be a 
@@ -314,9 +312,9 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
                     "eth" : 6}
     
     # These constants match what's in the fortran code.  
-    rgas    = 287.04     #J/K/kg
-    ussalr  = .0065      # deg C per m, avg lapse rate
-    sclht   = rgas*256./9.81
+    rgas = Constants.RD#287.04     #J/K/kg
+    ussalr = Constants.USSALR#.0065      # deg C per m, avg lapse rate
+    sclht = Constants.SCLHT #rgas*256./9.81
     
     # interp_levels might be a list or tuple, make a numpy array
     if not isinstance(interp_levels, np.ndarray):
@@ -390,7 +388,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         
         p_hpa = p * ConversionFactors.PA_TO_HPA
         
-        vcord_array = monotonic(t, p_hpa, coriolis, idir, delta, icorsw)
+        vcord_array = _monotonic(t, p_hpa, coriolis, idir, delta, icorsw)
         
         # We only extrapolate temperature fields below ground 
         # if we are interpolating to pressure or height vertical surfaces.
@@ -407,7 +405,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         
         p_hpa = p * ConversionFactors.PA_TO_HPA
         
-        vcord_array = monotonic(eth, p_hpa, coriolis, idir, delta, icorsw)
+        vcord_array = _monotonic(eth, p_hpa, coriolis, idir, delta, icorsw)
         # We only extrapolate temperature fields below ground if we are
         # interpolating to pressure or height vertical surfaces
         icase = 0
@@ -424,9 +422,9 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
                          "same value used when extracting the 'field' "
                          "variable.")
             
-    res = vintrp(field, p, tk, qv, ght, terht, sfp, smsfp,
-                 vcord_array, interp_levels,
-                 icase, extrap, vcor, log_p_int, missing)
+    res = _vintrp(field, p, tk, qv, ght, terht, sfp, smsfp,
+                  vcord_array, interp_levels,
+                  icase, extrap, vcor, log_p_int, missing)
     
     return ma.masked_values(res, missing)
 

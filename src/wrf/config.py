@@ -28,11 +28,6 @@ except ImportError:
     _PYNGL_ENABLED = False
 else:
     _PYNGL_ENABLED = True
-    
-__all__ = ["xarray_enabled", "disable_xarray", "enable_xarray",
-           "cartopy_enabled", "enable_cartopy", "enable_cartopy",
-           "basemap_enabled", "disable_basemap", "enable_basemap",
-           "pyngl_enabled", "enable_pyngl", "disable_pyngl"]
 
 def xarray_enabled():
     global _XARRAY_ENABLED

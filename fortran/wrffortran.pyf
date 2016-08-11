@@ -3,18 +3,269 @@
 
 python module _wrffortran ! in 
     interface  ! in :_wrffortran
+        subroutine dcalcuh(nx,ny,nz,nzp1,zp,mapfct,dx,dy,uhmnhgt,uhmxhgt,us,vs,w,uh,tem1,tem2) ! in :_wrffortran:calc_uh.f90
+            threadsafe 
+            integer, optional,intent(in),check(shape(zp,0)==nx),depend(zp) :: nx=shape(zp,0)
+            integer, optional,intent(in),check(shape(zp,1)==ny),depend(zp) :: ny=shape(zp,1)
+            integer, optional,intent(in),check(shape(us,2)==nz),depend(us) :: nz=shape(us,2)
+            integer, optional,intent(in),check(shape(zp,2)==nzp1),depend(zp) :: nzp1=shape(zp,2)
+            real(kind=8) dimension(nx,ny,nzp1),intent(in) :: zp
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: mapfct
+            real(kind=8) intent(in) :: dx
+            real(kind=8) intent(in) :: dy
+            real(kind=8) intent(in) :: uhmnhgt
+            real(kind=8) intent(in) :: uhmxhgt
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny) :: us
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: vs
+            real(kind=8) dimension(nx,ny,nzp1),intent(in),depend(nx,ny,nzp1) :: w
+            real(kind=8) dimension(nx,ny),intent(out,in),depend(nx,ny) :: uh
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: tem1
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: tem2
+        end subroutine dcalcuh
+        subroutine dcloudfrac(pres,rh,lowc,midc,highc,nz,ns,ew) ! in :_wrffortran:cloud_fracf.f90
+            threadsafe 
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: pres
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: rh
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: lowc
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: midc
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: highc
+            integer, optional,check(shape(pres,2)==nz),depend(pres) :: nz=shape(pres,2)
+            integer, optional,check(shape(pres,1)==ns),depend(pres) :: ns=shape(pres,1)
+            integer, optional,check(shape(pres,0)==ew),depend(pres) :: ew=shape(pres,0)
+        end subroutine dcloudfrac
         module constants ! in :_wrffortran:constants.f90
+            real(kind=8), parameter,optional :: wrf_earth_radius=6370000.d0
+            real(kind=8), parameter,optional :: rhowat=1000.d0
+            real(kind=8), parameter,optional :: t_base=300.0
+            real(kind=8), parameter,optional :: cp=1004.d0
+            real(kind=8), parameter,optional :: thtecon1=3376.d0
+            real(kind=8), parameter,optional :: thtecon3=.81d0
+            real(kind=8), parameter,optional :: thtecon2=2.54d0
             real(kind=8), parameter,optional :: p1000mb=100000.d0
-            real(kind=8), parameter,optional :: r=287.04d0
+            real(kind=8), parameter,optional :: rv=461.5d0
+            real(kind=8), parameter,optional,depend(pi) :: rad_per_deg=pi/180.d0
+            real(kind=8), parameter,optional :: rd=287.04d0
+            real(kind=8), parameter,optional :: abscoef=.145d0
+            real(kind=8), parameter,optional :: celkel=273.15d0
+            real(kind=8), parameter,optional :: abscoefi=.272d0
+            real(kind=8), parameter,optional :: eslcon2=29.65d0
+            real(kind=8), parameter,optional :: eslcon1=17.67d0
+            real(kind=8), parameter,optional :: pi=3.141592653589793d0
+            real(kind=8), parameter,optional :: tlclc2=3.5d0
+            real(kind=8), parameter,optional :: tlclc3=4.805d0
+            real(kind=8), parameter,optional :: rho_g=400.d0
+            real(kind=8), parameter,optional :: tlclc1=2840.d0
+            real(kind=8), parameter,optional :: tlclc4=55.d0
+            real(kind=8), parameter,optional,depend(pi) :: deg_per_rad=180.d0/pi
+            real(kind=8), parameter,optional :: cpmd=.887d0
+            real(kind=8), parameter,optional,depend(rd,g) :: sclht=rd*256.d0/g
+            real(kind=8), parameter,optional :: ussalr=0.0065d0
+            real(kind=8), parameter,optional :: default_fill=9.9692099683868690d36
+            real(kind=8), parameter,optional :: rho_s=100.d0
+            real(kind=8), parameter,optional,depend(rhowat) :: rho_r=1000.0
+            real(kind=8), parameter,optional :: alpha=0.224d0
+            real(kind=8), parameter,optional :: celkel_triple=273.16d0
+            real(kind=8), parameter,optional :: ezero=6.112d0
+            real(kind=8), parameter,optional,depend(rd,ussalr,g) :: expon=0.190189602446
+            real(kind=8), parameter,optional :: rgasmd=.608d0
             real(kind=8), parameter,optional :: g=9.81d0
-            real(kind=8), parameter,optional :: r_d=287.d0
-            real(kind=8), parameter,optional,depend(r_d) :: cp=7.d0*r_d/2.d0
             integer, optional :: errlen=512
-            real(kind=8), parameter,optional :: gamma=0.0065d0
+            real(kind=8), parameter,optional :: eps=0.622d0
+            real(kind=8), parameter,optional :: gamma_seven=720.d0
+            real(kind=8), parameter,optional,depend(cpmd,rgasmd) :: gammamd=-0.279
+            integer, optional :: algerr=64
+            real(kind=8), parameter,optional,depend(cp,rd) :: gamma=0.285896414343
+            real(kind=8), parameter,optional,depend(expon,rd,ussalr,g) :: exponi=5.25791098534
         end module constants
+        subroutine deqthecalc(qvp,tmk,prs,eth,miy,mjx,mkzh) ! in :_wrffortran:eqthecalc.f90
+            threadsafe 
+            use constants, only: tlclc2,tlclc3,tlclc1,tlclc4,eps,thtecon3,gammamd,thtecon1,gamma,thtecon2
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: qvp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: tmk
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: prs
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out,in),depend(miy,mjx,mkzh) :: eth
+            integer, optional,intent(in),check(shape(qvp,0)==miy),depend(qvp) :: miy=shape(qvp,0)
+            integer, optional,intent(in),check(shape(qvp,1)==mjx),depend(qvp) :: mjx=shape(qvp,1)
+            integer, optional,intent(in),check(shape(qvp,2)==mkzh),depend(qvp) :: mkzh=shape(qvp,2)
+        end subroutine deqthecalc
+        function tvirtual(temp,ratmix) ! in :_wrffortran:rip_cape.f90
+            threadsafe 
+            use constants, only: eps
+            real(kind=8) intent(in) :: temp
+            real(kind=8) intent(in) :: ratmix
+            real(kind=8) :: tvirtual
+        end function tvirtual
+        function tonpsadiabat(thte,prs,psadithte,psadiprs,psaditmk,gamma,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+            threadsafe 
+            use constants, only: algerr
+            real(kind=8) intent(in) :: thte
+            real(kind=8) intent(in) :: prs
+            real(kind=8) dimension(150),intent(in) :: psadithte
+            real(kind=8) dimension(150),intent(in) :: psadiprs
+            real(kind=8) dimension(150,150),intent(in) :: psaditmk
+            real(kind=8) intent(in) :: gamma
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+            real(kind=8) :: tonpsadiabat
+        end function tonpsadiabat
+        subroutine dlookup_table(psadithte,psadiprs,psaditmk,fname,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+            threadsafe 
+            use constants, only: algerr
+            real(kind=8) dimension(150),intent(inout) :: psadithte
+            real(kind=8) dimension(150),intent(inout) :: psadiprs
+            real(kind=8) dimension(150,150),intent(inout) :: psaditmk
+            character*(*) intent(in) :: fname
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine dlookup_table
+        subroutine dpfcalc(prs,sfp,pf,miy,mjx,mkzh,ter_follow) ! in :_wrffortran:rip_cape.f90
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: sfp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out),depend(miy,mjx,mkzh) :: pf
+            integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
+            integer intent(in) :: ter_follow
+        end subroutine dpfcalc
+        subroutine dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,miy,mjx,mkzh,i3dflag,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+            threadsafe 
+            use constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,algerr,ezero,thtecon2
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: tmk
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: qvp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: ght
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: ter
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: sfp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out,in),depend(miy,mjx,mkzh) :: cape
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out,in),depend(miy,mjx,mkzh) :: cin
+            real(kind=8) intent(in) :: cmsg
+            integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
+            integer intent(in) :: i3dflag
+            integer intent(in) :: ter_follow
+            character*(*) intent(in) :: psafile
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine dcapecalc3d
+        subroutine wrfcttcalc(prs,tk,qci,qcw,qvp,ght,ter,ctt,haveqci,ew,ns,nz) ! in :_wrffortran:wrf_fctt.f90
+            threadsafe 
+            use constants, only: g,eps,rd,ussalr,abscoefi,abscoef,celkel
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: prs
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: tk
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qci
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qcw
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qvp
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: ght
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: ter
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: ctt
+            integer intent(in) :: haveqci
+            integer, optional,intent(in),check(shape(prs,0)==ew),depend(prs) :: ew=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==ns),depend(prs) :: ns=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
+        end subroutine wrfcttcalc
+        subroutine dcomputeabsvort(av,u,v,msfu,msfv,msft,cor,dx,dy,nx,ny,nz,nxp1,nyp1) ! in :_wrffortran:wrf_pvo.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny,nz),intent(out,in) :: av
+            real(kind=8) dimension(nxp1,ny,nz),intent(in),depend(ny,nz) :: u
+            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nx,nz) :: v
+            real(kind=8) dimension(nxp1,ny),intent(in),depend(nxp1,ny) :: msfu
+            real(kind=8) dimension(nx,nyp1),intent(in),depend(nx,nyp1) :: msfv
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: msft
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: cor
+            real(kind=8) :: dx
+            real(kind=8) :: dy
+            integer, optional,intent(in),check(shape(av,0)==nx),depend(av) :: nx=shape(av,0)
+            integer, optional,intent(in),check(shape(av,1)==ny),depend(av) :: ny=shape(av,1)
+            integer, optional,intent(in),check(shape(av,2)==nz),depend(av) :: nz=shape(av,2)
+            integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
+            integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
+        end subroutine dcomputeabsvort
+        subroutine dcomputepv(pv,u,v,theta,prs,msfu,msfv,msft,cor,dx,dy,nx,ny,nz,nxp1,nyp1) ! in :_wrffortran:wrf_pvo.f90
+            threadsafe 
+            use constants, only: g
+            real(kind=8) dimension(nx,ny,nz),intent(out,in) :: pv
+            real(kind=8) dimension(nxp1,ny,nz),intent(in),depend(ny,nz) :: u
+            real(kind=8) dimension(nx,nyp1,nz),intent(in),depend(nx,nz) :: v
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: theta
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: prs
+            real(kind=8) dimension(nxp1,ny),intent(in),depend(nxp1,ny) :: msfu
+            real(kind=8) dimension(nx,nyp1),intent(in),depend(nx,nyp1) :: msfv
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: msft
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: cor
+            real(kind=8) :: dx
+            real(kind=8) :: dy
+            integer, optional,intent(in),check(shape(pv,0)==nx),depend(pv) :: nx=shape(pv,0)
+            integer, optional,intent(in),check(shape(pv,1)==ny),depend(pv) :: ny=shape(pv,1)
+            integer, optional,intent(in),check(shape(pv,2)==nz),depend(pv) :: nz=shape(pv,2)
+            integer, optional,intent(in),check(shape(u,0)==nxp1),depend(u) :: nxp1=shape(u,0)
+            integer, optional,intent(in),check(shape(v,1)==nyp1),depend(v) :: nyp1=shape(v,1)
+        end subroutine dcomputepv
+        subroutine dcomputepw(p,tv,qv,ht,pw,nx,ny,nz,nzh) ! in :_wrffortran:wrf_pw.f90
+            threadsafe 
+            use constants, only: rd
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: p
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: tv
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: qv
+            real(kind=8) dimension(nx,ny,nzh),intent(in),depend(nx,ny) :: ht
+            real(kind=8) dimension(nx,ny),intent(out,in),depend(nx,ny) :: pw
+            integer, optional,intent(in),check(shape(p,0)==nx),depend(p) :: nx=shape(p,0)
+            integer, optional,intent(in),check(shape(p,1)==ny),depend(p) :: ny=shape(p,1)
+            integer, optional,intent(in),check(shape(p,2)==nz),depend(p) :: nz=shape(p,2)
+            integer, optional,intent(in),check(shape(ht,2)==nzh),depend(ht) :: nzh=shape(ht,2)
+        end subroutine dcomputepw
+        subroutine dcalrelhl(u,v,ght,ter,top,sreh,miy,mjx,mkzh) ! in :_wrffortran:wrf_relhl.f90
+            threadsafe 
+            use constants, only: rad_per_deg,deg_per_rad,pi
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: u
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: v
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: ght
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: ter
+            real(kind=8) intent(in) :: top
+            real(kind=8) dimension(miy,mjx),intent(out,in),depend(miy,mjx) :: sreh
+            integer, optional,intent(in),check(shape(u,0)==miy),depend(u) :: miy=shape(u,0)
+            integer, optional,intent(in),check(shape(u,1)==mjx),depend(u) :: mjx=shape(u,1)
+            integer, optional,intent(in),check(shape(u,2)==mkzh),depend(u) :: mkzh=shape(u,2)
+        end subroutine dcalrelhl
+        subroutine wetbulbcalc(prs,tmk,qvp,twb,nx,ny,nz,psafile,errstat,errmsg) ! in :_wrffortran:wrf_rip_phys_routines.f90
+            threadsafe 
+            use constants, only: tlclc2,tlclc3,tlclc1,tlclc4,eps,thtecon3,gammamd,thtecon1,algerr,gamma,thtecon2
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: prs
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: tmk
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: qvp
+            real(kind=8) dimension(nx,ny,nz),intent(out,in),depend(nx,ny,nz) :: twb
+            integer, optional,intent(in),check(shape(prs,0)==nx),depend(prs) :: nx=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==ny),depend(prs) :: ny=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
+            character*(*) intent(in) :: psafile
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine wetbulbcalc
+        subroutine omgcalc(qvp,tmk,www,prs,omg,mx,my,mz) ! in :_wrffortran:wrf_rip_phys_routines.f90
+            threadsafe 
+            use constants, only: rd,eps,g
+            real(kind=8) dimension(mx,my,mz),intent(in) :: qvp
+            real(kind=8) dimension(mx,my,mz),intent(in),depend(mx,my,mz) :: tmk
+            real(kind=8) dimension(mx,my,mz),intent(in),depend(mx,my,mz) :: www
+            real(kind=8) dimension(mx,my,mz),intent(in),depend(mx,my,mz) :: prs
+            real(kind=8) dimension(mx,my,mz),intent(out,in),depend(mx,my,mz) :: omg
+            integer, optional,intent(in),check(shape(qvp,0)==mx),depend(qvp) :: mx=shape(qvp,0)
+            integer, optional,intent(in),check(shape(qvp,1)==my),depend(qvp) :: my=shape(qvp,1)
+            integer, optional,intent(in),check(shape(qvp,2)==mz),depend(qvp) :: mz=shape(qvp,2)
+        end subroutine omgcalc
+        subroutine virtual_temp(temp,ratmix,tv,nx,ny,nz) ! in :_wrffortran:wrf_rip_phys_routines.f90
+            threadsafe 
+            use constants, only: eps
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: temp
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: ratmix
+            real(kind=8) dimension(nx,ny,nz),intent(out,in),depend(nx,ny,nz) :: tv
+            integer, optional,intent(in),check(shape(temp,0)==nx),depend(temp) :: nx=shape(temp,0)
+            integer, optional,intent(in),check(shape(temp,1)==ny),depend(temp) :: ny=shape(temp,1)
+            integer, optional,intent(in),check(shape(temp,2)==nz),depend(temp) :: nz=shape(temp,2)
+        end subroutine virtual_temp
         subroutine dcomputepi(pi,pressure,nx,ny,nz) ! in :_wrffortran:wrf_user.f90
             threadsafe 
-            use constants, only: p1000mb,cp,r_d
+            use constants, only: rd,p1000mb,cp
             real(kind=8) dimension(nx,ny,nz),intent(out,in) :: pi
             real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: pressure
             integer, optional,intent(in),check(shape(pi,0)==nx),depend(pi) :: nx=shape(pi,0)
@@ -23,7 +274,7 @@ python module _wrffortran ! in
         end subroutine dcomputepi
         subroutine dcomputetk(tk,pressure,theta,nx) ! in :_wrffortran:wrf_user.f90
             threadsafe 
-            use constants, only: p1000mb,cp,r_d
+            use constants, only: rd,p1000mb,cp
             real(kind=8) dimension(nx),intent(out,in) :: tk
             real(kind=8) dimension(nx),intent(in),depend(nx) :: pressure
             real(kind=8) dimension(nx),intent(in),depend(nx) :: theta
@@ -74,7 +325,7 @@ python module _wrffortran ! in
         end subroutine dinterp1d
         subroutine dcomputeseaprs(nx,ny,nz,z,t,p,q,sea_level_pressure,t_sea_level,t_surf,level,errstat,errmsg) ! in :_wrffortran:wrf_user.f90
             threadsafe 
-            use constants, only: r,errlen,gamma,g
+            use constants, only: rd,ussalr,algerr,g
             integer, optional,intent(in),check(shape(z,0)==nx),depend(z) :: nx=shape(z,0)
             integer, optional,intent(in),check(shape(z,1)==ny),depend(z) :: ny=shape(z,1)
             integer, optional,intent(in),check(shape(z,2)==nz),depend(z) :: nz=shape(z,2)
@@ -86,8 +337,8 @@ python module _wrffortran ! in
             real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: t_sea_level
             real(kind=8) dimension(nx,ny),intent(inout),depend(nx,ny) :: t_surf
             integer dimension(nx,ny),intent(inout),depend(nx,ny) :: level
-            integer, optional,intent(inout) :: errstat
-            character*errlen, optional,intent(inout) :: errmsg
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
         end subroutine dcomputeseaprs
         subroutine dfilter2d(a,b,nx,ny,it,missing) ! in :_wrffortran:wrf_user.f90
             threadsafe 
@@ -109,6 +360,7 @@ python module _wrffortran ! in
         end subroutine filter2d
         subroutine dcomputerh(qv,p,t,rh,nx) ! in :_wrffortran:wrf_user.f90
             threadsafe 
+            use constants, only: rv,eps,rd,ezero,eslcon2,eslcon1,celkel
             real(kind=8) dimension(nx),intent(in) :: qv
             real(kind=8) dimension(nx),intent(in),depend(nx) :: p
             real(kind=8) dimension(nx),intent(in),depend(nx) :: t
@@ -165,16 +417,144 @@ python module _wrffortran ! in
             integer, optional,intent(in),check(shape(iclw,1)==ny),depend(iclw) :: ny=shape(iclw,1)
             integer, optional,intent(in),check(shape(pressure,2)==nz),depend(pressure) :: nz=shape(pressure,2)
         end subroutine dcomputeiclw
-        subroutine testfunc(a,b,nx,ny,nz,errstat,errstr) ! in :_wrffortran:wrf_user.f90
-            threadsafe 
+        subroutine testfunc(a,b,c,nx,ny,nz,errstat,errmsg) ! in :_wrffortran:wrf_user.f90
+            use constants, only: algerr
             real(kind=8) dimension(nx,ny,nz),intent(in) :: a
             real(kind=8) dimension(nx,ny,nz),intent(out,in),depend(nx,ny,nz) :: b
+            character*(*) intent(in) :: c
             integer, optional,intent(in),check(shape(a,0)==nx),depend(a) :: nx=shape(a,0)
             integer, optional,intent(in),check(shape(a,1)==ny),depend(a) :: ny=shape(a,1)
             integer, optional,intent(in),check(shape(a,2)==nz),depend(a) :: nz=shape(a,2)
-            integer, optional,intent(inout) :: errstat
-            character*512, optional,intent(inout) :: errstr
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
         end subroutine testfunc
+        subroutine calcdbz(prs,tmk,qvp,qra,qsn,qgr,sn0,ivarint,iliqskin,dbz,nx,ny,nz) ! in :_wrffortran:wrf_user_dbz.f90
+            threadsafe 
+            use constants, only: rho_g,gamma_seven,rho_r,rd,rho_s,alpha,rhowat,pi,celkel
+            real(kind=8) dimension(nx,ny,nz),intent(in) :: prs
+            real(kind=8) dimension(nx,ny,nz),intent(in),depend(nx,ny,nz) :: tmk
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qvp
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qra
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qsn
+            real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: qgr
+            integer intent(in) :: sn0
+            integer intent(in) :: ivarint
+            integer intent(in) :: iliqskin
+            real(kind=8) dimension(nx,ny,nz),intent(out,in),depend(nx,ny,nz) :: dbz
+            integer, optional,intent(in),check(shape(prs,0)==nx),depend(prs) :: nx=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==ny),depend(prs) :: ny=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
+        end subroutine calcdbz
+        subroutine rotatecoords(ilat,ilon,olat,olon,lat_np,lon_np,lon_0,direction) ! in :_wrffortran:wrf_user_latlon_routines.f90
+            threadsafe 
+            use constants, only: rad_per_deg,deg_per_rad,pi
+            real(kind=8) intent(in) :: ilat
+            real(kind=8) intent(in) :: ilon
+            real(kind=8) intent(out,in) :: olat
+            real(kind=8) intent(out,in) :: olon
+            real(kind=8) intent(in) :: lat_np
+            real(kind=8) intent(in) :: lon_np
+            real(kind=8) intent(in) :: lon_0
+            integer intent(in) :: direction
+        end subroutine rotatecoords
+        subroutine dlltoij(map_proj,truelat1,truelat2,stdlon,lat1,lon1,pole_lat,pole_lon,knowni,knownj,dx,dy,latinc,loninc,lat,lon,loc,errstat,errmsg) ! in :_wrffortran:wrf_user_latlon_routines.f90
+            threadsafe 
+            use constants, only: rad_per_deg,deg_per_rad,pi,algerr,wrf_earth_radius
+            integer intent(in) :: map_proj
+            real(kind=8) intent(inout) :: truelat1
+            real(kind=8) intent(inout) :: truelat2
+            real(kind=8) intent(in) :: stdlon
+            real(kind=8) intent(in) :: lat1
+            real(kind=8) intent(in) :: lon1
+            real(kind=8) intent(in) :: pole_lat
+            real(kind=8) intent(in) :: pole_lon
+            real(kind=8) intent(in) :: knowni
+            real(kind=8) intent(in) :: knownj
+            real(kind=8) intent(in) :: dx
+            real(kind=8) intent(in) :: dy
+            real(kind=8) intent(in) :: latinc
+            real(kind=8) intent(in) :: loninc
+            real(kind=8) intent(inout) :: lat
+            real(kind=8) intent(inout) :: lon
+            real(kind=8) dimension(2),intent(out,in) :: loc
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine dlltoij
+        subroutine dijtoll(map_proj,truelat1,truelat2,stdlon,lat1,lon1,pole_lat,pole_lon,knowni,knownj,dx,dy,latinc,loninc,ai,aj,loc,errstat,errmsg) ! in :_wrffortran:wrf_user_latlon_routines.f90
+            threadsafe 
+            use constants, only: rad_per_deg,deg_per_rad,pi,algerr,wrf_earth_radius
+            integer intent(in) :: map_proj
+            real(kind=8) intent(inout) :: truelat1
+            real(kind=8) intent(inout) :: truelat2
+            real(kind=8) intent(in) :: stdlon
+            real(kind=8) intent(in) :: lat1
+            real(kind=8) intent(in) :: lon1
+            real(kind=8) intent(in) :: pole_lat
+            real(kind=8) intent(in) :: pole_lon
+            real(kind=8) intent(in) :: knowni
+            real(kind=8) intent(in) :: knownj
+            real(kind=8) intent(in) :: dx
+            real(kind=8) intent(in) :: dy
+            real(kind=8) intent(in) :: latinc
+            real(kind=8) intent(in) :: loninc
+            real(kind=8) intent(in) :: ai
+            real(kind=8) intent(in) :: aj
+            real(kind=8) dimension(2),intent(out,in) :: loc
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine dijtoll
+        subroutine wrf_monotonic(out,in,lvprs,cor,idir,delta,ew,ns,nz,icorsw) ! in :_wrffortran:wrf_vinterp.f90
+            threadsafe 
+            real(kind=8) dimension(ew,ns,nz),intent(out,in) :: out
+            real(kind=8) dimension(ew,ns,nz),intent(inout),depend(ew,ns,nz) :: in
+            real(kind=8) dimension(ew,ns,nz),depend(ew,ns,nz) :: lvprs
+            real(kind=8) dimension(ew,ns),depend(ew,ns) :: cor
+            integer intent(in) :: idir
+            real(kind=8) intent(in) :: delta
+            integer, optional,intent(in),check(shape(out,0)==ew),depend(out) :: ew=shape(out,0)
+            integer, optional,intent(in),check(shape(out,1)==ns),depend(out) :: ns=shape(out,1)
+            integer, optional,intent(in),check(shape(out,2)==nz),depend(out) :: nz=shape(out,2)
+            integer intent(in) :: icorsw
+        end subroutine wrf_monotonic
+        function wrf_intrp_value(wvalp0,wvalp1,vlev,vcp0,vcp1,icase,errstat,errmsg) ! in :_wrffortran:wrf_vinterp.f90
+            threadsafe 
+            use constants, only: sclht,algerr
+            real(kind=8) intent(in) :: wvalp0
+            real(kind=8) intent(in) :: wvalp1
+            real(kind=8) intent(in) :: vlev
+            real(kind=8) intent(in) :: vcp0
+            real(kind=8) intent(in) :: vcp1
+            integer intent(in) :: icase
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+            real(kind=8) :: wrf_intrp_value
+        end function wrf_intrp_value
+        subroutine wrf_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,sfp,smsfp,vcarray,interp_levels,numlevels,icase,ew,ns,nz,extrap,vcor,logp,rmsg,errstat,errmsg) ! in :_wrffortran:wrf_vinterp.f90
+            threadsafe 
+            use constants, only: tlclc2,tlclc3,sclht,tlclc4,thtecon3,eps,tlclc1,celkel,exponi,gammamd,ussalr,expon,thtecon1,algerr,gamma,thtecon2
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: datain
+            real(kind=8) dimension(ew,ns,numlevels),intent(out,in),depend(ew,ns) :: dataout
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: pres
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: tk
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: qvp
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: ght
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: terrain
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: sfp
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: smsfp
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: vcarray
+            real(kind=8) dimension(numlevels),intent(in),depend(numlevels) :: interp_levels
+            integer, optional,intent(in),check(shape(dataout,2)==numlevels),depend(dataout) :: numlevels=shape(dataout,2)
+            integer intent(in) :: icase
+            integer, optional,intent(in),check(shape(datain,0)==ew),depend(datain) :: ew=shape(datain,0)
+            integer, optional,intent(in),check(shape(datain,1)==ns),depend(datain) :: ns=shape(datain,1)
+            integer, optional,intent(in),check(shape(datain,2)==nz),depend(datain) :: nz=shape(datain,2)
+            integer intent(in) :: extrap
+            integer intent(in) :: vcor
+            integer intent(in) :: logp
+            real(kind=8) intent(in) :: rmsg
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine wrf_vintrp
     end interface 
 end python module _wrffortran
 

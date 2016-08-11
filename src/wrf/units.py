@@ -22,7 +22,7 @@ def _apply_conv_fact(var, vartype, var_unit, dest_unit):
 
 def _to_celsius(var, var_unit):
     if var_unit == "k":
-        return var - Constants.TCK0
+        return var - Constants.CELKEL
     elif var_unit == "f":
         return (var - 32.0) * (5.0/9.0)
     

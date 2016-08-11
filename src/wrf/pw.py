@@ -2,7 +2,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 #from .extension import computepw,computetv,computetk
-from .extension import computepw,computetv, _tk
+from .extension import _pw, _tv, _tk
 from .constants import Constants
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
@@ -32,9 +32,9 @@ def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     full_t  =  t + Constants.T_BASE
     
     tk = _tk(full_p, full_t)
-    tv = computetv(tk, qv)
+    tv = _tv(tk, qv)
     
-    return computepw(full_p, tv, qv, ht)
+    return _pw(full_p, tv, qv, ht)
     
     
     

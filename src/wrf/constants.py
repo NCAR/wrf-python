@@ -1,18 +1,18 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
+import numpy as np
+
+from .py3compat import viewitems
+from wrf._wrffortran import constants
+
 ALL_TIMES = None
 
 class Constants(object):
-    R = 287.06
-    CP = 1005.0
-    G = 9.81
-    TCK0 = 273.15
-    T_BASE = 300.0 # In WRF the base temperature is always 300 (not var T00)
-    PI = 3.141592653589793
-    DEFAULT_FILL = 9.9692099683868690e+36 # Value is from netcdf.h
-    WRF_EARTH_RADIUS = 6370000.
-    ERRLEN = 512
+    pass
+    
+for key,val in viewitems(constants.__dict__):
+    setattr(Constants, key.upper(), np.asscalar(val))
 
 class ConversionFactors(object):
     PA_TO_HPA = .01

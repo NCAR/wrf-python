@@ -6,7 +6,7 @@ from math import floor, ceil
 import numpy as np
 
 from .extension import _interp2dxy
-from .util import py3range
+from .py3compat import py3range
 
 
 def to_positive_idxs(shape, coord):

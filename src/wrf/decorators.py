@@ -8,8 +8,8 @@ import numpy as np
 import numpy.ma as ma
 
 from .units import do_conversion, check_units
-from .util import (iter_left_indexes, viewitems, viewvalues, from_args, 
-                   npvalues, py3range, combine_dims, isstr)
+from .util import iter_left_indexes, from_args, npvalues, combine_dims
+from .py3compat import viewitems, viewvalues, py3range, isstr
 from .config import xarray_enabled
 from .constants import Constants
 
@@ -351,38 +351,6 @@ def left_iter_nocopy(ref_var_expected_dims,
     
     return func_wrapper
 
-# Only flip the input arguments, but flip the result
-def flip_vertical(argidxs=None, argkeys=None, flip_result=True):
-    @wrapt.decorator
-    def func_wrapper(wrapped, instance, args, kwargs):
-        
-        _argidxs = argidxs if argidxs is not None else ()
-        _argkeys = argkeys if argkeys is not None else ()
-        
-        # Slice the args if applicable
-        new_args = [np.ascontiguousarray(arg[...,::-1,:,:])
-                    if i in _argidxs else arg 
-                    for i,arg in enumerate(args)]
-            
-        # Slice the kwargs if applicable
-        new_kargs = {key:np.ascontiguousarray(kwarg[...,::-1,:,:])
-                     if key in _argkeys else kwarg
-                     for key,kwarg in viewitems(kwargs)}
-        
-        
-        result = wrapped(*args, **kwargs)
-        
-        if flip_result:
-            if isinstance(result, np.ndarray):
-                return np.ascontiguousarray(result[...,::-1,:,:])
-            else:
-                # Sequence
-                return [np.ascontiguousarray(arr[...,::-1,:,:]) 
-                        for arr in result]
-        
-        return result
-         
-    return func_wrapper
 
 def handle_casting(ref_idx=0, arg_idxs=None, karg_names=None, 
                    alg_dtype=np.float64,
@@ -397,7 +365,7 @@ def handle_casting(ref_idx=0, arg_idxs=None, karg_names=None,
         _karg_names = karg_names if karg_names is not None else ()
         
         # Handle output views if applicable
-        _outkeys = [outviews] if isstr(outviews) else _outviews
+        _outkeys = [outviews] if isstr(outviews) else outviews
         _outviews = from_args(wrapped, _outkeys, *args, **kwargs)
         
         has_outview = False
@@ -425,7 +393,7 @@ def handle_casting(ref_idx=0, arg_idxs=None, karg_names=None,
                 if result.dtype == orig_type:
                     return result
                 return result.astype(orig_type)
-            else:   # got back a sequence of arrays
+            elif isinstance(result, Iterable):   # got back a sequence of arrays
                 return tuple(arr.astype(orig_type) 
                              if arr.dtype != orig_type else arr
                              for arr in result)
@@ -458,7 +426,7 @@ def handle_extract_transpose(do_transpose=True, outviews="outview"):
     def func_wrapper(wrapped, instance, args, kwargs):
         
         # Handle output views if applicable
-        _outkeys = [outviews] if isstr(outviews) else _outviews
+        _outkeys = [outviews] if isstr(outviews) else outviews
         _outviews = from_args(wrapped, _outkeys, *args, **kwargs)
         
         has_outview = False
@@ -490,13 +458,37 @@ def handle_extract_transpose(do_transpose=True, outviews="outview"):
     return func_wrapper
 
 
-def check_args(refvaridx, refvarndim, rightdims):
+def check_args(refvaridx, refvarndim, rightdims, stagger=None,
+               refstagdim=None):
+    """
+    
+    refvaridx - reference variable to check for presence of left dimensions
+    refvarndim - the number of dimensions for the references variable 
+                 expected by the fortran routine
+    rightdims - the expected number of right dimensions for each argument
+    stagger - the dimension which is staggered for each argument.  Use
+              None to indicate no staggering.
+    refstagdim - If the reference variable is staggered, indicate the dim that
+                 is staggered
+    """
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
         
         refvar = args[refvaridx]
         extra_dims = refvar.ndim - refvarndim
-        ref_right_sizes = refvar.shape[extra_dims:]
+        
+        # Always use unstaggered as the basis of comparison
+        if refstagdim is not None:
+            _refshape = list(refvar.shape)
+            _refshape[refstagdim] -= 1
+            _refshape = tuple(_refshape)
+        else:
+            _refshape = refvar.shape
+        
+        if stagger is None:
+            _stagger = [None]*len(rightdims)
+        else:
+            _stagger = stagger
         
         for i,ndim in enumerate(rightdims):
             if ndim is None:
@@ -513,9 +505,20 @@ def check_args(refvaridx, refvarndim, rightdims):
                                                 var.ndim,
                                                 right_var_ndims + extra_dims))
             
+            # Add 1 to the reference staggered dim index before doing the check
+            if _stagger[i] is not None:
+                ref_shape = list(_refshape)
+                ref_shape[_stagger[i]] += 1
+                ref_shape = tuple(ref_shape)
+            else:
+                ref_shape = _refshape
+                
+            ref_right_sizes = ref_shape[extra_dims:]
+            
             # Check that right dimensions are lined up
             if (var.shape[-right_var_ndims:] != 
                 ref_right_sizes[-right_var_ndims:]):
+                
                 raise ValueError("invalid shape for argument "
                                  "{} (got {}, expected {})".format(i, 
                                         var.shape[-right_var_ndims:],
@@ -524,6 +527,8 @@ def check_args(refvaridx, refvarndim, rightdims):
         return wrapped(*args, **kwargs)
     
     return func_wrapper
+
+
     
 
 

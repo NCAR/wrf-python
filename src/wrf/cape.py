@@ -1,26 +1,28 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-import numpy as n
+import numpy as np
 import numpy.ma as ma
 
 #from .extension import computetk,computecape
-from .extension import _tk,computecape
+from .extension import _tk, _cape
 from .destag import destagger
 from .constants import Constants, ConversionFactors
 from .util import extract_vars, combine_with
-from .metadecorators import copy_and_set_metadata
+from .metadecorators import set_cape_metadata
 
 
-@copy_and_set_metadata(copy_varname="T", 
-                       name="cape_2d",
-                       dimnames=combine_with("T", remove_dims=("bottom_top",),
-                                        insert_before="south_north",
-                                        new_dimnames=["mcape_mcin_lcl_lfc"]), 
-                       description="mcape ; mcin ; lcl ; lfc",
-                       units="J/kg ; J/kg ; m ; m",
-                       MemoryOrder="XY")
+#@copy_and_set_metadata(copy_varname="T", 
+#                       name="cape_2d",
+#                       dimnames=combine_with("T", remove_dims=("bottom_top",),
+#                                        insert_before="south_north",
+#                                        new_dimnames=["mcape_mcin_lcl_lfc"]), 
+#                       description="mcape ; mcin ; lcl ; lfc",
+#                       units="J/kg ; J/kg ; m ; m",
+#                       MemoryOrder="XY")
+@set_cape_metadata(is2d=True)
 def get_2dcape(wrfnc, timeidx=0, method="cat", 
+               
                squeeze=True, cache=None, meta=True,
                missing=Constants.DEFAULT_FILL):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
@@ -53,37 +55,35 @@ def get_2dcape(wrfnc, timeidx=0, method="cat",
     i3dflag = 0
     ter_follow = 1
     
-    cape_res,cin_res = computecape(p_hpa,tk,qv,z,ter,psfc_hpa,
-                                   missing,i3dflag,ter_follow)
+    cape_cin = _cape(p_hpa, tk, qv, z, ter, psfc_hpa, missing, i3dflag, 
+                     ter_follow)
     
-    cape = cape_res[...,0,:,:]
-    cin = cin_res[...,0,:,:]
-    lcl = cin_res[...,1,:,:]
-    lfc = cin_res[...,2,:,:]
+    left_dims = cape_cin.shape[1:-3]
+    right_dims = cape_cin.shape[-2:]
     
-    left_dims = [x for x in cape_res.shape[0:-3]]
-    right_dims = [x for x in cape_res.shape[-2:]]
-    
-    resdim = left_dims + [4] + right_dims
+    resdim = (4,) + left_dims + right_dims
     
     # Make a new output array for the result
-    res = n.zeros(resdim, cape.dtype)
+    result = np.zeros(resdim, cape_cin.dtype)
     
-    res[...,0,:,:] = cape[:]
-    res[...,1,:,:] = cin[:]
-    res[...,2,:,:] = lcl[:]
-    res[...,3,:,:] = lfc[:]
+    # Cape 2D output is not flipped in the vertical, so index from the 
+    # end
+    result[0,...,:,:] = cape_cin[0,...,-1,:,:]
+    result[1,...,:,:] = cape_cin[1,...,-1,:,:]
+    result[2,...,:,:] = cape_cin[1,...,-2,:,:]
+    result[3,...,:,:] = cape_cin[1,...,-3,:,:]
     
-    return ma.masked_values(res, missing)
+    return ma.masked_values(result, missing)
 
 
-@copy_and_set_metadata(copy_varname="T", name="cape_3d",
-                       dimnames=combine_with("T",
-                                             insert_before="bottom_top",
-                                             new_dimnames=["cape_cin"]),
-                       description="cape ; cin",
-                       units="J kg-1 ; J kg-1",
-                       MemoryOrder="XY")
+#@copy_and_set_metadata(copy_varname="T", name="cape_3d",
+#                       dimnames=combine_with("T",
+#                                             insert_before="bottom_top",
+#                                             new_dimnames=["cape_cin"]),
+#                       description="cape ; cin",
+#                       units="J kg-1 ; J kg-1",
+#                       MemoryOrder="XY")
+@set_cape_metadata(is2d=False)
 def get_3dcape(wrfnc, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
                missing=Constants.DEFAULT_FILL):
@@ -115,21 +115,11 @@ def get_3dcape(wrfnc, timeidx=0, method="cat",
     i3dflag = 1
     ter_follow = 1
     
-    cape,cin = computecape(p_hpa,tk,qv,z,ter,psfc_hpa,
-                           missing,i3dflag,ter_follow)
+    cape_cin = _cape(p_hpa, tk, qv, z, ter, psfc_hpa, missing, i3dflag, 
+                     ter_follow)
     
-    # Make a new output array for the result
-    left_dims = [x for x in cape.shape[0:-3]]
-    right_dims = [x for x in cape.shape[-3:]]
     
-    resdim = left_dims + [2] + right_dims
-    
-    res = n.zeros(resdim, cape.dtype)
-    
-    res[...,0,:,:,:] = cape[:]
-    res[...,1,:,:,:] = cin[:]
-    
-    return ma.masked_values(res, missing)
+    return ma.masked_values(cape_cin, missing)
     
     
     

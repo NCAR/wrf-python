@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
+import os
 from sys import version_info
 from copy import copy
 from collections import Iterable, Mapping, OrderedDict
@@ -26,19 +27,12 @@ import numpy.ma as ma
 from .config import xarray_enabled
 from .projection import getproj, NullProjection
 from .constants import Constants, ALL_TIMES
-
+from .py3compat import (viewitems, viewkeys, viewvalues, isstr, py2round, 
+                        py3range, ucode)
 
 if xarray_enabled():
     from xarray import DataArray
     from pandas import NaT
-
-__all__ = ["extract_vars", "extract_global_attrs", "extract_dim",
-           "combine_files", "is_standard_wrf_var", "extract_times",
-           "iter_left_indexes", "get_left_indexes", "get_right_slices",
-           "is_staggered", "get_proj_params", "viewitems", "viewkeys",
-           "viewvalues", "py2round", "py3range", "combine_with", "either", 
-           "from_args", "arg_location", "args_to_list", "npvalues", 
-           "CoordPair"]
 
 
 _COORD_PAIR_MAP = {"XLAT" : ("XLAT", "XLONG"),
@@ -63,25 +57,25 @@ _LON_COORDS = ("XLONG", "XLONG_M", "XLONG_U","XLONG_V", "CLONG")
 _TIME_COORD_VARS = ("XTIME",)
 
 
-def _is_time_coord_var(varname):
+def is_time_coord_var(varname):
     return varname in _TIME_COORD_VARS
 
 
-def _get_coord_pairs(varname):
+def get_coord_pairs(varname):
     return _COORD_PAIR_MAP[varname]
 
 
-def _is_multi_time_req(timeidx):
+def is_multi_time_req(timeidx):
     return timeidx is None
 
 
-def _is_multi_file(wrfnc):
+def is_multi_file(wrfnc):
     return (isinstance(wrfnc, Iterable) and not isstr(wrfnc))
 
-def _has_time_coord(wrfnc):
+def has_time_coord(wrfnc):
     return "XTIME" in wrfnc.variables
 
-def _is_mapping(wrfnc):
+def is_mapping(wrfnc):
     return isinstance(wrfnc, Mapping)
 
 def _generator_copy(gen):
@@ -159,12 +153,12 @@ class IterWrapper(Iterable):
             return obj_copy.__iter__()
             
             
-def _get_iterable(wrfseq):
+def get_iterable(wrfseq):
     """Returns a resetable iterable object."""
-    if not _is_multi_file(wrfseq):
+    if not is_multi_file(wrfseq):
         return wrfseq
     else:
-        if not _is_mapping(wrfseq):
+        if not is_mapping(wrfseq):
             
             if isinstance(wrfseq, (list, tuple, IterWrapper)):
                 return wrfseq
@@ -176,73 +170,18 @@ def _get_iterable(wrfseq):
                 return wrfseq
             else:
                 return dict(wrfseq) # generator/custom iterable class
-
-# Dictionary python 2-3 compatibility stuff
-def viewitems(d):
-    func = getattr(d, "viewitems", None)
-    if func is None:
-        func = d.items
-    return func()
-
-
-def viewkeys(d):
-    func = getattr(d, "viewkeys", None)
-    if func is None:
-        func = d.keys
-    return func()
-
-
-def viewvalues(d):
-    func = getattr(d, "viewvalues", None)
-    if func is None:
-        func = d.values
-    return func()
-
-def isstr(s):
-    try:
-        return isinstance(s, basestring)
-    except NameError:
-        return isinstance(s, str)
-
-
-# Python 2 rounding behavior  
-def _round2(x, d=0):
-    p = 10 ** d
-    return float(floor((x * p) + copysign(0.5, x)))/p
-
-
-def py2round(x, d=0):
-    if version_info >= (3,):
-        return _round2(x, d)
-    
-    return round(x, d)
-
-
-def py3range(*args):
-    if version_info >= (3,):
-        return range(*args)
-    
-    return xrange(*args)
-
-
-def ucode(*args, **kwargs):
-    if version_info >= (3, ):
-        return str(*args, **kwargs)
-    
-    return unicode(*args, **kwargs)
-
     
 # Helper to extract masked arrays from DataArrays that convert to NaN
-def npvalues(da):
-    if not isinstance(da, DataArray):
-        result = da
+def npvalues(array_type):
+    if not isinstance(array_type, DataArray):
+        result = array_type
     else:
         try:
-            fill_value = da.attrs["_FillValue"]
+            fill_value = array_type.attrs["_FillValue"]
         except KeyError:
-            result = da.values
+            result = array_type.values
         else:
-            result = ma.masked_invalid(da.values, copy=False)
+            result = ma.masked_invalid(array_type.values, copy=False)
             result.set_fill_value(fill_value)
     
     return result
@@ -253,8 +192,8 @@ class either(object):
         self.varnames = varnames
     
     def __call__(self, wrfnc):
-        if _is_multi_file(wrfnc):
-            if not _is_mapping(wrfnc):
+        if is_multi_file(wrfnc):
+            if not is_mapping(wrfnc):
                 wrfnc = next(iter(wrfnc))
             else:
                 entry = wrfnc[next(iter(viewkeys(wrfnc)))]
@@ -319,7 +258,7 @@ class combine_dims(object):
                 result.append(var.shape[dimidxs])
         
         return tuple(result)
-
+    
   
 class from_var(object):
     def __init__(self, varname, attribute):
@@ -362,7 +301,7 @@ def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     return False
 
 
-def _is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"), 
+def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"), 
                       lonvar=either("XLONG", "XLONG_M")):
     
     if isinstance(latvar, either):
@@ -372,17 +311,17 @@ def _is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
         lonvar = lonvar(wrfseq)
         
     # In case it's just a single file
-    if not _is_multi_file(wrfseq):
+    if not is_multi_file(wrfseq):
         wrfseq = [wrfseq]
     
     # Slow, but safe. Compare the corner points to the first item and see
     # any move.  User iterator protocol in case wrfseq is not a list/tuple.
-    if not _is_mapping(wrfseq):
+    if not is_mapping(wrfseq):
         wrf_iter = iter(wrfseq)
         first_wrfnc = next(wrf_iter)
     else:
         entry = wrfseq[next(iter(viewkeys(wrfseq)))]
-        return _is_moving_domain(entry, varname, latvar, lonvar)
+        return is_moving_domain(entry, varname, latvar, lonvar)
     
     # Quick check on pressure coordinates, bypassing the need to search the
     # domain corner points
@@ -475,10 +414,10 @@ def extract_global_attrs(wrfnc, attrs):
     else:
         attrlist = attrs
         
-    multifile = _is_multi_file(wrfnc)
+    multifile = is_multi_file(wrfnc)
     
     if multifile:
-        if not _is_mapping(wrfnc):
+        if not is_mapping(wrfnc):
             wrfnc = next(iter(wrfnc))
         else:
             entry = wrfnc[next(iter(viewkeys(wrfnc)))]
@@ -487,8 +426,8 @@ def extract_global_attrs(wrfnc, attrs):
     return {attr:_get_global_attr(wrfnc, attr) for attr in attrlist}
 
 def extract_dim(wrfnc, dim):
-    if _is_multi_file(wrfnc):
-        if not _is_mapping(wrfnc):
+    if is_multi_file(wrfnc):
+        if not is_mapping(wrfnc):
             wrfnc = next(iter(wrfnc))
         else:
             entry = wrfnc[next(iter(viewkeys(wrfnc)))]
@@ -509,7 +448,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta):
     first_key = next(key_iter)
     keynames.append(first_key)
     
-    is_moving = _is_moving_domain(wrfdict, varname)
+    is_moving = is_moving_domain(wrfdict, varname)
     
     first_array = _extract_var(wrfdict[first_key], varname, 
                               timeidx, is_moving=is_moving, method=method, 
@@ -591,7 +530,7 @@ def _find_max_time_size(wrfseq):
 
 
 def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
-    multitime = _is_multi_time_req(timeidx)
+    multitime = is_multi_time_req(timeidx)
     time_idx_or_slice = timeidx if not multitime else slice(None)
     var = wrfnc.variables[varname]
     data = var[time_idx_or_slice, :]
@@ -611,10 +550,10 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain):
     except AttributeError:
         if is_coordvar(varname):
             # Coordinate variable (most likely XLAT or XLONG)
-            lat_coord, lon_coord = _get_coord_pairs(varname)
+            lat_coord, lon_coord = get_coord_pairs(varname)
             time_coord = None
             
-            if is_moving_domain and _has_time_coord(wrfnc):
+            if is_moving_domain and has_time_coord(wrfnc):
                 time_coord = "XTIME"
                 
         else:
@@ -769,11 +708,11 @@ def _find_arr_for_time(wrfseq, varname, timeidx, is_moving, meta):
 # TODO:  implement in C
 def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta):
     if is_moving is None:
-        is_moving = _is_moving_domain(wrfseq, varname)
+        is_moving = is_moving_domain(wrfseq, varname)
     
     file_times = extract_times(wrfseq, ALL_TIMES)
     
-    multitime = _is_multi_time_req(timeidx) 
+    multitime = is_multi_time_req(timeidx) 
     
     # For single times, just need to find the ncfile and appropriate 
     # time index, and return that array
@@ -920,8 +859,8 @@ def _get_numfiles(wrfseq):
 # TODO:  implement in C
 def _join_files(wrfseq, varname, timeidx, is_moving, meta):
     if is_moving is None:
-        is_moving = _is_moving_domain(wrfseq, varname)
-    multitime = _is_multi_time_req(timeidx)
+        is_moving = is_moving_domain(wrfseq, varname)
+    multitime = is_multi_time_req(timeidx)
     numfiles = _get_numfiles(wrfseq)
     maxtimes = _find_max_time_size(wrfseq)
     
@@ -1101,10 +1040,10 @@ def combine_files(wrfseq, varname, timeidx, is_moving=None,
                   method="cat", squeeze=True, meta=True):
     
     # Handles generators, single files, lists, tuples, custom classes
-    wrfseq = _get_iterable(wrfseq)
+    wrfseq = get_iterable(wrfseq)
     
     # Dictionary is unique
-    if _is_mapping(wrfseq):
+    if is_mapping(wrfseq):
         outarr = _combine_dict(wrfseq, varname, timeidx, method, meta)
     elif method.lower() == "cat":
         outarr = _cat_files(wrfseq, varname, timeidx, is_moving, 
@@ -1133,13 +1072,13 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
             
             return cache_var
     
-    multitime = _is_multi_time_req(timeidx)
-    multifile = _is_multi_file(wrfnc)
+    multitime = is_multi_time_req(timeidx)
+    multifile = is_multi_file(wrfnc)
     
     if not multifile:
         if xarray_enabled() and meta:
             if is_moving is None:
-                is_moving = _is_moving_domain(wrfnc, varname)
+                is_moving = is_moving_domain(wrfnc, varname)
             result = _build_data_array(wrfnc, varname, timeidx, is_moving)
         else:
             if not multitime:
@@ -1167,16 +1106,16 @@ def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True,
             for var in varlist}
 
 # Python 3 compatability
-def _npbytes_to_str(var):
+def npbytes_to_str(var):
     return (bytes(c).decode("utf-8") for c in var[:])
 
 
 def _make_time(timearr):
-    return dt.datetime.strptime("".join(_npbytes_to_str(timearr)), 
+    return dt.datetime.strptime("".join(npbytes_to_str(timearr)), 
                                 "%Y-%m-%d_%H:%M:%S")
 
 def _file_times(wrfnc, timeidx):
-    multitime = _is_multi_time_req(timeidx)
+    multitime = is_multi_time_req(timeidx)
     if multitime:
         times = wrfnc.variables["Times"][:,:]
         for i in py3range(times.shape[0]):
@@ -1187,7 +1126,7 @@ def _file_times(wrfnc, timeidx):
         
 
 def extract_times(wrfnc, timeidx):
-    multi_file = _is_multi_file(wrfnc)
+    multi_file = is_multi_file(wrfnc)
     if not multi_file:
         wrf_list = [wrfnc]
     else:
@@ -1199,9 +1138,9 @@ def extract_times(wrfnc, timeidx):
         
     
 def is_standard_wrf_var(wrfnc, var):
-    multifile = _is_multi_file(wrfnc)
+    multifile = is_multi_file(wrfnc)
     if multifile:
-        if not _is_mapping(wrfnc):
+        if not is_mapping(wrfnc):
             wrfnc = next(iter(wrfnc))
         else:
             entry = wrfnc[next(iter(viewkeys(wrfnc)))]
@@ -1268,7 +1207,7 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
                                                 "TRUELAT1", "TRUELAT2",
                                                 "MOAD_CEN_LAT", "STAND_LON", 
                                                 "POLE_LAT", "POLE_LON"))
-    multitime = _is_multi_time_req(timeidx)
+    multitime = is_multi_time_req(timeidx)
     if not multitime:
         time_idx_or_slice = timeidx
     else:
@@ -1281,7 +1220,7 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
             lon_coord = coord_names[0]
             lat_coord = coord_names[1]
         else:
-            lat_coord, lon_coord = _get_coord_pairs(varname)
+            lat_coord, lon_coord = get_coord_pairs(varname)
     else:
         lat_coord, lon_coord = latlon_coordvars(wrfnc.variables)
     
@@ -1439,6 +1378,9 @@ def arg_location(func, argname, args, kwargs):
         _arg_location = _arg_location2
         
     return _arg_location(func, argname, args, kwargs)
+
+def psafilepath():
+    return os.path.join(os.path.dirname(__file__), "data", "psadilookup.dat")
     
     
     

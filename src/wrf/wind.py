@@ -28,20 +28,20 @@ def _calc_wspd_wdir(u, v, two_d, units):
     
     outdims = list(wspd.shape[0:idx_end]) + [2] + list(wspd.shape[idx_end:])
 
-    res = np.zeros(outdims, wspd.dtype)
+    result = np.zeros(outdims, wspd.dtype)
     
     idxs0 = ((0,Ellipsis, slice(None), slice(None), slice(None)) 
             if not two_d else 
-            (1,Ellipsis, slice(None), slice(None)))
+            (1, Ellipsis, slice(None), slice(None)))
     
     idxs1 = ((1, Ellipsis, slice(None), slice(None), slice(None)) 
             if not two_d else 
             (0, Ellipsis, slice(None), slice(None)))
     
-    res[idxs0] = wspd[:]
-    res[idxs1] = wdir[:]
+    result[idxs0] = wspd[:]
+    result[idxs1] = wdir[:]
     
-    return res
+    return result
 
 
 @set_wind_metadata(copy_varname=either("P", "PRES"), 
@@ -76,6 +76,7 @@ def get_v_destag(wrfnc, timeidx=0, method="cat", squeeze=True,
     v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
                           meta=False)
     v = destagger(v_vars[varname], -2)
+    
     return v
 
 
@@ -137,5 +138,5 @@ def get_destag_wspd_wdir10(wrfnc, timeidx=0, method="cat",
     v = (v_vars[varname] if varname == "V10" else 
          destagger(v_vars[varname][...,0,:,:], -2))
     
-    return _calc_wspd_wdir(u,v,True,units)
+    return _calc_wspd_wdir(u, v, True, units)
 

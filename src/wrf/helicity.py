@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 
 from .constants import Constants
 
-from .extension import computesrh, computeuh
+from .extension import _srhel, _udhel
 from .destag import destagger
 from .util import extract_vars, extract_global_attrs, either
 from .metadecorators import copy_and_set_metadata
@@ -44,7 +44,7 @@ def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True,
     v1 = v[...,::-1,:,:]
     z1 = z[...,::-1,:,:]
     
-    srh = computesrh(u1, v1, z1, ter, top)
+    srh = _srhel(u1, v1, z1, ter, top)
     
     return srh
 
@@ -80,7 +80,7 @@ def get_uh(wrfnc, timeidx=0, method="cat", squeeze=True,
     
     zp = ph + phb
     
-    uh = computeuh(zp, mapfct, u, v, wstag, dx, dy, bottom, top)
+    uh = _udhel(zp, mapfct, u, v, wstag, dx, dy, bottom, top)
     
     return uh
 

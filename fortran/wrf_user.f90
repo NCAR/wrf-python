@@ -1,6 +1,6 @@
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTEPI(pi, pressure, nx, ny, nz)
-    USE constants, ONLY : P1000MB, R_D, CP
+    USE constants, ONLY : P1000MB, RD, CP
 
     IMPLICIT NONE
 
@@ -19,7 +19,7 @@ SUBROUTINE DCOMPUTEPI(pi, pressure, nx, ny, nz)
     DO k = 1,nz
       DO j = 1,ny
           DO i = 1,nx
-              pi(i,j,k) = (pressure(i,j,k)/P1000MB)**(R_D/CP)
+              pi(i,j,k) = (pressure(i,j,k)/P1000MB)**(RD/CP)
           END DO
       END DO
     END DO
@@ -29,7 +29,7 @@ END SUBROUTINE DCOMPUTEPI
 ! Temperature from potential temperature in kelvin.
 !NCLFORTSTART
 SUBROUTINE DCOMPUTETK(tk, pressure, theta, nx)
-    USE constants, ONLY : P1000MB, R_D, CP
+    USE constants, ONLY : P1000MB, RD, CP
 
     IMPLICIT NONE
 
@@ -46,10 +46,10 @@ SUBROUTINE DCOMPUTETK(tk, pressure, theta, nx)
 
     INTEGER :: i
 
-    !REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, R_D=287.D0, CP=7.D0*R_D/2.D0
+    !REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, RD=287.D0, CP=7.D0*RD/2.D0
 
     DO i = 1,nx
-        pi = (pressure(i)/P1000MB)**(R_D/CP)
+        pi = (pressure(i)/P1000MB)**(RD/CP)
         tk(i) = pi*theta(i)
     END DO
 
@@ -282,7 +282,7 @@ END SUBROUTINE DINTERP1D
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
                           t_sea_level, t_surf, level, errstat, errmsg)
-    USE constants, ONLY : ERRLEN, R, G, GAMMA
+    USE constants, ONLY : ALGERR, RD, G, USSALR
 
     IMPLICIT NONE
 
@@ -297,11 +297,10 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: sea_level_pressure
     INTEGER, DIMENSION(nx,ny), INTENT(INOUT) ::  level
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(INOUT) :: t_surf, t_sea_level
+    INTEGER, INTENT(INOUT) :: errstat
+    CHARACTER(LEN=*), INTENT(INOUT) :: errmsg
+
 ! NCLFORTEND
-
-
-    INTEGER, OPTIONAL, INTENT(INOUT) :: errstat
-    CHARACTER(LEN=ERRLEN), OPTIONAL, INTENT(INOUT) :: errmsg
 
     !     Some required physical constants:
 
@@ -329,9 +328,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     !  temperature, which is supposed to reduce the effect of the diurnal
     !  heating cycle in the pressure field.
 
-    IF (PRESENT(errstat)) THEN
-        errstat = 0
-    END IF
+    errstat = 0
 
     DO j = 1,ny
         DO i = 1,nx
@@ -348,16 +345,14 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
             END DO
 
             IF (level(i,j) == -1) THEN
-                IF (PRESENT(errstat)) THEN
-                    errstat = 1
-                    errmsg = 'Error in finding 100 hPa up'
-                    RETURN
-                ELSE
-                    PRINT '(A,I4,A)','Troubles finding level ', NINT(PCONST)/100,' above ground.'
-                    PRINT '(A,I4,A,I4,A)','Problems first occur at (',I,',',J,')'
-                    PRINT '(A,F6.1,A)','Surface pressure = ',p(i,j,1)/100,' hPa.'
-                    STOP 'Error in finding 100 hPa up'
-                END IF
+                errstat = ALGERR
+                errmsg = "Error in finding 100 hPa up"
+                RETURN
+
+                !PRINT '(A,I4,A)','Troubles finding level ', NINT(PCONST)/100,' above ground.'
+                !PRINT '(A,I4,A,I4,A)','Problems first occur at (',I,',',J,')'
+                !PRINT '(A,F6.1,A)','Surface pressure = ',p(i,j,1)/100,' hPa.'
+                !STOP 'Error in finding 100 hPa up'
 
             END IF
         END DO
@@ -366,28 +361,26 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     !     Get temperature PCONST Pa above surface.  Use this to extrapolate
     !     the temperature at the surface and down to sea level.
 
-    DO J = 1,ny
-        DO I = 1,nx
+    DO j = 1,ny
+        DO i = 1,nx
 
             klo = MAX(level(i,j)-1,1)
             khi = MIN(klo+1,nz-1)
 
             IF (klo == khi) THEN
-                IF (PRESENT(errstat)) THEN
-                    errstat = 1
-                    errmsg = 'Error trapping levels'
-                    RETURN
-                ELSE
-                    PRINT '(A)','Trapping levels are weird.'
-                    PRINT '(A,I3,A,I3,A)','klo = ',klo,', khi = ',khi,': and they should not be equal.'
-                    STOP 'Error trapping levels'
-                END IF
+                errstat = ALGERR
+                errmsg = "Error trapping levels"
+                RETURN
+
+                !PRINT '(A)','Trapping levels are weird.'
+                !PRINT '(A,I3,A,I3,A)','klo = ',klo,', khi = ',khi,': and they should not be equal.'
+                !STOP 'Error trapping levels'
             END IF
 
             plo = p(i,j,klo)
             phi = p(i,j,khi)
-            tlo = t(i,j,klo)* (1.D0+0.608D0*q(i,j,klo))
-            thi = t(i,j,khi)* (1.D0+0.608D0*q(i,j,khi))
+            tlo = t(i,j,klo) * (1.D0+0.608D0*q(i,j,klo))
+            thi = t(i,j,khi) * (1.D0+0.608D0*q(i,j,khi))
             ! zlo = zetahalf(klo)/ztop*(ztop-terrain(i,j))+terrain(i,j)
             ! zhi = zetahalf(khi)/ztop*(ztop-terrain(i,j))+terrain(i,j)
             zlo = z(i,j,klo)
@@ -397,8 +390,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
             t_at_pconst = thi - (thi-tlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
             z_at_pconst = zhi - (zhi-zlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
 
-            t_surf(i,j) = t_at_pconst * (p(i,j,1)/p_at_pconst)**(GAMMA*R/G)
-            t_sea_level(i,j) = t_at_pconst + GAMMA*z_at_pconst
+            t_surf(i,j) = t_at_pconst * (p(i,j,1)/p_at_pconst)**(USSALR*RD/G)
+            t_sea_level(i,j) = t_at_pconst + USSALR*z_at_pconst
 
         END DO
     END DO
@@ -408,8 +401,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     ! temperatures are *too* hot.
 
     IF (ridiculous_mm5_test) THEN
-        DO J = 1,ny
-            DO I = 1,nx
+        DO j = 1,ny
+            DO i = 1,nx
                 l1 = t_sea_level(i,j) < TC
                 l2 = t_surf(i,j) <= TC
                 l3 = .NOT. l1
@@ -423,8 +416,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     END IF
 
     !     The grand finale: ta da!
-    DO J = 1,ny
-        DO I = 1,nx
+    DO j = 1,ny
+        DO i = 1,nx
     !   z_half_lowest=zetahalf(1)/ztop*(ztop-terrain(i,j))+terrain(i,j)
             z_half_lowest = z(i,j,1)
 
@@ -432,7 +425,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     ! Fortran routine didn't do this, but the NCL script that called it
     ! did, so we moved it here.
             sea_level_pressure(i,j) = 0.01 * (p(i,j,1)*EXP((2.D0*G*z_half_lowest)/&
-                (R*(t_sea_level(i,j)+t_surf(i,j)))))
+                (RD*(t_sea_level(i,j)+t_surf(i,j)))))
         END DO
     END DO
 
@@ -592,6 +585,7 @@ END SUBROUTINE FILTER2D
 
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
+    USE constants, ONLY : EZERO, ESLCON1, ESLCON2, CELKEL, RD, RV, EPS
 
     IMPLICIT NONE
 
@@ -604,23 +598,19 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
 
 ! NCLEND
 
-    REAL(KIND=8), PARAMETER :: SVP1=0.6112D0,SVP2=17.67D0,SVP3=29.65D0,SVPT0=273.15D0
-
     INTEGER :: i
     REAL(KIND=8) :: qvs,es,pressure,temperature
-    REAL(KIND=8), PARAMETER :: R_D=287.D0,R_V=461.6D0,EP_2=R_D/R_V
-    REAL(KIND=8), PARAMETER :: EP_3=0.622D0
 
     DO i = 1,nx
         pressure = p(i)
         temperature = t(i)
         ! es  = 1000.*svp1*
-        es = 10.D0*SVP1*EXP(SVP2* (temperature-SVPT0)/(temperature-SVP3))
+        es = EZERO * EXP(ESLCON1 * (temperature-CELKEL) / (temperature-ESLCON2))
         ! qvs = ep_2*es/(pressure-es)
-        qvs = EP_3*es/ (0.01D0*pressure- (1.D0-EP_3)*es)
+        qvs = EPS * es / (0.01D0 * pressure - (1.D0 - EPS) * es)
         ! rh = 100*amax1(1., qv(i)/qvs)
         ! rh(i) = 100.*qv(i)/qvs
-        rh(i) = 100.D0*DMAX1(DMIN1(qv(i)/qvs,1.0D0),0.0D0)
+        rh(i) = 100.D0 * DMAX1(DMIN1(qv(i) / qvs, 1.0D0), 0.0D0)
     END DO
 
     RETURN
@@ -744,7 +734,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
         END DO
     END DO
 
-    !      WRITE (6,FMT=*) ' computing velocities '
+    !      WRITE (6,FMT=*) " computing velocities "
     DO j = 1,ny
         DO i = 1,nx
             IF (istag.EQ.1) THEN
@@ -859,26 +849,23 @@ SUBROUTINE DCOMPUTEICLW(iclw, pressure, qc_in, nx, ny, nz)
 
 END SUBROUTINE DCOMPUTEICLW
 
-SUBROUTINE testfunc(a, b, nx, ny, nz, errstat, errstr)
+SUBROUTINE testfunc(a, b, c, nx, ny, nz, errstat, errmsg)
+    USE constants, ONLY : ALGERR
     IMPLICIT NONE
 
-    !f2py threadsafe
+    !threadsafe
     !f2py intent(in,out) :: b
 
     INTEGER, INTENT(IN) :: nx, ny, nz
 
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: a
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(OUT) :: b
-    INTEGER, INTENT(INOUT), OPTIONAL :: errstat
-    CHARACTER(LEN=512), INTENT(INOUT), OPTIONAL :: errstr
+    CHARACTER(LEN=*), INTENT(IN) :: c
+    INTEGER, INTENT(INOUT) :: errstat
+    REAL(KIND=8), PARAMETER :: blah=123.45
+    CHARACTER(LEN=*), INTENT(INOUT) :: errmsg
 
     INTEGER :: i,j,k
-
-    IF (PRESENT(errstat)) THEN
-        errstat = 0
-        errstr = 'test string worked'
-    END IF
-
 
     DO k=1,nz
         DO j=1,ny
@@ -888,9 +875,8 @@ SUBROUTINE testfunc(a, b, nx, ny, nz, errstat, errstr)
         END DO
     END DO
 
-    IF (PRESENT(errstat)) THEN
-        errstat = 1
-    END IF
+    errstat = ALGERR
+    WRITE(errmsg, *) c(1:20), blah
 
     RETURN
 

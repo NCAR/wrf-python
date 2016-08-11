@@ -1,10 +1,10 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-import numpy as n
+import numpy as np
 
 #from .extension import computedbz,computetk
-from .extension import computedbz, _tk
+from .extension import _dbz, _tk
 from .constants import Constants
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
@@ -39,7 +39,7 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
         snowvars = extract_vars(wrfnc, timeidx, "QSNOW", 
                                 method, squeeze, cache, meta=False)
     except KeyError:
-        qs = n.zeros(qv.shape, "float")
+        qs = np.zeros(qv.shape, qv.dtype)
     else:
         qs = snowvars["QSNOW"]
     
@@ -47,28 +47,20 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
         graupvars = extract_vars(wrfnc, timeidx, "QGRAUP", 
                                  method, squeeze, cache, meta=False)
     except KeyError:
-        qg = n.zeros(qv.shape, "float")
+        qg = np.zeros(qv.shape, qv.dtype)
     else:
         qg = graupvars["QGRAUP"]
-    
-    # If qsnow is all 0, set sn0 to 1
-    sn0 = 0
-    if (n.any(qs != 0)):
-        sn0 = 1
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
     tk = _tk(full_p, full_t)
     
-    ivarint = 0
-    if do_varint:
-        ivarint = 1
-        
-    iliqskin = 0
-    if do_liqskin:
-        iliqskin = 1
+    # If qsnow is not all 0, set sn0 to 1
+    sn0 = 1 if qs.any() else 0
+    ivarint = 1 if do_varint else 0
+    iliqskin = 1 if do_liqskin else 0
     
-    return computedbz(full_p,tk,qv,qr,qs,qg,sn0,ivarint,iliqskin)
+    return _dbz(full_p, tk, qv, qr, qs, qg, sn0, ivarint, iliqskin)
 
 
 @copy_and_set_metadata(copy_varname="T", name="max_dbz", 
@@ -79,8 +71,7 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
 def get_max_dbz(wrfnc, timeidx=0, method="cat", 
                 squeeze=True, cache=None, meta=True,
                 do_varint=False, do_liqskin=False):
-    return n.amax(get_dbz(wrfnc, timeidx, method, 
-                          squeeze, cache, meta,
-                          do_varint, do_liqskin), 
+    return np.amax(get_dbz(wrfnc, timeidx, method, squeeze, cache, meta,
+                           do_varint, do_liqskin), 
                   axis=-3)
 

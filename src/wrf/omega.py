@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 from .constants import Constants
 from .destag import destagger
 #from .extension import computeomega,computetk
-from .extension import computeomega, _tk
+from .extension import _omega, _tk
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata
 
@@ -28,7 +28,7 @@ def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     full_p = p + pb
     tk = _tk(full_p, full_t)
     
-    omega = computeomega(qv,tk,wa,full_p)
+    omega = _omega(qv, tk, wa, full_p)
     
     return omega
     

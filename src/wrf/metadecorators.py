@@ -7,12 +7,11 @@ import numpy as np
 import numpy.ma as ma
 
 from .extension import _interpline
-from .util import (viewkeys, viewitems, extract_vars, 
-                   combine_with, either, from_args, arg_location,
+from .util import (extract_vars, combine_with, either, from_args, arg_location,
                    is_coordvar, latlon_coordvars, CoordPair, npvalues, 
-                   py3range, ucode, from_var, iter_left_indexes)
+                   from_var, iter_left_indexes)
+from .py3compat import viewkeys, viewitems, py3range, ucode
 from .interputils import get_xy_z_params, get_xy
-from .latlonutils import ij_to_ll, ll_to_ij
 from .config import xarray_enabled
 
 if xarray_enabled():
@@ -231,7 +230,172 @@ def set_wind_metadata(copy_varname, name, description,
         
     return func_wrapper
 
-def set_latlon_metadata(ij=False):
+def set_cape_metadata(is2d):
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
+            return wrapped(*args, **kwargs)
+        
+        argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", "squeeze", 
+                                      "cache", "missing"), 
+                          *args, **kwargs)
+        wrfnc = argvars["wrfnc"]
+        timeidx = argvars["timeidx"]
+        method = argvars["method"]
+        squeeze = argvars["squeeze"]
+        cache = argvars["cache"]
+        missing = argvars["missing"]
+        if cache is None:
+            cache = {}
+        
+        _copy_varname = "P"
+        copy_var = extract_vars(wrfnc, timeidx, _copy_varname, method, squeeze, 
+                                cache, meta=True)[_copy_varname]
+        
+        # Make a copy so we don't modify a user supplied cache
+        new_cache = dict(cache) 
+        new_cache[_copy_varname] = copy_var
+        
+        # Don't modify the original args/kargs.  The args need to be a list
+        # so it can be modified.
+        new_args, cache_argloc = arg_location(wrapped, "cache", args, kwargs)
+        new_args[cache_argloc] = new_cache
+        
+        result = wrapped(*new_args)
+        
+        outcoords = OrderedDict()
+        outattrs = OrderedDict()
+        outattrs.update(copy_var.attrs)
+        outdimnames = [None] * result.ndim
+        
+        if is2d:
+            # Right dims
+            outdimnames[-2:] = copy_var.dims[-2:]
+            # Left dims
+            outdimnames[1:-2] = copy_var.dims[0:-3]
+            outdimnames[0] = "mcape_mcin_lcl_lfc"
+            outattrs["description"] = "mcape ; mcin ; lcl ; lfc"
+            outattrs["MemoryOrder"] = "XY"
+            outattrs["units"] = "J/kg ; J/kg ; m ; m"
+            outname = "cape_2d"
+        else:
+            # Right dims
+            outdimnames[-3:] = copy_var.dims[-3:]
+            # Left dims
+            outdimnames[1:-3] = copy_var.dims[0:-3]
+            outdimnames[0] = "cape_cin"
+            outattrs["description"] = "cape; cin"
+            outattrs["units"] = "J kg-1 ; J kg-1"
+            outattrs["MemoryOrder"] = "XYZ"
+            outname = "cape_3d"
+        
+        outattrs["_FillValue"] = missing
+        outattrs["missing_value"] = missing
+
+        
+        # xarray doesn't line up coordinate dimensions based on 
+        # names, it just remembers the index it originally mapped to.  
+        # So, need to rebuild the XLAT, XLONG, coordinates again since the 
+        # leftmost index changed.
+
+        for key,dataarray in viewitems(copy_var.coords):
+            if is_coordvar(key):
+                outcoords[key] = dataarray.dims, npvalues(dataarray)
+            elif key == "XTIME":
+                outcoords[key] = dataarray.dims, npvalues(dataarray)
+            elif key == "Time":
+                outcoords[key] = npvalues(dataarray)
+        
+        if is2d:
+            outcoords["mcape_mcin_lcl_lfc"] = ["mcape", "mcin", "lcl", "lfc"]
+        else:
+            outcoords["cape_cin"] = ["cape", "cin"]
+            
+        
+        return DataArray(result, name=outname, coords=outcoords, 
+                       dims=outdimnames, attrs=outattrs)
+        
+    return func_wrapper
+
+
+def set_cloudfrac_metadata():
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
+            return wrapped(*args, **kwargs)
+        
+        argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", "squeeze", 
+                                      "cache"), 
+                          *args, **kwargs)
+        wrfnc = argvars["wrfnc"]
+        timeidx = argvars["timeidx"]
+        method = argvars["method"]
+        squeeze = argvars["squeeze"]
+        cache = argvars["cache"]
+        if cache is None:
+            cache = {}
+        
+        _copy_varname = "P"
+        copy_var = extract_vars(wrfnc, timeidx, _copy_varname, method, squeeze, 
+                                cache, meta=True)[_copy_varname]
+        
+        # Make a copy so we don't modify a user supplied cache
+        new_cache = dict(cache) 
+        new_cache[_copy_varname] = copy_var
+        
+        # Don't modify the original args/kargs.  The args need to be a list
+        # so it can be modified.
+        new_args, cache_argloc = arg_location(wrapped, "cache", args, kwargs)
+        new_args[cache_argloc] = new_cache
+        
+        result = wrapped(*new_args)
+        
+        outcoords = OrderedDict()
+        outattrs = OrderedDict()
+        outattrs.update(copy_var.attrs)
+        outdimnames = [None] * result.ndim
+        
+        # Right dims
+        outdimnames[-2:] = copy_var.dims[-2:]
+        # Left dims
+        outdimnames[1:-2] = copy_var.dims[0:-3]
+        outdimnames[0] = "low_med_high"
+        outattrs["description"] = "low, med, high clouds"
+        outattrs["MemoryOrder"] = "XY"
+        outattrs["units"] = "%"
+        outname = "cloudfrac"
+
+        # xarray doesn't line up coordinate dimensions based on 
+        # names, it just remembers the index it originally mapped to.  
+        # So, need to rebuild the XLAT, XLONG, coordinates again since the 
+        # leftmost index changed.
+
+        for key,dataarray in viewitems(copy_var.coords):
+            if is_coordvar(key):
+                outcoords[key] = dataarray.dims, npvalues(dataarray)
+            elif key == "XTIME":
+                outcoords[key] = dataarray.dims, npvalues(dataarray)
+            elif key == "Time":
+                outcoords[key] = npvalues(dataarray)
+        
+        outcoords["low_med_high"] = ["low", "med", "high"]
+            
+        return DataArray(result, name=outname, coords=outcoords, 
+                       dims=outdimnames, attrs=outattrs)
+        
+    return func_wrapper
+
+def set_latlon_metadata(xy=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
         
@@ -243,22 +407,27 @@ def set_latlon_metadata(ij=False):
         if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
-        res = wrapped(*args, **kwargs)
+        # Set squeeze to False.  Squeeze will be handled in here
+        new_args, squeeze_argloc = arg_location(wrapped, "squeeze", args, 
+                                                kwargs)
+        new_args[squeeze_argloc] = False
+        
+        result = wrapped(*new_args)
         
         # Want to preserve the input coordinate pair in metadata
-        if res.ndim == 1:
-            res = res[np.newaxis, :]
+        if result.ndim == 1:
+            result = result[np.newaxis, :]
         
-        argnames = ["i", "j"] if not ij else ["latitude", "longitude"]
+        argnames = ["x", "y"] if not xy else ["latitude", "longitude"]
         argnames.append("squeeze")
-        outname = "latlon" if not ij else "ij"
+        outname = "latlon" if not xy else "xy"
         
-        if res.ndim == 2:
-            dimnames = (["ij", "lat_lon"] if not ij 
-                        else ["latlon", "i_j"])
+        if result.ndim == 2:
+            dimnames = (["xy", "lat_lon"] if not xy 
+                        else ["latlon", "x_y"])
         else:
-            dimnames = (["ij", "domain", "lat_lon"] if not ij 
-                        else ["latlon", "domain", "i_j"])
+            dimnames = (["xy", "domain", "lat_lon"] if not xy 
+                        else ["latlon", "domain", "x_y"])
         
         argvars = from_args(wrapped, argnames, *args, **kwargs)
         
@@ -271,15 +440,15 @@ def set_latlon_metadata(ij=False):
         
         coords = {}
         if not ij:
-            coords["coord_pair"] = (dimnames[0], [CoordPair(i=x[0], j=x[1]) 
+            coords["coord_pair"] = (dimnames[0], [CoordPair(x=x[0], y=x[1]) 
                                for x in zip(arr1, arr2)])
             coords[dimnames[-1]] = ["lat", "lon"]
         else:
             coords["coord_pair"] = (dimnames[0], [CoordPair(lat=x[0], lon=x[1]) 
                                for x in zip(arr1, arr2)])
-            coords[dimnames[-1]] = ["i", "j"]
+            coords[dimnames[-1]] = ["x", "y"]
         
-        da = DataArray(res, name=outname, dims=dimnames, coords=coords)
+        da = DataArray(result, name=outname, dims=dimnames, coords=coords)
         
         if squeeze:
             da = da.squeeze()
@@ -642,12 +811,11 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                     lats = _interpline(latcoord, xy)
                     lons = _interpline(loncoord, xy)
                     
-                    outcoords["xy_loc"] = ("xy", 
-                                           np.asarray(tuple(
+                    outcoords["xy_loc"] = np.asarray(tuple(
                                                 CoordPair(x=xy[i,0], y=xy[i,1],
                                                     lat=lats[i], lon=lons[i]) 
                                           for i in py3range(xy.shape[-2])))
-                                          )
+
                     
                 else:
                     extra_dims = latcoord.shape[0:-2]
@@ -919,11 +1087,21 @@ def set_interp_metadata(interp_type):
     return func_wrapper
 
 
-def set_alg_metadata(alg_ndims, right_dimnames=None,
-                     refvarndims=None, 
-                     refvarname=None, missingarg=None,
-                     insert_dimnames=None,
+def set_alg_metadata(alg_ndims, refvarname, 
+                     refvarndims=None, missingarg=None,
+                     stagdim=None, stagsubvar=None,
                      units=None, description=None, squeeze=False):
+    """
+        alg_ndims: number of dimensions returned by the algorithm
+        refvarndims: number of right dimensions for the refernce var, used
+                     when the result has less dimensions than reference
+        refvarname: argument name for the reference variable
+        missingarg: argument name for the missing value
+        stagdim: staggered dimension in reference
+        stagsubvar: the variable to use to supply the staggered dimension name
+        
+    
+    """
     
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
@@ -980,14 +1158,19 @@ def set_alg_metadata(alg_ndims, right_dimnames=None,
         else:
             refvar = None
             
+        if stagsubvar is not None:
+            stagvar = from_args(wrapped, (stagsubvar,), 
+                               *args, **kwargs)[stagsubvar]
+        else:
+            stagvar = None
+            
         if isinstance(refvar, DataArray):
             
-            # If right dims are provided, use them first
-            if right_dimnames is not None:
-                outdims[-alg_ndims:] = right_dimnames[-alg_ndims:] 
-            else:
-                # Copy the right dims
-                outdims[-alg_ndims:] = refvar.dims[-alg_ndims:]
+            # Copy the right dims
+            outdims[-alg_ndims:] = refvar.dims[-alg_ndims:]
+            
+            # Use the stagsubvar if applicable
+            outdims[stagdim] = stagvar.dims[stagdim]
             
             # Left dims 
             if refvarndims is None:
@@ -1001,7 +1184,8 @@ def set_alg_metadata(alg_ndims, right_dimnames=None,
                             outdims[idx] = refvar.dims[idx]
                         else:
                             continue
-            # When reference and result aren't exactly aligned (slp,uvmet)
+            # When reference and result aren't exactly aligned (slp)
+            # (reference is 3D, result is 2D)
             else: 
                 ref_extra = refvar.ndim - refvarndims
                 ref_left_dimnames = refvar.dims[0:ref_extra]
@@ -1012,13 +1196,8 @@ def set_alg_metadata(alg_ndims, right_dimnames=None,
                         outdims[idx] = dimname
                     else:
                         continute
-                        
-            if insert_dimnames is not None:
-                for pair in insert_dimnames:
-                    outdims.insert(pair[0], pair[1])
                     
-        out = DataArray(result, name=outname, dims=outdims,
-                         attrs=outattrs)
+        out = DataArray(result, name=outname, dims=outdims, attrs=outattrs)
         
         if squeeze:
             return out.squeeze()
@@ -1063,11 +1242,127 @@ def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v"):
             # Left dims come from u-var
             outdims[1:-2] = uvar.dims[0:-2]
             
-            # Left-most is always u_v
-            outdims[0] = "u_v"
+        # Left-most is always u_v
+        outdims[0] = "u_v"
+        outcoords = {}
+        outcoords["u_v"] = ["u", "v"]
                           
-        out = DataArray(result, name=outname, dims=outdims,
-                         attrs=outattrs)
+        out = DataArray(result, name=outname, dims=outdims, coords=outcoords,
+                        attrs=outattrs)
+        
+        return out
+    
+    return func_wrapper
+
+def set_cape_alg_metadata(is2d):
+    
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+            
+        if not xarray_enabled() or not do_meta:
+            return wrapped(*args, **kwargs)
+            
+        result = wrapped(*args, **kwargs)
+        
+        # Default dimension names
+        outdims = ["dim_{}".format(i) for i in py3range(result.ndim)]
+        
+        outattrs = OrderedDict()
+        
+        if is2d:
+            outname = "cape_2d"
+            outattrs["description"] = "mcape ; mcin ; lcl ; lfc"
+            outattrs["units"] = "J/kg ; J/kg ; m ; m"
+            outattrs["MemoryOrder"] = "XY"
+        else:
+            outname = "cape_3d"
+            outattrs["description"] = "cape; cin"
+            outattrs["units"] = "J kg-1 ; J kg-1"
+            outattrs["MemoryOrder"] = "XYZ"
+            
+        
+        argvals = from_args(wrapped, ("p_hpa","missing"), *args, **kwargs)
+        p = argvals["p_hpa"]
+        missing = argvals["missing"]
+            
+        if isinstance(p, DataArray):
+            if is2d:
+                # Right dims
+                outdims[-2:] = p.dims[-2:]
+                # Left dims
+                outdims[1:-2] = p.dims[0:-3]
+                
+            else:
+                # Right dims
+                outdims[-3:] = p.dims[-3:]
+                # Left dims
+                outdims[1:-3] = p.dims[0:-3]
+        
+        outcoords = {}     
+        # Left-most is always cape_cin or cape_cin_lcl_lfc
+        if is2d:
+            outdims[0] = "cape_cin_lcl_lfc"
+            outcoords["cape_cin_lcl_lfc"] = ["cape", "cin", "lcl", "lfc"]
+        else:
+            outdims[0] = "cape_cin"
+            outcoords["cape_cin"] = ["cape", "cin"]
+            
+        outattrs["_FillValue"] = missing
+        outattrs["missing_value"] = missing
+            
+        out = DataArray(result, name=outname, dims=outdims, coords=outcoords,
+                        attrs=outattrs)
+        
+        return out
+    
+    return func_wrapper
+
+
+def set_cloudfrac_alg_metadata():
+    
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+            
+        if not xarray_enabled() or not do_meta:
+            return wrapped(*args, **kwargs)
+            
+        result = wrapped(*args, **kwargs)
+        
+        # Default dimension names
+        outdims = ["dim_{}".format(i) for i in py3range(result.ndim)]
+        
+        outattrs = OrderedDict()
+        
+        outname = "cloudfrac"
+        outattrs["description"] = "low, med, high clouds"
+        outattrs["units"] = "%"
+        outattrs["MemoryOrder"] = "XY"
+            
+        
+        argvals = from_args(wrapped, "p", *args, **kwargs)["p"]
+            
+        if isinstance(p, DataArray):
+            # Right dims
+            outdims[-2:] = p.dims[-2:]
+            # Left dims
+            outdims[1:-2] = p.dims[0:-3]
+                
+        
+        outcoords = {}     
+        # Left-most is always cape_cin or cape_cin_lcl_lfc
+        outdims[0] = "low_med_high"
+        outcoords["low_med_high"] = ["low", "med", "high"]
+            
+        out = DataArray(result, name=outname, dims=outdims, coords=outcoords,
+                        attrs=outattrs)
         
         return out
     
