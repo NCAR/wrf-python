@@ -32,6 +32,7 @@ from wrf.projection import getproj, RotatedLatLon, PolarStereographic
 
 FILE_DIR = "/Users/ladwig/Documents/wrf_files/"
 WRF_FILES = [
+            join(FILE_DIR, "norway", "geo_em.d01.nc"),
             join(FILE_DIR, "rotated_pole", "EAS_geo_em.d01.nc"),
             join(FILE_DIR, "rotated_pole", "EUR_geo_em.d01.nc"),
             join(FILE_DIR,"wrfout_d01_2016-02-25_18_00_00"),
@@ -55,7 +56,7 @@ def nz_proj():
               "POLE_LAT" : 48.185131,
               "POLE_LON" : 0.0}
     
-    return lats, lons, RotLatLonProj(lats=lats, lons=lons, **params)
+    return lats, lons, RotatedLatLon(lats=lats, lons=lons, **params)
 
 def argentina_proj():
     lats = np.array([[-57.144064, -57.144064],
@@ -73,7 +74,7 @@ def argentina_proj():
               "POLE_LAT" : 90 + -39.222954,
               "POLE_LON" : 0.0}
     
-    return lats, lons, RotLatLonProj(lats=lats, lons=lons, **params)
+    return lats, lons, RotatedLatLon(lats=lats, lons=lons, **params)
 
 def south_polar_proj():
     lats = np.array([[-30.0,-30.0],
@@ -88,7 +89,7 @@ def south_polar_proj():
               "MOAD_CEN_LAT" : -90.0,
               "STAND_LON" : 0}
     
-    return lats, lons, PolarStereographicProj(lats=lats, lons=lons, **params)
+    return lats, lons, PolarStereographic(lats=lats, lons=lons, **params)
 
 def north_polar_proj():
     lats = np.array([[30.0,30.0],
@@ -103,7 +104,7 @@ def north_polar_proj():
               "MOAD_CEN_LAT" : 90.0,
               "STAND_LON" : 10}
     
-    return lats, lons, PolarStereographicProj(lats=lats, lons=lons, **params)
+    return lats, lons, PolarStereographic(lats=lats, lons=lons, **params)
 
 
 def dateline_rot_proj():
@@ -121,7 +122,7 @@ def dateline_rot_proj():
               "STAND_LON" :  173.143792,
               "POLE_LAT" : 90.0 - 66.335764,
               "POLE_LON" : 180.0}
-    return lats, lons, RotLatLonProj(lats=lats, lons=lons, **params)
+    return lats, lons, RotatedLatLon(lats=lats, lons=lons, **params)
 
 class WRFProjTest(ut.TestCase):
     longMessage = True
@@ -148,8 +149,8 @@ def make_test(wrf_file=None, fixed_case=None):
     print ("wrf proj4: {}".format(proj.proj4()))
     if PYNGL:
         # PyNGL plotting
-        wks_type = "png"
-        wks = Ngl.open_wks(wks_type,"pyngl_{}".format(name_suffix))
+        wks_type = bytes("png")
+        wks = Ngl.open_wks(wks_type,bytes("pyngl_{}".format(name_suffix)))
         mpres = proj.pyngl()
         map = Ngl.map(wks,mpres)
         

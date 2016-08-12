@@ -210,9 +210,9 @@ class LambertConformal(WrfProj):
                 else self.truelat2)
                                                 
         _pyngl = Resources()
-        _pyngl.mpProjection = "LambertConformal"
-        _pyngl.mpDataBaseVersion = "MediumRes"
-        _pyngl.mpLimitMode = "Corners"
+        _pyngl.mpProjection = bytes("LambertConformal")
+        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpLimitMode = bytes("Corners")
         _pyngl.mpLeftCornerLonF = self.ll_lon
         _pyngl.mpLeftCornerLatF = self.ll_lat
         _pyngl.mpRightCornerLonF = self.ur_lon
@@ -257,7 +257,7 @@ class LambertConformal(WrfProj):
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
-        xs, ys, zs  = self._cartopy.transform_points(pc,
+        xs, ys, zs  = self._cartopy().transform_points(pc,
                              np.array([self.ll_lon, self.ur_lon]),
                              np.array([self.ll_lat, self.ur_lat])).T
 
@@ -308,9 +308,9 @@ class Mercator(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = "Mercator"
-        _pyngl.mpDataBaseVersion = "MediumRes"
-        _pyngl.mpLimitMode = "Corners"
+        _pyngl.mpProjection = bytes("Mercator")
+        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpLimitMode = bytes("Corners")
         _pyngl.mpLeftCornerLonF = self.ll_lon
         _pyngl.mpLeftCornerLatF = self.ll_lat
         _pyngl.mpRightCornerLonF = self.ur_lon
@@ -361,7 +361,7 @@ class Mercator(WrfProj):
                 
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
-        xs, ys, zs  = self._cartopy.transform_points(pc,
+        xs, ys, zs  = self._cartopy().transform_points(pc,
                              np.array([self.ll_lon, self.ur_lon]),
                              np.array([self.ll_lat, self.ur_lat])).T
                             
@@ -409,9 +409,9 @@ class PolarStereographic(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = "Stereographic"
-        _pyngl.mpDataBaseVersion = "MediumRes"
-        _pyngl.mpLimitMode = "Corners"
+        _pyngl.mpProjection = bytes("Stereographic")
+        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpLimitMode = bytes("Corners")
         _pyngl.mpLeftCornerLonF = self.ll_lon
         _pyngl.mpLeftCornerLatF = self.ll_lat
         _pyngl.mpRightCornerLonF = self.ur_lon
@@ -458,7 +458,7 @@ class PolarStereographic(WrfProj):
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
-        xs, ys, zs  = self._cartopy.transform_points(pc,
+        xs, ys, zs  = self._cartopy().transform_points(pc,
                              np.array([self.ll_lon, self.ur_lon]),
                              np.array([self.ll_lat, self.ur_lat])).T
                             
@@ -499,9 +499,9 @@ class LatLon(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = "CylindricalEquidistant"
-        _pyngl.mpDataBaseVersion = "MediumRes"
-        _pyngl.mpLimitMode = "Corners"
+        _pyngl.mpProjection = bytes("CylindricalEquidistant")
+        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpLimitMode = bytes("Corners")
         _pyngl.mpLeftCornerLonF = self.ll_lon
         _pyngl.mpLeftCornerLatF = self.ll_lat
         _pyngl.mpRightCornerLonF = self.ur_lon
@@ -647,9 +647,9 @@ class RotatedLatLon(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = "CylindricalEquidistant"
-        _pyngl.mpDataBaseVersion = "MediumRes"
-        _pyngl.mpLimitMode = "Corners"
+        _pyngl.mpProjection = bytes("CylindricalEquidistant")
+        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpLimitMode = bytes("Corners")
         _pyngl.mpLeftCornerLonF = self.ll_lon
         _pyngl.mpLeftCornerLatF = self.ll_lat
         _pyngl.mpRightCornerLonF = self.ur_lon
@@ -693,7 +693,7 @@ class RotatedLatLon(WrfProj):
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
-        xs, ys, zs  = self._cartopy.transform_points(pc,
+        xs, ys, zs  = self._cartopy().transform_points(pc,
                              np.array([self.ll_lon, self.ur_lon]),
                              np.array([self.ll_lat, self.ur_lat])).T
                             
