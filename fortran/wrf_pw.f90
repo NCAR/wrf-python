@@ -1,6 +1,6 @@
 !NCLFORTSTART
 SUBROUTINE DCOMPUTEPW(p, tv, qv, ht, pw, nx, ny, nz, nzh)
-    USE constants, ONLY : RD
+    USE wrf_constants, ONLY : RD
 
     IMPLICIT NONE
 
@@ -21,7 +21,7 @@ SUBROUTINE DCOMPUTEPW(p, tv, qv, ht, pw, nx, ny, nz, nzh)
     DO k=1,nz
         DO j=1,ny
             DO i=1,nx
-                pw(i,j) = pw(i,j) + ((p(i,j,k)/(RD*tv(i,j,k))) * qv(i,j,k) * (ht(i,j,k+1) - ht(i,j,k)))
+                pw(i,j) = pw(i,j) + ((p(i,j,k)/(RD*tv(i,j,k)))*qv(i,j,k)*(ht(i,j,k+1) - ht(i,j,k)))
             END DO
         END DO
     END DO

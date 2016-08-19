@@ -1,11 +1,11 @@
 ! These are chosen to match the wrf module_model_constants.F where
 ! applicable
-MODULE constants
+MODULE wrf_constants
     INTEGER :: ERRLEN=512
     INTEGER :: ALGERR=64
 
     REAL(KIND=8), PARAMETER :: WRF_EARTH_RADIUS = 6370000.D0
-    REAL(KIND=8), PARAMETER :: T_BASE = 300.0
+    REAL(KIND=8), PARAMETER :: T_BASE = 300.0D0
     REAL(KIND=8), PARAMETER :: PI = 3.1415926535897932384626433D0
     REAL(KIND=8), PARAMETER :: RAD_PER_DEG = PI/180.D0
     REAL(KIND=8), PARAMETER :: DEG_PER_RAD = 180.D0/PI
@@ -62,5 +62,5 @@ MODULE constants
     REAL(KIND=8), PARAMETER :: EXPONI =  1./EXPON
 
 
-END MODULE constants
+END MODULE wrf_constants
 

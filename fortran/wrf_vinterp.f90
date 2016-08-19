@@ -1,3 +1,7 @@
+! The subroutines in this file were taken directly from RIP code written
+! by Dr. Mark Stoelinga.  They were modified by Sherrie
+! Fredrick(NCAR/MMM) to work with NCL February 2015.
+
 !NCLFORTSTART
 SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
@@ -62,7 +66,7 @@ END SUBROUTINE wrf_monotonic
 
 !NCLFORTSTART
 FUNCTION wrf_intrp_value(wvalp0, wvalp1, vlev, vcp0, vcp1, icase, errstat, errmsg)
-    USE constants, ONLY : ALGERR, SCLHT
+    USE wrf_constants, ONLY : ALGERR, SCLHT
 
     IMPLICIT NONE
 
@@ -122,7 +126,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                       sfp, smsfp, vcarray, interp_levels, numlevels,&
                       icase, ew, ns, nz, extrap, vcor, logp, rmsg,&
                       errstat, errmsg)
-    USE constants, ONLY : ALGERR, SCLHT, EXPON, EXPONI, GAMMA, GAMMAMD, TLCLC1, &
+    USE wrf_constants, ONLY : ALGERR, SCLHT, EXPON, EXPONI, GAMMA, GAMMAMD, TLCLC1, &
                           TLCLC2, TLCLC3, TLCLC4, THTECON1, THTECON2, THTECON3, &
                           CELKEL, EPS, USSALR
 

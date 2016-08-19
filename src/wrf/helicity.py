@@ -1,8 +1,9 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .constants import Constants
+import numpy as np
 
+from .constants import Constants
 from .extension import _srhel, _udhel
 from .destag import destagger
 from .util import extract_vars, extract_global_attrs, either
@@ -12,8 +13,7 @@ from .metadecorators import copy_and_set_metadata
                        description="storm relative helicity",
                        units="m-2/s-2")
 def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True, 
-            cache=None, meta=True,
-            top=3000.0):
+            cache=None, meta=True, top=3000.0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
     ncvars = extract_vars(wrfnc, timeidx, ("HGT", "PH", "PHB"),
@@ -40,9 +40,9 @@ def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True,
     z = geopt_unstag / Constants.G
     
     # Re-ordering from high to low
-    u1 = u[...,::-1,:,:] 
-    v1 = v[...,::-1,:,:]
-    z1 = z[...,::-1,:,:]
+    u1 = np.ascontiguousarray(u[...,::-1,:,:])
+    v1 = np.ascontiguousarray(v[...,::-1,:,:])
+    z1 = np.ascontiguousarray(z[...,::-1,:,:])
     
     srh = _srhel(u1, v1, z1, ter, top)
     
@@ -56,7 +56,7 @@ def get_uh(wrfnc, timeidx=0, method="cat", squeeze=True,
            bottom=2000.0, top=5000.0):
     
     ncvars = extract_vars(wrfnc, timeidx, ("W", "PH", "PHB", "MAPFAC_M"),
-                          method, squeeze, cache)
+                          method, squeeze, cache, meta=False)
     
     wstag = ncvars["W"]
     ph = ncvars["PH"]

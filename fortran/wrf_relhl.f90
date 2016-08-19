@@ -1,6 +1,38 @@
+!   ***************************************************************
+!   * Storm Relative Helicity (SRH) is a measure of the           *
+!   * streamwise vorticity within the inflow environment of a     *
+!   * convective storm. It is calculated by multiplying the       *
+!   * storm-relative inflow velocity vector (Vh-C) by the         *
+!   * streamwise vorticity (Zh) and integrating this quantity     *
+!   * over the inflow depth (lowest 1-3 km layers above ground    *
+!   * level). It describes the extent to which corkscrew-like     *
+!   * motion occurs (similar to the spiraling motion of an        *
+!   * American football). SRH corresponds to the transfer of      *
+!   * vorticity from the environment to an air parcel in          *
+!   * convective motion and is used to predict the potential      *
+!   * for tornadic development (cyclonic updraft rotation) in     *
+!   * right-moving supercells.                                    *
+!   *                                                             *
+!   * There is no clear threshold value for SRH when forecasting  *
+!   * supercells, since the formation of supercells appears to be *
+!   * related more strongly to the deeper layer vertical shear.   *
+!   * Larger values of 0-3-km SRH (greater than 250 m**2/s**2)    *
+!   * and 0-1-km SRH (greater than 100 m**2/s**2), suggest an     *
+!   * increased threat of tornadoes with supercells. For SRH,     *
+!   * larger values are generally better, but there are no clear  *
+!   * "boundaries" between non-tornadic and significant tornadic  *
+!   * supercells.                                                 *
+!   *                                                             *
+!   * SRH < 100 (lowest 1 km): cutoff value                       *
+!   * SRH = 150-299: supercells possible with weak tornadoes      *
+!   * SRH = 300-499: very favorable to supercell development and  *
+!   *                strong tornadoes                             *
+!   * SRH > 450    : violent tornadoes                            *
+!   ***************************************************************
+
 ! NCLFORTSTART
 SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
-    USE constants, ONLY : PI, RAD_PER_DEG, DEG_PER_RAD
+    USE wrf_constants, ONLY : PI, RAD_PER_DEG, DEG_PER_RAD
 
     IMPLICIT NONE
 
@@ -24,11 +56,13 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
     INTEGER :: i, j, k, k10, k3, ktop
     !REAL(KIND=8), PARAMETER :: DTR=PI/180.d0, DPR=180.d0/PI
 
-    DO j = 1, mjx-1
-        DO i = 1, miy-1
-            sdh = 0.d0
-            su = 0.d0
-            sv = 0.d0
+    !DO j = 1, mjx-1
+    DO j=1, mjx
+        DO i=1, miy
+        !DO i=1, miy-1
+            sdh = 0.D0
+            su = 0.D0
+            sv = 0.D0
             k3 = 0
             k10 = 0
             ktop = 0
@@ -54,25 +88,25 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
                 su = su + 0.5D0*dh*(u(i,j,k-1) + u(i,j,k))
                 sv = sv + 0.5D0*dh*(v(i,j,k-1) + v(i,j,k))
             END DO
-            ua = su / sdh
-            va = sv / sdh
+            ua = su/sdh
+            va = sv/sdh
             asp = SQRT(ua*ua + va*va)
             IF (ua .EQ. 0.D0 .AND. va .EQ. 0.D0) THEN
                 adr = 0.D0
             ELSE
                 adr = DEG_PER_RAD * (PI + ATAN2(ua,va))
             ENDIF
-            bsp = 0.75D0 * asp
+            bsp = 0.75D0*asp
             bdr = adr + 30.D0
             IF (bdr .GT. 360.D0) THEN
                 bdr = bdr - 360.D0
             ENDIF
-            cu = -bsp * SIN(bdr * RAD_PER_DEG)
-            cv = -bsp * COS(bdr * RAD_PER_DEG)
+            cu = -bsp*SIN(bdr * RAD_PER_DEG)
+            cv = -bsp*COS(bdr * RAD_PER_DEG)
             sum = 0.D0
             DO k = mkzh-1, ktop, -1
-                x = ((u(i,j,k) - cu) * (v(i,j,k) - v(i,j,k+1))) - &
-                                     ((v(i,j,k) - cv) * (u(i,j,k) - u(i,j,k+1)))
+                x = ((u(i,j,k) - cu)*(v(i,j,k) - v(i,j,k+1))) - &
+                    ((v(i,j,k) - cv)*(u(i,j,k) - u(i,j,k+1)))
                 sum = sum + x
             END DO
             sreh(i,j) = -sum

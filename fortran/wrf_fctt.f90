@@ -1,6 +1,6 @@
 !NCLFORTSTART
-SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz)
-    USE constants, ONLY : EPS, USSALR, RD, G, ABSCOEFI, ABSCOEF, CELKEL
+SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew)
+    USE wrf_constants, ONLY : EPS, USSALR, RD, G, ABSCOEFI, ABSCOEF, CELKEL
 
     IMPLICIT NONE
 
@@ -19,9 +19,9 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
     ! LOCAL VARIABLES
     INTEGER i,j,k,ripk
     !INTEGER :: mjx,miy,mkzh
-    REAL(KIND=8) :: vt,opdepthu,opdepthd,dp
-    REAL(KIND=8) :: ratmix,arg1,arg2,agl_hgt
-    REAL(KIND=8) :: fac,prsctt
+    REAL(KIND=8) :: vt, opdepthu, opdepthd, dp
+    REAL(KIND=8) :: ratmix, arg1, arg2, agl_hgt
+    REAL(KIND=8) :: fac, prsctt
     !REAL(KIND=8) :: eps,ussalr,rgas,grav,abscoefi,abscoef,celkel,wrfout
     !REAL(KIND=8) ::    ght(ew,ns,nz),stuff(ew,ns)
     !REAL(KIND=8), DIMENSION(ew,ns,nz) ::     pf(ns,ew,nz),p1,p2
@@ -37,13 +37,13 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
 ! Calculate the surface pressure
     DO j=1,ns
         DO i=1,ew
-           ratmix = .001d0*qvp(i,j,1)
+           ratmix = .001D0*qvp(i,j,1)
            arg1 = EPS + ratmix
-           arg2 = EPS * (1. + ratmix)
-           vt = tk(i,j,1) * arg1/arg2 !Virtual temperature
+           arg2 = EPS*(1. + ratmix)
+           vt = tk(i,j,1)*arg1/arg2 !Virtual temperature
            agl_hgt = ght(i,j,nz) - ter(i,j)
-           arg1 = -G / (RD * USSALR)
-           pf(i,j,nz) = prs(i,j,1) * (vt / (vt + USSALR*(agl_hgt)))**(arg1)
+           arg1 = -G/(RD*USSALR)
+           pf(i,j,nz) = prs(i,j,1)*(vt/(vt + USSALR*(agl_hgt)))**(arg1)
         END DO
     END DO
 
@@ -51,14 +51,14 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
         DO j=1,ns
             DO i=1,ew
                 ripk = nz-k+1
-                pf(i,j,k) = .5d0 * (prs(i,j,ripk) + prs(i,j,ripk-1))
+                pf(i,j,k) = .5D0*(prs(i,j,ripk) + prs(i,j,ripk-1))
             END DO
         END DO
     END DO
 
     DO j=1,ns
         DO i=1,ew
-            opdepthd = 0.d0
+            opdepthd = 0.D0
             k = 0
 
 !      Integrate downward from model top, calculating path at full
@@ -72,9 +72,9 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
                 ripk = nz - k + 1
 
                 IF (k .EQ. 1) THEN
-                    dp = 200.d0 * (pf(i,j,1) - prs(i,j,nz))  ! should be in Pa
+                    dp = 200.D0*(pf(i,j,1) - prs(i,j,nz))  ! should be in Pa
                 ELSE
-                    dp = 100.d0 * (pf(i,j,k) - pf(i,j,k-1))  ! should be in Pa
+                    dp = 100.D0*(pf(i,j,k) - pf(i,j,k-1))  ! should be in Pa
                 END IF
 
                 IF (haveqci .EQ. 0) then
@@ -85,7 +85,7 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
                         opdepthd = opdepthu + ABSCOEF*qcw(i,j,k) * dp/G
                     END IF
                 ELSE
-                    opdepthd = opdepthd + (ABSCOEF*qcw(i,j,ripk) + ABSCOEFI*qci(i,j,ripk)) * dp/G
+                    opdepthd = opdepthd + (ABSCOEF*qcw(i,j,ripk) + ABSCOEFI*qci(i,j,ripk))*dp/G
                 END IF
 
                 IF (opdepthd .LT. 1. .AND. k .LT. nz) THEN
@@ -96,7 +96,7 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
                     prsctt = prs(i,j,1)
                     EXIT
                 ELSE
-                    fac = (1. - opdepthu) / (opdepthd - opdepthu)
+                    fac = (1. - opdepthu)/(opdepthd - opdepthu)
                     prsctt = pf(i,j,k-1) + fac*(pf(i,j,k) - pf(i,j,k-1))
                     prsctt = MIN(prs(i,j,1), MAX(prs(i,j,nz), prsctt))
                     EXIT
@@ -104,12 +104,12 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, ew, ns, nz
             END DO
 
             DO k=2,nz
-                ripk = nz-k+1
+                ripk = nz - k + 1
                 p1 = prs(i,j,ripk+1)
                 p2 = prs(i,j,ripk)
                 IF (prsctt .GE. p1 .AND. prsctt .LE. p2) THEN
-                    fac = (prsctt - p1) / (p2 - p1)
-                    arg1 = fac * (tk(i,j,ripk) - tk(i,j,ripk+1)) - CELKEL
+                    fac = (prsctt - p1)/(p2 - p1)
+                    arg1 = fac*(tk(i,j,ripk) - tk(i,j,ripk+1)) - CELKEL
                     ctt(i,j) = tk(i,j,ripk+1) + arg1
                     !GOTO 40
                     EXIT

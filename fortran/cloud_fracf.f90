@@ -37,9 +37,9 @@ SUBROUTINE DCLOUDFRAC(pres, rh, lowc, midc, highc, nz, ns, ew)
             END IF
         END DO
 
-        lowc(i,j)  = 4.0 * lowc(i,j)/100. - 3.0
-        midc(i,j)  = 4.0 * midc(i,j)/100. - 3.0
-        highc(i,j) = 2.5 * highc(i,j)/100. - 1.5
+        lowc(i,j)  = 4.0*lowc(i,j)/100. - 3.0
+        midc(i,j)  = 4.0*midc(i,j)/100. - 3.0
+        highc(i,j) = 2.5*highc(i,j)/100. - 1.5
 
         lowc(i,j)  = amin1(lowc(i,j), 1.0)
         lowc(i,j)  = amax1(lowc(i,j), 0.0)

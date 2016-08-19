@@ -4,7 +4,7 @@ import numpy as np
 import math
 
 from .config import basemap_enabled, cartopy_enabled, pyngl_enabled
-from .constants import Constants
+from .constants import Constants, ProjectionTypes
 
 if cartopy_enabled():
     from cartopy import crs
@@ -719,16 +719,17 @@ def getproj(bottom_left=None, top_right=None,
             lats=None, lons=None, **proj_params):
     
     proj_type = proj_params.get("MAP_PROJ", 0)
-    if proj_type == 1:
+    if proj_type == ProjectionTypes.LAMBERT_CONFORMAL:
         return LambertConformal(bottom_left, top_right, 
                                     lats, lons, **proj_params)
-    elif proj_type == 2:
+    elif proj_type == ProjectionTypes.POLAR_STEREOGRAPHIC:
         return PolarStereographic(bottom_left, top_right, 
                                       lats, lons, **proj_params)
-    elif proj_type == 3:
+    elif proj_type == ProjectionTypes.MERCATOR:
         return Mercator(bottom_left, top_right, 
                             lats, lons, **proj_params)
-    elif proj_type == 0 or proj_type == 6:
+    elif (proj_type == ProjectionTypes.ZERO or 
+          proj_type == ProjectionTypes.LAT_LON):
         if (proj_params.get("POLE_LAT", None) == 90. 
             and proj_params.get("POLE_LON", None) == 0.):
             return LatLon(bottom_left, top_right, 

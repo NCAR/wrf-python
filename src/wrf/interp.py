@@ -67,8 +67,7 @@ def interplevel(field3d, z, desiredlev, missing=Constants.DEFAULT_FILL,
 def vertcross(field3d, z, missing=Constants.DEFAULT_FILL, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
-              include_latlon=False, 
-              cache=None, meta=True):
+              latlon=False, cache=None, meta=True):
     """Return the vertical cross section for a 3D field, interpolated 
     to a vertical plane defined by a horizontal line.
     
@@ -105,7 +104,7 @@ def vertcross(field3d, z, missing=Constants.DEFAULT_FILL,
         (or [west_east, south_north]), which indicates the end x,y location 
         through which the plane will pass.
         
-    include_latlon : {True, False}, optional
+    latlon : {True, False}, optional
         Set to True to also interpolate the two-dimensional latitude and 
         longitude coordinates along the same horizontal line and include
         this information in the metadata (if enabled).  This can be 
@@ -147,7 +146,7 @@ def vertcross(field3d, z, missing=Constants.DEFAULT_FILL,
 @set_interp_metadata("line")
 def interpline(field2d, pivot_point=None, 
                angle=None, start_point=None,
-               end_point=None, include_latlon=False, 
+               end_point=None, latlon=False, 
                cache=None, meta=True):
     """Return the two-dimensional field interpolated along a line.
     
@@ -176,7 +175,7 @@ def interpline(field2d, pivot_point=None,
         (or [west_east, south_north]), which indicates the end x,y location 
         through which the plane will pass.
         
-    include_latlon : {True, False}, optional
+    latlon : {True, False}, optional
         Set to True to also interpolate the two-dimensional latitude and 
         longitude coordinates along the same horizontal line and include
         this information in the metadata (if enabled).  This can be 

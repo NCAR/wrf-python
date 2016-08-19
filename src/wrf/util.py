@@ -656,7 +656,9 @@ def _find_forward(wrfseq, varname, timeidx, is_moving, meta):
                     return _build_data_array(wrfnc, varname, filetimeidx, 
                                              is_moving)
                 else:
-                    return wrfnc.variables[varname][filetimeidx, :]
+                    result = wrfnc.variables[varname][filetimeidx, :]
+                    return result[np.newaxis, :]  # So that nosqueee works
+                
             else:
                 comboidx += numtimes
             
@@ -692,7 +694,8 @@ def _find_reverse(wrfseq, varname, timeidx, is_moving, meta):
                     return _build_data_array(wrfnc, varname, filetimeidx, 
                                              is_moving)
                 else:
-                    return wrfnc.variables[varname][filetimeidx, :]
+                    result = wrfnc.variables[varname][filetimeidx, :]
+                    return result[np.newaxis, :] # So that nosqueeze works
             else:
                 comboidx += numtimes
             
@@ -1090,7 +1093,7 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
         # Squeeze handled in this routine, so just return it
         return combine_files(wrfnc, varname, timeidx, is_moving, 
                              method, squeeze, meta)
-        
+    
     return result.squeeze() if squeeze else result
 
 

@@ -1,12 +1,12 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .decorators import handle_extract_transpose
+from .decorators import extract_and_transpose
 from .metadecorators import set_destag_metadata
 
 
 @set_destag_metadata()
-@handle_extract_transpose(do_transpose=False)
+@extract_and_transpose(do_transpose=False)
 def destagger(var, stagger_dim, meta=False):
     """ De-stagger the variable.  
     

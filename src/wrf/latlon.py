@@ -31,19 +31,28 @@ def get_lon(wrfnc, timeidx=0, method="cat", squeeze=True,
 # Can either use wrfnc as a single file or sequence, or provide 
 # projection parameters (which don't allow for moving domains)
 @set_latlon_metadata(xy=True) 
-def ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
-           stagger=None, method="cat", squeeze=True, cache=None, meta=True,
-           **projparms):
-    return _ll_to_xy(latitude, longitude, wrfnc, timeidx, stagger, 
-                    method, squeeze, cache, **projparams)
+def ll_to_xy(wrfnc, latitude, longitude, timeidx=0, stagger=None, method="cat", 
+             squeeze=True, cache=None, meta=True):
+    return _ll_to_xy(latitude, longitude, wrfnc, timeidx, stagger, method, 
+                     squeeze, cache, **{})
+
+
+@set_latlon_metadata(xy=True) 
+def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, **projparams):
+    return _ll_to_xy(latitude, longitude, None, 0, squeeze, "cat", True, None, 
+                     **projparams)
     
     
 @set_latlon_metadata(xy=False) 
-def xy_to_ll(x, y, wrfnc=None, timeidx=0,
-           stagger=None, method="cat", squeeze=True, cache=None, meta=True,
-           **projparms):
-    return _xy_to_ll(x, y, wrfnc, timeidx, stagger, 
-                    method, squeeze, cache, **projparams)
+def xy_to_ll(wrfnc, x, y, timeidx=0, stagger=None, method="cat", squeeze=True, 
+             cache=None, meta=True):
+    return _xy_to_ll(x, y, wrfnc, timeidx, stagger, method, squeeze, cache, 
+                     **{})
+ 
+    
+@set_latlon_metadata(xy=False) 
+def xy_to_ll_proj(x, y, meta=True, squeeze=True, **projparams):
+    return _xy_to_ll(x, y, None, 0, None, "cat", squeeze, None, **projparams)
     
     
     

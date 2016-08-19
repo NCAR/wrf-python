@@ -5,7 +5,7 @@ from collections import Iterable
 
 import numpy as np
 
-from .constants import Constants
+from .constants import Constants, ProjectionTypes
 from .extension import _lltoxy, _xytoll
 from .util import (extract_vars, extract_global_attrs, 
                    either, is_moving_domain, is_multi_time_req,
@@ -46,7 +46,7 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache):
     dx = attrs["DX"]
     dy = attrs["DY"]
     
-    if map_proj == 6:
+    if map_proj == ProjectionTypes.LAT_LON:
         pole_attrs = extract_global_attrs(wrfnc, attrs=("POLE_LAT", 
                                                         "POLE_LON"))
         pole_lat = pole_attrs["POLE_LAT"]
@@ -133,7 +133,9 @@ def _kwarg_proj_params(projparams):
     known_x = known_x + 1
     known_y = known_y + 1
     
-    if map_proj in (1, 2, 3):
+    if map_proj in (ProjectionTypes.LAMBERT_CONFORMAL, 
+                    ProjectionTypes.POLAR_STEREOGRAPHIC, 
+                    ProjectionTypes.MERCATOR):
         if truelat1 is None:
             raise ValueError("'TRUELAT1' argument required")
     else:
@@ -141,7 +143,7 @@ def _kwarg_proj_params(projparams):
             truelat1 = 0.0
     
     # Map projection 6 (lat lon) required latinc, loninc, and dy
-    if map_proj == 6:
+    if map_proj == ProjectionTypes.LAT_LON:
         if latinc is None:
             raise ValueError("'LATINC' argument required")
         
@@ -227,9 +229,6 @@ def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
     
     # Make indexes 0-based
     result = result - 1
-    
-    if squeeze:
-        result = result.squeeze()
         
     return result
 
@@ -303,8 +302,5 @@ def _xy_to_ll(x, y, wrfnc=None, timeidx=0, stagger=None,
         result = _xytoll(map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
                       pole_lat, pole_lon, known_x, known_y, dx, dy, latinc, 
                       loninc, x_val, y_val)
-    
-    if squeeze:
-        result = result.squeeze()
         
     return result

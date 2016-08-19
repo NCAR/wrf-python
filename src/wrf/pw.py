@@ -26,10 +26,9 @@ def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     phb = ncvars["PHB"]
     qv = ncvars["QVAPOR"]
     
-    # Change this to use real virtual temperature!
-    full_p   =  p + pb
+    full_p = p + pb
     ht = (ph + phb)/Constants.G
-    full_t  =  t + Constants.T_BASE
+    full_t = t + Constants.T_BASE
     
     tk = _tk(full_p, full_t)
     tv = _tv(tk, qv)

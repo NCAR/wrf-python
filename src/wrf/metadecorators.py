@@ -423,11 +423,11 @@ def set_latlon_metadata(xy=False):
         outname = "latlon" if not xy else "xy"
         
         if result.ndim == 2:
-            dimnames = (["xy", "lat_lon"] if not xy 
-                        else ["latlon", "x_y"])
+            dimnames = (["idx", "lat_lon"] if not xy 
+                        else ["idx", "x_y"])
         else:
-            dimnames = (["xy", "domain", "lat_lon"] if not xy 
-                        else ["latlon", "domain", "x_y"])
+            dimnames = (["idx", "domain", "lat_lon"] if not xy 
+                        else ["idx", "domain", "x_y"])
         
         argvars = from_args(wrapped, argnames, *args, **kwargs)
         
@@ -439,12 +439,12 @@ def set_latlon_metadata(xy=False):
         arr2 = np.asarray(var2).ravel()
         
         coords = {}
-        if not ij:
-            coords["coord_pair"] = (dimnames[0], [CoordPair(x=x[0], y=x[1]) 
+        if not xy:
+            coords["xy_coord"] = (dimnames[0], [CoordPair(x=x[0], y=x[1]) 
                                for x in zip(arr1, arr2)])
             coords[dimnames[-1]] = ["lat", "lon"]
         else:
-            coords["coord_pair"] = (dimnames[0], [CoordPair(lat=x[0], lon=x[1]) 
+            coords["latlon_coord"] = (dimnames[0], [CoordPair(lat=x[0], lon=x[1]) 
                                for x in zip(arr1, arr2)])
             coords[dimnames[-1]] = ["x", "y"]
         
@@ -581,7 +581,7 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
                      coords=outcoords, attrs=outattrs)
     
 def _set_cross_meta(wrapped, instance, args, kwargs):    
-    argvars = from_args(wrapped, ("field3d", "z", "include_latlon", "missing", 
+    argvars = from_args(wrapped, ("field3d", "z", "latlon", "missing", 
                                   "pivot_point", "angle",
                                   "start_point", "end_point",
                                   "cache"), 
@@ -589,7 +589,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     
     field3d = argvars["field3d"]
     z = argvars["z"]
-    inc_latlon = argvars["include_latlon"]
+    inc_latlon = argvars["latlon"]
     missingval = argvars["missing"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
@@ -650,7 +650,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
             del outcoords[key]
         
         outdimnames.append("vertical")
-        outdimnames.append("xy")
+        outdimnames.append("idx")
         outattrs.update(field3d.attrs)
         
         outname = "{0}_cross".format(field3d.name)
@@ -673,13 +673,13 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                     lats = _interpline(latcoord, xy)
                     lons = _interpline(loncoord, xy)
                     
-                    outcoords["xy_loc"] = ("xy", 
+                    outcoords["xy_loc"] = ("idx", 
                                            np.asarray(tuple(
                                                 CoordPair(x=xy[i,0], y=xy[i,1],
                                                     lat=lats[i], lon=lons[i]) 
                                           for i in py3range(xy.shape[-2])))
                                           )
-                    
+                # Moving domain
                 else:
                     extra_dims = latcoord.shape[0:-2]
                     outdims = extra_dims + xy.shape[-2:-1]
@@ -698,16 +698,16 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                         
                     
                     extra_dimnames = latcoord.dims[0:-2]
-                    loc_dimnames = extra_dimnames + ("xy",)
+                    loc_dimnames = extra_dimnames + ("idx",)
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
-                outcoords["xy_loc"] = ("xy", np.asarray(tuple(
+                outcoords["xy_loc"] = ("idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
             
         else:    
-            outcoords["xy_loc"] = ("xy", np.asarray(tuple(
+            outcoords["xy_loc"] = ("idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
         
@@ -728,7 +728,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
 
 def _set_line_meta(wrapped, instance, args, kwargs):    
     argvars = from_args(wrapped, ("field2d", "pivot_point", "angle",
-                                  "start_point", "end_point", "include_latlon", 
+                                  "start_point", "end_point", "latlon", 
                                   "cache"), 
                           *args, **kwargs)  
     
@@ -737,7 +737,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     angle = argvars["angle"]
     start_point = argvars["start_point"]
     end_point = argvars["end_point"]
-    inc_latlon = argvars["include_latlon"]
+    inc_latlon = argvars["latlon"]
     cache = argvars["cache"]
     
     if cache is None:
@@ -788,7 +788,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
         for key in delkeys:
             del outcoords[key]
         
-        outdimnames.append("xy")
+        outdimnames.append("line_idx")
         outattrs.update(field2d.attrs)
         
         outname = "{0}_line".format(field2d.name)
@@ -811,12 +811,14 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                     lats = _interpline(latcoord, xy)
                     lons = _interpline(loncoord, xy)
                     
-                    outcoords["xy_loc"] = np.asarray(tuple(
+                    outcoords["xy_loc"] = ("line_idx",
+                                           np.asarray(tuple(
                                                 CoordPair(x=xy[i,0], y=xy[i,1],
                                                     lat=lats[i], lon=lons[i]) 
-                                          for i in py3range(xy.shape[-2])))
+                                           for i in py3range(xy.shape[-2])))
+                                           )
 
-                    
+                # Moving domain 
                 else:
                     extra_dims = latcoord.shape[0:-2]
                     outdims = extra_dims + xy.shape[-2:-1]
@@ -835,16 +837,16 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                         
                     
                     extra_dimnames = latcoord.dims[0:-2]
-                    loc_dimnames = extra_dimnames + ("xy",)
+                    loc_dimnames = extra_dimnames + ("line_idx",)
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
-                outcoords["xy_loc"] = ("xy", np.asarray(tuple(
+                outcoords["xy_loc"] = ("line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
             
         else:    
-            outcoords["xy_loc"] = ("xy", np.asarray(tuple(
+            outcoords["xy_loc"] = ("line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
         
@@ -905,8 +907,7 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
       
         
 def _set_2dxy_meta(wrapped, instance, args, kwargs):
-    argvars = from_args(wrapped, ("field3d", "xy"), 
-                          *args, **kwargs)  
+    argvars = from_args(wrapped, ("field3d", "xy"), *args, **kwargs)  
     
     field3d = argvars["field3d"]
     xy = argvars["xy"]
@@ -941,7 +942,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
         for key in delkeys:
             del outcoords[key]
         
-        outdimnames.append("xy")
+        outdimnames.append("line_idx")
         #outattrs.update(field3d.attrs)
         
         desc = field3d.attrs.get("description", None)
@@ -954,7 +955,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
         
         outname = "{0}_2dxy".format(field3d.name)
         
-        outcoords["xy_loc"] = ("xy", [CoordPair(xy[i,0], xy[i,1]) 
+        outcoords["xy_loc"] = ("line_idx", [CoordPair(xy[i,0], xy[i,1]) 
                            for i in py3range(xy.shape[-2])])
         
         for key in ("MemoryOrder",):
@@ -1040,7 +1041,7 @@ def _set_xy_meta(wrapped, instance, args, kwargs):
     else:
         outname = "xy"
         
-    outdimnames = ["idx", "x_y"]
+    outdimnames = ["line_idx", "x_y"]
     outcoords = OrderedDict()
     outattrs = OrderedDict()
     
@@ -1098,7 +1099,8 @@ def set_alg_metadata(alg_ndims, refvarname,
         refvarname: argument name for the reference variable
         missingarg: argument name for the missing value
         stagdim: staggered dimension in reference
-        stagsubvar: the variable to use to supply the staggered dimension name
+        stagsubvar: the variable name to use to supply the unstaggered 
+                    dimension size
         
     
     """
@@ -1170,7 +1172,8 @@ def set_alg_metadata(alg_ndims, refvarname,
             outdims[-alg_ndims:] = refvar.dims[-alg_ndims:]
             
             # Use the stagsubvar if applicable
-            outdims[stagdim] = stagvar.dims[stagdim]
+            if stagvar is not None and stagdim is not None:
+                outdims[stagdim] = stagvar.dims[stagdim]
             
             # Left dims 
             if refvarndims is None:
@@ -1191,11 +1194,10 @@ def set_alg_metadata(alg_ndims, refvarname,
                 ref_left_dimnames = refvar.dims[0:ref_extra]
                 
                 for i,dimname in enumerate(ref_left_dimnames[::-1], 1):
-                    idx = -i
-                    if -idx <= result.shape:
-                        outdims[idx] = dimname
+                    if i <= result.ndim:
+                        outdims[-alg_ndims - i] = dimname
                     else:
-                        continute
+                        continue
                     
         out = DataArray(result, name=outname, dims=outdims, attrs=outattrs)
         
@@ -1206,7 +1208,8 @@ def set_alg_metadata(alg_ndims, refvarname,
     
     return func_wrapper
 
-def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v"):
+def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v",
+                           latarg="lat", windarg="u"):
     
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
@@ -1232,8 +1235,8 @@ def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v"):
         if description is not None:
             outattrs["description"] = description
         
-        latvar = from_args(wrapped, ("lat",), *args, **kwargs)["lat"]
-        uvar = from_args(wrapped, ("u",), *args, **kwargs)["u"]
+        latvar = from_args(wrapped, latarg, *args, **kwargs)[latarg]
+        uvar = from_args(wrapped, windarg, *args, **kwargs)[windarg]
             
         if isinstance(uvar, DataArray):
             # Right dims come from latvar
@@ -1254,7 +1257,7 @@ def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v"):
     
     return func_wrapper
 
-def set_cape_alg_metadata(is2d):
+def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
     
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
@@ -1285,8 +1288,8 @@ def set_cape_alg_metadata(is2d):
             outattrs["MemoryOrder"] = "XYZ"
             
         
-        argvals = from_args(wrapped, ("p_hpa","missing"), *args, **kwargs)
-        p = argvals["p_hpa"]
+        argvals = from_args(wrapped, (copyarg,"missing"), *args, **kwargs)
+        p = argvals[copyarg]
         missing = argvals["missing"]
             
         if isinstance(p, DataArray):
@@ -1322,7 +1325,7 @@ def set_cape_alg_metadata(is2d):
     return func_wrapper
 
 
-def set_cloudfrac_alg_metadata():
+def set_cloudfrac_alg_metadata(copyarg="pres"):
     
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
@@ -1347,7 +1350,7 @@ def set_cloudfrac_alg_metadata():
         outattrs["MemoryOrder"] = "XY"
             
         
-        argvals = from_args(wrapped, "p", *args, **kwargs)["p"]
+        p = from_args(wrapped, copyarg, *args, **kwargs)[copyarg]
             
         if isinstance(p, DataArray):
             # Right dims

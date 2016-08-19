@@ -15,7 +15,8 @@ import numpy.distutils.core
 
 ext1 = numpy.distutils.core.Extension(
     name = "wrf._wrffortran",
-    sources = ["fortran/constants.f90",
+    sources = ["fortran/wrf_constants.f90",
+               "fortran/wrf_testfunc.f90",
                "fortran/wrf_user.f90",
                "fortran/rip_cape.f90",
                "fortran/cloud_fracf.f90",

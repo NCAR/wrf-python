@@ -1,6 +1,6 @@
 import unittest as ut
 import numpy.testing as nt 
-import numpy as n
+import numpy as np
 import numpy.ma as ma
 import os, sys
 import subprocess
@@ -111,9 +111,9 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                 masked=True
             
             if not masked:
-                ref_vals = n.zeros(new_dims, data.dtype)
+                ref_vals = np.zeros(new_dims, data.dtype)
             else:
-                ref_vals = ma.asarray(n.zeros(new_dims, data.dtype))
+                ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
                 
             for i in xrange(repeat):
                 if (varname != "uvmet" and varname != "uvmet10" 
@@ -173,13 +173,13 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             tol = 0/100.
             atol = 200.0
             
-            #print n.amax(n.abs(npvalues(cape_3d[0,:]) - ref_vals[0,:]))
+            #print np.amax(np.abs(npvalues(cape_3d[0,:]) - ref_vals[0,:]))
             nt.assert_allclose(npvalues(cape_3d), ref_vals, tol, atol)
         else:
             my_vals = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 2/100.
             atol = 0.1
-            #print (n.amax(n.abs(npvalues(my_vals) - ref_vals)))
+            #print (np.amax(np.abs(npvalues(my_vals) - ref_vals)))
             nt.assert_allclose(npvalues(my_vals), ref_vals, tol, atol)
     
     
@@ -203,9 +203,9 @@ def _get_refvals(referent, varname, repeat, multi):
             masked=True
           
         if not masked:
-            ref_vals = n.zeros(new_dims, data.dtype)
+            ref_vals = np.zeros(new_dims, data.dtype)
         else:
-            ref_vals = ma.asarray(n.zeros(new_dims, data.dtype))
+            ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
               
         for i in xrange(repeat):
             ref_vals[i,:] = data[:]
@@ -311,7 +311,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
         elif (varname == "vinterp"):
             # Tk to theta
             fld_tk_theta = _get_refvals(referent, "fld_tk_theta", repeat, multi)
-            fld_tk_theta = n.squeeze(fld_tk_theta)
+            fld_tk_theta = np.squeeze(fld_tk_theta)
             
             tk = getvar(in_wrfnc, "temp", timeidx=timeidx, units="k")
             
@@ -329,13 +329,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             tol = 5/100.
             atol = 0.0001
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_tk_theta)))
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_tk_theta)))
             nt.assert_allclose(npvalues(field), fld_tk_theta, tol, atol)
             
             # Tk to theta-e
             fld_tk_theta_e = _get_refvals(referent, "fld_tk_theta_e", repeat, multi)
-            fld_tk_theta_e = n.squeeze(fld_tk_theta_e)
+            fld_tk_theta_e = np.squeeze(fld_tk_theta_e)
             
             interp_levels = [200,300,500,1000]
             
@@ -351,13 +351,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             tol = 3/100.
             atol = 50.0001
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_tk_theta_e)/fld_tk_theta_e)*100)
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_tk_theta_e)/fld_tk_theta_e)*100)
             nt.assert_allclose(npvalues(field), fld_tk_theta_e, tol, atol)
             
             # Tk to pressure
             fld_tk_pres = _get_refvals(referent, "fld_tk_pres", repeat, multi)
-            fld_tk_pres = n.squeeze(fld_tk_pres)
+            fld_tk_pres = np.squeeze(fld_tk_pres)
             
             interp_levels = [850,500]
             
@@ -370,14 +370,14 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx,  
                             log_p=True)
             
-            field = n.squeeze(field)
+            field = np.squeeze(field)
             
-            #print (n.amax(n.abs(npvalues(field) - fld_tk_pres)))
+            #print (np.amax(np.abs(npvalues(field) - fld_tk_pres)))
             nt.assert_allclose(npvalues(field), fld_tk_pres, tol, atol)
             
             # Tk to geoht_msl
             fld_tk_ght_msl = _get_refvals(referent, "fld_tk_ght_msl", repeat, multi)
-            fld_tk_ght_msl = n.squeeze(fld_tk_ght_msl)
+            fld_tk_ght_msl = np.squeeze(fld_tk_ght_msl)
             interp_levels = [1,2]
             
             field = vinterp(in_wrfnc, 
@@ -389,13 +389,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx,  
                             log_p=True)
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_tk_ght_msl)))
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_tk_ght_msl)))
             nt.assert_allclose(npvalues(field), fld_tk_ght_msl, tol, atol)
             
             # Tk to geoht_agl
             fld_tk_ght_agl = _get_refvals(referent, "fld_tk_ght_agl", repeat, multi)
-            fld_tk_ght_agl = n.squeeze(fld_tk_ght_agl)
+            fld_tk_ght_agl = np.squeeze(fld_tk_ght_agl)
             interp_levels = [1,2]
             
             field = vinterp(in_wrfnc, 
@@ -407,13 +407,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_tk_ght_agl)))
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_tk_ght_agl)))
             nt.assert_allclose(npvalues(field), fld_tk_ght_agl, tol, atol)
             
             # Hgt to pressure
             fld_ht_pres = _get_refvals(referent, "fld_ht_pres", repeat, multi)
-            fld_ht_pres = n.squeeze(fld_ht_pres)
+            fld_ht_pres = np.squeeze(fld_ht_pres)
             
             z = getvar(in_wrfnc, "height", timeidx=timeidx, units="m")
             interp_levels = [500,50]
@@ -426,13 +426,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_ht_pres)))
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_ht_pres)))
             nt.assert_allclose(npvalues(field), fld_ht_pres, tol, atol)
             
             # Pressure to theta
             fld_pres_theta = _get_refvals(referent, "fld_pres_theta", repeat, multi)
-            fld_pres_theta = n.squeeze(fld_pres_theta)
+            fld_pres_theta = np.squeeze(fld_pres_theta)
             
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             interp_levels = [200,300,500,1000]
@@ -445,13 +445,13 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_pres_theta)))
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_pres_theta)))
             nt.assert_allclose(npvalues(field), fld_pres_theta, tol, atol)
             
             # Theta-e to pres
             fld_thetae_pres = _get_refvals(referent, "fld_thetae_pres", repeat, multi)
-            fld_thetae_pres = n.squeeze(fld_thetae_pres)
+            fld_thetae_pres = np.squeeze(fld_thetae_pres)
             
             eth = getvar(in_wrfnc, "eth", timeidx=timeidx)
             interp_levels = [850,500,5]
@@ -464,8 +464,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            field = n.squeeze(field)
-            #print (n.amax(n.abs(npvalues(field) - fld_thetae_pres)))
+            field = np.squeeze(field)
+            #print (np.amax(np.abs(npvalues(field) - fld_thetae_pres)))
             nt.assert_allclose(npvalues(field), fld_thetae_pres, tol, atol)
     
     return test
@@ -483,7 +483,7 @@ if __name__ == "__main__":
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "ctt", "cloudfrac"]
+                "wa", "uvmet10", "uvmet", "z", "cloudfrac"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     
     try:

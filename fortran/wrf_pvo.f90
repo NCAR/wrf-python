@@ -37,9 +37,9 @@ SUBROUTINE DCOMPUTEABSVORT(av, u, v, msfu, msfv, msft, cor, dx, dy, nx, ny, nz,&
                 dsy = (jp1 - jm1) * dy
                 mm = msft(i,j)*msft(i,j)
     !           PRINT *,j,i,u(i,jp1,k),msfu(i,jp1),u(i,jp1,k)/msfu(i,jp1)
-                dudy = 0.5D0 * (u(i,jp1,k)/msfu(i,jp1) + u(i+1,jp1,k)/msfu(i+1,jp1) - &
+                dudy = 0.5D0*(u(i,jp1,k)/msfu(i,jp1) + u(i+1,jp1,k)/msfu(i+1,jp1) - &
                      u(i,jm1,k)/msfu(i,jm1) - u(i+1,jm1,k)/msfu(i+1,jm1))/dsy*mm
-                dvdx = 0.5D0 * (v(ip1,j,k)/msfv(ip1,j) + v(ip1,j+1,k)/msfv(ip1,j+1) - &
+                dvdx = 0.5D0*(v(ip1,j,k)/msfv(ip1,j) + v(ip1,j+1,k)/msfv(ip1,j+1) - &
                      v(im1,j,k)/msfv(im1,j) - v(im1,j+1,k)/msfv(im1,j+1))/dsx*mm
                 avort = dvdx - dudy + cor(i,j)
                 av(i,j,k) = avort*1.D5
@@ -55,7 +55,7 @@ END SUBROUTINE DCOMPUTEABSVORT
 !NCLFORTSTART
 SUBROUTINE DCOMPUTEPV(pv, u, v, theta, prs, msfu, msfv, msft, cor, dx, dy, nx, &
                       ny, nz, nxp1, nyp1)
-    USE constants, ONLY : G
+    USE wrf_constants, ONLY : G
 
     IMPLICIT NONE
 
@@ -92,22 +92,22 @@ SUBROUTINE DCOMPUTEPV(pv, u, v, theta, prs, msfu, msfv, msft, cor, dx, dy, nx, &
                 ip1 = MIN(i+1, nx)
                 im1 = MAX(i-1, 1)
     !           PRINT *,jp1,jm1,ip1,im1
-                dsx = (ip1 - im1) * dx
-                dsy = (jp1 - jm1) * dy
+                dsx = (ip1 - im1)*dx
+                dsy = (jp1 - jm1)*dy
                 mm = msft(i,j)*msft(i,j)
     !           PRINT *,j,i,u(i,jp1,k),msfu(i,jp1),u(i,jp1,k)/msfu(i,jp1)
-                dudy = 0.5D0 * (u(i,jp1,k)/msfu(i,jp1) + u(i+1,jp1,k)/msfu(i+1,jp1) - &
+                dudy = 0.5D0*(u(i,jp1,k)/msfu(i,jp1) + u(i+1,jp1,k)/msfu(i+1,jp1) - &
                        u(i,jm1,k)/msfu(i,jm1) - u(i+1,jm1,k)/msfu(i+1,jm1))/dsy*mm
-                dvdx = 0.5D0 * (v(ip1,j,k)/msfv(ip1,j) + v(ip1,j+1,k)/msfv(ip1,j+1) - &
+                dvdx = 0.5D0*(v(ip1,j,k)/msfv(ip1,j) + v(ip1,j+1,k)/msfv(ip1,j+1) - &
                        v(im1,j,k)/msfv(im1,j) - v(im1,j+1,k)/msfv(im1,j+1))/dsx*mm
                 avort = dvdx - dudy + cor(i,j)
                 dp = prs(i,j,kp1) - prs(i,j,km1)
-                dudp = 0.5D0 * (u(i,j,kp1) + u(i+1,j,kp1) - u(i,j,km1) - u(i+1,j,km1))/dp
-                dvdp = 0.5D0 * (v(i,j,kp1) + v(i,j+1,kp1) - v(i,j,km1) - v(i,J+1,km1))/dp
+                dudp = 0.5D0*(u(i,j,kp1) + u(i+1,j,kp1) - u(i,j,km1) - u(i+1,j,km1))/dp
+                dvdp = 0.5D0*(v(i,j,kp1) + v(i,j+1,kp1) - v(i,j,km1) - v(i,J+1,km1))/dp
                 dthdp = (theta(i,j,kp1) - theta(i,j,km1))/dp
-                dthdx = (theta(ip1,j,k) - theta(im1,j,k))/dsx * msft(i,j)
-                dthdy = (theta(i,jp1,k) - theta(i,jm1,k))/dsy * msft(i,j)
-                pv(i,j,k) = -G * (dthdp*avort - dvdp*dthdx + dudp*dthdy)*10000.D0
+                dthdx = (theta(ip1,j,k) - theta(im1,j,k))/dsx*msft(i,j)
+                dthdy = (theta(i,jp1,k) - theta(i,jm1,k))/dsy*msft(i,j)
+                pv(i,j,k) = -G*(dthdp*avort - dvdp*dthdx + dudp*dthdy)*10000.D0
     !               if(i.eq.300 .and. j.eq.300) then
     !                 PRINT*,'avort,dudp,dvdp,dthdp,dthdx,dthdy,pv'
     !                 PRINT*,avort,dudp,dvdp,dthdp,dthdx,dthdy,pv(i,j,k)

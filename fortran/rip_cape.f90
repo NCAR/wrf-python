@@ -18,7 +18,7 @@
 
 ! NCLFORTSTART
 REAL(KIND=8) FUNCTION TVIRTUAL(temp, ratmix)
-    USE constants, ONLY : EPS
+    USE wrf_constants, ONLY : EPS
 
     !f2py threadsafe
 
@@ -34,9 +34,9 @@ REAL(KIND=8) FUNCTION TVIRTUAL(temp, ratmix)
 END FUNCTION TVIRTUAL
 
 ! NCLFORTSTART
-REAL(KIND=8) FUNCTION TONPSADIABAT(thte,prs,psadithte,psadiprs,psaditmk,gamma,&
+REAL(KIND=8) FUNCTION TONPSADIABAT(thte, prs, psadithte, psadiprs, psaditmk, gamma,&
                                    errstat, errmsg)
-    USE constants, ONLY : ALGERR
+    USE wrf_constants, ONLY : ALGERR
 
     !f2py threadsafe
     !f2py intent(in,out) :: cape, cin
@@ -127,7 +127,7 @@ END FUNCTION TONPSADIABAT
 
 !NCLFORTSTART
 SUBROUTINE DLOOKUP_TABLE(psadithte, psadiprs, psaditmk, fname, errstat, errmsg)
-    USE constants, ONLY : ALGERR
+    USE wrf_constants, ONLY : ALGERR
 
     !f2py threadsafe
 
@@ -250,7 +250,7 @@ END SUBROUTINE DPFCALC
 SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
             cmsg,miy,mjx,mkzh,i3dflag,ter_follow,&
             psafile, errstat, errmsg)
-    USE constants, ONLY : ALGERR, CELKEL, G, EZERO, ESLCON1, ESLCON2, &
+    USE wrf_constants, ONLY : ALGERR, CELKEL, G, EZERO, ESLCON1, ESLCON2, &
                           EPS, RD, CP, GAMMA, CPMD, RGASMD, GAMMAMD, TLCLC1, &
                           TLCLC2, TLCLC3, TLCLC4, THTECON1, THTECON2, THTECON3
 
@@ -259,7 +259,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !f2py threadsafe
     !f2py intent(in,out) :: cape, cin
 
-    INTEGER, INTENT(IN) :: miy,mjx,mkzh,i3dflag,ter_follow
+    INTEGER, INTENT(IN) :: miy, mjx, mkzh, i3dflag, ter_follow
     REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: prs
     REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: tmk
     REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: qvp

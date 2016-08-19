@@ -1,6 +1,6 @@
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTEPI(pi, pressure, nx, ny, nz)
-    USE constants, ONLY : P1000MB, RD, CP
+    USE wrf_constants, ONLY : P1000MB, RD, CP
 
     IMPLICIT NONE
 
@@ -29,7 +29,7 @@ END SUBROUTINE DCOMPUTEPI
 ! Temperature from potential temperature in kelvin.
 !NCLFORTSTART
 SUBROUTINE DCOMPUTETK(tk, pressure, theta, nx)
-    USE constants, ONLY : P1000MB, RD, CP
+    USE wrf_constants, ONLY : P1000MB, RD, CP
 
     IMPLICIT NONE
 
@@ -65,7 +65,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
     !f2py threadsafe
     !f2py intent(in,out) :: out2d
 
-    INTEGER, INTENT(IN) :: nx,ny,nz
+    INTEGER, INTENT(IN) :: nx, ny, nz
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) ::  data3d
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: out2d
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: zdata
@@ -99,7 +99,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
 
             DO WHILE ((.NOT. dointerp) .AND. (kp >= 2))
                 IF (((zdata(i,j,kp-im) < height) .AND. (zdata(i,j,kp-ip) > height))) THEN
-                    w2 = (height-zdata(i,j,kp-im))/(zdata(i,j,kp-ip)-zdata(i,j,kp-im))
+                    w2 = (height - zdata(i,j,kp-im))/(zdata(i,j,kp-ip) - zdata(i,j,kp-im))
                     w1 = 1.D0 - w2
                     out2d(i,j) = w1*data3d(i,j,kp-im) + w2*data3d(i,j,kp-ip)
                     dointerp = .TRUE.
@@ -139,7 +139,7 @@ SUBROUTINE DZSTAG(znew, nx, ny, nz, z, nxz, nyz ,nzz, terrain)
                 DO i = 1,nx
                     ii = MIN0(i,nxz)
                     im1 = MAX0(i-1,1)
-                    znew(i,j,k) = 0.5D0 * (z(ii,j,k) + z(im1,j,k))
+                    znew(i,j,k) = 0.5D0*(z(ii,j,k) + z(im1,j,k))
                 END DO
             END DO
         END DO
@@ -150,7 +150,7 @@ SUBROUTINE DZSTAG(znew, nx, ny, nz, z, nxz, nyz ,nzz, terrain)
                 jj = MIN0(j,nyz)
                 jm1 = MAX0(j-1,1)
                 DO i = 1,nx
-                    znew(i,j,k) = 0.5D0 * (z(i,jj,k) + z(i,jm1,k))
+                    znew(i,j,k) = 0.5D0*(z(i,jj,k) + z(i,jm1,k))
                 END DO
             END DO
         END DO
@@ -166,7 +166,7 @@ SUBROUTINE DZSTAG(znew, nx, ny, nz, z, nxz, nyz ,nzz, terrain)
         DO k = 2,nz
             DO j = 1,ny
                 DO i = 1,nx
-                    znew(i,j,k) = znew(i,j,k-1) + 2.D0 * (z(i,j,k-1) - znew(i,j,k-1))
+                    znew(i,j,k) = znew(i,j,k-1) + 2.D0*(z(i,j,k-1) - znew(i,j,k-1))
                 END DO
             END DO
         END DO
@@ -282,7 +282,7 @@ END SUBROUTINE DINTERP1D
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
                           t_sea_level, t_surf, level, errstat, errmsg)
-    USE constants, ONLY : ALGERR, RD, G, USSALR
+    USE wrf_constants, ONLY : ALGERR, RD, G, USSALR
 
     IMPLICIT NONE
 
@@ -364,8 +364,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     DO j = 1,ny
         DO i = 1,nx
 
-            klo = MAX(level(i,j)-1,1)
-            khi = MIN(klo+1,nz-1)
+            klo = MAX(level(i,j)-1, 1)
+            khi = MIN(klo+1, nz-1)
 
             IF (klo == khi) THEN
                 errstat = ALGERR
@@ -379,8 +379,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
             plo = p(i,j,klo)
             phi = p(i,j,khi)
-            tlo = t(i,j,klo) * (1.D0+0.608D0*q(i,j,klo))
-            thi = t(i,j,khi) * (1.D0+0.608D0*q(i,j,khi))
+            tlo = t(i,j,klo)*(1.D0 + 0.608D0*q(i,j,klo))
+            thi = t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi))
             ! zlo = zetahalf(klo)/ztop*(ztop-terrain(i,j))+terrain(i,j)
             ! zhi = zetahalf(khi)/ztop*(ztop-terrain(i,j))+terrain(i,j)
             zlo = z(i,j,klo)
@@ -424,8 +424,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     ! Convert to hPa in this step, by multiplying by 0.01. The original
     ! Fortran routine didn't do this, but the NCL script that called it
     ! did, so we moved it here.
-            sea_level_pressure(i,j) = 0.01 * (p(i,j,1)*EXP((2.D0*G*z_half_lowest)/&
-                (RD*(t_sea_level(i,j)+t_surf(i,j)))))
+            sea_level_pressure(i,j) = 0.01*(p(i,j,1)*EXP((2.D0*G*z_half_lowest)/&
+                (RD*(t_sea_level(i,j) + t_surf(i,j)))))
         END DO
     END DO
 
@@ -546,7 +546,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
                     b(i,j+1) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i,j-1)-2*b(i,j) + b(i,j+1))
+                    a(i,j) = a(i,j) + COEF*(b(i,j-1) - 2*b(i,j) + b(i,j+1))
                 END IF
             END DO
         END DO
@@ -557,7 +557,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
                     b(i+1,j) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i-1,j)-2*b(i,j)+b(i+1,j))
+                    a(i,j) = a(i,j) + COEF*(b(i-1,j) - 2*b(i,j)+b(i+1,j))
                 END IF
             END DO
         END DO
@@ -585,7 +585,7 @@ END SUBROUTINE FILTER2D
 
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
-    USE constants, ONLY : EZERO, ESLCON1, ESLCON2, CELKEL, RD, RV, EPS
+    USE wrf_constants, ONLY : EZERO, ESLCON1, ESLCON2, CELKEL, RD, RV, EPS
 
     IMPLICIT NONE
 
@@ -593,7 +593,7 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
     !f2py intent(in,out) :: rh
 
     INTEGER, INTENT(IN) :: nx
-    REAL(KIND=8), DIMENSION(nx), INTENT(IN) :: qv,p,t
+    REAL(KIND=8), DIMENSION(nx), INTENT(IN) :: qv, p, t
     REAL(KIND=8), DIMENSION(nx), INTENT(OUT) :: rh
 
 ! NCLEND
@@ -605,12 +605,12 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
         pressure = p(i)
         temperature = t(i)
         ! es  = 1000.*svp1*
-        es = EZERO * EXP(ESLCON1 * (temperature-CELKEL) / (temperature-ESLCON2))
+        es = EZERO*EXP(ESLCON1*(temperature - CELKEL)/(temperature - ESLCON2))
         ! qvs = ep_2*es/(pressure-es)
-        qvs = EPS * es / (0.01D0 * pressure - (1.D0 - EPS) * es)
+        qvs = EPS*es/(0.01D0*pressure - (1.D0 - EPS)*es)
         ! rh = 100*amax1(1., qv(i)/qvs)
         ! rh(i) = 100.*qv(i)/qvs
-        rh(i) = 100.D0 * DMAX1(DMIN1(qv(i) / qvs, 1.0D0), 0.0D0)
+        rh(i) = 100.D0*DMAX1(DMIN1(qv(i)/qvs, 1.0D0), 0.0D0)
     END DO
 
     RETURN
@@ -625,10 +625,10 @@ SUBROUTINE DGETIJLATLONG(lat_array, long_array, lat, longitude, ii, jj, nx, ny, 
     !f2py threadsafe
     !f2py intent(in,out) :: ii,jj
 
-    INTEGER, INTENT(IN) :: nx,ny,imsg
-    INTEGER, INTENT(OUT) :: ii,jj
-    REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: lat_array,long_array
-    REAL(KIND=8) :: lat,longitude
+    INTEGER, INTENT(IN) :: nx, ny, imsg
+    INTEGER, INTENT(OUT) :: ii, jj
+    REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: lat_array, long_array
+    REAL(KIND=8) :: lat, longitude
 ! NCLEND
 
     REAL(KIND=8) :: longd,latd
@@ -640,14 +640,14 @@ SUBROUTINE DGETIJLATLONG(lat_array, long_array, lat, longitude, ii, jj, nx, ny, 
     ir = imsg
     jr = imsg
 
-    dist_min = 1.d+20
+    dist_min = 1.D+20
     DO j = 1,ny
         DO i = 1,nx
-            latd = (lat_array(i,j)-lat)**2
-            longd = (long_array(i,j)-longitude)**2
+            latd = (lat_array(i,j) - lat)**2
+            longd = (long_array(i,j) - longitude)**2
             ! longd = dmin1((long_array(i,j)-longitude)**2, &
             !               (long_array(i,j)+longitude)**2)
-            dist = SQRT(latd+longd)
+            dist = SQRT(latd + longd)
             IF (dist_min .GT. dist) THEN
                 dist_min = dist
                 ir = DBLE(i)
@@ -664,8 +664,8 @@ SUBROUTINE DGETIJLATLONG(lat_array, long_array, lat, longitude, ii, jj, nx, ny, 
     ! script which has 0-based indexing.
 
     IF (ir .NE. imsg .AND. jr .NE. imsg) THEN
-        ii = NINT(ir)-1
-        jj = NINT(jr)-1
+        ii = NINT(ir) - 1
+        jj = NINT(jr) - 1
     ELSE
         ii = imsg
         jj = imsg
@@ -691,7 +691,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
     !f2py threadsafe
     !f2py intent(in,out) :: uvmet
 
-    INTEGER,INTENT(IN) :: nx,ny,nxp1,nyp1,istag
+    INTEGER,INTENT(IN) :: nx, ny, nxp1, nyp1, istag
     LOGICAL,INTENT(IN) :: is_msg_val
     REAL(KIND=8), DIMENSION(nxp1,ny), INTENT(IN):: u
     REAL(KIND=8), DIMENSION(nx,nyp1), INTENT(IN) :: v
@@ -699,15 +699,15 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: flat
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(INOUT) :: longca
     REAL(KIND=8), DIMENSION(nx,ny), INTENT(INOUT) :: longcb
-    REAL(KIND=8), INTENT(IN) :: cen_long,cone,rpd
-    REAL(KIND=8), INTENT(IN) :: umsg,vmsg,uvmetmsg
+    REAL(KIND=8), INTENT(IN) :: cen_long, cone, rpd
+    REAL(KIND=8), INTENT(IN) :: umsg, vmsg, uvmetmsg
     REAL(KIND=8), DIMENSION(nx,ny,2), INTENT(OUT) :: uvmet
 
 
 ! NCLEND
 
     INTEGER :: i,j
-    REAL(KIND=8) :: uk,vk
+    REAL(KIND=8) :: uk, vk
 
     ! msg stands for missing value in this code
     ! WRITE (6,FMT=*) ' in compute_uvmet ',NX,NY,NXP1,NYP1,ISTAG
@@ -743,8 +743,8 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
                     uvmet(i,j,1) = uvmetmsg
                     uvmet(i,j,2) = uvmetmsg
                 ELSE
-                    uk = 0.5D0* (u(i,j)+u(i+1,j))
-                    vk = 0.5D0* (v(i,j)+v(i,j+1))
+                    uk = 0.5D0*(u(i,j) + u(i+1,j))
+                    vk = 0.5D0*(v(i,j) + v(i,j+1))
                     uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
                     uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
                 END IF
@@ -792,13 +792,13 @@ SUBROUTINE DCOMPUTETD(td, pressure, qv_in, nx)
     INTEGER :: i
 
     DO i = 1,nx
-      qv = DMAX1(qv_in(i),0.D0)
+      qv = DMAX1(qv_in(i), 0.D0)
       ! vapor pressure
-      tdc = qv*pressure(i)/ (.622D0 + qv)
+      tdc = qv*pressure(i)/(.622D0 + qv)
 
       ! avoid problems near zero
-      tdc = DMAX1(tdc,0.001D0)
-      td(i) = (243.5D0*LOG(tdc)-440.8D0) / (19.48D0-LOG(tdc))
+      tdc = DMAX1(tdc, 0.001D0)
+      td(i) = (243.5D0*LOG(tdc) - 440.8D0)/(19.48D0 - LOG(tdc))
     END DO
 
     RETURN
@@ -807,6 +807,8 @@ END SUBROUTINE DCOMPUTETD
 
 ! NCLFORTSTART
 SUBROUTINE DCOMPUTEICLW(iclw, pressure, qc_in, nx, ny, nz)
+    USE wrf_constants, ONLY : G
+
     IMPLICIT NONE
 
     !f2py threadsafe
@@ -819,26 +821,26 @@ SUBROUTINE DCOMPUTEICLW(iclw, pressure, qc_in, nx, ny, nz)
 
 ! NCLEND
 
-    REAL(KIND=8) :: qclw,dp
-    REAL(KIND=8), PARAMETER :: GG = 1000.d0/9.8d0
+    REAL(KIND=8) :: qclw, dp
+    REAL(KIND=8), PARAMETER :: GG = 1000.D0/G
     INTEGER i,j,k
 
     DO j = 1,ny
         DO i = 1,nx
-            iclw(i,j) = 0.d0
+            iclw(i,j) = 0.D0
         END DO
     END DO
 
     DO j = 3,ny - 2
         DO i = 3,nx - 2
             DO k = 1,nz
-                qclw = DMAX1(qc_in(i,j,k),0.d0)
+                qclw = DMAX1(qc_in(i,j,k), 0.D0)
                 IF (k.EQ.1) THEN
                     dp = pressure(i,j,k-1) - pressure(i,j,k)
                 ELSE IF (k.EQ.nz) then
                     dp = pressure(i,j,k) - pressure(i,j,k+1)
                 ELSE
-                    dp = (pressure(i,j,k-1) - pressure(i,j,k+1)) / 2.d0
+                    dp = (pressure(i,j,k-1) - pressure(i,j,k+1))/2.D0
                 END IF
                 iclw(i,j) = iclw(i,j) + qclw*dp*GG
             END DO
@@ -849,38 +851,6 @@ SUBROUTINE DCOMPUTEICLW(iclw, pressure, qc_in, nx, ny, nz)
 
 END SUBROUTINE DCOMPUTEICLW
 
-SUBROUTINE testfunc(a, b, c, nx, ny, nz, errstat, errmsg)
-    USE constants, ONLY : ALGERR
-    IMPLICIT NONE
-
-    !threadsafe
-    !f2py intent(in,out) :: b
-
-    INTEGER, INTENT(IN) :: nx, ny, nz
-
-    REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: a
-    REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(OUT) :: b
-    CHARACTER(LEN=*), INTENT(IN) :: c
-    INTEGER, INTENT(INOUT) :: errstat
-    REAL(KIND=8), PARAMETER :: blah=123.45
-    CHARACTER(LEN=*), INTENT(INOUT) :: errmsg
-
-    INTEGER :: i,j,k
-
-    DO k=1,nz
-        DO j=1,ny
-            DO i=1,nx
-                b(i,j,k) = a(i,j,k)
-            END DO
-        END DO
-    END DO
-
-    errstat = ALGERR
-    WRITE(errmsg, *) c(1:20), blah
-
-    RETURN
-
-END SUBROUTINE testfunc
 
 
 

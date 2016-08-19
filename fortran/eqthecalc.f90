@@ -1,7 +1,7 @@
 ! Theta-e
 !NCLFORTSTART
 SUBROUTINE DEQTHECALC(qvp, tmk, prs, eth, miy, mjx, mkzh)
-    USE constants, ONLY : EPS, GAMMA, GAMMAMD, TLCLC1, TLCLC2, TLCLC3, TLCLC4, &
+    USE wrf_constants, ONLY : EPS, GAMMA, GAMMAMD, TLCLC1, TLCLC2, TLCLC3, TLCLC4, &
                           THTECON1, THTECON2, THTECON3
 
     IMPLICIT NONE

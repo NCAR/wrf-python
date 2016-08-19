@@ -15,14 +15,14 @@ from .metadecorators import copy_and_set_metadata
                        units="dBz")
 def get_dbz(wrfnc, timeidx=0, method="cat", 
             squeeze=True, cache=None, meta=True,
-            do_varint=False, do_liqskin=False):
+            use_varint=False, use_liqskin=False):
     """ Return the dbz
     
-    do_varint - do variable intercept (if False, constants are used.  Otherwise, 
+    use_varint - do variable intercept (if False, constants are used.  Otherwise, 
     intercepts are calculated using a technique from Thompson, Rasmussen, 
     and Manning (2004, Monthly Weather Review, Vol. 132, No. 2, pp. 519-542.)
     
-    do_liqskin - do liquid skin for snow (frozen particles above freezing scatter
+    use_liqskin - do liquid skin for snow (frozen particles above freezing scatter
     as liquid)
     
     """
@@ -57,8 +57,8 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
     
     # If qsnow is not all 0, set sn0 to 1
     sn0 = 1 if qs.any() else 0
-    ivarint = 1 if do_varint else 0
-    iliqskin = 1 if do_liqskin else 0
+    ivarint = 1 if use_varint else 0
+    iliqskin = 1 if use_liqskin else 0
     
     return _dbz(full_p, tk, qv, qr, qs, qg, sn0, ivarint, iliqskin)
 

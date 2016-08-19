@@ -4,14 +4,14 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 
 from .py3compat import viewitems
-from wrf._wrffortran import constants
+from wrf._wrffortran import wrf_constants
 
 ALL_TIMES = None
 
 class Constants(object):
     pass
     
-for key,val in viewitems(constants.__dict__):
+for key,val in viewitems(wrf_constants.__dict__):
     setattr(Constants, key.upper(), np.asscalar(val))
 
 class ConversionFactors(object):
@@ -27,5 +27,12 @@ class ConversionFactors(object):
     M_TO_DM = 1.0/10.0
     M_TO_FT = 3.28084
     M_TO_MILES = .000621371
+    
+class ProjectionTypes(object):
+    ZERO = 0
+    LAMBERT_CONFORMAL = 1
+    POLAR_STEREOGRAPHIC = 2
+    MERCATOR = 3
+    LAT_LON = 6
     
     

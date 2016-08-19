@@ -138,18 +138,18 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
     
     #  interp to constant z grid
     if(var2dz[idx1] > var2dz[idx2]):  # monotonically decreasing coordinate
-        z_max = floor(np.amax(z) / 10) * 10     # bottom value
-        z_min = ceil(np.amin(z) / 10) * 10      # top value
+        z_max = floor(np.amax(z)/10) * 10     # bottom value
+        z_min = ceil(np.amin(z)/10) * 10      # top value
         dz = 10
-        nlevels = int((z_max-z_min) / dz)
+        nlevels = int((z_max - z_min)/dz)
         z_var2d = np.zeros((nlevels), dtype=z.dtype)
         z_var2d[0] = z_max
         dz = -dz
     else:
         z_max = np.amax(z)
         z_min = 0.
-        dz = 0.01 * z_max
-        nlevels = int(z_max / dz)
+        dz = 0.01*z_max
+        nlevels = int(z_max/dz)
         z_var2d = np.zeros((nlevels), dtype=z.dtype)
         z_var2d[0] = z_min
     

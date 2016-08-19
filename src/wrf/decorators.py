@@ -42,168 +42,18 @@ def _calc_out_dims(outvar, left_dims):
     left_dims = [x for x in left_dims]
     right_dims = [x for x in outvar.shape]
     return left_dims + right_dims 
+        
 
-def handle_left_iter(ref_var_expected_dims, ref_var_idx=-1,
+def left_iteration(ref_var_expected_dims,
+                   ref_var_right_ndims,
+                   insert_dims=None,
+                   ref_var_idx=None,
                    ref_var_name=None,
-                   ignore_args=None, ignore_kargs=None):
-    """Decorator to handle iterating over leftmost dimensions when using 
-    multiple files and/or multiple times.
-    
-    Arguments:
-        - ref_var_expected_dims - the number of dimensions that the Fortran 
-        algorithm is expecting for the reference variable
-        - ref_var_idx - the index in args used as the reference variable for 
-        calculating leftmost dimensions
-        - ref_var_name - the keyword argument name for kwargs used as the 
-        reference varible for calculating leftmost dimensions
-        - alg_out_fixed_dims - additional fixed dimension sizes for the 
-        numerical algorithm (e.g. uvmet has a fixed left dimsize of 2)
-        - ignore_args - indexes of any arguments which should be passed 
-        directly without any slicing
-        - ignore_kargs - keys of any keyword arguments which should be passed
-        directly without slicing
-        - ref_stag_dim - in some cases the reference variable dimensions
-        have a staggered dimension that needs to be corrected when calculating
-        the output dimensions (e.g. avo)
-    
-    """
-    @wrapt.decorator
-    def func_wrapper(wrapped, instance, args, kwargs):
-        _ignore_args = ignore_args if ignore_args is not None else ()
-        _ignore_kargs = ignore_kargs if ignore_kargs is not None else ()
-        
-        if ref_var_idx >= 0:
-            ref_var = args[ref_var_idx]
-        else:
-            ref_var = kwargs[ref_var_name]
-        
-        ref_var_shape = ref_var.shape
-        extra_dim_num = ref_var.ndim - ref_var_expected_dims
-        
-        # No special left side iteration, return the function result
-        if (extra_dim_num == 0):
-            return wrapped(*args, **kwargs)
-        
-        # Start by getting the left-most 'extra' dims
-        extra_dims = ref_var_shape[0:extra_dim_num]           
-        
-        mask_output = False
-        out_inited = False
-        for left_idxs in iter_left_indexes(extra_dims):
-            # Make the left indexes plus a single slice object
-            # The single slice will handle all the dimensions to
-            # the right (e.g. [1,1,:])
-            left_and_slice_idxs = left_idxs + (slice(None), )
-            
-            # Slice the args if applicable
-            new_args = [arg[left_and_slice_idxs] 
-                        if i not in _ignore_args else arg 
-                        for i,arg in enumerate(args)]
-                
-            # Slice the kwargs if applicable
-            new_kargs = {key:(val[left_and_slice_idxs] 
-                         if key not in _ignore_kargs else val)
-                         for key,val in viewitems(kwargs)}
-            
-            # Skip the possible empty/missing arrays for the join method
-            skip_missing = False
-            if out_inited:
-                for i,arg in enumerate(new_args):
-                    if isinstance(arg, DataArray):
-                        arr = npvalues(arg)
-                    elif isinstance(arg, np.ndarray):
-                        arr = arg
-                    else:
-                        continue
-                    
-                    if isinstance(arr, np.ma.MaskedArray):
-                        if arr.mask.all():
-                            if isinstance(output, np.ndarray):
-                                output[left_and_slice_idxs] = (
-                                                    Constants.DEFAULT_FILL)
-                            else:
-                                for arr in output:
-                                    arr[left_and_slice_idxs] = (
-                                                    Constants.DEFAULT_FILL)
-                            skip_missing = True
-                            mask_output = True
-                        
-            if skip_missing:
-                continue
-            
-            # Call the numerical routine
-            result = wrapped(*new_args, **new_kargs)
-            
-            if isinstance(result, np.ndarray):
-                # Output array
-                if not out_inited:
-                    outdims = _calc_out_dims(result, extra_dims)
-                    if not isinstance(result, ma.MaskedArray):
-                        output = np.empty(outdims, ref_var.dtype)
-                        masked = False
-                    else:
-                        output = ma.MaskedArray(
-                                        np.zeros(outdims, ref_var.dtype),
-                                        mask=np.zeros(outdims, np.bool_),
-                                        fill_value=result.fill_value)
-                        masked = True
-                    
-                    out_inited = True 
-                
-                if not masked:
-                    output[left_and_slice_idxs] = result[:]
-                else:
-                    output.data[left_and_slice_idxs] = result.data[:]
-                    output.mask[left_and_slice_idxs] = result.mask[:]
-                
-            else:   # This should be a list or a tuple (cape)
-                if not out_inited:
-                    outdims = _calc_out_dims(result[0], extra_dims)
-                    if not isinstance(result[0], ma.MaskedArray):
-                        output = [np.empty(outdims, ref_var.dtype) 
-                                  for i in py3range(len(result))]
-                        masked = False
-                    else:
-                        output = [ma.MaskedArray(
-                                    np.zeros(outdims, ref_var.dtype),
-                                    mask=np.zeros(outdims, np.bool_),
-                                    fill_value=result[0].fill_value) 
-                                  for i in py3range(len(result))]
-                        masked = True
-                    
-                    out_inited = True
-                
-                for i,outarr in enumerate(result):
-                    if not masked:
-                        output[i][left_and_slice_idxs] = outarr[:]
-                    else:
-                        output[i].data[left_and_slice_idxs] = outarr.data[:]
-                        output[i].mask[left_and_slice_idxs] = outarr.mask[:]
-            
-        
-        if mask_output:
-            if isinstance(output, np.ndarray):
-                output = ma.masked_values(output, Constants.DEFAULT_FILL)
-            else:
-                output = tuple(ma.masked_values(arr, Constants.DEFAULT_FILL) 
-                               for arr in output)
-                
-        return output
-    
-    return func_wrapper
-        
-        
-
-def left_iter_nocopy(ref_var_expected_dims,
-                     ref_var_right_ndims,
-                     insert_dims=None,
-                     ref_var_idx=None,
-                     ref_var_name=None,
-                     ignore_args=None, 
-                     ignore_kargs=None,
-                     outviews="outview",
-                     alg_dtype=np.float64,
-                     cast_output=True):
+                   ignore_args=None, 
+                   ignore_kargs=None,
+                   outviews="outview",
+                   alg_dtype=np.float64,
+                   cast_output=True):
     """Decorator to handle iterating over leftmost dimensions when using 
     multiple files and/or multiple times.
     
@@ -352,7 +202,7 @@ def left_iter_nocopy(ref_var_expected_dims,
     return func_wrapper
 
 
-def handle_casting(ref_idx=0, arg_idxs=None, karg_names=None, 
+def cast_type(ref_idx=0, arg_idxs=None, karg_names=None, 
                    alg_dtype=np.float64,
                    outviews="outview"):
     """Decorator to handle casting to/from required dtype used in 
@@ -417,7 +267,7 @@ def _extract_and_transpose(arg, do_transpose):
     return arg
 
     
-def handle_extract_transpose(do_transpose=True, outviews="outview"):
+def extract_and_transpose(do_transpose=True, outviews="outview"):
     """Decorator to extract the data array from a DataArray and also
     transposes the view of the data if the data is not fortran contiguous.
     
@@ -475,7 +325,13 @@ def check_args(refvaridx, refvarndim, rightdims, stagger=None,
     def func_wrapper(wrapped, instance, args, kwargs):
         
         refvar = args[refvaridx]
-        extra_dims = refvar.ndim - refvarndim
+        try:
+            _ndim = refvar.ndim
+        except AttributeError:
+            raise ValueError("argument {} is not an arraylike "
+                             "object".format(refvaridx))
+        else:
+            extra_dims = refvar.ndim - refvarndim
         
         # Always use unstaggered as the basis of comparison
         if refstagdim is not None:
@@ -495,6 +351,12 @@ def check_args(refvaridx, refvarndim, rightdims, stagger=None,
                 continue
             
             var = args[i]
+            
+            try:
+                _ = var.ndim
+            except AttributeError:
+                raise ValueError("argument {} is not an arraylike "
+                                 "object".format(i))
             
             right_var_ndims = rightdims[i]
             

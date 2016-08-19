@@ -1,6 +1,6 @@
 !NCLFORTSTART
 SUBROUTINE ROTATECOORDS(ilat, ilon, olat, olon, lat_np, lon_np, lon_0, direction)
-    USE constants, ONLY : PI, RAD_PER_DEG, DEG_PER_RAD
+    USE wrf_constants, ONLY : PI, RAD_PER_DEG, DEG_PER_RAD
 
     IMPLICIT NONE
 
@@ -61,7 +61,7 @@ END SUBROUTINE ROTATECOORDS
 SUBROUTINE DLLTOIJ(map_proj, truelat1, truelat2, stdlon, lat1, lon1,&
                    pole_lat, pole_lon, knowni, knownj, dx, dy, latinc,&
                    loninc, lat, lon, loc, errstat, errmsg)
-    USE constants, ONLY : ALGERR, PI, RAD_PER_DEG, DEG_PER_RAD, WRF_EARTH_RADIUS
+    USE wrf_constants, ONLY : ALGERR, PI, RAD_PER_DEG, DEG_PER_RAD, WRF_EARTH_RADIUS
 
     ! Converts input lat/lon values to the cartesian (i,j) value
     ! for the given projection.
@@ -278,7 +278,7 @@ END SUBROUTINE DLLTOIJ
 SUBROUTINE DIJTOLL(map_proj, truelat1, truelat2, stdlon, lat1, lon1,&
                    pole_lat, pole_lon, knowni, knownj, dx, dy, latinc,&
                    loninc, ai, aj, loc, errstat, errmsg)
-    USE constants, ONLY : ALGERR, PI, RAD_PER_DEG, DEG_PER_RAD, WRF_EARTH_RADIUS
+    USE wrf_constants, ONLY : ALGERR, PI, RAD_PER_DEG, DEG_PER_RAD, WRF_EARTH_RADIUS
 
     ! converts input lat/lon values to the cartesian (i,j) value
     ! for the given projection.

@@ -30,7 +30,7 @@
 
 ! NCLFORTSTART
 SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
-    USE constants, ONLY : ALGERR, GAMMA, GAMMAMD, TLCLC1, TLCLC2, TLCLC3, &
+    USE wrf_constants, ONLY : ALGERR, GAMMA, GAMMAMD, TLCLC1, TLCLC2, TLCLC3, &
                           EPS, TLCLC4, THTECON1, THTECON2, THTECON3
 
     IMPLICIT NONE
@@ -175,7 +175,7 @@ END SUBROUTINE WETBULBCALC
 
 !NCLFORTSTART
 SUBROUTINE OMGCALC(qvp, tmk, www, prs, omg, mx, my, mz)
-    USE constants, ONLY : G, RD, EPS
+    USE wrf_constants, ONLY : G, RD, EPS
 
     IMPLICIT NONE
 
@@ -238,7 +238,7 @@ END SUBROUTINE OMGCALC
 ! ------------------------------------------------------------------
 !NCLFORTSTART
 SUBROUTINE VIRTUAL_TEMP(temp, ratmix, tv, nx, ny, nz)
-    USE constants, ONLY : EPS
+    USE wrf_constants, ONLY : EPS
 
     IMPLICIT NONE
 

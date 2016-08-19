@@ -1,6 +1,37 @@
+!     This routine computes equivalent reflectivity factor (in dBZ) at
+!     each model grid point.  In calculating Ze, the RIP algorithm makes
+!     assumptions consistent with those made in an early version
+!     (ca. 1996) of the bulk mixed-phase microphysical scheme in the MM5
+!     model (i.e., the scheme known as "Resiner-2").  For each species:
+!
+!     1. Particles are assumed to be spheres of constant density.  The
+!     densities of rain drops, snow particles, and graupel particles are
+!     taken to be rho_r = rho_l = 1000 kg m^-3, rho_s = 100 kg m^-3, and
+!     rho_g = 400 kg m^-3, respectively. (l refers to the density of
+!     liquid water.)
+!
+!     2. The size distribution (in terms of the actual diameter of the
+!     particles, rather than the melted diameter or the equivalent solid
+!     ice sphere diameter) is assumed to follow an exponential
+!     distribution of the form N(D) = N_0 * exp( lambda*D ).
+!
+!     3. If ivarint=0, the intercept parameters are assumed constant
+!     (as in early Reisner-2), with values of 8x10^6, 2x10^7,
+!     and 4x10^6 m^-4, for rain, snow, and graupel, respectively.
+!     If ivarint=1, variable intercept parameters are used, as
+!     calculated in Thompson, Rasmussen, and Manning (2004, Monthly
+!     Weather Review, Vol. 132, No. 2, pp. 519-542.)
+!
+!     4. If iliqskin=1, frozen particles that are at a temperature above
+!     freezing are assumed to scatter as a liquid particle.
+!
+!     More information on the derivation of simulated reflectivity in
+!     RIP can be found in Stoelinga (2005, unpublished write-up).
+!     Contact Mark Stoelinga (stoeling@atmos.washington.edu) for a copy.
+
 !NCLFORTSTART
 SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx, ny, nz)
-    USE constants, ONLY : GAMMA_SEVEN, RHOWAT, RHO_R, RHO_S, RHO_G, ALPHA, &
+    USE wrf_constants, ONLY : GAMMA_SEVEN, RHOWAT, RHO_R, RHO_S, RHO_G, ALPHA, &
                           CELKEL, PI, RD
 
     IMPLICIT NONE
@@ -50,16 +81,16 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx
-                IF (qvp(i,j,k).LT.0.0) THEN
+                IF (qvp(i,j,k) .LT. 0.0) THEN
                     qvp(i,j,k) = 0.0
                 END IF
-                IF (qra(i,j,k).LT.0.0) THEN
+                IF (qra(i,j,k) .LT. 0.0) THEN
                     qra(i,j,k) = 0.0
                 END IF
-                IF (qsn(i,j,k).LT.0.0) THEN
+                IF (qsn(i,j,k) .LT. 0.0) THEN
                     qsn(i,j,k) = 0.0
                 END IF
-                IF (qgr(i,j,k).LT.0.0) THEN
+                IF (qgr(i,j,k) .LT. 0.0) THEN
                     qgr(i,j,k) = 0.0
                 END IF
             END DO
@@ -89,7 +120,7 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
         DO j = 1,ny
             DO i = 1,nx
                 virtual_t = tmk(i,j,k)*(0.622D0 + qvp(i,j,k))/(0.622D0*(1.D0 + qvp(i,j,k)))
-                rhoair = prs(i,j,k) / (RD*virtual_t)
+                rhoair = prs(i,j,k)/(RD*virtual_t)
 
                 ! Adjust factor for brightband, where snow or graupel particle
                 ! scatters like liquid water (alpha=1.0) because it is assumed to
@@ -116,7 +147,7 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
 
                     ronv = RON2
                     IF (qra(i,j,k) .GT. R1) THEN
-                        ronv = RON_CONST1R*TANH((RON_QR0-qra(i,j,k))/RON_DELQR0) + RON_CONST2R
+                        ronv = RON_CONST1R*TANH((RON_QR0 - qra(i,j,k))/RON_DELQR0) + RON_CONST2R
                     END IF
 
                 ELSE
@@ -129,8 +160,8 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
                 ! the sum of z_e for each hydrometeor species:
 
                 z_e = factor_r*(rhoair*qra(i,j,k))**1.75D0/ronv**.75D0 + &
-                    factorb_s*(rhoair*qsn(i,j,k))**1.75D0/sonv**.75D0 + &
-                    factorb_g* (rhoair*qgr(i,j,k))**1.75D0/gonv**.75D0
+                      factorb_s*(rhoair*qsn(i,j,k))**1.75D0/sonv**.75D0 + &
+                      factorb_g*(rhoair*qgr(i,j,k))**1.75D0/gonv**.75D0
 
                 ! Adjust small values of Z_e so that dBZ is no lower than -30
                 z_e = MAX(z_e, .001D0)
