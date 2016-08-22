@@ -22,7 +22,8 @@ ext1 = numpy.distutils.core.Extension(
                "fortran/wrffortran.pyf"]
     )
 
-exec(open("src/wrf/version.py").read())
+with open('src/wrf/version.py') as f: 
+    exec(f.read())
 
 requirements = [
     "numpy>=1.9.0",
