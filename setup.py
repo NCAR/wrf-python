@@ -1,17 +1,6 @@
 import setuptools
 import numpy.distutils.core
  
-#ext1 = numpy.distutils.core.Extension(
-#    name = "wrf._wrfext",
-#    sources = ["src/wrf/wrfext.f90",
-#               "src/wrf/wrfext.pyf"]
-#    )
-
-#ext2 = numpy.distutils.core.Extension(
-#    name = "wrf._wrfcape",
-#    sources = ["src/wrf/wrfcape.f90",
-#               "src/wrf/wrfcape.pyf"]
-#    )
 
 ext1 = numpy.distutils.core.Extension(
     name = "wrf._wrffortran",
@@ -33,9 +22,37 @@ ext1 = numpy.distutils.core.Extension(
                "fortran/wrffortran.pyf"]
     )
 
+exec(open("src/wrf/version.py").read())
+
+requirements = [
+    "numpy>=1.9.0",
+    "wrapt>=1.10"
+    ] 
+
 numpy.distutils.core.setup( 
+    author = "Bill Ladwig",
+    author_email = "ladwig@ucar.edu",
+    description = "Diagnostic and interpolation routines for WRF-ARW data",
+    long_description = """
+    A collection of diagnostics and interpolation routines to be used with 
+    WRF-ARW data.
+    """,
+    url = "https://github.com/NCAR/wrf-python",
+    keywords = ["python", "wrf-python", "wrf", "forecast", "model",
+                "weather research and forecasting", "interpolation", 
+                "plotting", "plots", "meteorology", "nwp", 
+                "numerical weather predication", "diagnostic"],
+    install_requires = requirements,
+    classifiers = ["Development Status :: 3 - Alpha",
+                "Intended Audience :: Science/Research",
+                "License :: OSI Approved",
+                "Programming Language :: Python",
+                "Programming Language :: Python :: 3",
+                "Topic :: Scientific/Engineering :: Atmospheric Science",
+                "Topic :: Software Development :: Libraries :: Python Modules",
+                "Operating System :: OS Independent"],
     name = "wrf",
-    version = "0.0.1",        
+    version = __version__,        
     packages = setuptools.find_packages("src"),   
     ext_modules = [ext1],
     package_dir={"" : "src"},

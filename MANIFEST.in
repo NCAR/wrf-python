@@ -1,0 +1,10 @@
+include README
+
+include fortran/*.f90
+include fortran/*.pyf
+include setup.py
+
+recursive-include doc *
+include doc/make.bat
+include doc/Makefile
+

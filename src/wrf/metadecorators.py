@@ -1091,7 +1091,7 @@ def set_interp_metadata(interp_type):
 def set_alg_metadata(alg_ndims, refvarname, 
                      refvarndims=None, missingarg=None,
                      stagdim=None, stagsubvar=None,
-                     units=None, description=None, squeeze=False):
+                     units=None, description=None):
     """
         alg_ndims: number of dimensions returned by the algorithm
         refvarndims: number of right dimensions for the refernce var, used
@@ -1200,9 +1200,6 @@ def set_alg_metadata(alg_ndims, refvarname,
                         continue
                     
         out = DataArray(result, name=outname, dims=outdims, attrs=outattrs)
-        
-        if squeeze:
-            return out.squeeze()
         
         return out
     

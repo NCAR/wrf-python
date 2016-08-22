@@ -17,6 +17,7 @@ from .util import (npvalues, extract_global_attrs,
                    extract_dim, extract_vars, extract_times, combine_files, 
                    is_staggered, get_left_indexes, iter_left_indexes, 
                    get_right_slices, get_proj_params)
+from .version import __version__
 
 __all__ = []
 __all__ += ["xarray_enabled", "disable_xarray", "enable_xarray",
@@ -38,4 +39,5 @@ __all__ += ["npvalues", "extract_global_attrs",
             "extract_dim", "extract_vars", "extract_times", "combine_files", 
             "is_staggered", "get_left_indexes", "iter_left_indexes", 
             "get_right_slices", "get_proj_params"]
+__all__ += ["__version__"]
 
