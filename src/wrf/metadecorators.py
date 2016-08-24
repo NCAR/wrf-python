@@ -369,8 +369,8 @@ def set_cloudfrac_metadata():
         outdimnames[-2:] = copy_var.dims[-2:]
         # Left dims
         outdimnames[1:-2] = copy_var.dims[0:-3]
-        outdimnames[0] = "low_med_high"
-        outattrs["description"] = "low, med, high clouds"
+        outdimnames[0] = "low_mid_high"
+        outattrs["description"] = "low, mid, high clouds"
         outattrs["MemoryOrder"] = "XY"
         outattrs["units"] = "%"
         outname = "cloudfrac"
@@ -388,7 +388,7 @@ def set_cloudfrac_metadata():
             elif key == "Time":
                 outcoords[key] = npvalues(dataarray)
         
-        outcoords["low_med_high"] = ["low", "med", "high"]
+        outcoords["low_mid_high"] = ["low", "mid", "high"]
             
         return DataArray(result, name=outname, coords=outcoords, 
                        dims=outdimnames, attrs=outattrs)
@@ -1342,7 +1342,7 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
         outattrs = OrderedDict()
         
         outname = "cloudfrac"
-        outattrs["description"] = "low, med, high clouds"
+        outattrs["description"] = "low, mid, high clouds"
         outattrs["units"] = "%"
         outattrs["MemoryOrder"] = "XY"
             
@@ -1357,9 +1357,9 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
                 
         
         outcoords = {}     
-        # Left-most is always cape_cin or cape_cin_lcl_lfc
-        outdims[0] = "low_med_high"
-        outcoords["low_med_high"] = ["low", "med", "high"]
+        # Left-most is always low_mid_high
+        outdims[0] = "low_mid_high"
+        outcoords["low_mid_high"] = ["low", "mid", "high"]
             
         out = DataArray(result, name=outname, dims=outdims, coords=outcoords,
                         attrs=outattrs)

@@ -22,17 +22,6 @@ python module _wrffortran ! in
             real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: tem1
             real(kind=8) dimension(nx,ny,nz),intent(inout),depend(nx,ny,nz) :: tem2
         end subroutine dcalcuh
-        subroutine dcloudfrac(pres,rh,lowc,midc,highc,nz,ns,ew) ! in :_wrffortran:cloud_fracf.f90
-            threadsafe 
-            real(kind=8) dimension(ew,ns,nz),intent(in) :: pres
-            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: rh
-            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: lowc
-            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: midc
-            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: highc
-            integer, optional,check(shape(pres,2)==nz),depend(pres) :: nz=shape(pres,2)
-            integer, optional,check(shape(pres,1)==ns),depend(pres) :: ns=shape(pres,1)
-            integer, optional,check(shape(pres,0)==ew),depend(pres) :: ew=shape(pres,0)
-        end subroutine dcloudfrac
         subroutine deqthecalc(qvp,tmk,prs,eth,miy,mjx,mkzh) ! in :_wrffortran:eqthecalc.f90
             threadsafe 
             use wrf_constants, only: tlclc2,tlclc3,tlclc1,tlclc4,eps,thtecon3,gammamd,thtecon1,gamma,thtecon2
@@ -104,6 +93,17 @@ python module _wrffortran ! in
             integer intent(inout) :: errstat
             character*(*) intent(inout) :: errmsg
         end subroutine dcapecalc3d
+        subroutine dcloudfrac(pres,rh,lowc,midc,highc,nz,ns,ew) ! in :_wrffortran:wrf_cloud_fracf.f90
+            threadsafe 
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: pres
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: rh
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: lowc
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: midc
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: highc
+            integer, optional,check(shape(pres,2)==nz),depend(pres) :: nz=shape(pres,2)
+            integer, optional,check(shape(pres,1)==ns),depend(pres) :: ns=shape(pres,1)
+            integer, optional,check(shape(pres,0)==ew),depend(pres) :: ew=shape(pres,0)
+        end subroutine dcloudfrac
         module wrf_constants ! in :_wrffortran:wrf_constants.f90
             real(kind=8), parameter,optional :: wrf_earth_radius=6370000.d0
             real(kind=8), parameter,optional :: rhowat=1000.d0

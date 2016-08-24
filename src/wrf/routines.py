@@ -129,7 +129,8 @@ _ALIASES = {"cape_2d" : "cape2d",
             "ter" : "terrain",
             "updraft_helicity" : "uhel",
             "td" : "dp",
-            "td2" : "dp2m"
+            "td2" : "dp2m",
+            "cfrac" : "cloudfrac"
             }
   
 class ArgumentError(Exception):

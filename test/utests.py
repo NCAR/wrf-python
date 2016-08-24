@@ -82,15 +82,14 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                     wrf_file = wrf_in
                 nc = Nio.open_file(wrf_file)
                 in_wrfnc = [nc for i in xrange(repeat)]
-        
-        # Note:  remove this after cloudfrac is included in NCL
-        # For now just make sure it runs
-        if varname == "cloudfrac":
-            my_vals = getvar(in_wrfnc, "cloudfrac", timeidx=timeidx)
-            return
             
         
         refnc = NetCDF(referent)
+        
+        # These have a left index that defines the product type
+        multiproduct = varname in ("uvmet", "uvmet10", "cape_2d", "cape_3d", 
+                                   "cfrac")
+        
         
         if not multi:
             ref_vals = refnc.variables[varname][:]
@@ -104,6 +103,8 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                 new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
             elif (varname == "cape_2d"):
                 new_dims = [4] + [repeat] + [x for x in data.shape[1:]]
+            elif (varname == "cfrac"):
+                new_dims = [3] + [repeat] + [x for x in data.shape[1:]]
 
                 
             masked=False
@@ -114,34 +115,20 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                 ref_vals = np.zeros(new_dims, data.dtype)
             else:
                 ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
-                
+            
             for i in xrange(repeat):
-                if (varname != "uvmet" and varname != "uvmet10" 
-                    and varname != "cape_2d" and varname != "cape_3d"):
+                if not multiproduct:
                     ref_vals[i,:] = data[:]
                 
                     if masked:
                         ref_vals.mask[i,:] = data.mask[:]
-                elif (varname == "uvmet" or varname == "uvmet10" 
-                      or varname=="cape_3d"):
-                    ref_vals[0, i, :] = data[0,:]
-                    ref_vals[1, i, :] = data[1,:]
-                    
-                    if masked:
-                        ref_vals.mask[0,i,:] = data.mask[0,:]
-                        ref_vals.mask[1,i,:] = data.mask[1,:]
-                elif varname == "cape_2d":
-                    ref_vals[0, i, :] = data[0,:]
-                    ref_vals[1, i, :] = data[1,:]
-                    ref_vals[2, i, :] = data[2,:]
-                    ref_vals[3, i, :] = data[3,:]
-                    
-                    if masked:
-                        ref_vals.mask[0,i,:] = data.mask[0,:]
-                        ref_vals.mask[1,i,:] = data.mask[1,:]
-                        ref_vals.mask[2,i,:] = data.mask[2,:]
-                        ref_vals.mask[3,i,:] = data.mask[3,:]
-                    
+                        
+                else:
+                    for prod in xrange(ref_vals.shape[0]):
+                        ref_vals[prod,i,:] = data[prod,:]
+                        
+                        if masked:
+                            ref_vals.mask[prod,i,:] = data.mask[prod,:]
         
         if (varname == "tc"):
             my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
@@ -483,7 +470,7 @@ if __name__ == "__main__":
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "cloudfrac"]
+                "wa", "uvmet10", "uvmet", "z", "cfrac"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     
     try:

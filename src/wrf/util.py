@@ -325,18 +325,20 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
     
     # Quick check on pressure coordinates, bypassing the need to search the
     # domain corner points
-    try:
-        coord_names = getattr(first_wrfnc.variables["P"], 
-                              "coordinates").split()
-    except KeyError:
-        pass
-    else:
-        if "XTIME" in coord_names:
-            return True
-        else:
-            return False
+#     try:
+#         coord_names = getattr(first_wrfnc.variables["P"], 
+#                               "coordinates").split()
+#     except KeyError:
+#         pass
+#     else:
+#         if "XTIME" in coord_names:
+#             return True
+#         else:
+#             return False
     
     # The long way of checking all lat/lon corner points
+    # There doesn't appear to be a shortcut, so this should probably
+    # be stored in a cache somewhere
     if varname is not None:
         try:
             coord_names = getattr(first_wrfnc.variables[varname], 
@@ -349,18 +351,18 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
         else:
             # If the XTIME variable is found to be a coordinate variable, 
             # then it's a moving domain file
-            try:
-                xtime_coord = coord_names[2]
-            except IndexError:
-                # XTIME is not a coordinate variable, if the variable is in the
-                # file, then this is not a moving domain file
-                if "XTIME" in first_wrfnc.variables:
-                    return False
-                
-            else:
-                # XTIME is a coordinate, so this is a moving domain file
-                if xtime_coord == "XTIME":
-                    return True
+#             try:
+#                 xtime_coord = coord_names[2]
+#             except IndexError:
+#                 # XTIME is not a coordinate variable, if the variable is in the
+#                 # file, then this is not a moving domain file
+#                 if "XTIME" in first_wrfnc.variables:
+#                     return False
+#                 
+#             else:
+#                 # XTIME is a coordinate, so this is a moving domain file
+#                 if xtime_coord == "XTIME":
+#                     return True
                 
             lon_coord = coord_names[0]
             lat_coord = coord_names[1]
@@ -395,8 +397,9 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
         else:
             if _corners_moved(wrfnc, ll_corner, ur_corner, 
                               lat_coord, lon_coord):
+
                 return True
-    
+
     return False
 
 def _get_global_attr(wrfnc, attr):

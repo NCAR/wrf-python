@@ -8,7 +8,7 @@ ext1 = numpy.distutils.core.Extension(
                "fortran/wrf_testfunc.f90",
                "fortran/wrf_user.f90",
                "fortran/rip_cape.f90",
-               "fortran/cloud_fracf.f90",
+               "fortran/wrf_cloud_fracf.f90",
                "fortran/wrf_fctt.f90",
                "fortran/wrf_user_dbz.f90",
                "fortran/wrf_relhl.f90",
@@ -22,7 +22,7 @@ ext1 = numpy.distutils.core.Extension(
                "fortran/wrffortran.pyf"]
     )
 
-with open('src/wrf/version.py') as f: 
+with open("src/wrf/version.py") as f: 
     exec(f.read())
 
 requirements = [

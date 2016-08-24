@@ -22,7 +22,7 @@
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", \
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", \
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", \
-                "wa", "uvmet10", "uvmet", "z"/]
+                "wa", "uvmet10", "uvmet", "z", "cfrac"/]
     
     unique_dimname_list = NewList("fifo")
     unique_dimsize_list = NewList("fifo")

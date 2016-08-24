@@ -1,13 +1,16 @@
+
+# For the version to work, the patch in ncl_reference needs to be applied
+# to the installed conda-build.  Otherwise, it needs to be set manually until
+# continuum can release a fix.
 package:
   name: wrf-python
-  version: "0.0.1"
+  version: {{ load_setup_py_data().version }}
 
 source:
   git_url: git@github.com:NCAR/wrf-python.git
-  git_rev: prebeta.0.1
 
 build:
-  number: 5
+  number: 1
   detect_binary_files_with_prefix: true
 
 requirements:

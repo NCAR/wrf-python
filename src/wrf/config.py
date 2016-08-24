@@ -4,75 +4,87 @@ from __future__ import (absolute_import, division, print_function,
 try:
     from xarray import DataArray
 except ImportError:
-    _XARRAY_ENABLED = False
+    _xarray_enabled = False
 else:
-    _XARRAY_ENABLED = True
+    _xarray_enabled = True
     
 try:
     from cartopy import crs
 except ImportError:
-    _CARTOPY_ENABLED = False
+    _cartopy_enabled = False
 else:
-    _CARTOPY_ENABLED = True
+    _cartopy_enabled = True
     
 try:
     from mpl_toolkits.basemap import Basemap
 except ImportError:
-    _BASEMAP_ENABLED = False
+    _basemap_enabled = False
 else:
-    _BASEMAP_ENABLED = True
+    _basemap_enabled = True
     
 try:
     from Ngl import Resources
 except ImportError:
-    _PYNGL_ENABLED = False
+    _pyngl_enabled = False
 else:
-    _PYNGL_ENABLED = True
+    _pyngl_enabled = True
+    
+_cache_size = 5
 
 def xarray_enabled():
-    global _XARRAY_ENABLED
-    return _XARRAY_ENABLED
+    global _xarray_enabled
+    return _xarray_enabled
 
 def disable_xarray():
-    global _XARRAY_ENABLED
-    _XARRAY_ENABLED = False
+    global _xarray_enabled
+    _xarray_enabled = False
     
 def enable_xarray():
-    global _XARRAY_ENABLED
-    _XARRAY_ENABLED = True
+    global _xarray_enabled
+    _xarray_enabled = True
     
 def cartopy_enabled():
-    global _CARTOPY_ENABLED
-    return _CARTOPY_ENABLED
+    global _cartopy_enabled
+    return _cartopy_enabled
 
 def enable_cartopy():
-    global _CARTOPY_ENABLED
-    _CARTOPY_ENABLED = True
+    global _cartopy_enabled
+    _cartopy_enabled = True
     
 def disable_cartopy():
-    global _CARTOPY_ENABLED
-    _CARTOPY_ENABLED = True
+    global _cartopy_enabled
+    _cartopy_enabled = True
     
 def basemap_enabled():
-    global _BASEMAP_ENABLED
-    return _BASEMAP_ENABLED
+    global _basemap_enabled
+    return _basemap_enabled
 
 def enable_basemap():
-    global _BASEMAP_ENABLED
-    _BASEMAP_ENABLED = True
+    global _basemap_enabled
+    _basemap_enabled = True
     
 def disable_basemap():
-    global _BASEMAP_ENABLED
-    _BASEMAP_ENABLED = True
+    global _basemap_enabled
+    _basemap_enabled = True
     
 def pyngl_enabled():
-    global _PYNGL_ENABLED
-    return _PYNGL_ENABLED
+    global _pyngl_enabled
+    return _pyngl_enabled
 
 def enable_pyngl():
-    global _PYNGL_ENABLED
-    _PYNGL_ENABLED = True
+    global _pyngl_enabled
+    _pyngl_enabled = True
     
 def disable_pyngl():
-    global _PYNGL_ENABLED
-    _PYNGL_ENABLED = True
+    global _pyngl_enabled
+    _pyngl_enabled = True
+    
+def set_cache_size(size):
+    global _cache_size
+    _cache_size = size
+    
+def get_cache_size():
+    return int(_cache_size)
+    
+
+
