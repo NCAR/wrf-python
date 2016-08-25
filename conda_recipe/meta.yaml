@@ -16,6 +16,7 @@ build:
 requirements:
   build:
     - numpy x.x
+    - wrapt
     - gcc
     - python
     - libgcc 4.8.5
