@@ -52,11 +52,11 @@ def _calc_wspd_wdir(u, v, two_d, units):
                    wspd_wdir=False)
 @convert_units("wind", "mps")
 def get_u_destag(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                 cache=None, meta=True,
+                 cache=None, meta=True, _key=None,
                  units="mps"):
     varname = either("U", "UU")(wrfnc)
     u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     u = destagger(u_vars[varname], -1)
     
     return u
@@ -70,11 +70,11 @@ def get_u_destag(wrfnc, timeidx=0, method="cat", squeeze=True,
                    wspd_wdir=False)
 @convert_units("wind", "mps")
 def get_v_destag(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                 cache=None, meta=True,
+                 cache=None, meta=True, _key=None,
                  units="mps"):
     varname = either("V", "VV")(wrfnc)
     v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     v = destagger(v_vars[varname], -2)
     
     return v
@@ -88,10 +88,10 @@ def get_v_destag(wrfnc, timeidx=0, method="cat", squeeze=True,
                    wspd_wdir=False)
 @convert_units("wind", "mps")
 def get_w_destag(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                 cache=None, meta=True,
+                 cache=None, meta=True, _key=None,
                  units="mps"):
     w_vars = extract_vars(wrfnc, timeidx, "W", method, squeeze, cache, 
-                          meta=False)
+                          meta=False, _key=_key)
     w = destagger(w_vars["W"], -3)
     return w
 
@@ -102,16 +102,16 @@ def get_w_destag(wrfnc, timeidx=0, method="cat", squeeze=True,
                    two_d=False, 
                    wspd_wdir=True)
 def get_destag_wspd_wdir(wrfnc, timeidx=0, method="cat", 
-                         squeeze=True, cache=None, meta=True,
+                         squeeze=True, cache=None, meta=True, _key=None,
                          units="mps"):
     varname = either("U", "UU")(wrfnc)
     u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     u = destagger(u_vars[varname], -1)
     
     varname = either("V", "VV")(wrfnc)
     v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     v = destagger(v_vars[varname], -2)
     
     return _calc_wspd_wdir(u, v, False, units)
@@ -123,18 +123,18 @@ def get_destag_wspd_wdir(wrfnc, timeidx=0, method="cat",
                    two_d=False, 
                    wspd_wdir=True)
 def get_destag_wspd_wdir10(wrfnc, timeidx=0, method="cat", 
-                           squeeze=True, cache=None, meta=True, 
+                           squeeze=True, cache=None, meta=True, _key=None, 
                            units="mps"):
     
     varname = either("U10", "UU")(wrfnc)
     u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     u = (u_vars[varname] if varname == "U10" else 
          destagger(u_vars[varname][...,0,:,:], -1)) 
     
     varname = either("V10", "VV")(wrfnc)
     v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     v = (v_vars[varname] if varname == "V10" else 
          destagger(v_vars[varname][...,0,:,:], -2))
     

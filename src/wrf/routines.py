@@ -1,7 +1,8 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .util import get_iterable, is_standard_wrf_var, extract_vars, viewkeys
+from .util import (get_iterable, is_standard_wrf_var, extract_vars, viewkeys,
+                   get_id)
 from .cape import get_2dcape, get_3dcape
 from .ctt import get_ctt
 from .dbz import get_dbz, get_max_dbz
@@ -284,17 +285,21 @@ def getvar(wrfnc, varname, timeidx=0,
     
     """
     
+    _key = get_id(wrfnc)
+    
     wrfnc = get_iterable(wrfnc)
     
-    if is_standard_wrf_var(wrfnc, varname):
+    if is_standard_wrf_var(wrfnc, varname) and varname != "Times":
         return extract_vars(wrfnc, timeidx, varname, 
-                            method, squeeze, cache, meta)[varname]
+                            method, squeeze, cache, meta, _key)[varname]
+    elif varname == "Times":
+        varname = "times"  # Diverting to the get_times routine
       
     actual_var = _undo_alias(varname)
     if actual_var not in _VALID_KARGS:
         raise ArgumentError("'%s' is not a valid variable name" % (varname))
       
     _check_kargs(actual_var, kargs)
-    return _FUNC_MAP[actual_var](wrfnc, timeidx, 
-                                 method, squeeze, cache, meta, **kargs)
+    return _FUNC_MAP[actual_var](wrfnc, timeidx, method, squeeze, cache, 
+                                 meta, _key, **kargs)
     

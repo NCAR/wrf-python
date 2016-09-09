@@ -6,7 +6,8 @@ import os, sys
 import subprocess
 
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
-                     disable_xarray, xarray_enabled, npvalues)
+                     disable_xarray, xarray_enabled, npvalues,
+                     xy_to_ll, ll_to_xy )
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
@@ -457,10 +458,99 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
     
     return test
 
+def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3, 
+                     pynio=False):
+    def test(self):
+        try:
+            from netCDF4 import Dataset as NetCDF
+        except:
+            pass
+        
+        try:
+            from PyNIO import Nio
+        except:
+            pass
+        
+        if not multi:
+            timeidx = 0
+            if not pynio:
+                in_wrfnc = NetCDF(wrf_in)
+            else:
+                # Note: Python doesn't like it if you reassign an outer scoped
+                # variable (wrf_in in this case)
+                if not wrf_in.endswith(".nc"):
+                    wrf_file = wrf_in + ".nc"
+                else:
+                    wrf_file = wrf_in
+                in_wrfnc = Nio.open_file(wrf_file)
+        else:
+            timeidx = None
+            if not pynio:
+                nc = NetCDF(wrf_in)
+                in_wrfnc = [nc for i in xrange(repeat)]
+            else:
+                if not wrf_in.endswith(".nc"):
+                    wrf_file = wrf_in + ".nc"
+                else:
+                    wrf_file = wrf_in
+                nc = Nio.open_file(wrf_file)
+                in_wrfnc = [nc for i in xrange(repeat)]
+                
+        refnc = NetCDF(referent)
+                
+        if testid == "xy":
+            # Since this domain is not moving, the reference values are the 
+            # same whether there are multiple or single files
+            ref_vals = refnc.variables["ij"][:]
+            # Lats/Lons taken from NCL script, just hard-coding for now
+            lats = [-55, -60, -65]
+            lons = [25, 30, 35]
+            
+            # Just call with a single lat/lon
+            if single:
+                xy = ll_to_xy(in_wrfnc, lats[0], lons[0])
+                xy = xy + 1 # NCL uses fortran indexing
+                ref = ref_vals[:,0]
+                
+                nt.assert_allclose(npvalues(xy), ref)
+            
+            else:
+                xy = ll_to_xy(in_wrfnc, lats, lons)
+                xy = xy + 1 # NCL uses fortran indexing
+                ref = ref_vals[:]
+                
+                nt.assert_allclose(npvalues(xy), ref)
+                
+        else:
+            # Since this domain is not moving, the reference values are the 
+            # same whether there are multiple or single files
+            ref_vals = refnc.variables["ll"][:]
+            
+             # i_s, j_s taken from NCL script, just hard-coding for now
+             # NCL uses 1-based indexing for this, so need to subtract 1
+            i_s = np.asarray([10, 100, 150], int) - 1
+            j_s = np.asarray([10, 100, 150], int) - 1
+            
+            if single:
+                ll = xy_to_ll(in_wrfnc, i_s[0], j_s[0])
+                ref = ref_vals[::-1,0]
+                
+                nt.assert_allclose(npvalues(ll), ref)
+            else:
+                ll = xy_to_ll(in_wrfnc, i_s, j_s)
+                ref = ref_vals[::-1,:]
+                
+                nt.assert_allclose(npvalues(ll), ref)
+        
+    return test
+
 class WRFVarsTest(ut.TestCase):
     longMessage = True
     
 class WRFInterpTest(ut.TestCase):
+    longMessage = True
+    
+class WRFLatLonTest(ut.TestCase):
     longMessage = True
         
 
@@ -472,6 +562,7 @@ if __name__ == "__main__":
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
                 "wa", "uvmet10", "uvmet", "z", "cfrac"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
+    latlon_tests = ["xy", "ll"]
     
     try:
         import netCDF4
@@ -497,6 +588,19 @@ if __name__ == "__main__":
             setattr(WRFInterpTest, 'test_multi_{0}'.format(method), 
                     test_interp_func2)
         
+        for testid in latlon_tests:
+            for single in (True, False):
+                for multi in (True, False):
+                    test_ll_func = make_latlon_test(testid, TEST_FILE, 
+                                                    OUT_NC_FILE, 
+                                                    single=single, multi=multi, 
+                                                    repeat=3, pynio=False)
+                    multistr = "" if not multi else "_multi"
+                    singlestr = "_nosingle" if not single else "_single"
+                    test_name = "test_{}{}{}".format(testid, singlestr, 
+                                                       multistr)
+                    setattr(WRFLatLonTest, test_name, test_ll_func)
+                
     try:
         import PyNIO
     except ImportError:
@@ -522,6 +626,20 @@ if __name__ == "__main__":
                     test_interp_func1)
             setattr(WRFInterpTest, 'test_pynio_multi_{0}'.format(method), 
                     test_interp_func2)
+            
+        for testid in latlon_tests:
+            for single in (True, False):
+                for multi in (True, False):
+                    test_ll_func = make_latlon_test(testid, TEST_FILE, 
+                                                    OUT_NC_FILE, 
+                                                    single=single, multi=multi, 
+                                                    repeat=3, pynio=False)
+                    multistr = "" if not multi else "_multi"
+                    singlestr = "_nosingle" if not single else "_single"
+                    test_name = "test_pynio_{}{}{}".format(testid, 
+                                                              singlestr, 
+                                                              multistr)
+                    setattr(WRFLatLonTest, test_name, test_ll_func)
      
     ut.main()
     

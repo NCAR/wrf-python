@@ -10,11 +10,11 @@ from .metadecorators import copy_and_set_metadata
                        description="absolute vorticity",
                        units="10-5 s-1")
 def get_avo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
-            meta=True):
+            meta=True, _key=None):
     ncvars = extract_vars(wrfnc, timeidx, ("U", "V", "MAPFAC_U",
                                            "MAPFAC_V", "MAPFAC_M",
                                            "F"),
-                          method, squeeze, cache, meta=False)
+                          method, squeeze, cache, meta=False, _key=_key)
     
     attrs = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     u = ncvars["U"]
@@ -34,12 +34,12 @@ def get_avo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
                        description="potential vorticity",
                        units="PVU")
 def get_pvo(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
-            meta=True):
+            meta=True, _key=None):
     ncvars = extract_vars(wrfnc, timeidx, ("U", "V", "T", "P",
                                            "PB", "MAPFAC_U",
                                            "MAPFAC_V", "MAPFAC_M",
                                            "F"),
-                          method, squeeze, cache, meta=False)
+                          method, squeeze, cache, meta=False, _key=_key)
     attrs = extract_global_attrs(wrfnc, attrs=("DX", "DY"))
     
     u = ncvars["U"]

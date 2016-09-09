@@ -10,26 +10,29 @@ from .util import extract_vars, either
                        description="pressure")
 @convert_units("pressure", "pa")
 def get_pressure(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                 cache=None, meta=True,
+                 cache=None, meta=True, _key=None,
                  units="pa"):
     
     varname = either("P", "PRES")(wrfnc)
     if varname == "P":
         p_vars = extract_vars(wrfnc, timeidx, ("P", "PB"), 
-                              method, squeeze, cache, meta=False)
+                              method, squeeze, cache, meta=False,
+                              _key=_key)
         p = p_vars["P"]
         pb = p_vars["PB"]
         pres = p + pb
     else:
         pres = extract_vars(wrfnc, timeidx, "PRES", 
-                            method, squeeze, cache, meta=False)["PRES"]
+                            method, squeeze, cache, meta=False,
+                            _key=_key)["PRES"]
     
     return pres
 
 def get_pressure_hpa(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                     cache=None, meta=True,
+                     cache=None, meta=True, _key=None,
                      units="hpa"):
-    return get_pressure(wrfnc, timeidx, method, squeeze, cache, meta, units)
+    return get_pressure(wrfnc, timeidx, method, squeeze, cache, meta, _key,
+                        units)
 
 
     

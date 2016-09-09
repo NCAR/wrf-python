@@ -32,7 +32,7 @@ def _lon_varname(wrfnc, stagger):
     
     return varname
 
-def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache):
+def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache, _key):
     if timeidx < 0:
         raise ValueError("'timeidx' must be greater than 0")
     
@@ -75,14 +75,16 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache):
             if not is_mapping(wrfnc):
                 wrfnc = next(iter(wrfnc))  # only need one file
             else:
-                wrfnc = wrfnc[next(iter(viewkeys(wrfnc)))]
+                first_entry = next(iter(viewkeys(wrfnc)))
+                wrfnc = wrfnc[first_entry]
+                key = _key[first_entry]
                 return _get_proj_params(wrfnc, timeidx, stagger, 
-                                        method, squeeze, cache)
+                                        method, squeeze, cache, key)
             
     xlat = extract_vars(wrfnc, lat_timeidx, (latvar,), method, squeeze, cache,
-                           meta=False)[latvar]
+                           meta=False, _key=_key)[latvar]
     xlon = extract_vars(wrfnc, lat_timeidx, (lonvar,), method, squeeze, cache,
-                           meta=False)[lonvar]
+                           meta=False, _key=_key)[lonvar]
     
     ref_lat = np.ravel(xlat[..., 0, 0])
     ref_lon = np.ravel(xlon[..., 0, 0])
@@ -164,13 +166,13 @@ def _kwarg_proj_params(projparams):
 # Will return 0-based indexes
 def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
            stagger=None, method="cat", squeeze=True, cache=None,
-           **projparms):
+           _key=None, as_int=True, **projparms):
     
     if wrfnc is not None:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
         pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
         loninc) = _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, 
-                                    cache)
+                                    cache, _key)
     else:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
         pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
@@ -191,18 +193,22 @@ def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
                              "must be the same length")
         
         if ref_lat.size == 1:
-            outdim = [lats.size, 2]
-            extra_dims = [outdim[0]]
+            outdim = [2, lats.size]
+            #outdim = [lats.size, 2]
+            extra_dims = [outdim[1]]
         else:
             # Moving domain will have moving ref_lats/ref_lons
-            outdim = [lats.size, ref_lat.size, 2]
-            extra_dims = outdim[0:2]
+            outdim = [2, ref_lat.size, lats.size]
+            #outdim = [lats.size, ref_lat.size, 2]
+            extra_dims = outdim[1:]
             
         result = np.empty(outdim, np.float64)
         
         for left_idxs in iter_left_indexes(extra_dims):
-            left_and_slice_idxs = left_idxs + (slice(None), )
-            
+            #left_and_slice_idxs = left_idxs + (slice(None), )
+            # Left indexes is a misnomer, since these will be on the right
+            x_idxs = (0,) + left_idxs
+            y_idxs = (1,) + left_idxs
             if ref_lat.size == 1:
                 ref_lat_val = ref_lat[0]
                 ref_lon_val = ref_lon[0]
@@ -218,29 +224,41 @@ def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
                known_x, known_y, dx, dy, latinc, loninc,
                lat, lon)
             
-            result[left_and_slice_idxs] = xy[:]
+            # Note:  comes back from fortran as y,x
+            result[x_idxs] = xy[1]
+            result[y_idxs] = xy[0]
             
     else:
+        result = np.empty((2,), np.float64)
         
-        result = _lltoxy(map_proj, truelat1, truelat2, stdlon,
+        fort_out = _lltoxy(map_proj, truelat1, truelat2, stdlon,
                ref_lat, ref_lon, pole_lat, pole_lon,
                known_x, known_y, dx, dy, latinc, loninc,
                latitude, longitude)
+        
+        # Note, comes back from fortran as y,x.  So, need to swap them.
+        result[0] = fort_out[1]
+        result[1] = fort_out[0]
+        
     
     # Make indexes 0-based
     result = result - 1
-        
+    
+    if as_int:
+        result = np.rint(result).astype(int)
+    
     return result
 
 # X and Y should be 0-based
 def _xy_to_ll(x, y, wrfnc=None, timeidx=0, stagger=None, 
-           method="cat", squeeze=True, cache=None, **projparams):
+           method="cat", squeeze=True, cache=None, _key=None,
+           **projparams):
         
     if wrfnc is not None:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
         pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
         loninc) = _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, 
-                                    cache)
+                                    cache, _key)
     else:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
         pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
@@ -262,21 +280,26 @@ def _xy_to_ll(x, y, wrfnc=None, timeidx=0, stagger=None,
             y_arr = y_arr.ravel()
         
         if (x_arr.size != y_arr.size):
-            raise ValueError("'x' and 'y' "
-                             "must be the same length")
+            raise ValueError("'x' and 'y' must be the same length")
             
         if ref_lat.size == 1:
-            outdim = [x_arr.size, 2]
-            extra_dims = [outdim[0]]
+            #outdim = [x_arr.size, 2]
+            #extra_dims = [outdim[0]]
+            outdim = [2, x_arr.size]
+            extra_dims = [outdim[1]]
         else:
             # Moving domain will have moving ref_lats/ref_lons
-            outdim = [x_arr.size, ref_lat.size, 2]
-            extra_dims = outdim[0:2]
+            #outdim = [x_arr.size, ref_lat.size, 2]
+            #extra_dims = outdim[0:2]
+            outdim = [2, ref_lat.size, x_arr.size]
+            extra_dims = outdim[1:]
             
         result = np.empty(outdim, np.float64)
         
         for left_idxs in iter_left_indexes(extra_dims):
-            left_and_slice_idxs = left_idxs + (slice(None), )
+            #left_and_slice_idxs = left_idxs + (slice(None), )
+            lat_idxs = (0,) + left_idxs
+            lon_idxs = (1,) + left_idxs
             
             if ref_lat.size == 1:
                 ref_lat_val = ref_lat[0]
@@ -292,7 +315,9 @@ def _xy_to_ll(x, y, wrfnc=None, timeidx=0, stagger=None,
                          ref_lon_val, pole_lat, pole_lon, known_x, known_y,
                          dx, dy, latinc, loninc, x_val, y_val)
             
-            result[left_and_slice_idxs] = ll[:]
+            #result[left_and_slice_idxs] = ll[:]
+            result[lat_idxs] = ll[0]
+            result[lon_idxs] = ll[1]
             
     else:
         # Convert 0-based to 1-based for Fortran

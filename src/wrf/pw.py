@@ -14,10 +14,10 @@ from .metadecorators import copy_and_set_metadata
                        MemoryOrder="XY",
                        units="kg m-2")
 def get_pw(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
-           meta=True):
+           meta=True, _key=None):
     varnames=("T", "P", "PB", "PH", "PHB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     
     t = ncvars["T"]
     p = ncvars["P"]

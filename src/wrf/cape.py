@@ -21,15 +21,13 @@ from .metadecorators import set_cape_metadata
 #                       units="J/kg ; J/kg ; m ; m",
 #                       MemoryOrder="XY")
 @set_cape_metadata(is2d=True)
-def get_2dcape(wrfnc, timeidx=0, method="cat", 
-               
-               squeeze=True, cache=None, meta=True,
-               missing=Constants.DEFAULT_FILL):
+def get_2dcape(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
+               meta=True, _key=None, missing=Constants.DEFAULT_FILL):
     """Return the 2d fields of cape, cin, lcl, and lfc"""
 
     varnames = ("T", "P", "PB", "QVAPOR", "PH","PHB", "HGT", "PSFC")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -86,11 +84,11 @@ def get_2dcape(wrfnc, timeidx=0, method="cat",
 @set_cape_metadata(is2d=False)
 def get_3dcape(wrfnc, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
-               missing=Constants.DEFAULT_FILL):
+               _key=None, missing=Constants.DEFAULT_FILL):
     """Return the 3d fields of cape and cin"""
     varnames = ("T", "P", "PB", "QVAPOR", "PH", "PHB", "HGT", "PSFC")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]

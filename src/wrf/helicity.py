@@ -13,11 +13,12 @@ from .metadecorators import copy_and_set_metadata
                        description="storm relative helicity",
                        units="m-2/s-2")
 def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True, 
-            cache=None, meta=True, top=3000.0):
+            cache=None, meta=True, _key=None, top=3000.0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
     ncvars = extract_vars(wrfnc, timeidx, ("HGT", "PH", "PHB"),
-                          method, squeeze, cache, meta=False)
+                          method, squeeze, cache, meta=False,
+                          _key=_key)
     
     ter = ncvars["HGT"]
     ph = ncvars["PH"]
@@ -26,12 +27,12 @@ def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True,
     # As coded in NCL, but not sure this is possible
     varname = either("U", "UU")(wrfnc)
     u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     u = destagger(u_vars[varname], -1) 
     
     varname = either("V", "VV")(wrfnc)
     v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     v = destagger(v_vars[varname], -2)
 
     geopt = ph + phb
@@ -52,11 +53,11 @@ def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="updraft helicity",
                        units="m-2/s-2")
 def get_uh(wrfnc, timeidx=0, method="cat", squeeze=True, 
-           cache=None, meta=True,
+           cache=None, meta=True, _key=None,
            bottom=2000.0, top=5000.0):
     
     ncvars = extract_vars(wrfnc, timeidx, ("W", "PH", "PHB", "MAPFAC_M"),
-                          method, squeeze, cache, meta=False)
+                          method, squeeze, cache, meta=False, _key=None)
     
     wstag = ncvars["W"]
     ph = ncvars["PH"]
@@ -70,12 +71,12 @@ def get_uh(wrfnc, timeidx=0, method="cat", squeeze=True,
     # As coded in NCL, but not sure this is possible
     varname = either("U", "UU")(wrfnc)
     u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     u = destagger(u_vars[varname], -1) 
     
     varname = either("V", "VV")(wrfnc)
     v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     v = destagger(v_vars[varname], -2) 
     
     zp = ph + phb

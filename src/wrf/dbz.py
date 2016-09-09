@@ -14,7 +14,7 @@ from .metadecorators import copy_and_set_metadata
                        description="radar reflectivity",
                        units="dBz")
 def get_dbz(wrfnc, timeidx=0, method="cat", 
-            squeeze=True, cache=None, meta=True,
+            squeeze=True, cache=None, meta=True, _key=None,
             use_varint=False, use_liqskin=False):
     """ Return the dbz
     
@@ -28,7 +28,7 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
     """
     varnames = ("T", "P", "PB", "QVAPOR", "QRAIN")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -37,7 +37,8 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
     
     try:
         snowvars = extract_vars(wrfnc, timeidx, "QSNOW", 
-                                method, squeeze, cache, meta=False)
+                                method, squeeze, cache, meta=False,
+                                _key=_key)
     except KeyError:
         qs = np.zeros(qv.shape, qv.dtype)
     else:
@@ -45,7 +46,8 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
     
     try:
         graupvars = extract_vars(wrfnc, timeidx, "QGRAUP", 
-                                 method, squeeze, cache, meta=False)
+                                 method, squeeze, cache, meta=False,
+                                 _key=_key)
     except KeyError:
         qg = np.zeros(qv.shape, qv.dtype)
     else:
@@ -69,9 +71,9 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
                        units="dBz",
                        MemoryOrder="XY")
 def get_max_dbz(wrfnc, timeidx=0, method="cat", 
-                squeeze=True, cache=None, meta=True,
+                squeeze=True, cache=None, meta=True, _key=None,
                 do_varint=False, do_liqskin=False):
     return np.amax(get_dbz(wrfnc, timeidx, method, squeeze, cache, meta,
-                           do_varint, do_liqskin), 
+                           _key, do_varint, do_liqskin), 
                   axis=-3)
 

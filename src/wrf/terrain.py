@@ -11,11 +11,12 @@ from .util import extract_vars, either
                        description="terrain height")
 @convert_units("height", "m")
 def get_terrain(wrfnc, timeidx=0, method="cat", squeeze=True, 
-              cache=None, meta=False, units="m"):
+              cache=None, meta=False, _key=None, units="m"):
     varname = either("HGT", "HGT_M")(wrfnc)
     
     return extract_vars(wrfnc, timeidx, varname, 
-                        method, squeeze, cache, meta=False)[varname]
+                        method, squeeze, cache, meta=False,
+                        _key=_key)[varname]
 
     
         

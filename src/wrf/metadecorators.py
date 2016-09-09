@@ -39,7 +39,8 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", 
-                                      "squeeze", "cache", "units", "meta"), 
+                                      "squeeze", "cache", "units", "meta",
+                                      "_key"), 
                             *args, **kwargs)
         
         wrfnc = argvars["wrfnc"]
@@ -48,6 +49,7 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
         method = argvars["method"]
         squeeze = argvars["squeeze"]
         cache = argvars["cache"]
+        _key = argvars["_key"]
         if cache is None:
             cache = {}
         
@@ -65,7 +67,7 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
         if var_to_copy is None:
             var_to_copy = extract_vars(wrfnc, timeidx, (_copy_varname,), 
                                        method, squeeze, cache,
-                                       meta=True)[_copy_varname]
+                                       meta=True, _key=_key)[_copy_varname]
         
         # Make a copy so we don't modify a user supplied cache
         new_cache = dict(cache) 
@@ -148,7 +150,8 @@ def set_wind_metadata(copy_varname, name, description,
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "units", 
-                                      "method", "squeeze", "ten_m", "cache"), 
+                                      "method", "squeeze", "ten_m", "cache",
+                                      "_key"), 
                           *args, **kwargs)
         wrfnc = argvars["wrfnc"]
         timeidx = argvars["timeidx"]
@@ -157,6 +160,7 @@ def set_wind_metadata(copy_varname, name, description,
         squeeze = argvars["squeeze"]
         ten_m = argvars["ten_m"]
         cache = argvars["cache"]
+        _key = argvars["_key"]
         if cache is None:
             cache = {}
         
@@ -167,7 +171,7 @@ def set_wind_metadata(copy_varname, name, description,
         
         copy_var = extract_vars(wrfnc, timeidx, _copy_varname, 
                                 method, squeeze, cache, 
-                                meta=True)[_copy_varname]
+                                meta=True, _key=_key)[_copy_varname]
         
         # Make a copy so we don't modify a user supplied cache
         new_cache = dict(cache) 
@@ -242,7 +246,7 @@ def set_cape_metadata(is2d):
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", "squeeze", 
-                                      "cache", "missing"), 
+                                      "cache", "_key", "missing"), 
                           *args, **kwargs)
         wrfnc = argvars["wrfnc"]
         timeidx = argvars["timeidx"]
@@ -250,12 +254,13 @@ def set_cape_metadata(is2d):
         squeeze = argvars["squeeze"]
         cache = argvars["cache"]
         missing = argvars["missing"]
+        _key = argvars["_key"]
         if cache is None:
             cache = {}
         
         _copy_varname = "P"
         copy_var = extract_vars(wrfnc, timeidx, _copy_varname, method, squeeze, 
-                                cache, meta=True)[_copy_varname]
+                                cache, meta=True, _key=_key)[_copy_varname]
         
         # Make a copy so we don't modify a user supplied cache
         new_cache = dict(cache) 
@@ -335,19 +340,20 @@ def set_cloudfrac_metadata():
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", "squeeze", 
-                                      "cache"), 
+                                      "cache", "_key"), 
                           *args, **kwargs)
         wrfnc = argvars["wrfnc"]
         timeidx = argvars["timeidx"]
         method = argvars["method"]
         squeeze = argvars["squeeze"]
         cache = argvars["cache"]
+        _key = argvars["_key"]
         if cache is None:
             cache = {}
         
         _copy_varname = "P"
         copy_var = extract_vars(wrfnc, timeidx, _copy_varname, method, squeeze, 
-                                cache, meta=True)[_copy_varname]
+                                cache, meta=True, _key=_key)[_copy_varname]
         
         # Make a copy so we don't modify a user supplied cache
         new_cache = dict(cache) 
@@ -416,18 +422,17 @@ def set_latlon_metadata(xy=False):
         
         # Want to preserve the input coordinate pair in metadata
         if result.ndim == 1:
-            result = result[np.newaxis, :]
+            result = result[:, np.newaxis]
         
         argnames = ["x", "y"] if not xy else ["latitude", "longitude"]
         argnames.append("squeeze")
         outname = "latlon" if not xy else "xy"
         
         if result.ndim == 2:
-            dimnames = (["idx", "lat_lon"] if not xy 
-                        else ["idx", "x_y"])
+            dimnames = (["lat_lon", "idx"] if not xy else ["x_y", "idx"])
         else:
-            dimnames = (["idx", "domain", "lat_lon"] if not xy 
-                        else ["idx", "domain", "x_y"])
+            dimnames = (["lat_lon", "domain_idx", "idx"] if not xy 
+                        else ["x_y", "domain_idx", "idx"])
         
         argvars = from_args(wrapped, argnames, *args, **kwargs)
         
@@ -440,13 +445,14 @@ def set_latlon_metadata(xy=False):
         
         coords = {}
         if not xy:
-            coords["xy_coord"] = (dimnames[0], [CoordPair(x=x[0], y=x[1]) 
+            coords["xy_coord"] = (dimnames[-1], [CoordPair(x=x[0], y=x[1]) 
                                for x in zip(arr1, arr2)])
-            coords[dimnames[-1]] = ["lat", "lon"]
+            coords[dimnames[0]] = ["lat", "lon"]
         else:
-            coords["latlon_coord"] = (dimnames[0], [CoordPair(lat=x[0], lon=x[1]) 
+            coords["latlon_coord"] = (dimnames[-1], [CoordPair(lat=x[0], 
+                                                               lon=x[1]) 
                                for x in zip(arr1, arr2)])
-            coords[dimnames[-1]] = ["x", "y"]
+            coords[dimnames[0]] = ["x", "y"]
         
         da = DataArray(result, name=outname, dims=dimnames, coords=coords)
         
@@ -469,7 +475,8 @@ def set_height_metadata(geopt=False):
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfnc", "timeidx", "method", 
-                                    "squeeze", "units", "msl", "cache"), 
+                                    "squeeze", "units", "msl", "cache",
+                                    "_key"), 
                           *args, **kwargs)
         wrfnc = argvars["wrfnc"]
         timeidx = argvars["timeidx"]
@@ -478,6 +485,7 @@ def set_height_metadata(geopt=False):
         squeeze = argvars["squeeze"]
         msl = argvars["msl"]
         cache = argvars["cache"]
+        _key = argvars["_key"]
         
         if cache is None:
             cache = {}
@@ -486,7 +494,8 @@ def set_height_metadata(geopt=False):
         # pressure (which has the same dims as destaggered height)
         ht_metadata_varname = either("P", "GHT")(wrfnc)
         ht_var = extract_vars(wrfnc, timeidx, ht_metadata_varname, 
-                              method, squeeze, cache, meta=True)
+                              method, squeeze, cache, meta=True,
+                              _key=_key)
         ht_metadata_var = ht_var[ht_metadata_varname]
         
         # Make a copy so we don't modify a user supplied cache

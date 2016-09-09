@@ -1378,64 +1378,18 @@ begin
   end if
 
     if( any( variable .eq. "cfrac" )) then
-
-        print("calculating wrf cloud fraction")
-        if(typeof(file_handle).eq."file") then
-            ISFILE = True
-            nc_file = file_handle
-        else if(typeof(file_handle).eq."list") then
-            ISFILE = False
-            nc_file = file_handle[0]
-        else
-            print("wrf_user_getvar: error: the first argument must be a file or a list of files opened with addfile or addfiles")
-            return
-        end if
-        end if
-
-        time_in = time
-        if ( time .eq. -1 ) then
-            if(ISFILE) then
-                P    = nc_file->P
-                PB   = nc_file->PB
-                rh   = wrf_user_getvar(nc_file,"rh",-1)
-            else
-                P    = file_handle[:]->P
-                PB   = file_handle[:]->PB
-                rh   = wrf_user_getvar(file_handle,"rh",-1)
-            end if
-        else
-            if(ISFILE) then
-                P    = nc_file->P(time_in,:,:,:)
-                PB   = nc_file->PB(time_in,:,:,:)
-                rh   = wrf_user_getvar(file_handle,"rh",time_in)
-            else
-                P    = file_handle[:]->P(time_in,:,:,:)
-                PB   = file_handle[:]->PB(time_in,:,:,:)
-                rh   = wrf_user_getvar(file_handle,"rh",time_in)
-            end if
-        end if
-
+        P    = _get_wrf_var(file_handle,"P",time)
+        PB   = _get_wrf_var(file_handle,"PB",time)
+        rh   = wrf_user_getvar(file_handle,"rh",time)
 
         pres = (P + PB)
-        thedims = dimsizes(pres)
-
-
-        if(time .eq. -1) then
-            nt = thedims(0)
-            nz = thedims(1)
-            ns = thedims(2)
-            ew = thedims(3)
-        else
-            nt = 1
-            nz = thedims(0)
-            ns = thedims(1)
-            ew = thedims(2)
-        end if
-
         out_array = wrf_cloud_fraction(pres,rh)
-
+        
+        copy_VarAtts_except(rh,out_array,(/"MemoryOrder","description","units"/))
         out_array@units = "%"
         out_array@description = "Low, Mid, High Clouds"
+        out_array@MemoryOrder = "XY"
+        
         return(out_array)
 
     end if ;variable is cfrac

@@ -8,10 +8,11 @@ from .util import extract_vars
 
 @set_cloudfrac_metadata()
 def get_cloudfrac(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                 cache=None, meta=True):
+                 cache=None, meta=True, _key=None):
     
     vars = extract_vars(wrfnc, timeidx, ("P", "PB", "QVAPOR", "T"), 
-                          method, squeeze, cache, meta=False)
+                          method, squeeze, cache, meta=False,
+                          _key=_key)
     
     p = vars["P"]
     pb = vars["PB"]

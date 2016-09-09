@@ -326,6 +326,32 @@
     filevarattdef(fout,"fld_thetae_pres", fld8_intrp)
     fout->fld_thetae_pres = (/fld8_intrp/)
     
+    ; lat/lon to x/y and x/y to lat/lon routines
+    lats = (/-55, -60, -65 /)
+    lons = (/25, 30, 35 /)
+    i_s = (/10, 100, 150 /)
+    j_s = (/10, 100, 150 /)
+    ij = wrf_user_ll_to_ij(input_file, lons, lats, True) 
+    ll = wrf_user_ij_to_ll(input_file, i_s, j_s, True)
+    
+    ij_dims = dimsizes(ij)
+    ll_dims = dimsizes(ll)
+    
+    filedimdef(fout, (/"i_j", "ij_idx"/), \
+                     (/ij_dims(0), ij_dims(1)/), \ 
+                     (/False,False/))
+                     
+    filedimdef(fout, (/"lat_lon", "ll_idx"/), \
+                     (/ll_dims(0), ll_dims(1)/), \ 
+                     (/False,False/))
+                     
+    filevardef(fout, "ij", typeof(ij), (/"i_j", "ij_idx"/))
+    filevardef(fout, "ll", typeof(ll), (/"lat_lon", "ll_idx"/))
+    filevarattdef(fout,"ij", ij)
+    filevarattdef(fout,"ll", ll)
+    
+    fout->ij = (/ij/)
+    fout->ll = (/ll/)
     
     delete(fout)
 

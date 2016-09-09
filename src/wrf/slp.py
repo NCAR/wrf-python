@@ -16,11 +16,11 @@ from .util import extract_vars
                        MemoryOrder="XY")
 @convert_units("pressure", "hpa")
 def get_slp(wrfnc, timeidx=0, method="cat", squeeze=True, 
-            cache=None, meta=True,
+            cache=None, meta=True, _key=None,
             units="hpa"):
     varnames=("T", "P", "PB", "QVAPOR", "PH", "PHB")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
 
     t = ncvars["T"]
     p = ncvars["P"]

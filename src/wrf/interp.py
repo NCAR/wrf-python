@@ -12,7 +12,7 @@ from .extension import (_interpz3d, _interp2dxy, _interp1d, _vertcross,
                         _interpline, _smooth2d, _monotonic, _vintrp)
 
 from .metadecorators import set_interp_metadata
-from .util import extract_vars, is_staggered
+from .util import extract_vars, is_staggered, get_id
 from .interputils import get_xy, get_xy_z_params
 from .constants import Constants, ConversionFactors
 from .terrain import get_terrain
@@ -284,6 +284,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         `numpy.ndarray` object with no metadata.
         
     """
+    _key = get_id(wrfnc)
     
     # Remove case sensitivity
     field_type = field_type.lower() if field_type is not None else "none"
@@ -344,24 +345,30 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     # Extract vriables
     #timeidx = -1 # Should this be an argument?
     ncvars = extract_vars(wrfnc, timeidx, ("PSFC", "QVAPOR", "F"), 
-                          method, squeeze, cache, meta=False)
+                          method, squeeze, cache, meta=False, _key=_key)
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]
     coriolis = ncvars["F"]
     
     terht = get_terrain(wrfnc, timeidx, units="m", 
-                        method=method, squeeze=squeeze, cache=cache)
+                        method=method, squeeze=squeeze, cache=cache,
+                        meta=False, _key=_key)
     t = get_theta(wrfnc, timeidx,  units="k", 
-                  method=method, squeeze=squeeze, cache=cache)
+                  method=method, squeeze=squeeze, cache=cache, 
+                  meta=False, _key=_key)
     tk = get_temp(wrfnc, timeidx, units="k",  
-                  method=method, squeeze=squeeze, cache=cache)
+                  method=method, squeeze=squeeze, cache=cache, 
+                  meta=False, _key=_key)
     p = get_pressure(wrfnc, timeidx, units="pa",  
-                     method=method, squeeze=squeeze, cache=cache)
+                     method=method, squeeze=squeeze, cache=cache,
+                     meta=False, _key=_key)
     ght = get_height(wrfnc, timeidx, msl=True, units="m", 
-                     method=method, squeeze=squeeze, cache=cache)
+                     method=method, squeeze=squeeze, cache=cache,
+                     meta=False, _key=_key)
     ht_agl = get_height(wrfnc, timeidx, msl=False, units="m",
-                        method=method, squeeze=squeeze, cache=cache)
+                        method=method, squeeze=squeeze, cache=cache,
+                        meta=False, _key=_key)
     
     smsfp = _smooth2d(sfp, 3)        
 
@@ -400,7 +407,8 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         idir = 1
         delta = 0.01
         
-        eth = get_eth(wrfnc, timeidx)
+        eth = get_eth(wrfnc, timeidx, method=method, squeeze=squeeze, 
+            cache=cache, meta=False, _key=_key)
         
         p_hpa = p * ConversionFactors.PA_TO_HPA
         

@@ -12,11 +12,11 @@ from .util import extract_vars
                        description="dew point temperature")
 @convert_units("temp", "c")
 def get_dp(wrfnc, timeidx=0, method="cat", squeeze=True, 
-           cache=None, meta=True, units="c"):
+           cache=None, meta=True, _key=None, units="c"):
     
     varnames=("P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -33,11 +33,10 @@ def get_dp(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="2m dew point temperature")
 @convert_units("temp", "c")
 def get_dp_2m(wrfnc, timeidx=0, method="cat", squeeze=True, 
-              cache=None, meta=True, 
-              units="c"):
+              cache=None, meta=True, _key=None, units="c"):
     varnames=("PSFC", "Q2")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
 
     # Algorithm requires hPa
     psfc = .01*(ncvars["PSFC"])

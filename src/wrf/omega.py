@@ -13,10 +13,10 @@ from .metadecorators import copy_and_set_metadata
                        description="omega",
                        units="Pa/s")
 def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
-              meta=True):
+              meta=True, _key=None):
     varnames=("T", "P", "W", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     w = ncvars["W"]

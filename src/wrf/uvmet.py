@@ -17,31 +17,31 @@ from .util import extract_vars, extract_global_attrs, either
 
 @convert_units("wind", "mps")
 def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True, 
-               cache=None, meta=True,
+               cache=None, meta=True, _key=None,
                ten_m=False, units ="mps"):
     """ Return a tuple of u,v with the winds rotated in to earth space"""
     
     if not ten_m:
         varname = either("U", "UU")(wrfnc)
         u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                              meta=False)
+                              meta=False, _key=_key)
         
         u = destagger(u_vars[varname], -1)
         
         varname = either("V", "VV")(wrfnc)
         v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                              meta=False)
+                              meta=False, _key=_key)
         v = destagger(v_vars[varname], -2)
     else:
         varname = either("U10", "UU")(wrfnc)
         u_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                              meta=False)
+                              meta=False, _key=_key)
         u = (u_vars[varname] if varname == "U10" else 
              destagger(u_vars[varname][...,0,:,:], -1)) 
         
         varname = either("V10", "VV")(wrfnc)
         v_vars = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                              meta=False)
+                              meta=False, _key=_key)
         v = (v_vars[varname] if varname == "V10" else 
              destagger(v_vars[varname][...,0,:,:], -2))
     
@@ -97,12 +97,14 @@ def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
         
         varname = either("XLAT_M", "XLAT")(wrfnc)
         xlat_var = extract_vars(wrfnc, timeidx, varname, 
-                                method, squeeze, cache, meta=False)
+                                method, squeeze, cache, meta=False,
+                                _key=_key)
         lat = xlat_var[varname]
         
         varname = either("XLONG_M", "XLONG")(wrfnc)
         xlon_var = extract_vars(wrfnc, timeidx, varname, 
-                                method, squeeze, cache, meta=False)
+                                method, squeeze, cache, meta=False,
+                                _key=_key)
         lon = xlon_var[varname]
         
         if map_proj == 1:
@@ -132,10 +134,10 @@ def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
                    two_d=False, 
                    wspd_wdir=False)      
 def get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True, 
-              cache=None, meta=True,
+              cache=None, meta=True, _key=None,
               units="mps"):
     
-    return _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta,
+    return _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, _key,
                       False, units)
 
 
@@ -145,10 +147,10 @@ def get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
                    two_d=True, 
                    wspd_wdir=False)
 def get_uvmet10(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                cache=None, meta=True,
+                cache=None, meta=True, _key=None,
                 units="mps"):
     
-    return _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, 
+    return _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, _key, 
                       True, units)
 
 
@@ -158,11 +160,11 @@ def get_uvmet10(wrfnc, timeidx=0, method="cat", squeeze=True,
                    two_d=False, 
                    wspd_wdir=True)
 def get_uvmet_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                        cache=None, meta=True,
+                        cache=None, meta=True, _key=None,
                         units="mps"):
     
     uvmet = _get_uvmet(wrfnc, timeidx, method, squeeze, 
-                       cache, meta, False, units)
+                       cache, meta, _key, False, units)
     
     return _calc_wspd_wdir(uvmet[0,...,:,:,:], uvmet[1,...,:,:,:], 
                            False, units)
@@ -174,10 +176,10 @@ def get_uvmet_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True,
                    two_d=True, 
                    wspd_wdir=True)
 def get_uvmet10_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True, 
-                          cache=None, meta=True,
+                          cache=None, meta=True, _key=None,
                           units="mps"):
     
-    uvmet10 = _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, 
+    uvmet10 = _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, _key, 
                          True, units)
     
     return _calc_wspd_wdir(uvmet10[0,...,:,:], uvmet10[1,...,:,:], True, units)

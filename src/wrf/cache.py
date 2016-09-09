@@ -11,6 +11,9 @@ _local_storage = local()
 def cache_item(key, product, value):
     global _local_storage
     
+    if key is None:
+        return
+    
     try:
         cache = _local_storage.cache
     except AttributeError:
@@ -30,6 +33,9 @@ def cache_item(key, product, value):
     
     
 def get_cached_item(key, product):
+    if key is None:
+        return None
+    
     cache = getattr(_local_storage, "cache", None)
     
     if cache is None:
@@ -40,8 +46,9 @@ def get_cached_item(key, product):
     if prod_dict is None:
         return None
     
-    return prod_dict.get(product, None)
-
+    result = prod_dict.get(product, None)
+        
+    return result
 
 def _get_cache():
     return getattr(_local_storage, "cache", None)

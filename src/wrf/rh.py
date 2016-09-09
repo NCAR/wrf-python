@@ -12,10 +12,10 @@ from .metadecorators import copy_and_set_metadata
                        description="relative humidity",
                        delete_attrs=("units",))
 def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
-           meta=True):
+           meta=True, _key=None):
     varnames=("T", "P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -33,10 +33,10 @@ def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
                        description="2m relative humidity",
                        delete_attrs=("units",))
 def get_rh_2m(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
-              meta=True):
+              meta=True, _key=None):
     varnames=("T2", "PSFC", "Q2")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t2 = ncvars["T2"]
     psfc = ncvars["PSFC"]
     q2 = ncvars["Q2"]

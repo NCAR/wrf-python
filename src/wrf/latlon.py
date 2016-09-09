@@ -1,58 +1,63 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .util import extract_vars
+from .util import extract_vars, get_id
 from .latlonutils import (_lat_varname, _lon_varname, _ll_to_xy, _xy_to_ll)
 from .metadecorators import set_latlon_metadata
 
 
 def get_lat(wrfnc, timeidx=0, method="cat", squeeze=True, 
-            cache=None, meta=True,
+            cache=None, meta=True, _key=None,
             stagger=None):
     
     varname = _lat_varname(wrfnc, stagger)
     lat_var = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                           meta)
+                           meta, _key)
     
     return lat_var[varname]
 
         
 def get_lon(wrfnc, timeidx=0, method="cat", squeeze=True, 
-            cache=None, meta=True,
+            cache=None, meta=True, _key=None,
             stagger=None):
     
     varname = _lon_varname(wrfnc, stagger)
     lon_var = extract_vars(wrfnc, timeidx, varname, method, squeeze, cache,
-                           meta)
+                           meta, _key)
     
     return lon_var[varname]
 
+# TODO:  Do we need the user to know about method, squeeze, cache for this?
 
 # Can either use wrfnc as a single file or sequence, or provide 
 # projection parameters (which don't allow for moving domains)
 @set_latlon_metadata(xy=True) 
 def ll_to_xy(wrfnc, latitude, longitude, timeidx=0, stagger=None, method="cat", 
-             squeeze=True, cache=None, meta=True):
+             squeeze=True, cache=None, meta=True, as_int=True):
+    _key = get_id(wrfnc)
     return _ll_to_xy(latitude, longitude, wrfnc, timeidx, stagger, method, 
-                     squeeze, cache, **{})
+                     squeeze, cache, _key, as_int, **{})
 
 
 @set_latlon_metadata(xy=True) 
-def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, **projparams):
-    return _ll_to_xy(latitude, longitude, None, 0, squeeze, "cat", True, None, 
-                     **projparams)
+def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
+                  **projparams):
+    return _ll_to_xy(latitude, longitude, None, 0, squeeze, "cat", True, None,
+                     None, as_int, **projparams)
     
     
 @set_latlon_metadata(xy=False) 
 def xy_to_ll(wrfnc, x, y, timeidx=0, stagger=None, method="cat", squeeze=True, 
              cache=None, meta=True):
+    _key = get_id(wrfnc)
     return _xy_to_ll(x, y, wrfnc, timeidx, stagger, method, squeeze, cache, 
-                     **{})
+                     _key, **{})
  
     
 @set_latlon_metadata(xy=False) 
 def xy_to_ll_proj(x, y, meta=True, squeeze=True, **projparams):
-    return _xy_to_ll(x, y, None, 0, None, "cat", squeeze, None, **projparams)
+    return _xy_to_ll(x, y, None, 0, None, "cat", squeeze, None, None,
+                     **projparams)
     
     
     

@@ -13,12 +13,12 @@ from .util import extract_vars
                        description="potential temperature")
 @convert_units("temp", "k")
 def get_theta(wrfnc, timeidx=0, method="cat", squeeze=True, 
-              cache=None, meta=True,
+              cache=None, meta=True, _key=None,
               units="k"):
     varnames = ("T",)
     
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     full_t = t + Constants.T_BASE
 
@@ -28,13 +28,13 @@ def get_theta(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="temperature")
 @convert_units("temp", "k")
 def get_temp(wrfnc, timeidx=0, method="cat", squeeze=True, 
-             cache=None, meta=True,
+             cache=None, meta=True, _key=None,
              units="k"):
     """Return the temperature in Kelvin or Celsius"""
     
     varnames=("T", "P", "PB")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -49,13 +49,13 @@ def get_temp(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="equivalent potential temperature")
 @convert_units("temp", "k")
 def get_eth(wrfnc, timeidx=0, method="cat", squeeze=True, 
-            cache=None, meta=True,
+            cache=None, meta=True, _key=None,
             units="k"):
     "Return equivalent potential temperature (Theta-e) in Kelvin"
     
     varnames=("T", "P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -73,13 +73,13 @@ def get_eth(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="virtual temperature")
 @convert_units("temp", "k")
 def get_tv(wrfnc, timeidx=0, method="cat", squeeze=True, 
-           cache=None, meta=True,
+           cache=None, meta=True, _key=None,
            units="k"):
     "Return the virtual temperature (tv) in Kelvin or Celsius"
     
     varnames=("T", "P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     
     t = ncvars["T"]
     p = ncvars["P"]
@@ -98,13 +98,13 @@ def get_tv(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="wetbulb temperature")
 @convert_units("temp", "k")
 def get_tw(wrfnc, timeidx=0, method="cat", squeeze=True, 
-           cache=None, meta=True,
+           cache=None, meta=True, _key=None,
            units="k"):
     "Return the wetbulb temperature (tw)"
     
     varnames=("T", "P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
-                          meta=False)
+                          meta=False, _key=_key)
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
@@ -119,12 +119,14 @@ def get_tw(wrfnc, timeidx=0, method="cat", squeeze=True,
     return tw
 
 def get_tk(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
-           meta=True):
-    return get_temp(wrfnc, timeidx, method, squeeze, cache, meta, units="k")
+           meta=True, _key=None):
+    return get_temp(wrfnc, timeidx, method, squeeze, cache, meta, _key, 
+                    units="k")
 
 def get_tc(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
-           meta=True):
-    return get_temp(wrfnc, timeidx, method, squeeze, cache, meta, units="c")
+           meta=True, _key=None):
+    return get_temp(wrfnc, timeidx, method, squeeze, cache, meta, _key,
+                    units="c")
     
     
 
