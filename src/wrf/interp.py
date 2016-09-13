@@ -4,12 +4,8 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 import numpy.ma as ma
 
-# from .extension import (interpz3d, interp2dxy, interp1d,
-#                         smooth2d, monotonic, vintrp, computevertcross,
-#                         computeinterpline)
-
-from .extension import (_interpz3d, _interp2dxy, _interp1d, _vertcross,
-                        _interpline, _smooth2d, _monotonic, _vintrp)
+from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d, 
+                        _monotonic, _vintrp)
 
 from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered, get_id
@@ -312,9 +308,9 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
                     "eth" : 6}
     
     # These constants match what's in the fortran code.  
-    rgas = Constants.RD#287.04     #J/K/kg
-    ussalr = Constants.USSALR#.0065      # deg C per m, avg lapse rate
-    sclht = Constants.SCLHT #rgas*256./9.81
+    rgas = Constants.RD
+    ussalr = Constants.USSALR
+    sclht = Constants.SCLHT
     
     # interp_levels might be a list or tuple, make a numpy array
     if not isinstance(interp_levels, np.ndarray):

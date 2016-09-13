@@ -5,121 +5,12 @@ import numpy as np
 
 import wrapt 
 
-#from .destag import destagger
 from .util import iter_left_indexes, npvalues
-from .py3compat import py3range
 from .config import xarray_enabled
 from .constants import Constants
 
 if xarray_enabled():
     from xarray import DataArray
-
-
-# def uvmet_left_iter():
-#     """Decorator to handle iterating over leftmost dimensions when using 
-#     multiple files and/or multiple times with the uvmet product.
-#     
-#     """
-#     @wrapt.decorator
-#     def func_wrapper(wrapped, instance, args, kwargs):
-#         u = args[0]
-#         v = args[1]
-#         lat = args[2]
-#         lon = args[3]
-#         cen_long  = args[4]
-#         cone = args[5]
-#         
-#         if u.ndim == lat.ndim:
-#             num_right_dims = 2
-#             is_3d = False
-#         else:
-#             num_right_dims = 3
-#             is_3d = True
-#         
-#         is_stag = False
-#         if ((u.shape[-1] != lat.shape[-1]) or 
-#             (u.shape[-2] != lat.shape[-2])):
-#             is_stag = True
-#         
-#         if is_3d:
-#             extra_dim_num = u.ndim - 3
-#         else:
-#             extra_dim_num = u.ndim - 2
-#             
-#         if is_stag:
-#             u = destagger(u,-1)
-#             v = destagger(v,-2)
-#         
-#         # No special left side iteration, return the function result
-#         if (extra_dim_num == 0):
-#             return wrapped(u, v, lat, lon, cen_long, cone)
-#         
-#         # Start by getting the left-most 'extra' dims
-#         outdims = u.shape[0:extra_dim_num]
-#         extra_dims = list(outdims) # Copy the left-most dims for iteration
-#         
-#         # Append the right-most dimensions
-#         outdims += [2] # For u/v components
-#         
-#         #outdims += [u.shape[x] for x in py3range(-num_right_dims,0,1)]
-#         outdims += list(u.shape[-num_right_dims:])
-#         
-#         output = np.empty(outdims, u.dtype)
-#         
-#         for left_idxs in iter_left_indexes(extra_dims):
-#             # Make the left indexes plus a single slice object
-#             # The single slice will handle all the dimensions to
-#             # the right (e.g. [1,1,:])
-#             left_and_slice_idxs = tuple([x for x in left_idxs] + [slice(None)])
-#                     
-#             new_u = u[left_and_slice_idxs]
-#             new_v = v[left_and_slice_idxs]
-#             new_lat = lat[left_and_slice_idxs]
-#             new_lon = lon[left_and_slice_idxs]
-#             
-#             # Call the numerical routine
-#             result = wrapped(new_u, new_v, new_lat, new_lon, cen_long, cone)
-#             
-#             # Note:  The 2D version will return a 3D array with a 1 length
-#             # dimension.  Numpy is unable to broadcast this without 
-#             # sqeezing first.
-#             result = np.squeeze(result) 
-#             
-#             output[left_and_slice_idxs] = result[:]
-#             
-#         return output
-#     
-#     return func_wrapper
-
-def _move_dim_to_left(arr, dimidx):
-        
-    if isinstance(arr, np.ma.MaskedArray):
-        has_missing = True
-        missing = result.fill_value
-    
-    shape = list(arr.shape)
-    move_dim_size = shape.pop(dimidx)
-    
-    output_dims = [move_dim_size] + shape
-    
-    output = np.empty(output_dims, arr.dtype)
-    
-    if dimidx < 0:
-        right_ndim = -dimidx
-    else:
-        right_ndim = arr.ndim - dimidx
-        
-    rightdims = [slice(None)] * right_ndim
-    
-    for i in py3range(move_dim_size):
-        rightdims[0] = i
-        outidxs = (Ellipsis,) + tuple(rightdims)
-        output[i,:] = outview_array[outidxs]
-
-    if has_missing:
-        output = np.ma.masked_values(output, missing)
-    
-    return output
 
 
 def uvmet_left_iter_nocopy(alg_dtype=np.float64):

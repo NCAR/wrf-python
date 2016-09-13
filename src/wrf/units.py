@@ -20,17 +20,21 @@ def _apply_conv_fact(var, vartype, var_unit, dest_unit):
             return var*(_CONV_FACTORS[vartype]["to_base"][var_unit] * 
                     _CONV_FACTORS[vartype]["to_dest"][dest_unit])
 
+
 def _to_celsius(var, var_unit):
     if var_unit == "k":
         return var - Constants.CELKEL
     elif var_unit == "f":
         return (var - 32.0) * (5.0/9.0)
     
+    
 def _c_to_k(var):
     return var + Constants.TCK0
 
+
 def _c_to_f(var):
     return 1.8 * var + 32.0
+
 
 # Temperature is a more complicated operation so requres functions
 def _apply_temp_conv(var, var_unit, dest_unit):
@@ -109,10 +113,12 @@ _TEMP_CONV_METHODS = {"k" : _c_to_k,
                       "f" : _c_to_f
                       }
 
+
 def check_units(unit, unit_type):
     unitl = unit.lower()
     if unitl not in _VALID_UNITS[unit_type]:
         raise ValueError("invalid unit type '%s'" % unit)
+
 
 def do_conversion(var, vartype, var_unit, dest_unit):
     if vartype != "temp":

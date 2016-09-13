@@ -9,7 +9,7 @@ import numpy.ma as ma
 
 from .units import do_conversion, check_units
 from .util import iter_left_indexes, from_args, npvalues, combine_dims
-from .py3compat import viewitems, viewvalues, py3range, isstr
+from .py3compat import viewitems, viewvalues, isstr
 from .config import xarray_enabled
 from .constants import Constants
 
@@ -192,9 +192,9 @@ def left_iteration(ref_var_expected_dims,
         # Mostly when used with join
         if mask_output:
             if isinstance(output, np.ndarray):
-                output = np.ma.masked_values(output, Constants.DEFAULT_FILL)
+                output = ma.masked_values(output, Constants.DEFAULT_FILL)
             else:
-                output = tuple(masked_values(arr, Constants.DEFAULT_FILL) 
+                output = tuple(ma.masked_values(arr, Constants.DEFAULT_FILL) 
                                for arr in output)
         
         return output

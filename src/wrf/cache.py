@@ -21,13 +21,12 @@ def cache_item(key, product, value):
         cache = _local_storage.cache
     
     try:
-        prod_dict = cache[key]
+        _ = cache[key]
     except KeyError:
         if len(cache) >= get_cache_size():
             cache.popitem(last=False) # Remove the oldest dataset
         
         cache[key] = OrderedDict()
-        prod_dict = cache[key]
         
     cache[key][product] = value
     

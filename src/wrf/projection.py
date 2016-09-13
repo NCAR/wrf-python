@@ -257,7 +257,7 @@ class LambertConformal(WrfProj):
     def _cart_extents(self):
         # Need to modify the extents for the new projection
         pc = crs.PlateCarree()
-        xs, ys, zs  = self._cartopy().transform_points(pc,
+        xs, ys, _  = self._cartopy().transform_points(pc,
                              np.array([self.ll_lon, self.ur_lon]),
                              np.array([self.ll_lat, self.ur_lat])).T
 

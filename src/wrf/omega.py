@@ -3,7 +3,6 @@ from __future__ import (absolute_import, division, print_function,
 
 from .constants import Constants
 from .destag import destagger
-#from .extension import computeomega,computetk
 from .extension import _omega, _tk
 from .util import extract_vars
 from .metadecorators import copy_and_set_metadata

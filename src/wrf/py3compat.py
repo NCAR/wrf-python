@@ -1,4 +1,5 @@
 from sys import version_info
+from math import floor, copysign
 
 # Dictionary python 2-3 compatibility stuff
 def viewitems(d):

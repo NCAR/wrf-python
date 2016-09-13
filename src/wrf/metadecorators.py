@@ -1127,6 +1127,9 @@ def set_alg_metadata(alg_ndims, refvarname,
         
         result = wrapped(*args, **kwargs)
         
+        outname = wrapped.__name__
+        outattrs = OrderedDict()
+        
         # Default dimension names
         outdims = ["dim_{}".format(i) for i in py3range(result.ndim)]
         
@@ -1137,17 +1140,14 @@ def set_alg_metadata(alg_ndims, refvarname,
             missingval = None
         
         if missingval is not None:
-                outattrs["_FillValue"] = missingval
-                outattrs["missing_value"] = missingval
-                result = np.ma.masked_values(result, missingval)
-        
-        outname = wrapped.__name__
-        outattrs = OrderedDict()
+            outattrs["_FillValue"] = missingval
+            outattrs["missing_value"] = missingval
+            result = np.ma.masked_values(result, missingval)
         
         if units is not None:
-            if isinstance(description, from_var):
+            if isinstance(units, from_var):
                 _units = units(wrapped, *args, **kwargs)
-                if uts is not None:
+                if _units is not None:
                     outattrs["units"] = _units 
             else:
                 outattrs["units"] = units
@@ -1214,6 +1214,7 @@ def set_alg_metadata(alg_ndims, refvarname,
     
     return func_wrapper
 
+
 def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v",
                            latarg="lat", windarg="u"):
     
@@ -1263,6 +1264,7 @@ def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v",
     
     return func_wrapper
 
+
 def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
     
     @wrapt.decorator
@@ -1292,7 +1294,6 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
             outattrs["description"] = "cape; cin"
             outattrs["units"] = "J kg-1 ; J kg-1"
             outattrs["MemoryOrder"] = "XYZ"
-            
         
         argvals = from_args(wrapped, (copyarg,"missing"), *args, **kwargs)
         p = argvals[copyarg]
@@ -1377,6 +1378,7 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
     
     return func_wrapper
 
+
 def set_destag_metadata():
     
     @wrapt.decorator
@@ -1404,7 +1406,7 @@ def set_destag_metadata():
             if var.name is not None:
                 outname = "destag_{}".format(var.name)
             else:
-                outnames = "destag_var"
+                outname = "destag_var"
             
             outattrs = OrderedDict()
             outattrs.update(var.attrs)

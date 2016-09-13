@@ -75,7 +75,7 @@ def smooth2d(field, passes, meta=True):
 
 
 @set_cape_alg_metadata(is2d=True, copyarg="pres_hpa")
-def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
+def cape_2d(pres_hpa, tkel, qvapor, height, terrain, psfc_hpa, ter_follow, 
             missing=Constants.DEFAULT_FILL, meta=True):
     
     if isinstance(ter_follow, bool):
@@ -128,7 +128,7 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True):
     
     # Qice and QCLD need to be in g/kg
     if qice is None:
-        qice = n.zeros(qv.shape, qv.dtype)
+        qice = np.zeros(qv.shape, qv.dtype)
         haveqci = 0
     else:
         haveqci = 1 if qice.any() else 0

@@ -29,6 +29,7 @@ def get_rh(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     
     return rh
 
+
 @copy_and_set_metadata(copy_varname="T2", name="rh2", 
                        description="2m relative humidity",
                        delete_attrs=("units",))

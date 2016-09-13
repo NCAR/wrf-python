@@ -8,7 +8,7 @@ import numpy.ma as ma
 from .extension import _tk, _cape
 from .destag import destagger
 from .constants import Constants, ConversionFactors
-from .util import extract_vars, combine_with
+from .util import extract_vars
 from .metadecorators import set_cape_metadata
 
 

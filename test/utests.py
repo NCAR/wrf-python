@@ -6,8 +6,10 @@ import os, sys
 import subprocess
 
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
-                     disable_xarray, xarray_enabled, npvalues,
-                     xy_to_ll, ll_to_xy )
+                 disable_xarray, xarray_enabled, npvalues,
+                 xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj,
+                 extract_global_attrs, viewitems)
+from wrf.util import is_multi_file
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
 TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
@@ -458,6 +460,23 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
     
     return test
 
+def extract_proj_params(wrfnc):
+    attrs = extract_global_attrs(wrfnc, ("MAP_PROJ", "TRUELAT1", "TRUELAT2",
+                                         "STAND_LON", "POLE_LAT", "POLE_LON", 
+                                         "DX", "DY"))
+    
+    result = {key.lower(): val for key,val in viewitems(attrs)}
+    
+    if is_multi_file(wrfnc):
+        wrfnc = wrfnc[0]
+    
+    result["known_x"] = 0
+    result["known_y"] = 0
+    result["ref_lat"] = wrfnc.variables["XLAT"][0,0,0]
+    result["ref_lon"] = wrfnc.variables["XLONG"][0,0,0]
+    
+    return result
+
 def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3, 
                      pynio=False):
     def test(self):
@@ -513,6 +532,13 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
                 ref = ref_vals[:,0]
                 
                 nt.assert_allclose(npvalues(xy), ref)
+                
+                # Next make sure the 'proj' version works
+                projparams = extract_proj_params(in_wrfnc)
+                xy_proj = ll_to_xy_proj(lats[0], lons[0], **projparams)
+                
+                nt.assert_allclose(npvalues(xy_proj), npvalues(xy-1))
+                
             
             else:
                 xy = ll_to_xy(in_wrfnc, lats, lons)
@@ -520,6 +546,12 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
                 ref = ref_vals[:]
                 
                 nt.assert_allclose(npvalues(xy), ref)
+                
+                # Next make sure the 'proj' version works
+                projparams = extract_proj_params(in_wrfnc)
+                xy_proj = ll_to_xy_proj(lats, lons, **projparams)
+                
+                nt.assert_allclose(npvalues(xy_proj), npvalues(xy-1))
                 
         else:
             # Since this domain is not moving, the reference values are the 
@@ -536,11 +568,23 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
                 ref = ref_vals[::-1,0]
                 
                 nt.assert_allclose(npvalues(ll), ref)
+                
+                # Next make sure the 'proj' version works
+                projparams = extract_proj_params(in_wrfnc)
+                ll_proj = xy_to_ll_proj(i_s[0], j_s[0], **projparams)
+                
+                nt.assert_allclose(npvalues(ll_proj), npvalues(ll))
             else:
                 ll = xy_to_ll(in_wrfnc, i_s, j_s)
                 ref = ref_vals[::-1,:]
                 
                 nt.assert_allclose(npvalues(ll), ref)
+                
+                # Next make sure the 'proj' version works
+                projparams = extract_proj_params(in_wrfnc)
+                ll_proj = xy_to_ll_proj(i_s, j_s, **projparams)
+                
+                nt.assert_allclose(npvalues(ll_proj), npvalues(ll))
         
     return test
 

@@ -8,7 +8,6 @@ from collections import Iterable, Mapping, OrderedDict
 from itertools import product
 from types import GeneratorType
 import datetime as dt
-from math import floor, copysign
 from inspect import getmodule
 
 try:
@@ -27,8 +26,7 @@ import numpy.ma as ma
 from .config import xarray_enabled
 from .projection import getproj, NullProjection
 from .constants import Constants, ALL_TIMES
-from .py3compat import (viewitems, viewkeys, viewvalues, isstr, py2round, 
-                        py3range, ucode)
+from .py3compat import (viewitems, viewkeys, isstr, py3range, ucode)
 from .cache import cache_item, get_cached_item
 
 if xarray_enabled():
@@ -73,11 +71,14 @@ def is_multi_time_req(timeidx):
 def is_multi_file(wrfnc):
     return (isinstance(wrfnc, Iterable) and not isstr(wrfnc))
 
+
 def has_time_coord(wrfnc):
     return "XTIME" in wrfnc.variables
 
+
 def is_mapping(wrfnc):
     return isinstance(wrfnc, Mapping)
+
 
 def _generator_copy(gen):
     funcname = gen.__name__
@@ -96,10 +97,12 @@ def _generator_copy(gen):
         
     return res
 
+
 def test():
     q = [1,2,3]
     for i in q:
         yield i
+     
         
 class TestGen(object):
     def __init__(self, count=3):
@@ -121,6 +124,7 @@ class TestGen(object):
     def __next__(self):
         return self.next()
 
+
 def latlon_coordvars(d):
     lat_coord = None
     lon_coord = None
@@ -137,8 +141,10 @@ def latlon_coordvars(d):
         
     return lat_coord, lon_coord
 
+
 def is_coordvar(varname):
     return varname in _COORD_VARS
+
 
 class IterWrapper(Iterable):
     """A wrapper class for generators and custom iterable classes which returns
@@ -172,6 +178,7 @@ def get_iterable(wrfseq):
             else:
                 return dict(wrfseq) # generator/custom iterable class
     
+    
 # Helper to extract masked arrays from DataArrays that convert to NaN
 def npvalues(array_type):
     if not isinstance(array_type, DataArray):
@@ -186,6 +193,7 @@ def npvalues(array_type):
             result.set_fill_value(fill_value)
     
     return result
+
 
 # Helper utilities for metadata
 class either(object):
@@ -206,6 +214,7 @@ class either(object):
         
         raise ValueError("{} are not valid variable names".format(
                                                             self.varnames))
+
 
 class combine_with(object):
     # Remove remove_idx first, then insert_idx is applied to removed set
@@ -238,6 +247,7 @@ class combine_with(object):
             new_coords.update(self.new_coords)
         
         return new_dims, new_coords
+    
     
 # This should look like:
 # [(0, (-3,-2)), # variable 1
@@ -387,6 +397,7 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
     
     return False
 
+
 def _get_global_attr(wrfnc, attr):
     val = getattr(wrfnc, attr, None)
     
@@ -395,6 +406,7 @@ def _get_global_attr(wrfnc, attr):
         if len(val) == 1:
             return val[0] 
     return val
+    
         
 def extract_global_attrs(wrfnc, attrs):
     if isstr(attrs):
@@ -413,6 +425,7 @@ def extract_global_attrs(wrfnc, attrs):
         
     return {attr:_get_global_attr(wrfnc, attr) for attr in attrlist}
 
+
 def extract_dim(wrfnc, dim):
     if is_multi_file(wrfnc):
         if not is_mapping(wrfnc):
@@ -425,6 +438,7 @@ def extract_dim(wrfnc, dim):
     if not isinstance(d, int):
         return len(d) #netCDF4
     return d # PyNIO
+        
         
 def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
     """Dictionary combination creates a new left index for each key, then 
@@ -656,7 +670,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
         time_coord_vals = None
         if time_coord is not None:
             # If not from a multifile sequence, then cache the time
-             # coordinate.  Otherwise, handled in cat/join/
+            # coordinate.  Otherwise, handled in cat/join/
             if not is_multifile:
                 time_coord_vals = get_cached_item(_key, time_coord)
                 
@@ -797,6 +811,7 @@ def _find_arr_for_time(wrfseq, varname, timeidx, is_moving, meta, _key):
         return _find_forward(wrfseq, varname, timeidx, is_moving, meta, _key)
     else:
         return _find_reverse(wrfseq, varname, timeidx, is_moving, meta, _key)
+    
     
 # TODO:  implement in C
 def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
@@ -1234,6 +1249,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
     
     return outarr
 
+
 def combine_files(wrfseq, varname, timeidx, is_moving=None,
                   method="cat", squeeze=True, meta=True, 
                   _key=None):
@@ -1416,7 +1432,6 @@ def is_staggered(var, wrfnc):
     return False
 
 
-
 def get_left_indexes(ref_var, expected_dims):
     """Returns the extra left side dimensions for a variable with an expected
     shape.
@@ -1431,6 +1446,7 @@ def get_left_indexes(ref_var, expected_dims):
         return []
     
     return tuple([ref_var.shape[x] for x in py3range(extra_dim_num)]) 
+
 
 def iter_left_indexes(dims):
     """A generator which yields the iteration tuples for a sequence of 
@@ -1448,6 +1464,7 @@ def iter_left_indexes(dims):
     arg = [py3range(dim) for dim in dims]
     for idxs in product(*arg):
         yield idxs
+    
         
 def get_right_slices(var, right_ndims, fixed_val=0):
     extra_dim_num = var.ndim - right_ndims
@@ -1456,6 +1473,7 @@ def get_right_slices(var, right_ndims, fixed_val=0):
     
     return tuple([fixed_val]*extra_dim_num + 
                  [slice(None)]*right_ndims)
+
 
 def get_proj_params(wrfnc, timeidx=0, varname=None):
     proj_params = extract_global_attrs(wrfnc, attrs=("MAP_PROJ", 
@@ -1556,8 +1574,9 @@ def from_args(func, argnames, *args, **kwargs):
     
     return result
 
+
 def _args_to_list2(func, args, kwargs):
-    argspec = getargspec(func)
+    argspec = getargspec(func) 
     
     # Build the full tuple with defaults filled in
     outargs = [None]*len(argspec.args)
@@ -1576,14 +1595,16 @@ def _args_to_list2(func, args, kwargs):
         
     return outargs
 
+
 def _args_to_list3(func, args, kwargs):
     sig = signature(func)
     bound = sig.bind(*args, **kwargs)
     bound.apply_defaults()
     
     return [x for x in bound.arguments.values()]
+  
     
-
+# Note:  Doesn't allow for **kwargs or *args
 def args_to_list(func, args, kwargs):
     """Converts the mixed args/kwargs to a single list of args"""
     if version_info > (3,):
@@ -1606,6 +1627,7 @@ def _arg_location2(func, argname, args, kwargs):
     result_idx = argspec.args.index(argname)
     
     return list_args, result_idx
+
 
 def _arg_location3(func, argname, args, kwargs):
     sig = signature(func)

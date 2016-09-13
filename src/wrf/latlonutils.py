@@ -101,28 +101,29 @@ def _dict_keys_to_upper(d):
     return {key.upper(): val for key, val in viewitems(d)}        
 
 # known_x and known_y are 0-based
-def _kwarg_proj_params(projparams):
+def _kwarg_proj_params(**projparams):
     projparams = _dict_keys_to_upper(projparams)
     
-    map_proj = projparams.get("MAP_PROJ"),
-    truelat1 = projparams.get("TRUELAT1"),
-    truelat2 = projparams.get("TRUELAT2"),
-    stdlon = projparams.get("STDLON"),
-    ref_lat = projparams.get("REF_LAT"),
-    ref_lon = projparams.get("REF_LON"),
-    pole_lat = projparams.get("POLE_LAT", 90.0),
-    pole_lon = projparams.get("POLE_LON", 0.0),
-    known_x = projparams.get("KNOWN_X"), # Use 0-based
-    known_y = projparams.get("KNOWN_Y"), # Use 0-based
-    dx = projparams.get("DX"),
-    dy = projparams.get("DY"),
-    latinc = projparams.get("LATINC"),
+    map_proj = projparams.get("MAP_PROJ")
+    truelat1 = projparams.get("TRUELAT1")
+    truelat2 = projparams.get("TRUELAT2")
+    stdlon = projparams.get("STAND_LON")
+    ref_lat = projparams.get("REF_LAT")
+    ref_lon = projparams.get("REF_LON")
+    pole_lat = projparams.get("POLE_LAT", 90.0)
+    pole_lon = projparams.get("POLE_LON", 0.0)
+    known_x = projparams.get("KNOWN_X") # Use 0-based
+    known_y = projparams.get("KNOWN_Y") # Use 0-based
+    
+    dx = projparams.get("DX")
+    dy = projparams.get("DY")
+    latinc = projparams.get("LATINC")
     loninc = projparams.get("LONINC")
     
     # Sanity checks
     # Required args for all projections
     for name, var in viewitems({"MAP_PROJ" : map_proj, 
-                                "STDLON" : stdlon, 
+                                "STAND_LON" : stdlon, 
                                 "REF_LAT" : ref_lat, 
                                 "REF_LON" : ref_lon, 
                                 "KNOWN_X" : known_x, 
@@ -130,6 +131,10 @@ def _kwarg_proj_params(projparams):
                                 "DX" : dx}):
         if var is None:
             raise ValueError("'{}' argument required".format(name))
+    
+    # ref_lat and ref_lon are expectd to be lists
+    ref_lat = np.asarray([ref_lat])
+    ref_lon = np.asarray([ref_lon])
     
     # Fortran wants 1-based indexing
     known_x = known_x + 1
@@ -166,7 +171,7 @@ def _kwarg_proj_params(projparams):
 # Will return 0-based indexes
 def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
            stagger=None, method="cat", squeeze=True, cache=None,
-           _key=None, as_int=True, **projparms):
+           _key=None, as_int=True, **projparams):
     
     if wrfnc is not None:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,

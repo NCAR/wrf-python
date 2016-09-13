@@ -41,7 +41,18 @@ def ll_to_xy(wrfnc, latitude, longitude, timeidx=0, stagger=None, method="cat",
 
 @set_latlon_metadata(xy=True) 
 def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
-                  **projparams):
+                  map_proj=None, truelat1=None, truelat2=None, stand_lon=None, 
+                  ref_lat=None, ref_lon=None, pole_lat=None, pole_lon=None, 
+                  known_x=None, known_y=None, dx=None, dy=None, 
+                  latinc=None, loninc=None):
+
+    loc = locals()
+    projparams = {name : loc[name] for name in ("map_proj", "truelat1", 
+                                            "truelat2", "stand_lon", "ref_lat",
+                                            "ref_lon", "pole_lat", "pole_lon",
+                                            "known_x", "known_y", "dx", "dy",
+                                            "latinc", "loninc")}
+
     return _ll_to_xy(latitude, longitude, None, 0, squeeze, "cat", True, None,
                      None, as_int, **projparams)
     
@@ -55,7 +66,16 @@ def xy_to_ll(wrfnc, x, y, timeidx=0, stagger=None, method="cat", squeeze=True,
  
     
 @set_latlon_metadata(xy=False) 
-def xy_to_ll_proj(x, y, meta=True, squeeze=True, **projparams):
+def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None, 
+                  truelat2=None, stand_lon=None, ref_lat=None, ref_lon=None, 
+                  pole_lat=None, pole_lon=None, known_x=None, known_y=None, 
+                  dx=None, dy=None, latinc=None, loninc=None):
+    loc = locals()
+    projparams = {name : loc[name] for name in ("map_proj", "truelat1", 
+                                            "truelat2", "stand_lon", "ref_lat",
+                                            "ref_lon", "pole_lat", "pole_lon",
+                                            "known_x", "known_y", "dx", "dy",
+                                            "latinc", "loninc")}
     return _xy_to_ll(x, y, None, 0, None, "cat", squeeze, None, None,
                      **projparams)
     

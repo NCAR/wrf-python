@@ -10,7 +10,7 @@ from .computation import (xy, interp1d, interp2dxy, interpz3d, slp, tk, td, rh,
                           dbz, srhel, udhel, avo, pvo, eth, wetbulb, tvirtual,
                           omega, pw)
 from .interp import (interplevel, vertcross, interpline, vinterp)
-from .latlon import (xy_to_ll, ll_to_xy)
+from .latlon import (xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj)
 from .py3compat import (viewitems, viewkeys, viewvalues, isstr, py2round, 
                         py3range, ucode)
 from .util import (npvalues, extract_global_attrs, 
@@ -32,7 +32,7 @@ __all__ += ["xy", "interp1d", "interp2dxy", "interpz3d", "slp", "tk", "td",
             "ctt", "dbz", "srhel", "udhel", "avo", "pvo", "eth", "wetbulb",
             "tvirtual", "omega", "pw"]
 __all__ += ["interplevel", "vertcross", "interpline", "vinterp"]
-__all__ += ["xy_to_ll", "ll_to_xy"]
+__all__ += ["xy_to_ll", "ll_to_xy", "xy_to_ll_proj", "ll_to_xy_proj"]
 __all__ += ["viewitems", "viewkeys", "viewvalues", "isstr", "py2round", 
             "py3range", "ucode"]
 __all__ += ["npvalues", "extract_global_attrs", 

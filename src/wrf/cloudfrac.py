@@ -10,14 +10,14 @@ from .util import extract_vars
 def get_cloudfrac(wrfnc, timeidx=0, method="cat", squeeze=True, 
                  cache=None, meta=True, _key=None):
     
-    vars = extract_vars(wrfnc, timeidx, ("P", "PB", "QVAPOR", "T"), 
+    ncvars = extract_vars(wrfnc, timeidx, ("P", "PB", "QVAPOR", "T"), 
                           method, squeeze, cache, meta=False,
                           _key=_key)
     
-    p = vars["P"]
-    pb = vars["PB"]
-    qv = vars["QVAPOR"]
-    t = vars["T"]
+    p = ncvars["P"]
+    pb = ncvars["PB"]
+    qv = ncvars["QVAPOR"]
+    t = ncvars["T"]
     
     full_p = p + pb
     full_t = t + Constants.T_BASE

@@ -15,6 +15,7 @@ def to_positive_idxs(shape, coord):
     
     return [x if (x >= 0) else shape[-i-1]+x for (i,x) in enumerate(coord) ]
 
+
 def calc_xy(xdim, ydim, pivot_point=None, angle=None, 
            start_point=None, end_point=None):
     """Returns the x,y points for the horizontal cross section line.
