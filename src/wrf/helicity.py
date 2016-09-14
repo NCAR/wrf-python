@@ -11,7 +11,7 @@ from .metadecorators import copy_and_set_metadata
 
 @copy_and_set_metadata(copy_varname="HGT", name="srh", 
                        description="storm relative helicity",
-                       units="m-2/s-2")
+                       units="m2 s-2")
 def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True, 
             cache=None, meta=True, _key=None, top=3000.0):
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
@@ -51,7 +51,7 @@ def get_srh(wrfnc, timeidx=0, method="cat", squeeze=True,
 
 @copy_and_set_metadata(copy_varname="MAPFAC_M", name="updraft_helicity", 
                        description="updraft helicity",
-                       units="m-2/s-2")
+                       units="m2 s-2")
 def get_uh(wrfnc, timeidx=0, method="cat", squeeze=True, 
            cache=None, meta=True, _key=None,
            bottom=2000.0, top=5000.0):

@@ -12,7 +12,7 @@ from .util import extract_vars
                        description="dew point temperature")
 @convert_units("temp", "c")
 def get_dp(wrfnc, timeidx=0, method="cat", squeeze=True, 
-           cache=None, meta=True, _key=None, units="c"):
+           cache=None, meta=True, _key=None, units="degC"):
     
     varnames=("P", "PB", "QVAPOR")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
@@ -33,7 +33,7 @@ def get_dp(wrfnc, timeidx=0, method="cat", squeeze=True,
                        description="2m dew point temperature")
 @convert_units("temp", "c")
 def get_dp_2m(wrfnc, timeidx=0, method="cat", squeeze=True, 
-              cache=None, meta=True, _key=None, units="c"):
+              cache=None, meta=True, _key=None, units="degC"):
     varnames=("PSFC", "Q2")
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
                           meta=False, _key=_key)

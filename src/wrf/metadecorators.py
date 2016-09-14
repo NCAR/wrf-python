@@ -286,7 +286,7 @@ def set_cape_metadata(is2d):
             outdimnames[0] = "mcape_mcin_lcl_lfc"
             outattrs["description"] = "mcape ; mcin ; lcl ; lfc"
             outattrs["MemoryOrder"] = "XY"
-            outattrs["units"] = "J/kg ; J/kg ; m ; m"
+            outattrs["units"] = "J kg-1 ; J kg-1 ; m ; m"
             outname = "cape_2d"
         else:
             # Right dims
@@ -1215,7 +1215,7 @@ def set_alg_metadata(alg_ndims, refvarname,
     return func_wrapper
 
 
-def set_uvmet_alg_metadata(units="mps", description="earth rotated u,v",
+def set_uvmet_alg_metadata(units="m s-1", description="earth rotated u,v",
                            latarg="lat", windarg="u"):
     
     @wrapt.decorator
@@ -1287,7 +1287,7 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
         if is2d:
             outname = "cape_2d"
             outattrs["description"] = "mcape ; mcin ; lcl ; lfc"
-            outattrs["units"] = "J/kg ; J/kg ; m ; m"
+            outattrs["units"] = "J kg-1 ; J kg-1 ; m ; m"
             outattrs["MemoryOrder"] = "XY"
         else:
             outname = "cape_3d"

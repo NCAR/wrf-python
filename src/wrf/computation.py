@@ -38,7 +38,7 @@ def interpz3d(field3d, z, desiredloc, missingval=Constants.DEFAULT_FILL,
     return _interpz3d(field3d, z, desiredloc, missingval)
 
 
-@set_alg_metadata(2, "pres", refvarndims=3, units="hpa",
+@set_alg_metadata(2, "pres", refvarndims=3, units="hPa",
                   description="sea level pressure")
 def slp(height, tkel, pres, qv, meta=True):
     return _slp(height, tkel, pres, qv)
@@ -139,8 +139,8 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True):
 
 @set_alg_metadata(3, "pres", units="dBZ",
                   description="radar reflectivity")
-def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False, use_liqskin=False, 
-        meta=True):
+def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False, 
+        use_liqskin=False, meta=True):
     
     if qs is None:
         qs = np.zeros(qv.shape, qv.dtype)
@@ -155,7 +155,7 @@ def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False, use_liqskin=Fals
     return _dbz(pres, tkel, qv, qr, qs, qg, sn0, ivarint, iliqskin)
 
 
-@set_alg_metadata(2, "terrain", units="m-2/s-2",
+@set_alg_metadata(2, "terrain", units="m2 s-2",
                   description="storm relative helicity")
 def srhel(u, v, z, terrain, top=3000.0, meta=True):
     # u, v get swapped in vertical
@@ -166,7 +166,7 @@ def srhel(u, v, z, terrain, top=3000.0, meta=True):
     return _srhel(_u, _v, _z, terrain, top)
 
 
-@set_alg_metadata(2, "u", refvarndims=3, units="m-2/s-2",
+@set_alg_metadata(2, "u", refvarndims=3, units="m2 s-2",
                   description="updraft helicity")
 def udhel(zstag, mapfct, u, v, wstag, dx, dy, bottom=2000.0, top=5000.0, 
           meta=True):
@@ -205,7 +205,7 @@ def tvirtual(tkel, qv, meta=True):
     return _tv(tkel, qv)
 
 
-@set_alg_metadata(3, "qv", units="Pa/s",
+@set_alg_metadata(3, "qv", units="Pa s-1",
                   description="omega")
 def omega(qv, tkel, w, pres, meta=True):
     return _omega(qv, tkel, w, pres)

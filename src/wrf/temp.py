@@ -13,7 +13,7 @@ from .util import extract_vars
 @convert_units("temp", "k")
 def get_theta(wrfnc, timeidx=0, method="cat", squeeze=True, 
               cache=None, meta=True, _key=None,
-              units="k"):
+              units="K"):
     varnames = ("T",)
     
     ncvars = extract_vars(wrfnc, timeidx, varnames, method, squeeze, cache,
@@ -29,7 +29,7 @@ def get_theta(wrfnc, timeidx=0, method="cat", squeeze=True,
 @convert_units("temp", "k")
 def get_temp(wrfnc, timeidx=0, method="cat", squeeze=True, 
              cache=None, meta=True, _key=None,
-             units="k"):
+             units="K"):
     """Return the temperature in Kelvin or Celsius"""
     
     varnames=("T", "P", "PB")
@@ -48,10 +48,10 @@ def get_temp(wrfnc, timeidx=0, method="cat", squeeze=True,
 
 @copy_and_set_metadata(copy_varname="T", name="theta_e", 
                        description="equivalent potential temperature")
-@convert_units("temp", "k")
+@convert_units("temp", "K")
 def get_eth(wrfnc, timeidx=0, method="cat", squeeze=True, 
             cache=None, meta=True, _key=None,
-            units="k"):
+            units="K"):
     "Return equivalent potential temperature (Theta-e) in Kelvin"
     
     varnames=("T", "P", "PB", "QVAPOR")
@@ -76,7 +76,7 @@ def get_eth(wrfnc, timeidx=0, method="cat", squeeze=True,
 @convert_units("temp", "k")
 def get_tv(wrfnc, timeidx=0, method="cat", squeeze=True, 
            cache=None, meta=True, _key=None,
-           units="k"):
+           units="K"):
     "Return the virtual temperature (tv) in Kelvin or Celsius"
     
     varnames=("T", "P", "PB", "QVAPOR")
@@ -102,7 +102,7 @@ def get_tv(wrfnc, timeidx=0, method="cat", squeeze=True,
 @convert_units("temp", "k")
 def get_tw(wrfnc, timeidx=0, method="cat", squeeze=True, 
            cache=None, meta=True, _key=None,
-           units="k"):
+           units="K"):
     "Return the wetbulb temperature (tw)"
     
     varnames=("T", "P", "PB", "QVAPOR")
@@ -125,13 +125,13 @@ def get_tw(wrfnc, timeidx=0, method="cat", squeeze=True,
 def get_tk(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
            meta=True, _key=None):
     return get_temp(wrfnc, timeidx, method, squeeze, cache, meta, _key, 
-                    units="k")
+                    units="K")
 
 
 def get_tc(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
            meta=True, _key=None):
     return get_temp(wrfnc, timeidx, method, squeeze, cache, meta, _key,
-                    units="c")
+                    units="degC")
     
     
 

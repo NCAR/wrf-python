@@ -7,7 +7,7 @@ import wrapt
 import numpy as np
 import numpy.ma as ma
 
-from .units import do_conversion, check_units
+from .units import do_conversion, check_units, dealias_and_clean_unit
 from .util import iter_left_indexes, from_args, npvalues, combine_dims
 from .py3compat import viewitems, viewvalues, isstr
 from .config import xarray_enabled
@@ -29,7 +29,8 @@ def convert_units(unit_type, alg_unit):
     def func_wrapper(wrapped, instance, args, kwargs):
         
         desired_units = from_args(wrapped, "units", *args, **kwargs)["units"]
-        check_units(desired_units, unit_type)
+        u_cleaned = dealias_and_clean_unit(desired_units)
+        check_units(u_cleaned, unit_type)
         
         # Unit conversion done here
         return do_conversion(wrapped(*args, **kwargs), unit_type, 

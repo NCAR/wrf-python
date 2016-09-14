@@ -12,7 +12,7 @@ from .metadecorators import copy_and_set_metadata
 
 @copy_and_set_metadata(copy_varname="T", name="dbz", 
                        description="radar reflectivity",
-                       units="dBz")
+                       units="dBZ")
 def get_dbz(wrfnc, timeidx=0, method="cat", 
             squeeze=True, cache=None, meta=True, _key=None,
             use_varint=False, use_liqskin=False):
@@ -68,7 +68,7 @@ def get_dbz(wrfnc, timeidx=0, method="cat",
 @copy_and_set_metadata(copy_varname="T", name="max_dbz", 
                        remove_dims=("bottom_top",),
                        description="maximum radar reflectivity",
-                       units="dBz",
+                       units="dBZ",
                        MemoryOrder="XY")
 def get_max_dbz(wrfnc, timeidx=0, method="cat", 
                 squeeze=True, cache=None, meta=True, _key=None,

@@ -15,10 +15,10 @@ from .metadecorators import set_wind_metadata
 from .util import extract_vars, extract_global_attrs, either
 
 
-@convert_units("wind", "mps")
+@convert_units("wind", "m s-1")
 def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True, 
                cache=None, meta=True, _key=None,
-               ten_m=False, units ="mps"):
+               ten_m=False, units ="m s-1"):
     """ Return a tuple of u,v with the winds rotated in to earth space"""
     
     if not ten_m:
@@ -135,7 +135,7 @@ def _get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
                    wspd_wdir=False)      
 def get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True, 
               cache=None, meta=True, _key=None,
-              units="mps"):
+              units="m s-1"):
     
     return _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, _key,
                       False, units)
@@ -148,7 +148,7 @@ def get_uvmet(wrfnc, timeidx=0, method="cat", squeeze=True,
                    wspd_wdir=False)
 def get_uvmet10(wrfnc, timeidx=0, method="cat", squeeze=True, 
                 cache=None, meta=True, _key=None,
-                units="mps"):
+                units="m s-1"):
     
     return _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, _key, 
                       True, units)
@@ -161,7 +161,7 @@ def get_uvmet10(wrfnc, timeidx=0, method="cat", squeeze=True,
                    wspd_wdir=True)
 def get_uvmet_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True, 
                         cache=None, meta=True, _key=None,
-                        units="mps"):
+                        units="m s-1"):
     
     uvmet = _get_uvmet(wrfnc, timeidx, method, squeeze, 
                        cache, meta, _key, False, units)
@@ -177,7 +177,7 @@ def get_uvmet_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True,
                    wspd_wdir=True)
 def get_uvmet10_wspd_wdir(wrfnc, timeidx=0, method="cat", squeeze=True, 
                           cache=None, meta=True, _key=None,
-                          units="mps"):
+                          units="m s-1"):
     
     uvmet10 = _get_uvmet(wrfnc, timeidx, method, squeeze, cache, meta, _key, 
                          True, units)

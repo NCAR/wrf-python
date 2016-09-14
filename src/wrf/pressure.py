@@ -11,7 +11,7 @@ from .util import extract_vars, either
 @convert_units("pressure", "pa")
 def get_pressure(wrfnc, timeidx=0, method="cat", squeeze=True, 
                  cache=None, meta=True, _key=None,
-                 units="pa"):
+                 units="Pa"):
     
     varname = either("P", "PRES")(wrfnc)
     if varname == "P":
@@ -30,7 +30,7 @@ def get_pressure(wrfnc, timeidx=0, method="cat", squeeze=True,
 
 def get_pressure_hpa(wrfnc, timeidx=0, method="cat", squeeze=True, 
                      cache=None, meta=True, _key=None,
-                     units="hpa"):
+                     units="hPa"):
     return get_pressure(wrfnc, timeidx, method, squeeze, cache, meta, _key,
                         units)
 

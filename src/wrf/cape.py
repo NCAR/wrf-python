@@ -4,22 +4,12 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 import numpy.ma as ma
 
-#from .extension import computetk,computecape
 from .extension import _tk, _cape
 from .destag import destagger
 from .constants import Constants, ConversionFactors
 from .util import extract_vars
 from .metadecorators import set_cape_metadata
 
-
-#@copy_and_set_metadata(copy_varname="T", 
-#                       name="cape_2d",
-#                       dimnames=combine_with("T", remove_dims=("bottom_top",),
-#                                        insert_before="south_north",
-#                                        new_dimnames=["mcape_mcin_lcl_lfc"]), 
-#                       description="mcape ; mcin ; lcl ; lfc",
-#                       units="J/kg ; J/kg ; m ; m",
-#                       MemoryOrder="XY")
 @set_cape_metadata(is2d=True)
 def get_2dcape(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None, 
                meta=True, _key=None, missing=Constants.DEFAULT_FILL):
@@ -74,13 +64,6 @@ def get_2dcape(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
     return ma.masked_values(result, missing)
 
 
-#@copy_and_set_metadata(copy_varname="T", name="cape_3d",
-#                       dimnames=combine_with("T",
-#                                             insert_before="bottom_top",
-#                                             new_dimnames=["cape_cin"]),
-#                       description="cape ; cin",
-#                       units="J kg-1 ; J kg-1",
-#                       MemoryOrder="XY")
 @set_cape_metadata(is2d=False)
 def get_3dcape(wrfnc, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,

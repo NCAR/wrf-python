@@ -19,7 +19,7 @@ from .util import extract_vars
 @convert_units("temp", "c")
 def get_ctt(wrfnc, timeidx=0, method="cat", 
             squeeze=True, cache=None, meta=True, _key=None,
-            units="c"):
+            units="degC"):
     """Return the cloud top temperature.
     
     """

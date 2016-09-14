@@ -10,7 +10,7 @@ from .metadecorators import copy_and_set_metadata
 
 @copy_and_set_metadata(copy_varname="T", name="omega", 
                        description="omega",
-                       units="Pa/s")
+                       units="Pa s-1")
 def get_omega(wrfnc, timeidx=0, method="cat", squeeze=True, cache=None,
               meta=True, _key=None):
     varnames=("T", "P", "W", "PB", "QVAPOR")
