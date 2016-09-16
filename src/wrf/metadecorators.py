@@ -8,8 +8,9 @@ import numpy.ma as ma
 
 from .extension import _interpline
 from .util import (extract_vars, combine_with, either, from_args, arg_location,
-                   is_coordvar, latlon_coordvars, CoordPair, npvalues, 
+                   is_coordvar, latlon_coordvars, npvalues, 
                    from_var, iter_left_indexes)
+from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range, ucode
 from .interputils import get_xy_z_params, get_xy
 from .config import xarray_enabled
@@ -637,7 +638,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     ed_x = xy[-1,0]
     ed_y = xy[-1,1]
     
-    cross_str = "Cross-Section: ({0}, {1}) to ({2}, {3})".format(st_x, st_y, 
+    cross_str = "({0}, {1}) to ({2}, {3})".format(st_x, st_y, 
                                                                ed_x, ed_y)
     if angle is not None:
         cross_str += " ; center={0} ; angle={1}".format(pivot_point,
@@ -726,7 +727,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         outname = "field3d_cross"
         outattrs = OrderedDict()
     
-    outattrs["Orientation"] = cross_str
+    outattrs["orientation"] = cross_str
     outattrs["missing_value"] = missingval
     outattrs["_FillValue"] = missingval
     
@@ -863,7 +864,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
         outname = "field2d_line"
         outattrs = OrderedDict()
     
-    outattrs["Orientation"] = cross_str
+    outattrs["orientation"] = cross_str
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs) 
@@ -933,6 +934,11 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     cross_str = "({0},{1}) to ({2},{3})".format(st_x, st_y, 
                                                 ed_x, ed_y)
     
+    outname = None
+    outdimnames = None
+    outcoords = None
+    outattrs = None
+    
     # Dims are (...,xy,z)
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
@@ -976,56 +982,59 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     else:
         outname = "field3d_2dxy"
     
-    outattrs["Orientation"] = cross_str
+    outattrs["orientation"] = cross_str
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs) 
 
 
 def _set_1d_meta(wrapped, instance, args, kwargs):
-    argvars = from_args(wrapped, ("v_in", "z_in", "z_out", "missingval"), 
+    argvars = from_args(wrapped, ("field", "z_in", "z_out", "missingval"), 
                           *args, **kwargs)  
     
-    v_in = argvars["v_in"]
+    field = argvars["field"]
     z_in = argvars["z_in"]
     z_out = argvars["z_out"]
     missingval = argvars["missingval"]
     
     result = wrapped(*args, **kwargs)
     
+    outname = None
+    outdimnames = None
+    outcoords = None
+    outattrs = None
+    
     # Dims are (...,xy,z)
-    if isinstance(v_in, DataArray):
+    if isinstance(field, DataArray):
         outcoords = OrderedDict()
         outattrs = OrderedDict()
-        outdimnames = list(v_in.dims)
-        #outcoords.update(v_in.coords)
+        outdimnames = list(field.dims)
         
         outdimnames.pop(-1)
         
         for name in outdimnames:
             try:
-                outcoords[name] = v_in.coords[name]
+                outcoords[name] = field.coords[name]
             except KeyError:
                 continue
         
         outdimnames.append("z")
-        outname = "{0}_z".format(v_in.name)
+        outname = "{0}_z".format(field.name)
         outcoords["z"] = z_out
         
-        #outattrs.update(v_in.attrs)
         outattrs["_FillValue"] = missingval
         outattrs["missing_value"] = missingval
         
-        desc = v_in.attrs.get("description", None)
+        desc = field.attrs.get("description", None)
         if desc is not None:
             outattrs["description"] = desc
             
-        units = v_in.attrs.get("units", None)
+        units = field.attrs.get("units", None)
         if units is not None:
             outattrs["units"] = units
         
     else:
-        outname = "v_in_z"
+        outname = "field_z"
     
     
     return DataArray(result, name=outname, dims=outdimnames, 
@@ -1049,7 +1058,7 @@ def _set_xy_meta(wrapped, instance, args, kwargs):
         outname = "{0}_xy".format(field.name)
     else:
         outname = "xy"
-        
+    
     outdimnames = ["line_idx", "x_y"]
     outcoords = OrderedDict()
     outattrs = OrderedDict()

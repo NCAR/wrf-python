@@ -1507,56 +1507,7 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
     return (wrfnc.variables[lat_coord][time_idx_or_slice,:],
             wrfnc.variables[lon_coord][time_idx_or_slice,:],
             proj_params)
-    
-
-class CoordPair(object):
-    def __init__(self, x=None, y=None, i=None, j=None, lat=None, lon=None):
-        self.x = x
-        self.y = y
-        self.i = i
-        self.j = j
-        self.lat = lat
-        self.lon = lon
         
-    def __repr__(self):
-        args = []
-        if self.x is not None:
-            args.append("x={}".format(self.x))
-            args.append("y={}".format(self.y))
-            
-        if self.i is not None:
-            args.append("i={}".format(self.i))
-            args.append("j={}".format(self.j))
-        
-        if self.lat is not None:
-            args.append("lat={}".format(self.lat))
-            args.append("lon={}".format(self.lon))
-            
-        argstr = ", ".join(args)
-        
-        return "{}({})".format(self.__class__.__name__, argstr)
-    
-    def __str__(self):
-        return self.__repr__()
-    
-    def xy_str(self, fmt="{:.4f}, {:.4f}"):
-        if self.x is None or self.y is None:
-            return None
-        
-        return fmt.format(self.x, self.y)
-    
-    def latlon_str(self, fmt="{:.4f}, {:.4f}"):
-        if self.lat is None or self.lon is None:
-            return None
-        
-        return fmt.format(self.lat, self.lon)
-    
-    def ij_str(self, fmt="{:.4f}, {:.4f}"):
-        if self.i is None or self.j is None:
-            return None
-        
-        return fmt.format(self.i, self.j)
-    
 
 def from_args(func, argnames, *args, **kwargs):
     """Parses the function args and kargs looking for the desired argument 
@@ -1569,7 +1520,7 @@ def from_args(func, argnames, *args, **kwargs):
     else:
         arglist = argnames
     
-    result = {}
+    result = OrderedDict()
     for argname in arglist:
         arg_loc = arg_location(func, argname, args, kwargs)
         

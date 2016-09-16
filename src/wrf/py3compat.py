@@ -1,3 +1,6 @@
+from __future__ import (absolute_import, division, print_function, 
+                        unicode_literals)
+
 from sys import version_info
 from math import floor, copysign
 
@@ -30,12 +33,13 @@ def isstr(s):
 
 
 # Python 2 rounding behavior  
-def _round2(x, d=0):
+def _round2(x, d=None):
+    d = 0 if d is None else d
     p = 10 ** d
     return float(floor((x * p) + copysign(0.5, x)))/p
 
 
-def py2round(x, d=0):
+def py2round(x, d=None):
     if version_info >= (3,):
         return _round2(x, d)
     
