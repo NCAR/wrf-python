@@ -35,6 +35,11 @@ def calc_xy(xdim, ydim, pivot_point=None, angle=None,
         xp = pivot_point[-2]
         yp = pivot_point[-1]
         
+        if xp >= xdim or yp >= ydim:
+            raise ValueError("pivot point {} is outside of domain "
+                             "with shape {}".format(pivot_point,
+                                                         (xdim, ydim)))
+        
         if (angle > 315.0 or angle < 45.0 
             or ((angle > 135.0) and (angle < 225.0))):
             
@@ -101,6 +106,15 @@ def calc_xy(xdim, ydim, pivot_point=None, angle=None,
         y0 = start_point[-1]
         x1 = end_point[-2]
         y1 = end_point[-1]
+        
+        if x0 >= xdim or y0 >= ydim:
+            raise ValueError("start_point {} is outside of domain "
+                             "with shape {}".format(start_point, (xdim, ydim)))
+            
+        if x1 >= xdim or y1 >= ydim:
+            raise ValueError("end_point {} is outside of domain "
+                             "with shape {}".format(end_point, (xdim, ydim)))
+        
         if ( x1 > xdim-1 ): 
             x1 = xdim
         if ( y1 > ydim-1): 

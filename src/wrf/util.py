@@ -290,8 +290,8 @@ class from_var(object):
         
 
 def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
-    lats = wrfnc.variables[latvar]
-    lons = wrfnc.variables[lonvar]
+    lats = wrfnc.variables[latvar][:]
+    lons = wrfnc.variables[lonvar][:]
     
     # Need to check all times
     for i in py3range(lats.shape[-3]):
@@ -362,8 +362,8 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
         return moving
     
     # Need to search all the files
-    lats = first_wrfnc.variables[lat_coord]
-    lons = first_wrfnc.variables[lon_coord]
+    lats = first_wrfnc.variables[lat_coord][:]
+    lons = first_wrfnc.variables[lon_coord][:]
     
     zero_idxs = [0]*len(lats.shape)  # PyNIO doesn't have ndim
     last_idxs = list(zero_idxs)
@@ -380,6 +380,13 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
     ll_corner = (lat0, lon0)
     ur_corner = (lat1, lon1)
     
+    # Need to check if the first file is moving, might be a single 
+    # file with multiple times
+    if _corners_moved(first_wrfnc, ll_corner, ur_corner, lat_coord, lon_coord):
+        cache_item(_key, product, True)
+        return True
+    
+    # Now check any additional files
     while True:
         try:
             wrfnc = next(wrf_iter)
@@ -391,7 +398,6 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
                 
                 cache_item(_key, product, True)
                 return True
-    
 
     cache_item(_key, product, False)
     

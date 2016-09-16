@@ -8,7 +8,8 @@ from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d,
                         _monotonic, _vintrp)
 
 from .metadecorators import set_interp_metadata
-from .util import extract_vars, is_staggered, get_id
+from .util import extract_vars, is_staggered, get_id, npvalues
+from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params
 from .constants import Constants, ConversionFactors
 from .terrain import get_terrain
@@ -54,10 +55,22 @@ def interplevel(field3d, z, desiredlev, missing=Constants.DEFAULT_FILL,
         `numpy.ndarray` object with no metadata.
     
     """
-    r1 = _interpz3d(field3d, z, desiredlev, missing)
-    masked_r1 = ma.masked_values (r1, missing)
+    # Some fields like uvmet have an extra left dimension for the product
+    # type, we'll handle that iteration here.
+    multi = True if field3d.ndim - z.ndim == 1 else False
     
-    return masked_r1
+    if not multi:
+        result = _interpz3d(field3d, z, desiredlev, missing)
+    else:
+        outshape = field3d.shape[0:-3] + field3d.shape[-2:]
+        result = np.empty(outshape, dtype=field3d.dtype)
+            
+        for i in py3range(field3d.shape[0]):
+            result[i,:] = (
+                _interpz3d(field3d[i,:], z, desiredlev, missing)[:])
+            
+    return ma.masked_values (result, missing)
+
 
 @set_interp_metadata("cross")
 def vertcross(field3d, z, missing=Constants.DEFAULT_FILL, 
@@ -125,18 +138,29 @@ def vertcross(field3d, z, missing=Constants.DEFAULT_FILL,
         `numpy.ndarray` object with no metadata.
         
     """
+    # Some fields like uvmet have an extra left dimension for the product
+    # type, we'll handle that iteration here.
+    multi = True if field3d.ndim - z.ndim == 1 else False
     
     try:
         xy = cache["xy"]
         var2dz = cache["var2dz"]
         z_var2d = cache["z_var2d"]
     except (KeyError, TypeError):
-        xy, var2dz, z_var2d = get_xy_z_params(z, pivot_point, angle,
+        xy, var2dz, z_var2d = get_xy_z_params(npvalues(z), pivot_point, angle,
                                               start_point, end_point)
-        
-    res = _vertcross(field3d, xy, var2dz, z_var2d, missing)
     
-    return ma.masked_values(res, missing)
+    if not multi:
+        result = _vertcross(field3d, xy, var2dz, z_var2d, missing)
+    else:
+        outshape = field3d.shape[0:-3] + (z_var2d.shape[0], xy.shape[0])
+        result = np.empty(outshape, dtype=field3d.dtype)
+            
+        for i in py3range(field3d.shape[0]):
+            result[i,:] = _vertcross(field3d[i,:], xy, var2dz, z_var2d, 
+                                     missing)[:]
+    
+    return ma.masked_values(result, missing)
 
 
 @set_interp_metadata("line")
@@ -219,8 +243,8 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         Input WRF ARW NetCDF data as a `netCDF4.Dataset`, `Nio.NioFile` or an 
         iterable sequence of the aforementioned types.
         
-    field2d : `xarray.DataArray` or `numpy.ndarray`
-        A two-dimensional field.
+    field : `xarray.DataArray` or `numpy.ndarray`
+        A three-dimensional field.
         
     vert_coord : {'pressure', 'pres', 'p', 'ght_msl', 'ght_agl', 'theta', 'th', 'theta-e', 'thetae', 'eth'}
         A string indicating the vertical coordinate type to interpolate to.
