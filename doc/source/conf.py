@@ -48,7 +48,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'wrf-python'
-copyright = u'2016, Bill Ladwig'
+copyright = u'2016, UCAR'
 author = u'Bill Ladwig'
 
 # The version info for the project you're documenting, acts as replacement for

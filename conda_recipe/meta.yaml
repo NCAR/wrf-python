@@ -19,13 +19,13 @@ requirements:
     - wrapt
     - gcc
     - python
-    - libgcc 4.8.5
+    - libgcc
 
   run:
     - numpy x.x
     - python
     - wrapt 
-    - libgcc 4.8.5
+    - libgcc
     - xarray
 
 test:
