@@ -10,26 +10,65 @@ from .py3compat import py3range
 
 
 def to_positive_idxs(shape, coord):
+    """Return the positive index values.
+    
+    This function converts negative index values to positive index values.
+    
+    Args:
+    
+        shape (indexable sequence): The array shape.
+        
+        coord (indexable sequence): The coordinate pair for x and y.
+        
+    Returns:
+        
+        :obj:`list`: The coordinate values with all positive indexes.
+        
+    """
     if (coord[-2] >= 0 and coord[-1] >= 0):
         return coord
     
-    return [x if (x >= 0) else shape[-i-1]+x for (i,x) in enumerate(coord) ]
+    return [x if (x >= 0) else shape[-i-1]+x for (i,x) in enumerate(coord)]
 
 
-def calc_xy(xdim, ydim, pivot_point=None, angle=None, 
+def _calc_xy(xdim, ydim, pivot_point=None, angle=None, 
            start_point=None, end_point=None):
-    """Returns the x,y points for the horizontal cross section line.
+    """Return the x,y points for the horizontal cross section line.
     
-    xdim - maximum x-dimension
-    ydim - maximum y-dimension
-    pivot_point - a pivot point of (south_north, west_east) 
-                  (must be used with angle)
-    angle - the angle through the pivot point in degrees
-    start_point - a start_point sequence of (x, y)
-    end_point - an end point sequence of (x, y)
+    Args:
     
-    """ 
+        xdim (:obj:`int`): The x-dimension size.
+        
+        ydim (:obj:`int`): The y-dimension size.
+        
+        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, 
+            in the form of [x, y] (or [west_east, south_north]), which 
+            indicates the x,y location through which the plane will pass.  
+            Must also specify `angle`.
+        
+        angle (:obj:`float`, optional): Only valid for cross sections where 
+            a plane will be plotted through 
+            a given point on the model domain. 0.0 represents a S-N cross 
+            section.  90.0 is a W-E cross section. 
+            
+        start_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the start 
+            x,y location through which the plane will pass.
+            
+        end_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the end x,y 
+            location through which the plane will pass.
+            
+    Returns:
     
+        :class:`np.ndarray`: A two-dimensional array with the left index 
+        representing each point along the line, and the rightmost dimension 
+        having two values for the x and y coordinates [0=X, 1=Y].
+    
+    """
     # Have a pivot point with an angle to find cross section
     if pivot_point is not None and angle is not None:
         xp = pivot_point[-2]
@@ -139,8 +178,52 @@ def calc_xy(xdim, ydim, pivot_point=None, angle=None,
         
     return xy
 
+
 def get_xy_z_params(z, pivot_point=None, angle=None,
                     start_point=None, end_point=None):
+    """Return the cross section parameters.
+    
+    This function returns the xy horizontal cross section line coordinates, 
+    the xy x z vertical values interpolated along the xy cross section 
+    line, and the fixed vertical levels to be used by the cross section
+    algorithm (at ~1% increments for the minimum to maximum vertical 
+    span).
+    
+    Args:
+    
+        z (:class:`numpy.ndarray`): The vertical coordinate, whose rightmost 
+            dimensions are bottom_top x south_north x west_east.
+            
+        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, 
+            in the form of [x, y] (or [west_east, south_north]), which 
+            indicates the x,y location through which the plane will pass.  
+            Must also specify `angle`.
+        
+        angle (:obj:`float`, optional): Only valid for cross sections where 
+            a plane will be plotted through 
+            a given point on the model domain. 0.0 represents a S-N cross 
+            section.  90.0 is a W-E cross section. 
+            
+        start_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the start 
+            x,y location through which the plane will pass.
+            
+        end_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the end x,y 
+            location through which the plane will pass.
+            
+    Returns:
+    
+        :obj:`tuple`:  A tuple containing the xy horizontal cross section  
+        coordinates, the vertical values interpolated along the xy cross 
+        section line, and the fixed vertical levels used by the 
+        cross section algorithm at ~1% increments of minimum to maximum 
+        vertical span.
+    
+    """
     
     xy = get_xy(z, pivot_point, angle, start_point, end_point)
     
@@ -173,8 +256,44 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
         
     return xy, var2dz, z_var2d
 
+
 def get_xy(var, pivot_point=None, angle=None, 
            start_point=None, end_point=None):
+    """Return the x,y points for the horizontal cross section line.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A variable
+            that contains a :attr:`shape` attribute.
+        
+        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, 
+            in the form of [x, y] (or [west_east, south_north]), which 
+            indicates the x,y location through which the plane will pass.  
+            Must also specify `angle`.
+        
+        angle (:obj:`float`, optional): Only valid for cross sections where 
+            a plane will be plotted through 
+            a given point on the model domain. 0.0 represents a S-N cross 
+            section.  90.0 is a W-E cross section. 
+            
+        start_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the start 
+            x,y location through which the plane will pass.
+            
+        end_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the end x,y 
+            location through which the plane will pass.
+            
+    Returns:
+    
+        :class:`np.ndarray`: A two-dimensional array with the left index 
+        representing each point along the line, and the rightmost dimension 
+        having two values for the x and y coordinates [0=X, 1=Y].
+    
+    """
     if pivot_point is not None:
         pos_pivot = to_positive_idxs(var.shape[-2:], pivot_point)
     else:
@@ -193,6 +312,6 @@ def get_xy(var, pivot_point=None, angle=None,
     xdim = var.shape[-1]
     ydim = var.shape[-2]
     
-    xy = calc_xy(xdim, ydim, pos_pivot, angle, pos_start, pos_end)
+    xy = _calc_xy(xdim, ydim, pos_pivot, angle, pos_start, pos_end)
     
     return xy

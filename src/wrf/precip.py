@@ -5,8 +5,8 @@ from .util import extract_vars
 
 __all__ = ["get_accum_precip", "get_precip_diff"]
 
-def get_accum_precip(wrfnc, timeidx=0):
-    ncvars = extract_vars(wrfnc, timeidx, varnames=("RAINC", "RAINNC"))
+def get_accum_precip(wrfin, timeidx=0):
+    ncvars = extract_vars(wrfin, timeidx, varnames=("RAINC", "RAINNC"))
     rainc = ncvars["RAINC"]
     rainnc = ncvars["RAINNC"]
     
@@ -14,9 +14,9 @@ def get_accum_precip(wrfnc, timeidx=0):
     
     return rainsum
 
-def get_precip_diff(wrfnc1, wrfnc2, timeidx=0):
-    vars1 = extract_vars(wrfnc1, timeidx, varnames=("RAINC", "RAINNC"))
-    vars2 = extract_vars(wrfnc2, timeidx, varnames=("RAINC", "RAINNC"))
+def get_precip_diff(wrfin1, wrfin2, timeidx=0):
+    vars1 = extract_vars(wrfin1, timeidx, varnames=("RAINC", "RAINNC"))
+    vars2 = extract_vars(wrfin2, timeidx, varnames=("RAINC", "RAINNC"))
     rainc1 = vars1["RAINC"]
     rainnc1 = vars1["RAINNC"]
     

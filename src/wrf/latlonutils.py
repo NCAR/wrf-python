@@ -12,9 +12,32 @@ from .util import (extract_vars, extract_global_attrs,
                    iter_left_indexes, is_mapping, is_multi_file)
 from .py3compat import viewkeys, viewitems
 
-def _lat_varname(wrfnc, stagger):
+def _lat_varname(wrfin, stagger):
+    """Return the latitude variable name for the specified stagger type.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        stagger (:obj:`str`): The staggered grid type which is one of the 
+            following:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+                  
+    Returns:
+    
+        :obj:`str`: The latitude variable name.
+    
+    """
     if stagger is None or stagger.lower() == "m":
-        varname = either("XLAT", "XLAT_M")(wrfnc)
+        varname = either("XLAT", "XLAT_M")(wrfin)
     elif stagger.lower() == "u" or stagger.lower() == "v":
         varname = "XLAT_{}".format(stagger.upper())
     else:
@@ -22,9 +45,32 @@ def _lat_varname(wrfnc, stagger):
     
     return varname
     
-def _lon_varname(wrfnc, stagger):
+def _lon_varname(wrfin, stagger):
+    """Return the longitude variable name for the specified stagger type.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        stagger (:obj:`str`): The staggered grid type, which is one of the 
+            following:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+                  
+    Returns:
+    
+        :obj:`str`: The latitude variable name.
+    
+    """
     if stagger is None or stagger.lower() == "m":
-        varname = either("XLONG", "XLONG_M")(wrfnc)
+        varname = either("XLONG", "XLONG_M")(wrfin)
     elif stagger.lower() == "u" or stagger.lower() == "v":
         varname = "XLONG_{}".format(stagger.upper())
     else:
@@ -32,11 +78,61 @@ def _lon_varname(wrfnc, stagger):
     
     return varname
 
-def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache, _key):
+def _get_proj_params(wrfin, timeidx, stagger, method, squeeze, cache, _key):
+    """Return the map projection parameters.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        stagger (:obj:`str`): The staggered grid type, which is one of the 
+            following:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+                  
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+    Returns:
+    
+        
+    """
     if timeidx < 0:
         raise ValueError("'timeidx' must be greater than 0")
     
-    attrs = extract_global_attrs(wrfnc, attrs=("MAP_PROJ", "TRUELAT1",
+    attrs = extract_global_attrs(wrfin, attrs=("MAP_PROJ", "TRUELAT1",
                                                "TRUELAT2", "STAND_LON",
                                                "DX", "DY"))
     map_proj = attrs["MAP_PROJ"]
@@ -47,7 +143,7 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache, _key):
     dy = attrs["DY"]
     
     if map_proj == ProjectionTypes.LAT_LON:
-        pole_attrs = extract_global_attrs(wrfnc, attrs=("POLE_LAT", 
+        pole_attrs = extract_global_attrs(wrfin, attrs=("POLE_LAT", 
                                                         "POLE_LON"))
         pole_lat = pole_attrs["POLE_LAT"]
         pole_lon = pole_attrs["POLE_LON"]
@@ -59,31 +155,32 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache, _key):
         latinc = 0.0
         loninc = 0.0
     
-    latvar = _lat_varname(wrfnc, stagger)
-    lonvar = _lon_varname(wrfnc, stagger)
+    latvar = _lat_varname(wrfin, stagger)
+    lonvar = _lon_varname(wrfin, stagger)
     
     lat_timeidx = timeidx
     
-    is_moving = is_moving_domain(wrfnc, latvar=latvar, lonvar=lonvar)
+    is_moving = is_moving_domain(wrfin, latvar=latvar, lonvar=lonvar, 
+                                 _key=_key)
     
     # Only need one file and one time if the domain is not moving
     if not is_moving:
         if is_multi_time_req(timeidx):
             lat_timeidx = 0
             
-        if is_multi_file(wrfnc):
-            if not is_mapping(wrfnc):
-                wrfnc = next(iter(wrfnc))  # only need one file
+        if is_multi_file(wrfin):
+            if not is_mapping(wrfin):
+                wrfin = next(iter(wrfin))  # only need one file
             else:
-                first_entry = next(iter(viewkeys(wrfnc)))
-                wrfnc = wrfnc[first_entry]
+                first_entry = next(iter(viewkeys(wrfin)))
+                wrfin = wrfin[first_entry]
                 key = _key[first_entry]
-                return _get_proj_params(wrfnc, timeidx, stagger, 
+                return _get_proj_params(wrfin, timeidx, stagger, 
                                         method, squeeze, cache, key)
             
-    xlat = extract_vars(wrfnc, lat_timeidx, (latvar,), method, squeeze, cache,
+    xlat = extract_vars(wrfin, lat_timeidx, (latvar,), method, squeeze, cache,
                            meta=False, _key=_key)[latvar]
-    xlon = extract_vars(wrfnc, lat_timeidx, (lonvar,), method, squeeze, cache,
+    xlon = extract_vars(wrfin, lat_timeidx, (lonvar,), method, squeeze, cache,
                            meta=False, _key=_key)[lonvar]
     
     ref_lat = np.ravel(xlat[..., 0, 0])
@@ -98,10 +195,35 @@ def _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, cache, _key):
 
 
 def _dict_keys_to_upper(d):
+    """Return a dictionary with the keys changed to uppercase.
+    
+    Args:
+        
+        d (:obj:`dict`): A dictionary.
+        
+    Returns:
+    
+        :obj:`dict`: A dictionary with uppercase keys.
+    
+    """
     return {key.upper(): val for key, val in viewitems(d)}        
 
 # known_x and known_y are 0-based
 def _kwarg_proj_params(**projparams):
+    """Return the map projection parameters.
+    
+    This function aggregates the projection parameter keyword 
+    arguments and also performs sanity checking on them.
+    
+    Args:
+    
+        **projparams: Projection parameter keyword arguments.
+        
+    Returns:
+    
+        :obj:`tuple`: The map projection parameters.
+    
+    """
     projparams = _dict_keys_to_upper(projparams)
     
     map_proj = projparams.get("MAP_PROJ")
@@ -169,14 +291,89 @@ def _kwarg_proj_params(**projparams):
 
 
 # Will return 0-based indexes
-def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
+def _ll_to_xy(latitude, longitude, wrfin=None, timeidx=0,
            stagger=None, method="cat", squeeze=True, cache=None,
            _key=None, as_int=True, **projparams):
+    """Return the x,y coordinates for a specified latitude and longitude.
     
-    if wrfnc is not None:
+    The *latitude* and *longitude* arguments can be a single value or a 
+    sequence of values.
+    
+    The leftmost dimension of the returned array represents two different 
+    quantities:
+        
+        - return_val[0,...] will contain the X (west_east) values.
+        - return_val[1,...] will contain the Y (south_north) values.
+    
+    Args:
+    
+        latitude (:obj:`float` or sequence): A single latitude or a sequence 
+            of latitude values to be converted.
+            
+        longitude (:obj:`float` or sequence): A single longitude or a sequence 
+            of latitude values to be converted.
+            
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+            
+        stagger (:obj:`str`): By default, the latitude and longitude are 
+            returned on the mass grid, but a staggered grid can be chosen 
+            with the following options:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+                  
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        as_int (:obj:`bool`): Set to True to return the x,y values as 
+            :obj:`int`, otherwise they will be returned as :obj:`float`.
+            
+        **projparams: Map projection keyword arguments to set manually.
+        
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        x,y coordinate value(s) whose leftmost dimension is 2 (0=X, 1=Y).
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
+    
+    if wrfin is not None:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
         pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
-        loninc) = _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, 
+        loninc) = _get_proj_params(wrfin, timeidx, stagger, method, squeeze, 
                                     cache, _key)
     else:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
@@ -255,14 +452,92 @@ def _ll_to_xy(latitude, longitude, wrfnc=None, timeidx=0,
     return result
 
 # X and Y should be 0-based
-def _xy_to_ll(x, y, wrfnc=None, timeidx=0, stagger=None, 
+def _xy_to_ll(x, y, wrfin=None, timeidx=0, stagger=None, 
            method="cat", squeeze=True, cache=None, _key=None,
            **projparams):
+    
+    """Return the latitude and longitude for specified x,y coordinates.
+    
+    The *x* and *y* arguments can be a single value or a sequence of values.
+    
+    The leftmost dimension of the returned array represents two different 
+    quantities:
         
-    if wrfnc is not None:
+        - return_val[0,...] will contain the latitude values.
+        - return_val[1,...] will contain the longitude values.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        x (:obj:`float` or sequence): A single x-coordinate or a sequence 
+            of x-coordinate values to be converted.
+            
+        y (:obj:`float` or sequence): A single y-coordinate or a sequence 
+            of y-coordinate values to be converted.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+            
+        stagger (:obj:`str`): By default, the latitude and longitude are 
+            returned on the mass grid, but a staggered grid can be chosen 
+            with the following options:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+                  
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        **projparams: Map projection keyword arguments to set manually.
+        
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        latitude and longitude values whose leftmost dimension is 2 
+        (0=latitude, 1=longitude).
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
+        
+    if wrfin is not None:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
         pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
-        loninc) = _get_proj_params(wrfnc, timeidx, stagger, method, squeeze, 
+        loninc) = _get_proj_params(wrfin, timeidx, stagger, method, squeeze, 
                                     cache, _key)
     else:
         (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,

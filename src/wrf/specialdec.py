@@ -14,8 +14,27 @@ if xarray_enabled():
 
 
 def uvmet_left_iter_nocopy(alg_dtype=np.float64):
-    """Decorator to handle iterating over leftmost dimensions when using 
-    multiple files and/or multiple times with the uvmet product.
+    """A decorator to handle iterating over the leftmost dimensions for the 
+    uvmet diagnostic.
+    
+    For example, if a wrapped function works with three-dimensional arrays, but
+    the variables include a 4th leftmost dimension for 'Time', this decorator 
+    will iterate over all times, call the 3D Fortran routine, and aggregate the
+    results in to a 4D output array.
+    
+    It is also important to note that the final output array is allocated 
+    first, and then views are passed to the wrapped function so that values 
+    do not need to get copied in to the final output array.
+    
+    Args:
+        
+        alg_dtype (:class:`np.dtype` or :obj:`str`): The numpy data type used 
+            in the wrapped function.
+            
+    Returns:
+    
+        :class:`numpy.ndarray`: The aggregated uvmet output array that includes 
+        all extra leftmost dimensions.
     
     """
     @wrapt.decorator
@@ -159,9 +178,27 @@ def uvmet_left_iter_nocopy(alg_dtype=np.float64):
     
 
 def cape_left_iter(alg_dtype=np.float64):
-    """Decorator to handle iterating over leftmost dimensions when using 
-    multiple files and/or multiple times with the cape product.
+    """A decorator to handle iterating over the leftmost dimensions for the 
+    cape diagnostic.
     
+    For example, if a wrapped function works with three-dimensional arrays, but
+    the variables include a 4th leftmost dimension for 'Time', this decorator 
+    will iterate over all times, call the 3D Fortran routine, and aggregate the
+    results in to a 4D output array.
+    
+    It is also important to note that the final output array is allocated 
+    first, and then views are passed to the wrapped function so that values 
+    do not need to get copied in to the final output array.
+    
+    Args:
+        
+        alg_dtype (:class:`np.dtype` or :obj:`str`): The numpy data type used 
+            in the wrapped function.
+            
+    Returns:
+    
+        :class:`numpy.ndarray`: The aggregated cape output array that includes 
+        all extra leftmost dimensions.
     
     """
     @wrapt.decorator
@@ -289,9 +326,27 @@ def cape_left_iter(alg_dtype=np.float64):
     return func_wrapper
 
 def cloudfrac_left_iter(alg_dtype=np.float64):
-    """Decorator to handle iterating over leftmost dimensions when using 
-    multiple files and/or multiple times with the cloudfrac product.
+    """A decorator to handle iterating over the leftmost dimensions for the 
+    cloud fraction diagnostic.
     
+    For example, if a wrapped function works with three-dimensional arrays, but
+    the variables include a 4th leftmost dimension for 'Time', this decorator 
+    will iterate over all times, call the 3D Fortran routine, and aggregate the
+    results in to a 4D output array.
+    
+    It is also important to note that the final output array is allocated 
+    first, and then views are passed to the wrapped function so that values 
+    do not need to get copied in to the final output array.
+    
+    Args:
+        
+        alg_dtype (:class:`np.dtype` or :obj:`str`): The numpy data type used 
+            in the wrapped function.
+            
+    Returns:
+    
+        :class:`numpy.ndarray`: The aggregated cloud fraction output array 
+        that includes all extra leftmost dimensions.
     
     """
     @wrapt.decorator

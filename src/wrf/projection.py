@@ -18,11 +18,39 @@ if pyngl_enabled():
 
 if cartopy_enabled():
     class MercatorWithLatTS(crs.Mercator):
+        """A :class:`cartopy.crs.Mercator` subclass that adds support for 
+        a latitude of true scale parameter.
+        
+        See Also:
+        
+            :class:`cartopy.crs.Mercator`
+        
+        """
         def __init__(self, central_longitude=0.0,
                      latitude_true_scale=0.0,
                      min_latitude=-80.0, 
                      max_latitude=84.0,
                      globe=None):
+            """Initialize a :class:`wrf.MercatorWithLatTS` object.
+            
+            Args:
+            
+                central_longitude (:obj:`float`, optional): The central 
+                    longitude.  Default is 0.0.
+                
+                latitude_true_scale (:obj:`float`, optional): The latitude 
+                    of true scale.  Default is 0.0.
+                
+                min_latitude (:obj:`float`, optional): The maximum southerly 
+                    extent of the projection.  Default is -80.0.
+                
+                max_latitude (:obj:`float`, optional): The maximum northerly 
+                    extent of the projection.  Default is 84.0..
+                
+                globe (:class:`cartopy.crs.Globe`, optional): A globe object.
+                    If omitted, a default globe is created.
+            
+            """
             proj4_params = [("proj", "merc"),
                 ("lon_0", central_longitude),
                 ("lat_ts", latitude_true_scale),
@@ -51,11 +79,83 @@ if cartopy_enabled():
             self._threshold = np.diff(self.x_limits)[0] / 720
 
 def _ismissing(val):
+    """Return True if a value is None, greater than 90.0, or less than -90.
+    
+    This function is used to check for invalid latitude values.
+    
+    Args:
+    
+        val (numeric): A numeric value.
+        
+    Returns:
+    
+        :obj:`bool`: True if the value is None, greater than 90.0, or less
+        than -90.0.  Otherwise, False is returned.
+    
+    """
     return val is None or val > 90. or val < -90.
 
 class WrfProj(object):
+    """A base class for storing map projection information from WRF data.
+    
+    Subclasses of this type will be stored in the 'projection' attribute 
+    entry within a :attr:`xarray.DataArray.attrs` dictionary.  This base class
+    contains the methods required to extract the appropriate projection class 
+    for PyNGL, matplotlib basemap, and cartopy.  
+    
+    Attributes:
+    
+        ll_lat (:obj:`float): Lower left corner latitude.
+        
+        ll_lat (:obj:`float): Lower left corner longitude.
+        
+        ur_lat (:obj:`float): Upper right corner latitude.
+        
+        ur_lon (:obj:`float): Upper right corner longitude.
+        
+        bottom_left (indexable sequence): A pair of (ll_lat, ll_lon).
+        
+        top_right (indexable sequence): A pair of (ur_lat, ur_lon).
+    
+    """
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
+        """Initialize a :class:`wrf.WrfProj` object.
+        
+        Args:
+        
+            bottom_left (indexable sequence, optional): The lower left corner 
+                as a (latitude, longitude) pair. Must also specify *top_right* 
+                if used.  Default is None.
+                
+            top_right (indexable sequence): The upper right corner as a 
+                (latitude, longitude) pair.  Must also specify *bottom_left*
+                if used.  Default is None.
+                
+            lats (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the latitude values.  Must 
+                also specify *lons* if used.  Default is None.
+                
+            lons (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the longitude values.  Must 
+                also specify *lats* if used.  Default is None.
+                
+            **proj_params:  Map projection optional keyword arguments, that
+                have the same names as found in WRF output NetCDF global 
+                attributes:
+                
+                - 'MAP_PROJ': The map projection type as an integer.
+                - 'CEN_LAT': Center latitude.
+                - 'CEN_LON': Center longitude.
+                - 'TRUELAT1': True latitude 1.
+                - 'TRUELAT2': True latitude 2.
+                - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+                - 'STAND_LON': Standard longitude.
+                - 'POLE_LAT': Pole latitude.
+                - 'POLE_LON': Pole longitude.
+
+        """
+        
         if bottom_left is not None and top_right is not None:
             self.ll_lat = bottom_left[0]
             self.ll_lon = bottom_left[1]
@@ -119,11 +219,31 @@ class WrfProj(object):
                                semiminor_axis=Constants.WRF_EARTH_RADIUS))
      
     def cartopy_xlim(self):
-        """Return the x extents in projected coordinates (for cartopy)"""
+        """Return the x extents in projected coordinates for cartopy.
+        
+        Returns:
+        
+            :obj:`list`: A pair of [xmin, xmax].
+            
+        See Also:
+        
+            :mod:`cartopy`, :mod:`matplotlib`
+        
+        """
         return self._cart_extents()[0]
     
     def cartopy_ylim(self):
-        """Return the y extents in projected coordinates (for cartopy)"""
+        """Return the y extents in projected coordinates for cartopy.
+        
+        Returns:
+        
+            :obj:`list`: A pair of [ymin, ymax].
+            
+        See Also:
+        
+            :mod:`cartopy`, :mod:`matplotlib`
+        
+        """
         return self._cart_extents()[1]
     
     def __repr__(self):
@@ -138,41 +258,102 @@ class WrfProj(object):
         return "{}({})".format(self.__class__.__name__, args)
     
     def basemap(self, resolution='l'):
-        """Return a mpl_toolkits.basemap.Basemap instance for the
-        projection"""
+        """Return a :class:`matplotlib.mpl_toolkits.basemap.Basemap` object 
+        for the map projection.
+        
+        Arguments:
+        
+            resolution (:obj:`str`): The map resolution type.
+            
+        Returns:
+        
+            :class:`matplotlib.mpl_toolkits.basemap.Basemap`: A Basemap
+            object for the projection.
+            
+        See Also:
+        
+            :class:`matplotlib.mpl_toolkits.basemap.Basemap`
+        
+        """
         if not basemap_enabled():
             raise RuntimeError("'mpl_toolkits.basemap' is not "
                                "installed or is disabled")
         return self._basemap(resolution)
     
     def cartopy(self):
-        """Return a cartopy.crs.Projection subclass for the
-        projection"""
+        """Return a :class:`cartopy.crs.Projection` subclass for the 
+        map projection.
+        
+        Returns:
+        
+            :class:`cartopy.crs.Projection`: A Projection subclass for the 
+            map projection.
+            
+        See Also:
+        
+            :class:`cartopy.crs.Projection`
+        
+        """
         if not cartopy_enabled():
             raise RuntimeError("'cartopy' is not "
                                "installed or is disabled")
         return self._cartopy()
     
     def pyngl(self):
-        """Return the PyNGL resources for the projection"""
+        """Return a :class:`Ngl.Resources` object for the map projection.
+        
+        Returns:
+        
+            :class:`Ngl.Resources`: A dict-like object that contains the 
+            PyNGL resources for the map projection.
+                
+        See Also:
+        
+            `PyNGL <https://www.pyngl.ucar.edu/>`_ 
+                
+        """
         if not pyngl_enabled():
             raise RuntimeError("'pyngl' is not "
                                "installed or is disabled")
         return self._pyngl()
     
     def proj4(self):
-        """Return the proj4 string for the map projection"""
+        """Return the PROJ.4 string for the map projection.
+        
+        Returns:
+        
+            :obj:`str`: A string suitable for use with the PROJ.4 library.
+            
+        See Also:
+        
+            PROJ.4 <https://trac.osgeo.org/proj/>`_ 
+        
+        """
         return self._proj4()
     
     def cf(self):
         """Return a dictionary with the NetCDF CF parameters for the 
-        projection"""
+        projection.
+        
+        Returns:
+        
+        :obj:`dict`: A dictionary with the NetCDF CF parameter names and 
+        projection parameter values.
+        
+        """
         return self._cf_params()
     
 
 # Used for 'missing' projection values during the 'join' method
 class NullProjection(WrfProj):
+    """A :class:`wrf.WrfProj` subclass for empty projections.
+    
+    The :class:`NullProjection` is primarily used for creating missing 
+    projections when using the 'join' method.
+    
+    """
     def __init__(self):
+        """Initialize a :class:`wrf.NullProjection` object."""
         pass 
     
     def __repr__(self):
@@ -180,8 +361,51 @@ class NullProjection(WrfProj):
     
     
 class LambertConformal(WrfProj):
+    """A :class:`wrf.WrfProj` subclass for Lambert Conformal Conic projections.
+    
+    See Also:
+    
+        :class:`wrf.WrfProj`, :class:`wrf.LatLon`, 
+        :class:`wrf.PolarStereographic`, 
+        :class:`Mercator`, :class:`RotatedLatLon`
+    
+    """
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
+        """Initialize a :class:`wrf.LambertConformal` object.
+        
+        Args:
+        
+            bottom_left (indexable sequence, optional): The lower left corner 
+                as a (latitude, longitude) pair. Must also specify *top_right* 
+                if used.  Default is None.
+                
+            top_right (indexable sequence): The upper right corner as a 
+                (latitude, longitude) pair.  Must also specify *bottom_left*
+                if used.  Default is None.
+                
+            lats (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the latitude values.  Must 
+                also specify *lons* if used.  Default is None.
+                
+            lons (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the longitude values.  Must 
+                also specify *lats* if used.  Default is None.
+                
+            **proj_params:  Map projection optional keyword arguments, that
+                have the same names as found in WRF output NetCDF global 
+                attributes:
+                
+                - 'CEN_LAT': Center latitude.
+                - 'CEN_LON': Center longitude.
+                - 'TRUELAT1': True latitude 1.
+                - 'TRUELAT2': True latitude 2.
+                - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+                - 'STAND_LON': Standard longitude.
+                - 'POLE_LAT': Pole latitude.
+                - 'POLE_LON': Pole longitude.
+
+        """
         super(LambertConformal, self).__init__(bottom_left, 
                     top_right, lats, lons, **proj_params)
         
@@ -283,8 +507,51 @@ class LambertConformal(WrfProj):
         return _proj4
             
 class Mercator(WrfProj):
+    """A :class:`wrf.WrfProj` subclass for Mercator projections.
+    
+    See Also:
+    
+        :class:`wrf.WrfProj`, :class:`wrf.LatLon`, 
+        :class:`wrf.PolarStereographic`, 
+        :class:`RotatedLatLon`, :class:`LambertConformal`
+    
+    """
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
+        """Initialize a :class:`wrf.Mercator` object.
+        
+        Args:
+        
+            bottom_left (indexable sequence, optional): The lower left corner 
+                as a (latitude, longitude) pair. Must also specify *top_right* 
+                if used.  Default is None.
+                
+            top_right (indexable sequence): The upper right corner as a 
+                (latitude, longitude) pair.  Must also specify *bottom_left*
+                if used.  Default is None.
+                
+            lats (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the latitude values.  Must 
+                also specify *lons* if used.  Default is None.
+                
+            lons (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the longitude values.  Must 
+                also specify *lats* if used.  Default is None.
+                
+            **proj_params:  Map projection optional keyword arguments, that
+                have the same names as found in WRF output NetCDF global 
+                attributes:
+                
+                - 'CEN_LAT': Center latitude.
+                - 'CEN_LON': Center longitude.
+                - 'TRUELAT1': True latitude 1.
+                - 'TRUELAT2': True latitude 2.
+                - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+                - 'STAND_LON': Standard longitude.
+                - 'POLE_LAT': Pole latitude.
+                - 'POLE_LON': Pole longitude.
+
+        """
         super(Mercator, self).__init__(bottom_left, top_right, 
                                            lats, lons, **proj_params)
         
@@ -383,8 +650,52 @@ class Mercator(WrfProj):
         return _proj4
         
 class PolarStereographic(WrfProj):
+    """A :class:`wrf.WrfProj` subclass for Polar Stereographic projections.
+    
+    See Also:
+    
+        :class:`wrf.WrfProj`, :class:`wrf.LatLon`, 
+        :class:`wrf.RotatedLatLon`, 
+        :class:`Mercator`, :class:`LambertConformal`
+    
+    """
+
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
+        """Initialize a :class:`wrf.PolarStereographic` object.
+        
+        Args:
+        
+            bottom_left (indexable sequence, optional): The lower left corner 
+                as a (latitude, longitude) pair. Must also specify *top_right* 
+                if used.  Default is None.
+                
+            top_right (indexable sequence): The upper right corner as a 
+                (latitude, longitude) pair.  Must also specify *bottom_left*
+                if used.  Default is None.
+                
+            lats (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the latitude values.  Must 
+                also specify *lons* if used.  Default is None.
+                
+            lons (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the longitude values.  Must 
+                also specify *lats* if used.  Default is None.
+                
+            **proj_params:  Map projection optional keyword arguments, that
+                have the same names as found in WRF output NetCDF global 
+                attributes:
+                
+                - 'CEN_LAT': Center latitude.
+                - 'CEN_LON': Center longitude.
+                - 'TRUELAT1': True latitude 1.
+                - 'TRUELAT2': True latitude 2.
+                - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+                - 'STAND_LON': Standard longitude.
+                - 'POLE_LAT': Pole latitude.
+                - 'POLE_LON': Pole longitude.
+
+        """
         super(PolarStereographic, self).__init__(bottom_left, 
                         top_right, lats, lons, **proj_params)
         self._hemi = -90. if self.truelat1 < 0 else 90.
@@ -482,8 +793,51 @@ class PolarStereographic(WrfProj):
                   
 
 class LatLon(WrfProj):
+    """A :class:`wrf.WrfProj` subclass for Lat Lon projections.
+    
+    See Also:
+    
+        :class:`wrf.WrfProj`, :class:`wrf.RotatedLatLon`, 
+        :class:`wrf.PolarStereographic`, 
+        :class:`Mercator`, :class:`LambertConformal`
+    
+    """
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
+        """Initialize a :class:`wrf.LatLon` object.
+        
+        Args:
+        
+            bottom_left (indexable sequence, optional): The lower left corner 
+                as a (latitude, longitude) pair. Must also specify *top_right* 
+                if used.  Default is None.
+                
+            top_right (indexable sequence): The upper right corner as a 
+                (latitude, longitude) pair.  Must also specify *bottom_left*
+                if used.  Default is None.
+                
+            lats (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the latitude values.  Must 
+                also specify *lons* if used.  Default is None.
+                
+            lons (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the longitude values.  Must 
+                also specify *lats* if used.  Default is None.
+                
+            **proj_params:  Map projection optional keyword arguments, that
+                have the same names as found in WRF output NetCDF global 
+                attributes:
+                
+                - 'CEN_LAT': Center latitude.
+                - 'CEN_LON': Center longitude.
+                - 'TRUELAT1': True latitude 1.
+                - 'TRUELAT2': True latitude 2.
+                - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+                - 'STAND_LON': Standard longitude.
+                - 'POLE_LAT': Pole latitude.
+                - 'POLE_LON': Pole longitude.
+
+        """
         super(LatLon, self).__init__(bottom_left, top_right, 
                                          lats, lons, **proj_params)
     
@@ -563,8 +917,7 @@ class LatLon(WrfProj):
 # 4) In basemap, lon_0 should be set to the central (standard) longitude.
 # 5) In either cartopy, basemap or pyngl, I'm not sure that projections with
 #    a pole_lon not equal to 0 or 180 can be plotted.  Hopefully people 
-#    follow the WPS instructions, otherwise I need to see a sample file and 
-#    a lot of rum.
+#    follow the WPS instructions, otherwise I need to see a sample file.
 # 6) For items in 3 - 4, the "longitude" (lon_0 or pole_longitude) is 
 #    determined by WRF's 
 #    STAND_LON values, with the following calculations based on hemisphere:
@@ -583,8 +936,51 @@ class LatLon(WrfProj):
 #     to keep things in the -180 to 180, -90 to 90 range.
 # 12) This projection makes me sad.           
 class RotatedLatLon(WrfProj):
+    """A :class:`wrf.WrfProj` subclass for Rotated Lat Lon projections.
+    
+    See Also:
+    
+        :class:`wrf.WrfProj`, :class:`wrf.LatLon`, 
+        :class:`wrf.PolarStereographic`, 
+        :class:`Mercator`, :class:`LambertConformal`
+    
+    """
     def __init__(self, bottom_left=None, top_right=None, 
                  lats=None, lons=None, **proj_params):
+        """Initialize a :class:`wrf.RotatedLatLon` object.
+        
+        Args:
+        
+            bottom_left (indexable sequence, optional): The lower left corner 
+                as a (latitude, longitude) pair. Must also specify *top_right* 
+                if used.  Default is None.
+                
+            top_right (indexable sequence): The upper right corner as a 
+                (latitude, longitude) pair.  Must also specify *bottom_left*
+                if used.  Default is None.
+                
+            lats (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the latitude values.  Must 
+                also specify *lons* if used.  Default is None.
+                
+            lons (:class:`numpy.ndarray`, optional): An array of at least 
+                two dimensions containing all of the longitude values.  Must 
+                also specify *lats* if used.  Default is None.
+                
+            **proj_params:  Map projection optional keyword arguments, that
+                have the same names as found in WRF output NetCDF global 
+                attributes:
+                
+                - 'CEN_LAT': Center latitude.
+                - 'CEN_LON': Center longitude.
+                - 'TRUELAT1': True latitude 1.
+                - 'TRUELAT2': True latitude 2.
+                - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+                - 'STAND_LON': Standard longitude.
+                - 'POLE_LAT': Pole latitude.
+                - 'POLE_LON': Pole longitude.
+
+        """
         super(RotatedLatLon, self).__init__(bottom_left, top_right, 
                                     lats, lons, **proj_params)
         
@@ -717,6 +1113,49 @@ class RotatedLatLon(WrfProj):
         
 def getproj(bottom_left=None, top_right=None, 
             lats=None, lons=None, **proj_params):
+    """Return a :class:`wrf.WrfProj` subclass.
+    
+    This functions serves as a factory function for returning a 
+    :class:`wrf.WrfProj` subclass from the specified map projection parameters.
+    
+    Args:
+        
+        bottom_left (indexable sequence, optional): The lower left corner as 
+            a (latitude, longitude) pair. Must also specify *top_right* if 
+            used.  Default is None.
+            
+        top_right (indexable sequence): The upper right corner as a 
+            (latitude, longitude) pair.  Must also specify *bottom_left*
+            if used.  Default is None.
+            
+        lats (:class:`numpy.ndarray`, optional): An array of at least 
+            two dimensions containing all of the latitude values.  Must 
+            also specify *lons* if used.  Default is None.
+            
+        lons (:class:`numpy.ndarray`, optional): An array of at least 
+            two dimensions containing all of the longitude values.  Must 
+            also specify *lats* if used.  Default is None.
+            
+        **proj_params:  Map projection optional keyword arguments, that
+            have the same names as found in WRF output NetCDF global 
+            attributes:
+            
+            - 'MAP_PROJ': The map projection type as an integer.
+            - 'CEN_LAT': Center latitude.
+            - 'CEN_LON': Center longitude.
+            - 'TRUELAT1': True latitude 1.
+            - 'TRUELAT2': True latitude 2.
+            - 'MOAD_CEN_LAT': Mother of all domains center latitude.
+            - 'STAND_LON': Standard longitude.
+            - 'POLE_LAT': Pole latitude.
+            - 'POLE_LON': Pole longitude.
+    
+    Returns:
+    
+        :class:`wrf.WrfProj`: A :class:`wrf.WrfProj` subclass for the 
+        specified map projection parameters.
+    
+    """
     
     proj_type = proj_params.get("MAP_PROJ", 0)
     if proj_type == ProjectionTypes.LAMBERT_CONFORMAL:

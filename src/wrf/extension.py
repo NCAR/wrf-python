@@ -21,25 +21,52 @@ from .specialdec import (uvmet_left_iter_nocopy, cape_left_iter,
                          cloudfrac_left_iter)
 
 class FortranError(Exception):
+    """Raised when an error occurs in a Fortran routine."""
     def __init__(self, message=None):
+        """Initialize a :class:`wrf.FortranError` objection.
+        
+        Args:
+        
+            message (:obj:`str`): The error message.
+        
+        """
         self._msg = message
         
     def __str__(self):
         return self._msg
     
     def __call__(self, message):
+        """Callable method to make the exception object raise itself.
+        
+        This allows the exception to be thrown from inside Fortran routines 
+        by using f2py's callback mechanism.  This is no longer used within 
+        wrf-python, but may be useful to other users.
+        
+        See Also:
+        
+            `f2py doc <http://docs.scipy.org/doc/numpy-1.11.0/f2py/>`_
+        
+        """
         raise self.__class__(message)
 
+# The routines below are thin wrappers around the Fortran functions.  These 
+# are not meant to be called by end users.  Use the public API instead for 
+# that purpose.
 
 # IMPORTANT!  Unless otherwise noted, all variables used in the routines 
-# below assume that fortran-ordered views are being used.  This allows
-# f2py to pass the array pointers directly to the fortran routine.
+# below assume that Fortran-ordered views are being used.  This allows
+# f2py to pass the array pointers directly to the Fortran routine.
 
 @check_args(0, 3, (3, 3, None, None))
 @left_iteration(3, 2, ref_var_idx=0, ignore_args=(2,3))
 @cast_type(arg_idxs=(0,1))
 @extract_and_transpose()
 def _interpz3d(field3d, z, desiredloc, missingval, outview=None):
+    """Wrapper for dinterp3dz.
+    
+    Located in wrf_user.f90.
+    
+    """
     if outview is None:
         outview = np.empty(field3d.shape[0:2], np.float64, order="F")
         
@@ -57,6 +84,11 @@ def _interpz3d(field3d, z, desiredloc, missingval, outview=None):
 @cast_type(arg_idxs=(0,1))
 @extract_and_transpose()
 def _interp2dxy(field3d, xy, outview=None):
+    """Wrapper for dinterp2dxy.
+    
+    Located in wrf_user.f90.
+    
+    """
     if outview is None:
         outview = np.empty((xy.shape[-1], field3d.shape[-1]), np.float64, 
                            order="F")
@@ -72,7 +104,11 @@ def _interp2dxy(field3d, xy, outview=None):
 @cast_type(arg_idxs=(0,1,2))
 @extract_and_transpose()
 def _interp1d(v_in, z_in, z_out, missingval, outview=None):
+    """Wrapper for dinterp1d.
     
+    Located in wrf_user.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(z_out)
 
@@ -90,6 +126,14 @@ def _interp1d(v_in, z_in, z_out, missingval, outview=None):
 @cast_type(arg_idxs=(0,))
 @extract_and_transpose(do_transpose=False)
 def _vertcross(field3d, xy, var2dz, z_var2d, missingval, outview=None):
+    """Return the vertical cross section.
+    
+    This routine was originally written in scripted NCL code and doesn't 
+    directly wrap a Fortran routine.
+    
+    Located in WRFUserARW.ncl.
+    
+    """
     # Note:  This is using C-ordering
     if outview is None:
         outview = np.empty((z_var2d.shape[0], xy.shape[0]), dtype=var2dz.dtype)
@@ -107,6 +151,14 @@ def _vertcross(field3d, xy, var2dz, z_var2d, missingval, outview=None):
 @cast_type(arg_idxs=(0,))
 @extract_and_transpose(do_transpose=False)
 def _interpline(field2d, xy, outview=None):
+    """Return the two-dimensional field interpolated to a line.
+    
+    This routine was originally written in scripted NCL code and doesn't 
+    directly wrap a Fortran routine.
+    
+    Located in WRFUserARW.ncl.
+    
+    """
     # Note:  This is using C-ordering
     if outview is None:
         outview = np.empty(xy.shape[0], dtype=field2d.dtype)
@@ -127,7 +179,11 @@ def _interpline(field2d, xy, outview=None):
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _slp(z, t, p, q, outview=None):
+    """Wrapper for dcomputeseaprs.
     
+    Located in wrf_user.f90.
+    
+    """
     t_surf = np.zeros(z.shape[0:2], np.float64, order="F")
     t_sea_level = np.zeros(z.shape[0:2], np.float64, order="F")
     level = np.zeros(z.shape[0:2], np.int32, order="F")
@@ -160,6 +216,11 @@ def _slp(z, t, p, q, outview=None):
 @cast_type(arg_idxs=(0,1))
 @extract_and_transpose()
 def _tk(pressure, theta, outview=None):
+    """Wrapper for dcomputetk.
+    
+    Located in wrf_user.f90.
+    
+    """
     # No need to transpose here since operations on 1D array
     shape = pressure.shape
     if outview is None: 
@@ -177,6 +238,11 @@ def _tk(pressure, theta, outview=None):
 @cast_type(arg_idxs=(0,1))
 @extract_and_transpose()
 def _td(pressure, qv_in, outview=None):
+    """Wrapper for dcomputetd.
+    
+    Located in wrf_user.f90.
+    
+    """
     shape = pressure.shape
     if outview is None:
         outview = np.empty_like(pressure)
@@ -194,6 +260,11 @@ def _td(pressure, qv_in, outview=None):
 @cast_type(arg_idxs=(0,1,2))
 @extract_and_transpose()
 def _rh(qv, q, t, outview=None):
+    """Wrapper for dcomputerh.
+    
+    Located in wrf_user.f90.
+    
+    """
     shape = qv.shape
     if outview is None:
         outview = np.empty_like(qv)
@@ -216,6 +287,11 @@ def _rh(qv, q, t, outview=None):
 @cast_type(arg_idxs=(0,1,2,3,4,5))
 @extract_and_transpose()
 def _avo(u, v, msfu, msfv, msfm, cor, dx, dy, outview=None):
+    """Wrapper for dcomputeabsvort.
+    
+    Located in wrf_pvo.f90.
+    
+    """
     if outview is None:
         outshape = (v.shape[0],) + u.shape[1:]
         outview = np.empty(outshape, np.float64, order="F")
@@ -240,6 +316,11 @@ def _avo(u, v, msfu, msfv, msfm, cor, dx, dy, outview=None):
 @cast_type(arg_idxs=(0,1,2,3,4,5,6,7))
 @extract_and_transpose()
 def _pvo(u, v, theta, prs, msfu, msfv, msfm, cor, dx, dy, outview=None):
+    """Wrapper for dcomputepv.
+    
+    Located in wrf_pvo.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(prs)
         
@@ -263,6 +344,11 @@ def _pvo(u, v, theta, prs, msfu, msfv, msfm, cor, dx, dy, outview=None):
 @cast_type(arg_idxs=(0,1,2))
 @extract_and_transpose()
 def _eth(qv, tk, p, outview=None):
+    """Wrapper for deqthecalc.
+    
+    Located in eqthecalc.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(qv)
     
@@ -280,6 +366,11 @@ def _eth(qv, tk, p, outview=None):
 def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False, 
            umissing=Constants.DEFAULT_FILL, vmissing=Constants.DEFAULT_FILL, 
            uvmetmissing=Constants.DEFAULT_FILL, outview=None):
+    """Wrapper for dcomputeuvmet.
+    
+    Located in wrf_user.f90.
+    
+    """
     longca = np.zeros(lat.shape[0:2], np.float64, order="F")
     longcb = np.zeros(lon.shape[0:2], np.float64, order="F")
     rpd = Constants.PI/180.
@@ -312,6 +403,11 @@ def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False,
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _omega(qv, tk, w, p, outview=None):
+    """Wrapper for omgcalc.
+    
+    Located in wrf_rip_phys_routines.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(qv)
     
@@ -329,6 +425,11 @@ def _omega(qv, tk, w, p, outview=None):
 @cast_type(arg_idxs=(0,1))
 @extract_and_transpose()
 def _tv(tk, qv, outview=None):
+    """Wrapper for virtual_temp.
+    
+    Located in wrf_rip_phys_routines.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(tk)
         
@@ -344,6 +445,11 @@ def _tv(tk, qv, outview=None):
 @cast_type(arg_idxs=(0,1,2))
 @extract_and_transpose()
 def _wetbulb(p, tk, qv,  psafile=psafilepath(), outview=None):
+    """Wrapper for wetbulbcalc.
+    
+    Located in wrf_rip_phys_routines.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(p)
     
@@ -369,6 +475,11 @@ def _wetbulb(p, tk, qv,  psafile=psafilepath(), outview=None):
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _srhel(u, v, z, ter, top, outview=None):
+    """Wrapper for dcalrelhl.
+    
+    Located in wrf_relhl.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(ter)
         
@@ -387,6 +498,11 @@ def _srhel(u, v, z, ter, top, outview=None):
 @cast_type(arg_idxs=(0,1,2,3,4))
 @extract_and_transpose()
 def _udhel(zstag, mapfct, u, v, wstag, dx, dy, bottom, top, outview=None):
+    """Wrapper for dcalcuh.
+    
+    Located in calc_uh.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(mapfct)
         
@@ -416,7 +532,11 @@ def _udhel(zstag, mapfct, u, v, wstag, dx, dy, bottom, top, outview=None):
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _pw(p, tv, qv, ht, outview=None):
+    """Wrapper for dcomputepw.
     
+    Located in wrf_pw.f90.
+    
+    """
     if outview is None:
         outview = np.empty(p.shape[0:2], p.dtype, order="F")
         
@@ -434,6 +554,11 @@ def _pw(p, tv, qv, ht, outview=None):
 @cast_type(arg_idxs=(0,1,2,3,4,5))
 @extract_and_transpose()
 def _dbz(p, tk, qv, qr, qs, qg, sn0, ivarint, iliqskin, outview=None):
+    """Wrapper for calcdbz.
+    
+    Located in wrf_user_dbz.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(p)
         
@@ -457,7 +582,11 @@ def _dbz(p, tk, qv, qr, qs, qg, sn0, ivarint, iliqskin, outview=None):
 @extract_and_transpose(outviews=("capeview", "cinview"))
 def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
           psafile=psafilepath(), capeview=None, cinview=None):
+    """Wrapper for dcapecalc3d.
     
+    Located in rip_cape.f90.
+    
+    """
     if capeview is None:
         capeview = np.zeros(p_hpa.shape[0:3], p_hpa.dtype, order="F")
         
@@ -493,7 +622,11 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
 @cast_type(arg_idxs=(0, 1), outviews=("lowview", "medview", "highview"))
 @extract_and_transpose(outviews=("lowview", "medview", "hightview"))
 def _cloudfrac(p, rh, lowview=None, medview=None, highview=None):
+    """Wrapper for dcloudfrace.
     
+    Located in wrf_cloud_fracf.f90.
+    
+    """
     if lowview is None:
         lowview = np.zeros(p.shape[0:2], p.dtype, order="F")
         
@@ -516,7 +649,11 @@ def _lltoxy(map_proj, truelat1, truelat2, stdlon,
             lat1, lon1, pole_lat, pole_lon,
             known_x, known_y, dx, dy, latinc, loninc, lat, lon,
             outview=None):
+    """Wrapper for dlltoij.
     
+    Located in wrf_user_latlon_routines.f90.
+    
+    """
     if outview is None:
         outview = np.zeros((2), dtype=np.float64, order="F")
     
@@ -552,7 +689,11 @@ def _lltoxy(map_proj, truelat1, truelat2, stdlon,
 def _xytoll(map_proj, truelat1, truelat2, stdlon, lat1, lon1,
              pole_lat, pole_lon, known_x, known_y, dx, dy, latinc,
              loninc, x, y, outview=None):
+    """Wrapper for dijtoll.
     
+    Located in wrf_user_latlon_routines.f90.
+    
+    """
     if outview is None:
         outview = np.zeros((2), dtype=np.float64, order="F")
     
@@ -590,6 +731,11 @@ def _xytoll(map_proj, truelat1, truelat2, stdlon, lat1, lon1,
 @cast_type(arg_idxs=(0,1,2,3,4,5,6))
 @extract_and_transpose()
 def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
+    """Wrapper for wrfcttcalc.
+    
+    Located in wrf_fctt.f90.
+    
+    """
     if outview is None:
         outview = np.empty_like(ter)
         
@@ -611,6 +757,11 @@ def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
 @cast_type(arg_idxs=(0,))
 @extract_and_transpose()
 def _smooth2d(field, passes, outview=None):
+    """Wrapper for dfilter2d.
+    
+    Located in wrf_user.f90.
+    
+    """
     # Unlike NCL, this routine will not modify the values in place, but 
     # copies the original data before modifying it.
     
@@ -639,6 +790,11 @@ def _smooth2d(field, passes, outview=None):
 @cast_type(arg_idxs=(0,1,2))
 @extract_and_transpose()
 def _monotonic(var, lvprs, coriolis, idir, delta, icorsw, outview=None):
+    """Wrapper for wrf_monotonic.
+    
+    Located in wrf_vinterp.f90.
+    
+    """
     # If icorsw is not 0, then the input variable might get modified by the 
     # fortran routine.  We don't want this, so make a copy and pass that on.
     var = var.copy(order="A") if icorsw != 0 else var
@@ -667,7 +823,11 @@ def _monotonic(var, lvprs, coriolis, idir, delta, icorsw, outview=None):
 def _vintrp(field, pres, tk, qvp, ght, terrain, sfp, smsfp,
             vcarray, interp_levels, icase, extrap, vcor, logp,
             missing, outview=None):
+    """Wrapper for wrf_vintrp.
     
+    Located in wrf_vinterp.f90.
+    
+    """
     if outview is None:
         outdims = field.shape[0:2] + interp_levels.shape
         outview = np.empty(outdims, field.dtype, order="F")
@@ -698,12 +858,5 @@ def _vintrp(field, pres, tk, qvp, ght, terrain, sfp, smsfp,
         raise FortranError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
-    
-
-    
-    
-    
-    
-    
     
 

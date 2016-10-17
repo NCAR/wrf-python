@@ -65,8 +65,8 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "pres" : get_pressure,
              "wspd_wdir" : get_destag_wspd_wdir,
              "wspd_wdir10" : get_destag_wspd_wdir10,
-             "wspd_wdir_uvmet" : get_uvmet_wspd_wdir,
-             "wspd_wdir_uvmet10" : get_uvmet10_wspd_wdir,
+             "uvmet_wspd_wdir" : get_uvmet_wspd_wdir,
+             "uvmet10_wspd_wdir" : get_uvmet10_wspd_wdir,
              "ctt" : get_ctt,
              "cloudfrac" : get_cloudfrac
              }
@@ -108,8 +108,8 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "pressure" : ["units"],
              "wspd_wdir" : ["units"],
              "wspd_wdir10" : ["units"],
-             "wspd_wdir_uvmet" : ["units"],
-             "wspd_wdir_uvmet10" : ["units"],  
+             "uvmet_wspd_wdir" : ["units"],
+             "uvmet10_wspd_wdir" : ["units"],  
              "ctt" : [],
              "cloudfrac" : [],
              "default" : []
@@ -131,7 +131,9 @@ _ALIASES = {"cape_2d" : "cape2d",
             "updraft_helicity" : "uhel",
             "td" : "dp",
             "td2" : "dp2m",
-            "cfrac" : "cloudfrac"
+            "cfrac" : "cloudfrac",
+            "wspd_wdir_uvmet" : "uvmet_wspd_wdir",
+            "wspd_wdir_uvmet10" : "uvmet10_wspd_wdir"
             }
   
 class ArgumentError(Exception):
@@ -151,155 +153,134 @@ def _undo_alias(alias):
 def _check_kargs(var, kargs):
     for arg in viewkeys(kargs):
         if arg not in _VALID_KARGS[var]:
-            raise ArgumentError("'%s' is an invalid keyword "
+            raise ValueError("'%s' is an invalid keyword "
                           "argument for '%s'" % (arg, var))
               
   
-def getvar(wrfnc, varname, timeidx=0, 
+def getvar(wrfin, varname, timeidx=0, 
            method="cat", squeeze=True, cache=None, meta=True, 
-           **kargs):
+           **kwargs):
     
     """Returns basic diagnostics from the WRF ARW model output.
     
-    Below is a table of available diagnostics.
-    
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | Variable Name      | Description                                                   | Units               | Additional Keyword Arguments                                                                  |
-    +====================+===============================================================+=====================+===============================================================================================+
-    | avo                | Absolute Vorticity                                            | 10-5 s-1            |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | eth/theta_e        | Equivalent Potential Temperature                              | K                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | cape_2d            | 2D cape (mcape/mcin/lcl/lfc)                                  | J/kg / J/kg / m / m | missing: Fill value for output only (float)                                                   |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | cape_3d            | 3D cape and cin                                               | J/kg                | missing: Fill value for output only (float)                                                   |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | ctt                | Cloud Top Temperature                                         | C                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | cloudfrac          | Cloud Fraction                                                | %                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | dbz                | Reflectivity                                                  | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
-    |                    |                                                               |                     | do_liqskin : Set to True to enable liquid skin calculation. Default is False.                 |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | mdbz               | Maximum Reflectivity                                          | dBz                 | do_variant: Set to True to enable variant calculation. Default is False.                      |
-    |                    |                                                               |                     | do_liqskin: Set to True to enable liquid skin calculation. Default is False.                  |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | geopt/geopotential | Full Model Geopotential                                       | m2 s-2              |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | helicity           | Storm Relative Helicity                                       | m-2/s-2             | top: The top level for the calculation in meters (float). Default is 3000.0.                  |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | lat                | Latitude                                                      | decimal degrees     |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | lon                | Longitude                                                     | decimal degrees     |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | omg/omega          | Omega                                                         | Pa/s                |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | p/pres             | Full Model Pressure                                           | Pa                  |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | pressure           | Full Model Pressure                                           | hPa                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | pvo                | Potential Vorticity                                           | PVU                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | pw                 | Precipitable Water                                            | kg m-2              |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | rh2                | 2m Relative Humidity                                          | %                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | slp                | Sea Level Pressure                                            | hPa                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | ter                | Model Terrain Height                                          | m                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | td2                | 2m Dew Point Temperature                                      | C                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | td                 | Dew Point Temperature                                         | C                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | tc                 | Temperature                                                   | C                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | th/theta           | Potential Temperature                                         | K                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | tk                 | Temperature                                                   | K                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | times              | Times in the File or Sequence                                 |                     |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | tv                 | Virtual Temperature                                           | K                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | twb                | Wet Bulb Temperature                                          | K                   |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | updraft_helicity   | Updraft Helicity                                              | m-2/s-2             | bottom: The bottom level for the calculation in meters (float). Default is 2000.0.            |                                                              
-    |                    |                                                               |                     | top: The top level for the calculation in meters (float). Default is 5000.0.                  |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | ua                 | U-component of Wind on Mass Points                            | m/s                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | va                 | V-component of Wind on Mass Points                            | m/s                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | wa                 | W-component of Wind on Mass Points                            | m/s                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | uvmet10            | 10 m U and V Components of Wind Rotated to Earth Coordinates  | m/s                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | uvmet              | U and V Components of Wind Rotated to Earth Coordinates       | m/s                 |                                                                                               |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
-    | z/height           | Full Model Height                                             | m                   | msl: Set to False to return AGL values. Otherwise, MSL.  Default is True.                     |
-    +--------------------+---------------------------------------------------------------+---------------------+-----------------------------------------------------------------------------------------------+
+    A table of all available diagnostics is below.
+       
+    .. include:: ../../_templates/product_table.txt
 
-
-    Parameters
-    ----------
-    wrfnc : `netCD4F.Dataset`, `Nio.NioFile`, or a sequence
-        Input WRF ARW NetCDF data as a `netCDF4.Dataset`, `Nio.NioFile` or an 
-        iterable sequence of the aforementioned types.
+    Args:
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
     
-    varname : str
-        The variable name.
+        varname (:obj:`str`) : The variable name.
         
-    timeidx : int or `wrf.ALL_TIMES`, optional
-        The desired time index.  This value can be a positive integer, 
-        negative integer, or `wrf.ALL_TIMES` (an alias for None) to return 
-        all times in the file or sequence.  The default is 0.
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
         
-    method : {'cat', 'join'}, optional
-        The aggregation method to use for sequences, either 'cat' or 'join'.  
-        'cat' combines the data along the Time index.  'join' is creates a new 
-        index for the file.  The default is 'cat'.
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
         
-    squeeze : {True, False}, optional
-        Set to False to prevent dimensions with a size of 1 from being removed
-        from the shape of the output.  Default is True.
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
         
-    cache : dict, optional
-        A dictionary of (varname, ndarray) which can be used to supply 
-        pre-extracted NetCDF variables to the computational routines.  This can 
-        be used to prevent the repeated variable extraction from large
-        sequences of data files.  Default is None.
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
         
-    meta : {True, False}, optional
-        Set to False to disable metadata and return `numpy.ndarray` instead of 
-        `xarray.DataArray`.  Default is True.
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        **kwargs: Optional keyword arguments for certain diagnostics.  
+            See table above.
         
    
-    Returns
-    -------
-    `xarray.DataArray` or `numpy.ndarray`
-        Returns the specified diagnostics output.  If xarray is enabled and 
-        the meta parameter is True, then the result will be an 
-        `xarray.DataArray` object.  Otherwise, the result will be a 
-        `numpy.ndarray` object with no metadata.
+    Returns:
     
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    
+    Raises:
+        :class:`ValueError`: Raised when an invalid diagnostic type or 
+            keyword argument is passed to the routine.
+        :class:`FortranError`: Raised when a problem occurs during a Fortran
+            calculation.
+            
+    See Also:
+    
+        :class:`numpy.ndarray`, :class:`xarray.DataArray`
+    
+        
+    Examples:
+        Using netCDF4
+        
+        .. code-block:: python
+        
+            from netCDF4 import Dataset
+            from wrf import getvar
+        
+            wrfnc = Dataset("wrfout_d02_2010-06-13_21:00:00")
+            slp = getvar(wrfnc, "slp")
+        
+        Using PyNIO
+        
+        .. code-block:: python
+            
+            from Nio import open_file
+            from wrf import getvar
+            
+            wrfnc = open_file("wrfout_d02_2010-06-13_21:00:00"+".nc", "r")
+            slp = getvar(wrfnc, "slp")
+            
+        Using Iterables:
+        
+        .. code-block:: python
+            
+            import os
+            from netCDF4 import Dataset
+            from wrf import getvar
+            
+            filedir = "/path/to/wrf/files"
+            wrfin = [Dataset(f) for f in os.listdir(filedir) 
+                    if f.startswith("wrfout_d02_")]
+                    
+            uvmet = getvar(wrfin, "uvmet", timeidx=3, units="kt")
+            
+        
     """
     
-    _key = get_id(wrfnc)
+    _key = get_id(wrfin)
     
-    wrfnc = get_iterable(wrfnc)
+    wrfin = get_iterable(wrfin)
     
-    if is_standard_wrf_var(wrfnc, varname) and varname != "Times":
-        return extract_vars(wrfnc, timeidx, varname, 
+    if is_standard_wrf_var(wrfin, varname) and varname != "Times":
+        return extract_vars(wrfin, timeidx, varname, 
                             method, squeeze, cache, meta, _key)[varname]
     elif varname == "Times":
         varname = "times"  # Diverting to the get_times routine
       
     actual_var = _undo_alias(varname)
     if actual_var not in _VALID_KARGS:
-        raise ArgumentError("'%s' is not a valid variable name" % (varname))
+        raise ValueError("'%s' is not a valid variable name" % (varname))
       
-    _check_kargs(actual_var, kargs)
-    return _FUNC_MAP[actual_var](wrfnc, timeidx, method, squeeze, cache, 
-                                 meta, _key, **kargs)
+    _check_kargs(actual_var, kwargs)
+    
+    return _FUNC_MAP[actual_var](wrfin, timeidx, method, squeeze, cache, 
+                                 meta, _key, **kwargs)
     

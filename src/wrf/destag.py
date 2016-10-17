@@ -8,14 +8,31 @@ from .metadecorators import set_destag_metadata
 @set_destag_metadata()
 @extract_and_transpose(do_transpose=False)
 def destagger(var, stagger_dim, meta=False):
-    """ De-stagger the variable.  
+    """Return the variable on the unstaggered grid.
     
-    Arguments:
-        - var is a numpy array for the variable 
-        - stagger_dim is the dimension of the numpy array to de-stagger 
-        (e.g. 0, 1, 2).  Note:  negative values are acceptable to choose
-        a dimensions from the right hand side (e.g. -1, -2, -3)
-        - meta - set to True to include 'var' metadata
+    This function destaggers the variable by taking the average of the 
+    values located on either side of the grid box. 
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A variable 
+            on a staggered grid.
+        
+        stagger_dim (:obj:`int`): The dimension index to destagger.
+            Negative values can be used to choose dimensions referenced 
+            from the right hand side (-1 is the rightmost dimension).
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+    
+    Returns:
+         
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`:
+        The destaggered variable.  If xarray is enabled and 
+        the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
     
     """
     var_shape = var.shape

@@ -57,30 +57,138 @@ _TIME_COORD_VARS = ("XTIME",)
 
 
 def is_time_coord_var(varname):
+    """Return True if the input variable name is a time coordinate.
+    
+    Args:
+    
+        varname (:obj:`str`): The input variable name.
+        
+    Returns:
+    
+        :obj:`bool`: True if the input variable is a time coordinate, 
+        otherwise False.
+    
+    """
     return varname in _TIME_COORD_VARS
 
 
-def get_coord_pairs(varname):
-    return _COORD_PAIR_MAP[varname]
+def get_coord_pairs(coord_varname):
+    """Return a :obj:`tuple` for the variable names of the coordinate pair used 
+    for the 2D curvilinear coordinate variable.
+    
+    For example, the 'XLAT' variable will have coordinate variables of 
+    ('XLAT', 'XLONG') since the 'XLAT' variable itself is two-dimensional. 
+    
+    Args:
+    
+        coord_varname (:obj:`strq): The coordinate variable name.
+        
+    Returns:
+    
+        :obj:`bool`: True if the time index is :data:`wrf.ALL_TIMES` or 
+        :obj:`None`, otherwise False.
+    
+    """
+    return _COORD_PAIR_MAP[coord_varname]
 
 
 def is_multi_time_req(timeidx):
+    """Return True if the requested time index is for :data:`wrf.ALL_TIMES` or 
+    :obj:`None`.
+    
+    Args:
+    
+        timeidx (:obj:`int`, :data:`wrf.ALL_TIMES`, or :obj:`None`): The 
+            requested time index.
+        
+    Returns:
+    
+        :obj:`bool`: True if the time index is :data:`wrf.ALL_TIMES` or 
+        :obj:`None`, otherwise False.
+    
+    """
     return timeidx is None
 
 
-def is_multi_file(wrfnc):
-    return (isinstance(wrfnc, Iterable) and not isstr(wrfnc))
+def is_multi_file(wrfin):
+    """Return True if the input argument is an iterable.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+    Returns:
+    
+        :obj:`bool`: True if the input is an iterable.  False if the input
+        is a single NetCDF file object.
+    
+    """
+    return (isinstance(wrfin, Iterable) and not isstr(wrfin))
 
 
-def has_time_coord(wrfnc):
-    return "XTIME" in wrfnc.variables
+def has_time_coord(wrfin):
+    """Return True if the input file or sequence contains the time 
+    coordinate variable.
+    
+    The time coordinate is named 'XTIME'.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+    Returns:
+    
+        :obj:`bool`: True if the input contains the time coordinate 
+        variable, False otherwise.
+    
+    """
+    return "XTIME" in wrfin.variables
 
 
-def is_mapping(wrfnc):
-    return isinstance(wrfnc, Mapping)
+def is_mapping(wrfin):
+    """Return True if the input file or sequence is a mapping type.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+    Returns:
+    
+        :obj:`bool`: True if the input is a mapping type, False otherwise.
+    
+    """
+    return isinstance(wrfin, Mapping)
 
 
 def _generator_copy(gen):
+    """Return a copy of a generator.
+    
+    This function instantiates a new generator object using the arguments
+    passed to the original.
+    
+    Args:
+    
+        gen (:class:`types.GeneratorType`): A generator object.
+        
+    Note:
+    
+        In order for this to work correctly, the generator cannot modify
+        the original construction arguments.
+        
+    Returns:
+    
+        :class:`types.GeneratorType`: A copy of the generator object.
+    
+    """
     funcname = gen.__name__
     try:
         argvals = getargvalues(gen.gi_frame)
@@ -125,17 +233,34 @@ class TestGen(object):
         return self.next()
 
 
-def latlon_coordvars(d):
+def latlon_coordvars(ncvars):
+    """Return the first found latitude and longitude coordinate names from a 
+    NetCDF variable dictionary.
+    
+    This function searches the dictionary structure for NetCDF variables
+    and returns the first found latitude and longitude coordinate
+    names (typically 'XLAT' and 'XLONG').
+    
+    Args:
+    
+        ncvars (:obj:`dict`): A NetCDF variable dictionary object.
+        
+    Returns:
+    
+        :obj:`tuple`: The latitude and longitude coordinate name pairs as 
+        (lat_coord_name, lon_coord_name).
+    
+    """
     lat_coord = None
     lon_coord = None
     
     for name in _LAT_COORDS:
-        if name in viewkeys(d):
+        if name in viewkeys(ncvars):
             lat_coord = name
             break
         
     for name in _LON_COORDS:
-        if name in viewkeys(d):
+        if name in viewkeys(ncvars):
             lon_coord = name
             break
         
@@ -143,16 +268,53 @@ def latlon_coordvars(d):
 
 
 def is_coordvar(varname):
+    """Returns True if the variable is a coordinate variable.
+    
+    Args:
+    
+        varname (:obj:`str`):  The variable name.
+        
+    Returns:
+    
+        :obj:`bool`: True if the variable is a coordinate variable, 
+        otherwise False.
+    
+    """
     return varname in _COORD_VARS
 
 
 class IterWrapper(Iterable):
-    """A wrapper class for generators and custom iterable classes which returns
-    a new iterator from the start of the sequence when __iter__ is called"""
+    """A wrapper class for generators and custom iterable classes that returns
+    a new iterator to the start of the sequence when 
+    :meth:`IterWrapper.__iter__` is called.
+    
+    If the wrapped object is a generator, a copy of the generator is 
+    constructed and returned when :meth:`IterWrapper.__iter__` is called.  
+    If the wrapped object is a custom type, then the :meth:`copy.copy` is 
+    called and a new instance is returned.  In both cases, the original 
+    iterable object is unchanged.
+    
+    Args:
+    
+        wrapped (an iterable object): Any iterable object that contains the 
+            *__iter__* method.
+            
+    Note:
+        
+        Do not increment the wrapped iterable outside of this wrapper.
+        
+    """
     def __init__(self, wrapped):
         self._wrapped = wrapped
         
     def __iter__(self):
+        """Return an iterator to the start of the sequence.  
+        
+        Returns:
+    
+        An iterator to the start of the sequence.
+        
+        """
         if isinstance(self._wrapped, GeneratorType):
             return _generator_copy(self._wrapped)
         else:
@@ -161,7 +323,22 @@ class IterWrapper(Iterable):
             
             
 def get_iterable(wrfseq):
-    """Returns a resetable iterable object."""
+    """Returns a resettable iterable object.  
+    
+    In this context, resettable means that when :meth:`object.__iter__` 
+    is called, the iterable returned always points to the first element
+    in the sequence, similar to how the list and tuple behave.
+    
+    Args:
+    
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+        
+    Returns:
+    
+        iterable: A resettable iterator object.
+    
+    """
     if not is_multi_file(wrfseq):
         return wrfseq
     else:
@@ -176,85 +353,165 @@ def get_iterable(wrfseq):
             if isinstance(wrfseq, dict):
                 return wrfseq
             else:
-                return dict(wrfseq) # generator/custom iterable class
+                return dict(wrfseq) # generator/custom iterable dict class
     
     
 # Helper to extract masked arrays from DataArrays that convert to NaN
-def npvalues(array_type):
-    if not isinstance(array_type, DataArray):
-        result = array_type
+def npvalues(array):
+    """Return the :class:`numpy.ndarray` contained in an 
+    :class:`xarray.DataArray` instance.
+    
+    If the :class:`xarray.DataArray` instance does not contain a *_FillValue* 
+    or *missing_value* attribute, then this routine simply returns the 
+    :attr:`xarray.DataArray.values` attribute.  If the 
+    :class:`xarray.DataArray` object contains a *_FillValue* or *missing_value* 
+    attribute, then this routine returns a :class:`numpy.ma.MaskedArray` 
+    instance, where the NaN values (used by xarray to represent missing data) 
+    are replaced with the fill value.
+     
+    If the object passed in to this routine is not an 
+    :class:`xarray.DataArray` instance, then this routine simply returns the
+    passed in object.  This is useful in situations where you do not know 
+    if you have an :class:`xarray.DataArray` or a :class:`numpy.ndarray` and 
+    simply want a :class:`numpy.ndarray` returned.  
+
+    Args:
+    
+        array (:class:`xarray.DataArray`, :class:`numpy.ndarray`, or any \
+        object): Can be any object type, but is generally 
+            used with :class:`xarray.DataArray` or :class:`numpy.ndarray`.
+        
+    Returns:
+    
+        :class:`numpy.ndarray` or :class:`numpy.ma.MaskedArray`: The 
+        extracted array or the *array* object if *array* is not a 
+        :class:`xarray.DataArray` object..
+    
+    """
+
+    try:
+        fill_value = array.attrs["_FillValue"]
+    except AttributeError:
+        result = array # Not a DataArray
+    except KeyError:
+        result = array.values # Does not have missing values
     else:
-        try:
-            fill_value = array_type.attrs["_FillValue"]
-        except KeyError:
-            result = array_type.values
-        else:
-            result = ma.masked_invalid(array_type.values, copy=False)
-            result.set_fill_value(fill_value)
+        result = ma.masked_invalid(array.values, copy=False)
+        result.set_fill_value(fill_value)
     
     return result
 
 
 # Helper utilities for metadata
 class either(object):
+    """A callable class that determines which variable is present in the 
+    file.  
+    
+    This is used in situations where the same variable type has different names
+    depending on the type of file used.  For example, in a WRF output file, 
+    'P' is used for pressure, whereas in a met_em file, pressure is named
+    'PRES'. 
+    
+    Methods:
+        
+        __call__(wrfin): Return the variable that is present in the file.
+             
+            Args:
+             
+                wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+                iterable): Input WRF ARW NetCDF 
+                    data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+                    or an iterable sequence of the aforementioned types. 
+        
+            Returns:
+    
+                :obj:`str`: The variable name that is present in the file.
+                 
+    Attributes:
+    
+        varnames (sequence): A sequence of possible variable names.
+    
+    """
     def __init__(self, *varnames):
+        """Initialize an :class:`either` object.
+        
+        Args:
+    
+            *varnames (sequence): A sequence of possible variable names.
+        
+        """
         self.varnames = varnames
     
-    def __call__(self, wrfnc):
-        if is_multi_file(wrfnc):
-            if not is_mapping(wrfnc):
-                wrfnc = next(iter(wrfnc))
+    def __call__(self, wrfin):
+        if is_multi_file(wrfin):
+            if not is_mapping(wrfin):
+                wrfin = next(iter(wrfin))
             else:
-                entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+                entry = wrfin[next(iter(viewkeys(wrfin)))]
                 return self(entry)
             
         for varname in self.varnames:
-            if varname in wrfnc.variables:
+            if varname in wrfin.variables:
                 return varname
         
         raise ValueError("{} are not valid variable names".format(
                                                             self.varnames))
-
-
-class combine_with(object):
-    # Remove remove_idx first, then insert_idx is applied to removed set
-    def __init__(self, varname, remove_dims=None, insert_before=None, 
-                 new_dimnames=None, new_coords=None):
-        self.varname = varname
-        self.remove_dims = remove_dims
-        self.insert_before = insert_before
-        self.new_dimnames = new_dimnames if new_dimnames is not None else []
-        self.new_coords = (new_coords if new_coords is not None 
-                           else OrderedDict())
-    
-    def __call__(self, var):
-        new_dims = list(var.dims)
-        new_coords = OrderedDict(var.coords)
-        
-        if self.remove_dims is not None:
-            for dim in self.remove_dims:
-                new_dims.remove(dim)
-                del new_coords[dim]
-        
-        if self.insert_before is not None:     
-            insert_idx = new_dims.index(self.insert_before)
-            new_dims = (new_dims[0:insert_idx] + self.new_dimnames + 
-                    new_dims[insert_idx:])
-        elif self.new_dimnames is not None:
-            new_dims = self.new_dimnames
-        
-        if self.new_coords is not None:
-            new_coords.update(self.new_coords)
-        
-        return new_dims, new_coords
     
     
 # This should look like:
 # [(0, (-3,-2)), # variable 1
 # (1, -1)] # variable 2
 class combine_dims(object):
+    """A callable class that mixes dimension sizes from different function 
+    arguments.  
+    
+    This callable object is used for determining the output size for the 
+    extension module functions.  The class is initialized with a sequence of 
+    pairs, where the first value is the function argument index.  The second 
+    value is the dimension index(es) to use.  The second value can be a 
+    single integer or a sequence if multiple dimensions are used.
+    
+    Methods:
+        
+        __call__(*args): Return a tuple with the combined dimension sizes.
+             
+            Args:
+             
+                *args: The function arguments from which to extract the 
+                    dimensions sizes.
+        
+            Returns:
+    
+                :obj:`tuple`:  The shape for the combined dimensions.
+                 
+    Attributes:
+    
+        pairs (sequence): A sequence representing how to combine the 
+            dimensions.
+        
+    Example:
+    
+        .. code-block:: python
+            
+            # Take the -3, and -2 dimension sizes from argument 0
+            # Then take the -1 dimension size from argument 1
+            pairs = [(0, (-3, -2), (1, -1)]
+            
+            combo = combine_dims(pairs)
+    
+    """
     
     def __init__(self, pairs):
+        """Initialize a :class:`combine_dims` object.
+        
+        Args:
+    
+            pairs (sequence): A sequence where each element is a pair 
+                (:obj:`tuple`), with the first element being the function 
+                argument index and the second value being either an integer
+                or sequence for the dimension size indexes to use.
+        
+        """
         self.pairs = pairs
     
     def __call__(self, *args):
@@ -272,7 +529,48 @@ class combine_dims(object):
     
   
 class from_var(object):
+    """A callable class that retrieves attributes from the function argument.
+    
+    If the function argument is not of type :class:`xarray.DataArray`, then 
+    None will be returned.
+    
+    It is assumed that the function has been wrapped using the :mod:`wrapt`
+    module.
+    
+    Methods:
+        
+        __call__(wrapped, *args, **kwargs): Return the attribute found in \
+        the function arguments.
+             
+            Args:
+                wrapped: The wrapped function, as used by the :mod:`wrapt`
+                    module.
+             
+                *args: The function arguments.
+                
+                **kwargs: The function keyword arguments.
+        
+            Returns:
+    
+                :obj:`object`: The requested attribute.
+                 
+    Attributes:
+    
+        varname (:obj:`str`): The variable name.
+        
+        attribute (:obj:`str`): The attribute name.
+    
+    """
     def __init__(self, varname, attribute):
+        """Initialize a :class:`from_var` object.
+        
+        Args:
+    
+            varname (:obj:`str`): The variable name.
+        
+            attribute (:obj:`str`): The attribute name.
+        
+        """
         self.varname = varname
         self.attribute = attribute
         
@@ -282,14 +580,41 @@ class from_var(object):
         var = None
         if vard is not None:
             var = vard[self.varname]
-            
-        if not isinstance(var, DataArray):
-            return None
         
-        return var.attrs.get(self.attribute, None)
+        try:
+            return var.attrs.get(self.attribute, None)  
+        except AttributeError:
+            return None
         
 
 def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
+    """Return True if the corner points have moved.
+    
+    This function is used to test for a moving domain, since the WRF output
+    does not set any flags in the file for this.  The test will be performed
+    for all time steps in the NetCDF file.
+
+    Args:
+    
+        wrfnc (:class:`netCDF4.Dataset` or :class:`Nio.NioFile`): A single 
+            NetCDF file object.
+            
+        first_ll_corner (:obj:`tuple`): A (latitude, longitude) pair for the
+            lower left corner found in the initial file.
+            
+        first_ur_corner (:obj:`tuple`): A (latitude, longitude) pair for the
+            upper right corner found in the initial file.
+            
+        latvar (:obj:`str`): The latitude variable name to use.
+        
+        lonvar (:obj:`str`: The longitude variable name to use.
+        
+        
+    Returns:
+    
+        :obj:`bool`:  True if the corner points have moved, False otherwise.
+    
+    """
     lats = wrfnc.variables[latvar][:]
     lons = wrfnc.variables[lonvar][:]
     
@@ -312,28 +637,66 @@ def _corners_moved(wrfnc, first_ll_corner, first_ur_corner, latvar, lonvar):
     return False
 
 
-def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"), 
+def is_moving_domain(wrfin, varname=None, latvar=either("XLAT", "XLAT_M"), 
                       lonvar=either("XLONG", "XLONG_M"), _key=None):
     
+    """Return True if the domain is a moving nest.
+    
+    This function is used to test for a moving domain, since the WRF output
+    does not set any flags in the file for this.  The test will be performed
+    for all files in any sequences and across all times in each file.
+    
+    This result is cached internally, so this potentially lengthy check is 
+    only done one time for any given *wrfin* parameter.
+
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        varname (:obj:`str`, optional): A specific NetCDF variable to test, 
+            which must contain a 'coordinates' attribute.  If unspecified,
+            The *latvar* and *lonvar* parameters are used.  Default is None. 
+            
+        first_ur_corner (:obj:`tuple`): A (latitude, longitude) pair for the
+            upper right corner found in the initial file.
+            
+        latvar (:obj:`str` or :class:`either`, optional): The latitude variable 
+            name.  Default is :class:`either('XLAT', 'XLAT_M')`.
+        
+        lonvar (:obj:`str` or :class:`either`, optional): The latitude variable 
+            name.  Default is :class:`either('XLAT', 'XLAT_M')`.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+        
+    Returns:
+    
+        :obj:`bool`:  True if the domain is a moving nest, False otherwise.
+    
+    """
+    
     if isinstance(latvar, either):
-        latvar = latvar(wrfseq)
+        latvar = latvar(wrfin)
         
     if isinstance(lonvar, either):
-        lonvar = lonvar(wrfseq)
+        lonvar = lonvar(wrfin)
         
     # In case it's just a single file
-    if not is_multi_file(wrfseq):
-        wrfseq = [wrfseq]
+    if not is_multi_file(wrfin):
+        wrfin = [wrfin]
     
     # Slow, but safe. Compare the corner points to the first item and see
-    # any move.  User iterator protocol in case wrfseq is not a list/tuple.
-    if not is_mapping(wrfseq):
-        wrf_iter = iter(wrfseq)
+    # any move.  User iterator protocol in case wrfin is not a list/tuple.
+    if not is_mapping(wrfin):
+        wrf_iter = iter(wrfin)
         first_wrfnc = next(wrf_iter)
     else:
         # Currently only checking the first dict entry.
-        dict_key = next(iter(viewkeys(wrfseq)))
-        entry = wrfseq[dict_key]
+        dict_key = next(iter(viewkeys(wrfin)))
+        entry = wrfin[dict_key]
         key = _key[dict_key] if _key is not None else None
         return is_moving_domain(entry, varname, latvar, lonvar, key)
     
@@ -405,6 +768,20 @@ def is_moving_domain(wrfseq, varname=None, latvar=either("XLAT", "XLAT_M"),
 
 
 def _get_global_attr(wrfnc, attr):
+    """Return the global attribute.
+
+    Args:
+    
+        wrfnc (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`): A single 
+            WRF NetCDF file object.
+            
+        attr (:obj:`str`): The attribute name. 
+        
+    Returns:
+    
+        :obj:`object`:  The global attribute.
+    
+    """
     val = getattr(wrfnc, attr, None)
     
     # PyNIO puts single values in to an array
@@ -414,41 +791,123 @@ def _get_global_attr(wrfnc, attr):
     return val
     
         
-def extract_global_attrs(wrfnc, attrs):
+def extract_global_attrs(wrfin, attrs):
+    """Return the global attribute(s).
+    
+    If the *wrfin* parameter is a sequence, then only the first element is
+    used, so the entire sequence must have the same global attributes.
+
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        attrs (:obj:`str`, sequence): The attribute name 
+            or a sequence of attribute names. 
+        
+    Returns:
+    
+        :obj:`dict`:  A mapping of attribute_name to value.
+    
+    """
     if isstr(attrs):
         attrlist = [attrs]
     else:
         attrlist = attrs
         
-    multifile = is_multi_file(wrfnc)
+    multifile = is_multi_file(wrfin)
     
     if multifile:
-        if not is_mapping(wrfnc):
-            wrfnc = next(iter(wrfnc))
+        if not is_mapping(wrfin):
+            wrfin = next(iter(wrfin))
         else:
-            entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+            entry = wrfin[next(iter(viewkeys(wrfin)))]
             return extract_global_attrs(entry, attrs)
         
-    return {attr:_get_global_attr(wrfnc, attr) for attr in attrlist}
+    return {attr:_get_global_attr(wrfin, attr) for attr in attrlist}
 
 
-def extract_dim(wrfnc, dim):
-    if is_multi_file(wrfnc):
-        if not is_mapping(wrfnc):
-            wrfnc = next(iter(wrfnc))
+def extract_dim(wrfin, dim):
+    """Return the dimension size for the specified dimension name.
+
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        dim (:obj:`str`): The dimension name.
+        
+    Returns:
+    
+        :obj:`int`:  The dimension size.
+    
+    """
+    if is_multi_file(wrfin):
+        if not is_mapping(wrfin):
+            wrfin = next(iter(wrfin))
         else:
-            entry = wrfnc[next(iter(viewkeys(wrfnc)))]
+            entry = wrfin[next(iter(viewkeys(wrfin)))]
             return extract_dim(entry, dim)
     
-    d = wrfnc.dimensions[dim]
+    d = wrfin.dimensions[dim]
     if not isinstance(d, int):
         return len(d) #netCDF4
     return d # PyNIO
         
         
 def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
-    """Dictionary combination creates a new left index for each key, then 
-    does a cat or join for the list of files for that key"""
+    """Return an array object from a mapping input.
+    
+    The resulting array is the combination of all sequences associated with 
+    each key in the dictionary. The leftmost dimension will be the keys. The
+    rightmost dimensions are the dimensions for the aggregated sequences of 
+    arrays, using either the 'cat' or 'join' *method* parameter value. 
+    If dictionaries are nested, then the outermost dictionary keys will be the
+    leftmost dimension, followed by each subsequent dictionary's keys.
+    
+    If the order of the keys (and leftmost dimension ordering) matters, it is 
+    recommended that an :class:`OrderedDict` be used instead of a normal 
+    dictionary.  Otherwise, the leftmost dimension will be ordered by the 
+    iteration order.
+    
+    Args:
+        
+        wrfdict (mapping): A mapping of key to an array or 
+            key to a sequence of arrays.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
     keynames = []
     numkeys = len(wrfdict)  
     
@@ -541,6 +1000,19 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
 
 
 def _find_coord_names(coords):
+    """Return the coordinate variables names found in a 
+    :attr:`xarray.DataArray.coords` mapping.
+    
+    Args:
+    
+        coords (mapping): A :attr:`xarray.DataArray.coords` mapping object.
+    
+    Returns:
+    
+        :obj:`tuple`: The latitude, longitude, and xtime variable names used
+        in the coordinate mapping.
+    
+    """
     try:
         lat_coord = [name for name in _COORD_VARS[0::2] if name in coords][0]
     except IndexError:
@@ -560,6 +1032,18 @@ def _find_coord_names(coords):
 
 
 def _find_max_time_size(wrfseq):
+    """Return the maximum number of times found in a sequence of 
+    WRF files.
+    
+    Args:
+    
+        wrfseq (sequence): A sequence of WRF NetCDF file objects.
+    
+    Returns:
+    
+        :obj:`int`: The maximum number of times found in a file.
+    
+    """
     wrf_iter = iter(wrfseq)
     
     max_times = 0
@@ -577,6 +1061,36 @@ def _find_max_time_size(wrfseq):
 
 def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile, 
                       _key):
+    """Return a :class:`xarray.DataArray` object for the desired variable in 
+    a single NetCDF file object. 
+    
+    Args:
+        
+        wrfnc (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`): A single 
+            WRF NetCDF file object.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        is_moving_domain (:obj:`bool`): A boolean type that indicates if the 
+            NetCDF file object came from a moving nest.
+            
+        is_multifile (:obj:`bool`): A boolean type that indicates if the NetCDF
+            file object came from a sequence.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray`:  An array object that contains metadata.
+    
+    """
     
     # Note:  wrfnc is always a single netcdf file object
     # is_moving_domain and is_multifile are arguments indicating if the 
@@ -742,11 +1256,40 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
     data_array = DataArray(data, name=varname, dims=dimnames, coords=coords,
                            attrs=attrs)
     
-    
     return data_array
 
 
 def _find_forward(wrfseq, varname, timeidx, is_moving, meta, _key):
+    """Find and return the array object within a sequence for a specific time 
+    index.
+    
+    Args:
+    
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int`): The desired time index. Must be positive.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
 
     wrf_iter = iter(wrfseq)
     comboidx = 0
@@ -776,6 +1319,39 @@ def _find_forward(wrfseq, varname, timeidx, is_moving, meta, _key):
 
 
 def _find_reverse(wrfseq, varname, timeidx, is_moving, meta, _key):
+    """Find and return the array object within a sequence for a specific time 
+    index.
+    
+    The sequence is searched in reverse.
+    
+    Args:
+    
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int`): The desired time index. Must be negative.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
+    
     try:
         revwrfseq = reversed(wrfseq)
     except TypeError:
@@ -813,14 +1389,90 @@ def _find_reverse(wrfseq, varname, timeidx, is_moving, meta, _key):
 
 
 def _find_arr_for_time(wrfseq, varname, timeidx, is_moving, meta, _key):
+    """Find and return the array object within a sequence for a specific time 
+    index.
+    
+    The sequence is searched in forward or reverse based on the time index
+    chosen.
+    
+    Args:
+    
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int`): The desired time index.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
     if timeidx >= 0:
         return _find_forward(wrfseq, varname, timeidx, is_moving, meta, _key)
     else:
         return _find_reverse(wrfseq, varname, timeidx, is_moving, meta, _key)
     
-    
-# TODO:  implement in C
+
 def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
+    """Return an array object from a sequence of files using the concatenate
+    method.
+    
+    The concatenate method aggregates all files in the sequence along the 
+    'Time' dimension, which will be the leftmost dimension.  No sorting is 
+    performed, so all files in the sequence must be sorted prior to calling
+    this method.
+    
+    
+    Args:
+        
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
     if is_moving is None:
         is_moving = is_moving_domain(wrfseq, varname, _key=_key)
     
@@ -1017,6 +1669,21 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
 
 
 def _get_numfiles(wrfseq):
+    """Return the number of files in the sequence.
+    
+    This function will first try to call the builtin :meth:`len` function, but
+    if that fails, the entire squence will be iterated over and counted.
+    
+    Args:
+    
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+    Returns:
+    
+        :obj:`int`: The number of files in the sequence.
+    
+    """
     try:
         return len(wrfseq)
     except TypeError:
@@ -1024,8 +1691,56 @@ def _get_numfiles(wrfseq):
         return sum(1 for _ in wrf_iter)
 
 
-# TODO:  implement in C
 def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
+    """Return an array object from a sequence of files using the join
+    method.
+    
+    The join method creates a new leftmost dimension for the file/sequence 
+    index.  In situations where there are multiple files with multiple times, 
+    and the last file contains less times than the previous files, the
+    remaining arrays will be arrays filled with missing values.  There are 
+    checks in place within the wrf-python algorithms to look for these missing
+    arrays, but be careful when calling compiled routines outside of
+    wrf-python.
+    
+    In general, join is rarely used, so the concatenate method should be used 
+    for most cases.
+    
+    Args:
+        
+        wrfseq (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
     if is_moving is None:
         is_moving = is_moving_domain(wrfseq, varname, _key=_key)
     multitime = is_multi_time_req(timeidx)
@@ -1256,12 +1971,72 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
     return outarr
 
 
-def combine_files(wrfseq, varname, timeidx, is_moving=None,
+def combine_files(wrfin, varname, timeidx, is_moving=None,
                   method="cat", squeeze=True, meta=True, 
                   _key=None):
+    """Combine and return an array object for the sequence of WRF output 
+    files.
+    
+    Two aggregation methodologies are available to combine the sequence:
+    
+        - 'cat': Concatenate the files along the 'Time' dimension.  The Time 
+        dimension will be the leftmost dimension.  No sorting is performed, 
+        so files must be properly ordered in the sequence prior to calling this
+        function.
+        
+        - 'join': Join the files by creating a new leftmost dimension for the 
+        file index. In situations where there are multiple files with 
+        multiple times, and the last file contains less times than the previous 
+        files, the remaining arrays will be arrays filled with missing values.  
+        There are checks in place within the wrf-python algorithms to look for 
+        these missing arrays, but be careful when calling compiled routines 
+        outside of wrf-python.
+    
+    
+    Args:
+        
+        wrfin (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
     
     # Handles generators, single files, lists, tuples, custom classes
-    wrfseq = get_iterable(wrfseq)
+    wrfseq = get_iterable(wrfin)
     
     # Dictionary is unique
     if is_mapping(wrfseq):
@@ -1277,11 +2052,62 @@ def combine_files(wrfseq, varname, timeidx, is_moving=None,
     return outarr.squeeze() if squeeze else outarr
 
 
-# Cache is a dictionary of already extracted variables
-def _extract_var(wrfnc, varname, timeidx, is_moving, 
+def _extract_var(wrfin, varname, timeidx, is_moving, 
                  method, squeeze, cache, meta, _key):
-    # Mainly used internally so variables don't get extracted multiple times,
-    # particularly to copy metadata.  This can be slow.
+    """Extract a variable from a NetCDF file object or a sequence of NetCDF
+    file objects.
+    
+    Args:
+        
+        wrfin (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varname (:obj:`str`) : The variable name.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: If xarray is 
+        enabled and the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+    
+    """
+
     if cache is not None:
         try:
             cache_var = cache[varname]
@@ -1294,80 +2120,258 @@ def _extract_var(wrfnc, varname, timeidx, is_moving,
             return cache_var
     
     multitime = is_multi_time_req(timeidx)
-    multifile = is_multi_file(wrfnc)
+    multifile = is_multi_file(wrfin)
     
     if is_time_coord_var(varname):
-        return extract_times(wrfnc, timeidx, method, squeeze, cache, 
+        return extract_times(wrfin, timeidx, method, squeeze, cache, 
                              meta, do_xtime=True)
     
     if not multifile:
         if xarray_enabled() and meta:
             if is_moving is None:
-                is_moving = is_moving_domain(wrfnc, varname, _key=_key)
-            result = _build_data_array(wrfnc, varname, timeidx, is_moving,
+                is_moving = is_moving_domain(wrfin, varname, _key=_key)
+            result = _build_data_array(wrfin, varname, timeidx, is_moving,
                                        multifile, _key)
         else:
             if not multitime:
-                result = wrfnc.variables[varname][timeidx,:]
+                result = wrfin.variables[varname][timeidx,:]
                 result = result[np.newaxis, :] # So that no squeeze works
             else:
-                result = wrfnc.variables[varname][:]
+                result = wrfin.variables[varname][:]
     else:
         # Squeeze handled in this routine, so just return it
-        return combine_files(wrfnc, varname, timeidx, is_moving, 
+        return combine_files(wrfin, varname, timeidx, is_moving, 
                              method, squeeze, meta, _key)
     
     return result.squeeze() if squeeze else result
 
 
-def extract_vars(wrfnc, timeidx, varnames, method="cat", squeeze=True, 
+def extract_vars(wrfin, timeidx, varnames, method="cat", squeeze=True, 
                  cache=None, meta=True, _key=None):
+    """Extract variables from a NetCDF file object or a sequence of NetCDF
+    file objects.
+    
+    Args:
+        
+        wrfin (iterable): An iterable type, which includes lists, tuples, 
+            dictionaries, generators, and user-defined classes.
+            
+        varnames (sequence of :obj:`str`) : A sequence of variable names.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        is_moving (:obj:`bool`): A boolean type that indicates if the 
+            sequence is a moving nest.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+            
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): Cache key for the coordinate variables. 
+            This is used for internal purposes only.  Default is None.
+            
+    Returns:
+    
+        :obj:`dict`: A mapping of variable name to an array object. If xarray 
+        is enabled and the *meta* parameter is True, then the array object will 
+        be a :class:`xarray.DataArray` object.  Otherwise, the array object 
+        will be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     if isstr(varnames):
         varlist = [varnames]
     else:
         varlist = varnames
     
-    return {var:_extract_var(wrfnc, var, timeidx, None,
+    return {var:_extract_var(wrfin, var, timeidx, None,
                              method, squeeze, cache, meta, _key)
             for var in varlist}
 
-# Python 3 compatability
+
 def npbytes_to_str(var):
+    """Return a :obj:`bytes` object for the raw character array.
+    
+    Args:
+    
+        var (:class:`numpy.ndarray`): An array of characters.
+        
+    Returns:
+        
+        :obj:`bytes`: A string of bytes.
+    
+    """
     return (bytes(c).decode("utf-8") for c in var[:])
 
 
 def _make_time(timearr):
+    """Return a :class:`datetime.datetime` object for the array of characters.
+    
+    Args:
+    
+        timearr (:class:`numpy.ndarray`): An array of characters.
+        
+    Returns:
+        
+        :class:`datetime.datetime`: A datetime object.
+    
+    """
     return dt.datetime.strptime("".join(npbytes_to_str(timearr)), 
                                 "%Y-%m-%d_%H:%M:%S")
 
 
-def _file_times(wrfnc, do_xtime):
+def _file_times(wrfin, do_xtime):
+    """Yield a time object for the times found in a sequence of files.
+    
+    If *do_xtime* to True, a :class:`datetime.datetime` object is yielded.  
+    Otherwise, a :obj:`float` object is yielded.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        do_xtime (:obj:`bool`): Set to True to parse the 'XTIME' variable 
+            instead of the 'Times' variable.
+        
+    Yields:
+        
+        :class:`datetime.datetime` or :obj:`float`: A 
+        :class:`datetime.datetime` object if *do_xtime* is False, 
+        otherwise a :obj:`float`.
+    
+    """
     if not do_xtime:
-        times = wrfnc.variables["Times"][:,:]
+        times = wrfin.variables["Times"][:,:]
         for i in py3range(times.shape[0]):
             yield _make_time(times[i,:])
     else:
-        xtimes = wrfnc.variables["XTIME"][:]
+        xtimes = wrfin.variables["XTIME"][:]
         for i in py3range(xtimes.shape[0]):
             yield xtimes[i]
     
 
-def _extract_time_map(wrfnc, timeidx, do_xtime, meta=False):
+def _extract_time_map(wrfin, timeidx, do_xtime, meta=False):
+    """Return a mapping of key to a sequence of time objects.
+    
+    This function is used when *wrfin* is a mapping.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence.
+            
+        do_xtime (:obj:`bool`): Set to True to parse the 'XTIME' variable 
+            instead of the 'Times' variable.
+            
+        meta (:obj:`bool`, optional): Set to False to disable metadata.
+        
+    Returns:
+        
+        :obj:`dict`: A mapping of key to a sequence of time objects.  If 
+        *meta* is True, the sequence will be of type :class:`xarray.DataArray`,
+        otherwise the sequence is :class:`numpy.ndarray`.
+    
+    """
     return {key : extract_times(wrfseq, timeidx, do_xtime, meta) 
-            for key, wrfseq in viewitems(wrfnc)}
+            for key, wrfseq in viewitems(wrfin)}
         
 
-def extract_times(wrfnc, timeidx, method="cat", squeeze=True, cache=None, 
+def extract_times(wrfin, timeidx, method="cat", squeeze=True, cache=None, 
                   meta=False, do_xtime=False):
-    if is_mapping(wrfnc):
-        return _extract_time_map(wrfnc, timeidx, do_xtime)
+    
+    """Return a sequence of time objects.
+    
+    If *do_xtime*  is False, the 'XTIME' variable is used and each time object 
+    is a :obj:`float`.  Otherwise, the 'Times' variable is used, and each 
+    time object is a :class:`datetime.datetime` object.  
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata.
+            
+        do_xtime (:obj:`bool`): Set to True to parse the 'XTIME' variable 
+            instead of the 'Times' variable.  Default is False.
+        
+    Returns:
+        
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: A sequence of time 
+        objects.  If *meta* is True, the sequence will be of type 
+        :class:`xarray.DataArray`, otherwise the sequence is 
+        :class:`numpy.ndarray`.
+    
+    """
+    if is_mapping(wrfin):
+        return _extract_time_map(wrfin, timeidx, do_xtime)
     
     multitime = is_multi_time_req(timeidx)
-    multi_file = is_multi_file(wrfnc)
+    multi_file = is_multi_file(wrfin)
     if not multi_file:
-        wrf_list = [wrfnc]
+        wrf_list = [wrfin]
     else:
-        wrf_list = wrfnc
+        wrf_list = wrfin
     
     try:
         if method.lower() == "cat":
@@ -1415,22 +2419,61 @@ def extract_times(wrfnc, timeidx, method="cat", squeeze=True, cache=None,
     return outarr
     
     
-def is_standard_wrf_var(wrfnc, var):
-    multifile = is_multi_file(wrfnc)
+def is_standard_wrf_var(wrfin, varname):
+    """Return True if the variable is a standard WRF variable and not a 
+    diagnostic.
+    
+    If *wrfin* is a sequence, only the first file is used.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        varname (:obj:`str`): The variable name.
+        
+    Returns:
+    
+        :obj:`bool`: True if the variable is a standard WRF variable,
+        otherwise False.
+    
+    """
+    multifile = is_multi_file(wrfin)
     if multifile:
-        if not is_mapping(wrfnc):
-            wrfnc = next(iter(wrfnc))
+        if not is_mapping(wrfin):
+            wrfin = next(iter(wrfin))
         else:
-            entry = wrfnc[next(iter(viewkeys(wrfnc)))]
-            return is_standard_wrf_var(entry, var)
+            entry = wrfin[next(iter(viewkeys(wrfin)))]
+            return is_standard_wrf_var(entry, varname)
                 
-    return var in wrfnc.variables
+    return varname in wrfin.variables
 
 
-def is_staggered(var, wrfnc):
-    we = extract_dim(wrfnc, "west_east")
-    sn = extract_dim(wrfnc, "south_north")
-    bt = extract_dim(wrfnc, "bottom_top")
+def is_staggered(wrfin, var):
+    """Return True if the variable is on a staggered grid.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        var (array): An array object which contains a :attr:`shape` 
+            attribute.
+            
+    Returns:
+    
+        :obj:`bool`: True if the variable is on a staggered grid, otherwise 
+        False.
+    
+    """
+    
+    we = extract_dim(wrfin, "west_east")
+    sn = extract_dim(wrfin, "south_north")
+    bt = extract_dim(wrfin, "bottom_top")
     
     if (var.shape[-1] != we or var.shape[-2] != sn or var.shape[-3] != bt):
         return True
@@ -1438,33 +2481,51 @@ def is_staggered(var, wrfnc):
     return False
 
 
-def get_left_indexes(ref_var, expected_dims):
-    """Returns the extra left side dimensions for a variable with an expected
-    shape.
+def get_left_indexes(var, expected_dims):
+    """Returns a tuple for the extra leftmost dimension sizes.
     
-    For example, if a 2D variable contains an additional left side dimension
-    for time, this will return the time dimension size.
+    For example, if an algorithm expects a 3 dimensional variable, but the 
+    variable includes an additional left dimension for Time, and 
+    this Time dimension has 3 values, then this function will return (3,).
+    
+    Args:
+    
+        var (array): An array object that contains the :attr:`ndim` 
+            and :attr:`shape` attributes.
+            
+        expected_dims (:obj:`int`): The expected number of dimensions (usually
+            for a computational algorithm).
+            
+    Returns:
+    
+        :obj:`tuple`: The shape for the extra leftmost dimensions.
     
     """
-    extra_dim_num = ref_var.ndim - expected_dims
+    extra_dim_num = var.ndim - expected_dims
     
     if (extra_dim_num == 0):
         return []
     
-    return tuple([ref_var.shape[x] for x in py3range(extra_dim_num)]) 
+    return tuple([var.shape[x] for x in py3range(extra_dim_num)]) 
 
 
 def iter_left_indexes(dims):
-    """A generator which yields the iteration tuples for a sequence of 
-    dimensions sizes.
+    """Yield the iteration tuples for a sequence of dimensions sizes.
     
-    For example, if an array shape is (3,3), then this will yield:
+    For example, if *dims* is (3,3), then this will yield:
     
     (0,0), (0,1), (1,0), (1,1)
     
-    Arguments:
+    This is primarily used to iterate over the leftmost index values.
     
-        - dims - a sequence of dimensions sizes (e.g. ndarry.shape)
+    Args:
+    
+        dims (indexable sequence): A sequence of dimension sizes.
+        
+    Yields:
+    
+        :obj:`tuple`: The leftmost indexing iteration sizes.
+        
     
     """
     arg = [py3range(dim) for dim in dims]
@@ -1473,6 +2534,27 @@ def iter_left_indexes(dims):
     
         
 def get_right_slices(var, right_ndims, fixed_val=0):
+    """Return an indexing tuple where the left dimensions are held to a 
+    fixed value and the right dimensions are set to slice objects.
+    
+    For example, if *var* is a 5D variable, and the desired indexing sequence 
+    for a numpy array is (0,0,0,:,:), then *right_ndims* should be set to 2 
+    and *fixed_val* set to 0.
+    
+    Args:
+    
+        var (:class:`numpy.ndarray`): A numpy array.
+        
+        right_ndims (:obj:`int`): The number of right dimensions to be sliced.
+        
+        fixed_val (:obj:`int`): The value to hold the left dimensions to.
+        
+    Returns:
+    
+        :obj:`tuple`: An indexing tuple that can be used to index a 
+        :class:`numpy.ndarray`.
+    
+    """
     extra_dim_num = var.ndim - right_ndims
     if extra_dim_num == 0:
         return [slice(None)] * right_ndims
@@ -1481,8 +2563,34 @@ def get_right_slices(var, right_ndims, fixed_val=0):
                  [slice(None)]*right_ndims)
 
 
-def get_proj_params(wrfnc, timeidx=0, varname=None):
-    proj_params = extract_global_attrs(wrfnc, attrs=("MAP_PROJ", 
+def get_proj_params(wrfin, timeidx=0, varname=None):
+    """Return a tuple of latitude, longitude, and projection parameters from 
+    a WRF output file object or a sequence of WRF output file objects.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+            
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence.  Default is 0.
+            
+        varname (:obj:`str`, optional): The variable name to extract the 
+            coordinate variable names from.  Default is None, which will 
+            use the default coordinate variable names ('XLAT', 'XLONG').
+            
+    Returns:
+    
+        :obj:`tuple`: A tuple of the latitude coordinate variable, 
+        longitude coordinate, and global projection attributes. 
+    
+    """
+    proj_params = extract_global_attrs(wrfin, attrs=("MAP_PROJ", 
                                                 "CEN_LAT", "CEN_LON",
                                                 "TRUELAT1", "TRUELAT2",
                                                 "MOAD_CEN_LAT", "STAND_LON", 
@@ -1495,25 +2603,49 @@ def get_proj_params(wrfnc, timeidx=0, varname=None):
     
     if varname is not None:
         if not is_coordvar(varname):
-            coord_names = getattr(wrfnc.variables[varname], 
+            coord_names = getattr(wrfin.variables[varname], 
                                   "coordinates").split()
             lon_coord = coord_names[0]
             lat_coord = coord_names[1]
         else:
             lat_coord, lon_coord = get_coord_pairs(varname)
     else:
-        lat_coord, lon_coord = latlon_coordvars(wrfnc.variables)
+        lat_coord, lon_coord = latlon_coordvars(wrfin.variables)
     
-    return (wrfnc.variables[lat_coord][time_idx_or_slice,:],
-            wrfnc.variables[lon_coord][time_idx_or_slice,:],
+    return (wrfin.variables[lat_coord][time_idx_or_slice,:],
+            wrfin.variables[lon_coord][time_idx_or_slice,:],
             proj_params)
         
 
 def from_args(func, argnames, *args, **kwargs):
-    """Parses the function args and kargs looking for the desired argument 
-    value. Otherwise, the value is taken from the default keyword argument 
-    using the arg spec.
+    """Return a mapping of argument name to value for the called function.
     
+    This function parses the function *args and **kwargs to obtain the desired 
+    argument value. If the argument has not been passed in, the value is taken 
+    from the default keyword argument value.
+    
+    This func is usually called from within a decorator.
+    
+    Note:
+    
+        This function currently does not work with functions that contain 
+        *args or **kwargs arguments.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function that is 
+            wrapped).
+            
+        argnames (iterable): An iterable sequence of argument names.
+        
+        *args: The positional arguments.
+        
+        **kwargs: The keyword arguments.
+        
+    Returns:
+    
+        :obj:`dict`: A mapping of argument name to argument value.
+        
     """
     if isstr(argnames):
         arglist = [argnames]
@@ -1533,6 +2665,30 @@ def from_args(func, argnames, *args, **kwargs):
 
 
 def _args_to_list2(func, args, kwargs):
+    """Return all of the function arguments, including defaults, as a list.
+    
+    The result can then be passed to the function via *result.  This version 
+    uses :meth:`inspect.argspec`, so is only applicable for Python 2.7.
+    
+    Note:
+    
+        This function currently does not work with functions that contain 
+        *args or **kwargs arguments.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function 
+            that is wrapped).
+            
+        args (:obj:`tuple`): The positional arguments.
+        
+        kwargs (:obj:`dict`):  The keyword arguments.
+        
+    Returns:
+    
+        :obj:`list`: A list of all argument values, including defaults.
+    
+    """
     argspec = getargspec(func) 
     
     # Build the full tuple with defaults filled in
@@ -1554,6 +2710,30 @@ def _args_to_list2(func, args, kwargs):
 
 
 def _args_to_list3(func, args, kwargs):
+    """Return all of the function arguments, including defaults, as a list.
+    
+    The result can then be passed to the function via *result.  This version 
+    uses :meth:`inspect.signature`, so is only applicable for Python 3.4+.
+    
+    Note:
+    
+        This function currently does not work with functions that contain 
+        *args or **kwargs arguments.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function 
+            that is wrapped).
+            
+        args (:obj:`tuple`): The positional arguments.
+        
+        kwargs (:obj:`dict`):  The keyword arguments.
+        
+    Returns:
+    
+        :obj:`list`: A list of all argument values, including defaults.
+    
+    """
     sig = signature(func)
     bound = sig.bind(*args, **kwargs)
     bound.apply_defaults()
@@ -1563,7 +2743,28 @@ def _args_to_list3(func, args, kwargs):
     
 # Note:  Doesn't allow for **kwargs or *args
 def args_to_list(func, args, kwargs):
-    """Converts the mixed args/kwargs to a single list of args"""
+    """Return all of the function arguments, including defaults, as a list.
+    
+    The result can then be passed to the function via *result.
+    Note:
+    
+        This function currently does not work with functions that contain 
+        *args or **kwargs arguments.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function 
+            that is wrapped).
+            
+        args (:obj:`tuple`): The positional arguments.
+        
+        kwargs (:obj:`dict`):  The keyword arguments.
+        
+    Returns:
+    
+        :obj:`list`: A list of all argument values, including defaults.
+    
+    """
     if version_info > (3,):
         _args_to_list = _args_to_list3
     else:
@@ -1573,6 +2774,33 @@ def args_to_list(func, args, kwargs):
     
 
 def _arg_location2(func, argname, args, kwargs):
+    """Return the function arguments as a single list along with the 
+    index within that list for a specified argument name.
+    
+    This function parses the args, kargs and signature looking for the 
+    location of *argname*, and returns a list containing all arguments, along 
+    with the argument location in that list.
+    
+    This function requires :meth:`inspect.getargspec`, so it is only 
+    applicable for Python 2.7.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function 
+            that is wrapped).
+            
+        argname (:obj:`str`): The argument name to locate.
+            
+        args (:obj:`tuple`): The positional arguments.
+        
+        kwargs (:obj:`dict`):  The keyword arguments.
+        
+    Returns:
+    
+        :obj:`tuple`: A tuple containing the list of all argument values along
+        with the index for location of *argname*.
+    
+    """
     argspec = getargspec(func)
         
     list_args = _args_to_list2(func, args, kwargs)
@@ -1587,6 +2815,33 @@ def _arg_location2(func, argname, args, kwargs):
 
 
 def _arg_location3(func, argname, args, kwargs):
+    """Return the function arguments as a single list along with the 
+    index within that list for a specified argument name.
+    
+    This function parses the args, kargs and signature looking for the 
+    location of *argname*, and returns a list containing all arguments, along 
+    with the argument location in that list.
+    
+    This function requires :meth:`inspect.signature`, so it is only 
+    applicable for Python 3.4 and higher.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function 
+            that is wrapped).
+            
+        argname (:obj:`str`): The argument name to locate.
+            
+        args (:obj:`tuple`): The positional arguments.
+        
+        kwargs (:obj:`dict`):  The keyword arguments.
+        
+    Returns:
+    
+        :obj:`tuple`: A tuple containing the list of all argument values along
+        with the index for location of *argname*.
+    
+    """
     sig = signature(func)
     params = list(sig.parameters.keys())
     
@@ -1601,10 +2856,28 @@ def _arg_location3(func, argname, args, kwargs):
     
     
 def arg_location(func, argname, args, kwargs):
-    """Parses the function args, kargs and signature looking for the desired 
-    argument location (either in args, kargs, or argspec.defaults), 
-    and returns a list containing representing all arguments in the 
-    correct order with defaults filled in.
+    """Return the function arguments as a single list along with the 
+    index within that list for a specified argument name.
+    
+    This function parses the args, kargs and signature looking for the 
+    location of *argname*, and returns a list containing all arguments, along 
+    with the argument location in that list.
+    
+    Args:
+    
+        func (function): The function to examine (usually the function 
+            that is wrapped).
+            
+        argname (:obj:`str`): The argument name to locate.
+            
+        args (:obj:`tuple`): The positional arguments.
+        
+        kwargs (:obj:`dict`):  The keyword arguments.
+        
+    Returns:
+    
+        :obj:`tuple`: A tuple containing the list of all argument values along
+        with the index for location of *argname*.
     
     """
     if version_info > (3,):
@@ -1616,16 +2889,44 @@ def arg_location(func, argname, args, kwargs):
 
 
 def psafilepath():
+    """Return the full path to the 'psadilookup.dat' file.
+    
+    The 'psadilookup.dat' file contains the lookup table for the cape 
+    routines.
+    
+    Returns:
+    
+        :obj:`str`:  The full path to the 'psadilookup.dat' file.
+    
+    """
     return os.path.join(os.path.dirname(__file__), "data", "psadilookup.dat")
 
 
-def get_id(seq):
-    if not is_mapping(seq):
-        return id(seq)
+def get_id(obj):
+    """Return the object id.
     
-    # For each key in the mapping, recurisvely call get_id until
+    The object id is used as a caching key for various routines.  If the
+    object type is a mapping, then the result will also be a 
+    mapping of each key to the object id for the value.  Otherwise, only the 
+    object id is returned.
+    
+    Args:
+    
+        obj (:obj:`object`): Any object type.
+        
+    Returns:
+    
+        :obj:`int` or :obj:`dict`: If the *obj* parameter is not a mapping, 
+        then the object id is returned.  Otherwise, a mapping of each 
+        key to the object id for the value is returned.
+    
+    """
+    if not is_mapping(obj):
+        return id(obj)
+    
+    # For each key in the mapping, recursively call get_id until
     # until a non-mapping is found
-    return {key : get_id(val) for key,val in viewitems(seq)}
+    return {key : get_id(val) for key,val in viewitems(obj)}
     
     
     

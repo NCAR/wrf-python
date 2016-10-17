@@ -1,3 +1,5 @@
+import os
+import sys
 import setuptools
 import numpy.distutils.core
  
@@ -25,10 +27,24 @@ ext1 = numpy.distutils.core.Extension(
 with open("src/wrf/version.py") as f: 
     exec(f.read())
 
-requirements = [
-    "numpy>=1.9.0",
-    "wrapt>=1.10"
-    ] 
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
+#on_rtd=True
+if on_rtd:
+    if sys.version_info < (3,3):
+        requirements = ["mock"]  # for python2 and python < 3.3
+    else:
+        requirements = []  # for >= python3.3
+    ext_modules = []
+
+else:
+    # Place install_requires into the text file "requirements.txt"
+    with open("requirements.txt") as f2:
+        requirements = f2.read().strip().splitlines()
+        
+        #if sys.version_info < (3,3):
+        #    requirements.append("mock")
+    ext_modules = [ext1]
+        
 
 numpy.distutils.core.setup( 
     author = "Bill Ladwig",
@@ -61,7 +77,7 @@ numpy.distutils.core.setup(
     name = "wrf",
     version =  __version__,
     packages = setuptools.find_packages("src"),
-    ext_modules = [ext1],
+    ext_modules = ext_modules,
     package_dir = {"" : "src"},
     #namespace_packages=["wrf"],
     # Note:  If this doesn't work, you need to add the file to MANIFEST

@@ -4,8 +4,28 @@ from __future__ import (absolute_import, division, print_function,
 from .constants import Constants, ConversionFactors
 
 
-# Handles unit conversions that only differ by multiplication factors
 def _apply_conv_fact(var, vartype, var_unit, dest_unit):
+    """Return the variable converted to different units using a conversion 
+    factor.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            variable.
+            
+        vartype (:obj:`str`): The type of variable.  Choices are: 'wind', 
+            'pressure', 'temp', or 'height'.
+            
+        var_unit (:obj:`str`): The variable's current units.
+        
+        dest_unit (:obj:`str`): The desired units.
+        
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The variable in
+        the desired units.  
+    
+    """
     if var_unit == dest_unit:
         return var
     
@@ -22,6 +42,21 @@ def _apply_conv_fact(var, vartype, var_unit, dest_unit):
 
 
 def _to_kelvin(var, var_unit):
+    """Return the variable in Kelvin.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            variable.
+            
+        var_unit (:obj:`str`): The variable's current units.
+        
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The variable in 
+        Kelvin.
+    
+    """
     if var_unit == "c":
         return var + Constants.CELKEL
     elif var_unit == "f":
@@ -29,15 +64,58 @@ def _to_kelvin(var, var_unit):
     
     
 def _k_to_c(var):
+    """Return the variable in Celsius.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            variable in units of Kelvin.
+        
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The variable in 
+        Celsius.
+    
+    """
     return var - Constants.CELKEL
 
 
 def _k_to_f(var):
+    """Return the variable in Fahrenheit.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            variable in units of Kelvin.
+        
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The variable in 
+        Fahrenheit.
+    
+    """
     return 1.8 * _k_to_c(var) + 32.0
 
 
-# Temperature is a more complicated operation so requires functions
 def _apply_temp_conv(var, var_unit, dest_unit):
+    """Return the variable converted to different units using a temperature
+    conversion algorithm.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            variable.
+            
+        var_unit (:obj:`str`): The variable's current units.
+        
+        dest_unit (:obj:`str`): The desired units.
+        
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The variable in
+        the desired units.  
+    
+    """
     if dest_unit == var_unit:
         return var
     
@@ -51,6 +129,7 @@ def _apply_temp_conv(var, var_unit, dest_unit):
         return (_TEMP_CONV_METHODS[dest_unit])(var)
     
 
+# A mapping of unit names to their dictionary key names
 _UNIT_ALIASES = {"mps" : "m s-1",
                  "m/s" : "m s-1",
                  "ms-1" : "m s-1",
@@ -148,24 +227,28 @@ _UNIT_ALIASES = {"mps" : "m s-1",
     
     }
 
+# A mapping of unit types to the avaible units
 _VALID_UNITS = {"wind" : ["m s-1", "kt", "mi h-1", "km h-1", "ft s-1"],
           "pressure" : ["pa", "hpa", "mb", "torr", "mmhg", "atm"],
           "temp" : ["k", "f", "c"],
           "height" : ["m", "km", "dm", "ft", "mi"]
           }
 
+# Conversion factor map for wind from base units
 _WIND_BASE_FACTORS = {"kt" : ConversionFactors.MPS_TO_KTS,
                 "km h-1" : ConversionFactors.MPS_TO_KMPH,
                 "mi h-1" : ConversionFactors.MPS_TO_MPH,
                 "ft s-1" : ConversionFactors.MPS_TO_FPS
             }
 
+# Conversion factor map to base units
 _WIND_TOBASE_FACTORS = {"kt" : 1.0/ConversionFactors.MPS_TO_KTS,
                         "km h-1" : 1.0/ConversionFactors.MPS_TO_KMPH,
                         "mi h-1" : 1.0/ConversionFactors.MPS_TO_MPH,
                         "ft s-1" : 1.0/ConversionFactors.MPS_TO_FPS
                         }
 
+# Conversion factor map for pressure from base units
 _PRES_BASE_FACTORS = {"hpa" : ConversionFactors.PA_TO_HPA,
                       "mb" : ConversionFactors.PA_TO_HPA,
                       "torr" : ConversionFactors.PA_TO_TORR,
@@ -173,6 +256,7 @@ _PRES_BASE_FACTORS = {"hpa" : ConversionFactors.PA_TO_HPA,
                       "atm" : ConversionFactors.PA_TO_ATM
                       }
 
+# Conversion factor map for pressure to base units
 _PRES_TOBASE_FACTORS = {"hpa" : 1.0/ConversionFactors.PA_TO_HPA,
                         "mb" : 1.0/ConversionFactors.PA_TO_HPA,
                         "torr" : 1.0/ConversionFactors.PA_TO_TORR,
@@ -180,24 +264,28 @@ _PRES_TOBASE_FACTORS = {"hpa" : 1.0/ConversionFactors.PA_TO_HPA,
                         "atm" : 1.0/ConversionFactors.PA_TO_ATM
                         }
 
+# Conversion factor map for height from base units
 _HEIGHT_BASE_FACTORS = {"km" : ConversionFactors.M_TO_KM,
                         "dm" : ConversionFactors.M_TO_DM,
                         "ft" : ConversionFactors.M_TO_FT,
                         "mi" : ConversionFactors.M_TO_MILES
                         }
 
+# Conversion factor map for height to base units
 _HEIGHT_TOBASE_FACTORS = {"km" : 1.0/ConversionFactors.M_TO_KM,
                         "dm" : 1.0/ConversionFactors.M_TO_DM,
                         "ft" : 1.0/ConversionFactors.M_TO_FT,
                         "mi" : 1.0/ConversionFactors.M_TO_MILES
                         }
 
+# Mapping of unit type to base unit type
 _BASE_UNITS = {"wind" : "m s-1",
                "pressure" : "pa",
                "temp" : "k",
                "height" : "m"
                }
 
+# A mapping of unit type to a mapping of to/from base conversion factors
 _CONV_FACTORS = {"wind" : {"to_dest" : _WIND_BASE_FACTORS,
                            "to_base" : _WIND_TOBASE_FACTORS},
                  "pressure" : {"to_dest" : _PRES_BASE_FACTORS,
@@ -206,11 +294,23 @@ _CONV_FACTORS = {"wind" : {"to_dest" : _WIND_BASE_FACTORS,
                              "to_base" : _HEIGHT_TOBASE_FACTORS}            
                  }
 
+# A mapping of temperature type to the conversion function
 _TEMP_CONV_METHODS = {"c" : _k_to_c,
                       "f" : _k_to_f
                       }
 
 def dealias_and_clean_unit(unit):
+    """Return the properly cleaned and dealiased unit name.
+    
+    Args:
+    
+        unit (:obj:`str`): The unit name.
+        
+    Returns:
+    
+        :obj:`str`: A unit name suitable for dictionary key lookups.
+    
+    """
     cleaned_unit = " ".join(unit.lower().split())
     dealiased = _UNIT_ALIASES.get(cleaned_unit, None)
     
@@ -218,12 +318,49 @@ def dealias_and_clean_unit(unit):
     
 
 def check_units(unit, unit_type):
+    """Raise an exception if the unit name is invalid.
+    
+    Args:
+        
+        unit (:obj:`str`):  The unit name.
+        
+        unit_type (:obj:`str`): The type of unit.
+        
+    Returns:
+    
+        None
+        
+    Raises:
+    
+        :class:`ValueError`: Raised when the unit name is invalid.
+    
+    """
     u_cleaned = dealias_and_clean_unit(unit)
     if u_cleaned not in _VALID_UNITS[unit_type]:
         raise ValueError("invalid unit type '%s'" % unit)
 
 
 def do_conversion(var, vartype, var_unit, dest_unit):
+    """Return the variable converted to different units.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            variable.
+            
+        vartype (:obj:`str`): The type of variable.  Choices are: 'wind', 
+            'pressure', 'temp', or 'height'.
+            
+        var_unit (:obj:`str`): The variable's current units.
+        
+        dest_unit (:obj:`str`): The desired units.
+        
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The variable in
+        the desired units.  
+    
+    """
     u_cleaned = dealias_and_clean_unit(dest_unit) 
     if vartype != "temp":
         return _apply_conv_fact(var, vartype, var_unit.lower(), u_cleaned)

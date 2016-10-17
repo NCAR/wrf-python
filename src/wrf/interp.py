@@ -20,135 +20,169 @@ from .pressure import get_pressure
 
 #  Note:  Extension decorator is good enough to handle left dims
 @set_interp_metadata("horiz")
-def interplevel(field3d, z, desiredlev, missing=Constants.DEFAULT_FILL, 
+def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL, 
                 meta=True):
-    """Interpolates a three-dimensional field specified pressure or 
-    height level.
+    """Return the three-dimensional field horizontally interpolated to a 
+    specified vertical level.
 
-    Parameters
-    ----------
-    field3d : `xarray.DataArray` or `numpy.ndarray`
-        A three-dimensional field.
+    Args:
     
-    z : `xarray.DataArray` or `numpy.ndarray`
-        A three-dimensional array for the vertical coordinate, typically 
-        pressure or height.  
+        field3d (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            three-dimensional field to interpolate, with the rightmost 
+            dimensions of nz x ny x nx.
+    
+        vert (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            three-dimensional array for the vertical coordinate, typically 
+            pressure or height. This array must have the same dimensionality
+            as *field3d*.
         
-    desiredlev : float
-        The desired vertical level.  Must be in the same units as the `z`
-        parameter.
+        desiredlev (:obj:`float`): The desired vertical level.  
+            Must be in the same units as the *vert* parameter.
         
-    missing : float
-        The fill value to use for the output.  
-        `Default is wrf.Constants.DEFAULT_FILL`.
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.Constants.DEFAULT_FILL`.
         
-    meta : {True, False}
-        Set to False to disable metadata and return `numpy.ndarray` instead of 
-        `xarray.DataArray`.  Default is True.
+        meta (:obj:`bool`): Set to False to disable metadata and return 
+            :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
         
-    Returns
-    -------
-    `xarray.DataArray` or `numpy.ndarray`
-        Returns the interpolated variable.  If xarray is enabled and 
-        the meta parameter is True, then the result will be an 
-        `xarray.DataArray` object.  Otherwise, the result will be a 
-        `numpy.ndarray` object with no metadata.
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        interpolated variable.  If xarray is enabled and 
+        the *meta* parameter is True, then the result will be an 
+        :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    Example:
+    
+        Interpolate Geopotential Height to 500 hPa
+    
+        .. code-block:: python
+        
+            from netCDF4 import Dataset
+            from wrf import getvar, interplevel
+        
+            wrfin = Dataset("wrfout_d02_2010-06-13_21:00:00")
+            
+            p = getvar(wrfin, "pressure")
+            ht = getvar(wrfin, "z", units="dm")
+            
+            ht_500 = interplevel(ht, p, 500.0)
+        
     
     """
     # Some fields like uvmet have an extra left dimension for the product
     # type, we'll handle that iteration here.
-    multi = True if field3d.ndim - z.ndim == 1 else False
+    multi = True if field3d.ndim - vert.ndim == 1 else False
     
     if not multi:
-        result = _interpz3d(field3d, z, desiredlev, missing)
+        result = _interpz3d(field3d, vert, desiredlev, missing)
     else:
         outshape = field3d.shape[0:-3] + field3d.shape[-2:]
         result = np.empty(outshape, dtype=field3d.dtype)
             
         for i in py3range(field3d.shape[0]):
             result[i,:] = (
-                _interpz3d(field3d[i,:], z, desiredlev, missing)[:])
+                _interpz3d(field3d[i,:], vert, desiredlev, missing)[:])
             
     return ma.masked_values (result, missing)
 
 
 @set_interp_metadata("cross")
-def vertcross(field3d, z, missing=Constants.DEFAULT_FILL, 
+def vertcross(field3d, vert, missing=Constants.DEFAULT_FILL, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
               latlon=False, cache=None, meta=True):
-    """Return the vertical cross section for a 3D field, interpolated 
-    to a vertical plane defined by a horizontal line.
+    """Return the vertical cross section for a three-dimensional field.
     
-    The horizontal line is defined by either including the 
-    `pivot_point` and `angle` parameters, or the `start_point` and 
-    `end_point` parameters.
+    The cross section is defined by a horizontal line through the domain.  
+    This horizontal line is defined by either including the 
+    *pivot_point* and *angle* parameters, or the *start_point* and 
+    *end_point* parameters.
     
-    Parameters
-    ----------
-    field3d : `xarray.DataArray` or `numpy.ndarray`
-        A three-dimensional field.
-        
-    z : `xarray.DataArray` or `numpy.ndarray`
-        A three-dimensional array for the vertical coordinate, typically 
-        pressure or height
+    The vertical levels for the cross section are fixed, and are determined by 
+    dividing the vertical coordinate in to grid boxes of roughly 1% of the 
+    maximum vertical distance from top to bottom.  If all vertical levels are 
+    desired, use the lower level :meth:`wrf.interp2dxy` function.
     
-    pivot_point : tuple or list, optional
-        A tuple or list with two entries, in the form of [x, y] 
-        (or [west_east, south_north]), which indicates the x,y location 
-        through which the plane will pass.  Must also specify `angle`.
+    See Also:
     
-    angle : float, optional
-        Only valid for cross sections where a plane will be plotted through 
-        a given point on the model domain. 0.0 represents a S-N cross section 
-        and 90.0 a W-E cross section. 
+        :meth:`wrf.interp2dxy`
+    
+    Args:
+    
+        field3d (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            three-dimensional field to interpolate, whose 
+            rightmost dimensions are nz x ny x nx.
+            
+        vert (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            three-dimensional variable for the vertical coordinate, typically 
+            pressure or height. This array must have the same dimensionality
+            as *field3d*
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.Constants.DEFAULT_FILL`.
         
-    start_point : tuple or list, optional
-        A tuple or list with two entries, in the form of [x, y] 
-        (or [west_east, south_north]), which indicates the start x,y location 
-        through which the plane will pass.
+        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, 
+            in the form of [x, y] (or [west_east, south_north]), which 
+            indicates the x,y location through which the plane will pass.  
+            Must also specify `angle`.
         
-    end_point : tuple or list, optional
-        A tuple or list with two entries, in the form of [x, y] 
-        (or [west_east, south_north]), which indicates the end x,y location 
-        through which the plane will pass.
+        angle (:obj:`float`, optional): Only valid for cross sections where 
+            a plane will be plotted through 
+            a given point on the model domain. 0.0 represents a S-N cross 
+            section.  90.0 is a W-E cross section. 
+            
+        start_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the start 
+            x,y location through which the plane will pass.
+            
+        end_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the end x,y 
+            location through which the plane will pass.
+            
+        latlon (:obj:`bool`, optional): Set to True to also interpolate the 
+            two-dimensional latitude and longitude coordinates along the same 
+            horizontal line and include this information in the metadata 
+            (if enabled).  This can be helpful for plotting.  Default is False.
+            
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
         
-    latlon : {True, False}, optional
-        Set to True to also interpolate the two-dimensional latitude and 
-        longitude coordinates along the same horizontal line and include
-        this information in the metadata (if enabled).  This can be 
-        helpful for plotting.  Default is False.
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
         
-    cache : dict, optional
-        A dictionary of (varname, numpy.ndarray) pairs which can be used to 
-        supply pre-extracted NetCDF variables to the computational routines.  
-        This can be used to prevent the repeated variable extraction from large
-        sequences of data files.  Default is None.
-        
-    meta : {True, False}, optional
-        Set to False to disable metadata and return `numpy.ndarray` instead of 
-        `xarray.DataArray`.  Default is True.
-        
-    Returns
-    -------
-    `xarray.DataArray` or `numpy.ndarray`
-        Returns the interpolated variable.  If xarray is enabled and 
-        the meta parameter is True, then the result will be an 
-        `xarray.DataArray` object.  Otherwise, the result will be a 
-        `numpy.ndarray` object with no metadata.
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`:
+        The interpolated variable.  If xarray is enabled and 
+        the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
         
     """
     # Some fields like uvmet have an extra left dimension for the product
     # type, we'll handle that iteration here.
-    multi = True if field3d.ndim - z.ndim == 1 else False
+    multi = True if field3d.ndim - vert.ndim == 1 else False
     
     try:
         xy = cache["xy"]
         var2dz = cache["var2dz"]
         z_var2d = cache["z_var2d"]
     except (KeyError, TypeError):
-        xy, var2dz, z_var2d = get_xy_z_params(npvalues(z), pivot_point, angle,
-                                              start_point, end_point)
+        xy, var2dz, z_var2d = get_xy_z_params(npvalues(vert), pivot_point, 
+                                              angle, start_point, end_point)
     
     if not multi:
         result = _vertcross(field3d, xy, var2dz, z_var2d, missing)
@@ -170,55 +204,59 @@ def interpline(field2d, pivot_point=None,
                cache=None, meta=True):
     """Return the two-dimensional field interpolated along a line.
     
-    Parameters
-    ----------
-    field2d : `xarray.DataArray` or `numpy.ndarray`
-        A two-dimensional field.
+    Args:
     
-    pivot_point : tuple or list, optional
-        A tuple or list with two entries, in the form of [x, y] 
-        (or [west_east, south_north]), which indicates the x,y location 
-        through which the plane will pass.  Must also specify `angle`.
+        field2d (:class:`xarray.DataArray` or :class:`numpy.ndarray`):
+            A two-dimensional field.
     
-    angle : float, optional
-        Only valid for cross sections where a plane will be plotted through 
-        a given point on the model domain. 0.0 represents a S-N cross section 
-        and 90.0 a W-E cross section. 
+        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, 
+            in the form of [x, y] (or [west_east, south_north]), which 
+            indicates the x,y location through which the plane will pass.  
+            Must also specify `angle`.
         
-    start_point : tuple or list, optional
-        A tuple or list with two entries, in the form of [x, y] 
-        (or [west_east, south_north]), which indicates the start x,y location 
-        through which the plane will pass.
+        angle (:obj:`float`, optional): Only valid for cross sections where 
+            a plane will be plotted through 
+            a given point on the model domain. 0.0 represents a S-N cross 
+            section.  90.0 is a W-E cross section. 
+            
+        start_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the start 
+            x,y location through which the plane will pass.
+            
+        end_point (:obj:`tuple` or :obj:`list`, optional): A 
+            :obj:`tuple` or :obj:`list` with two entries, in the form of 
+            [x, y] (or [west_east, south_north]), which indicates the end x,y 
+            location through which the plane will pass.
+            
+        latlon (:obj:`bool`, optional): Set to True to also interpolate the 
+            two-dimensional latitude and longitude coordinates along the same 
+            horizontal line and include this information in the metadata 
+            (if enabled).  This can be helpful for plotting.  Default is False.
+            
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
         
-    end_point : tuple or list, optional
-        A tuple or list with two entries, in the form of [x, y] 
-        (or [west_east, south_north]), which indicates the end x,y location 
-        through which the plane will pass.
-        
-    latlon : {True, False}, optional
-        Set to True to also interpolate the two-dimensional latitude and 
-        longitude coordinates along the same horizontal line and include
-        this information in the metadata (if enabled).  This can be 
-        helpful for plotting.  Default is False.
-        
-    cache : dict, optional
-        A dictionary of (varname, numpy.ndarray) pairs which can be used to 
-        supply pre-extracted NetCDF variables to the computational routines.  
-        This can be used to prevent the repeated variable extraction from large
-        sequences of data files.  Default is None.
-        
-    meta : {True, False}, optional
-        Set to False to disable metadata and return `numpy.ndarray` instead of 
-        `xarray.DataArray`.  Default is True.
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
     
     
-    Returns
-    -------
-    `xarray.DataArray` or `numpy.ndarray`
-        Returns the interpolated variable.  If xarray is enabled and 
-        the meta parameter is True, then the result will be an 
-        `xarray.DataArray` object.  Otherwise, the result will be a 
-        `numpy.ndarray` object with no metadata.
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`:
+        The interpolated variable.  If xarray is enabled and 
+        the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
+        
         
     """
     
@@ -231,80 +269,92 @@ def interpline(field2d, pivot_point=None,
 
 
 @set_interp_metadata("vinterp")
-def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False, 
+def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False, 
             field_type=None, log_p=False, timeidx=0, method="cat", 
             squeeze=True, cache=None, meta=True):
     """Return the field vertically interpolated to the given the type of 
     surface and a set of new levels.
     
-    Parameters
-    ----------
-    wrfnc : `netCD4F.Dataset`, `Nio.NioFile`, or a sequence
-        Input WRF ARW NetCDF data as a `netCDF4.Dataset`, `Nio.NioFile` or an 
-        iterable sequence of the aforementioned types.
-        
-    field : `xarray.DataArray` or `numpy.ndarray`
-        A three-dimensional field.
-        
-    vert_coord : {'pressure', 'pres', 'p', 'ght_msl', 'ght_agl', 'theta', 'th', 'theta-e', 'thetae', 'eth'}
-        A string indicating the vertical coordinate type to interpolate to.
-        
-        Valid strings are: 
-            * 'pressure', 'pres', 'p': pressure [hPa]
-            * 'ght_msl': grid point height msl [km]
-            * 'ght_agl': grid point height agl [km]
-            * 'theta', 'th': potential temperature [K]
-            * 'theta-e', 'thetae', 'eth': equivalent potential temperature [K]
+    Args:
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`,\
+        or an iterable):
+            Input WRF ARW NetCDF data as a :class:`netCDF4.Dataset`, 
+            :class:`Nio.NioFile` or an iterable sequence of the 
+            aforementioned types.
             
-    interp_levels : sequence
-        A 1D sequence of vertical levels to interpolate to.
+        field (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+            three-dimensional field.
+            
+        vert_coord (:obj:`str`): A string indicating the vertical coordinate 
+            type to interpolate to.
+            
+            Valid strings are: 
+                * 'pressure', 'pres', 'p': pressure [hPa]
+                * 'ght_msl': grid point height msl [km]
+                * 'ght_agl': grid point height agl [km]
+                * 'theta', 'th': potential temperature [K]
+                * 'theta-e', 'thetae', 'eth': equivalent potential temperature \
+                [K]
+                
+        interp_levels (sequence): A 1D sequence of vertical levels to 
+            interpolate to.
+            
+        extrapolate (:obj:`bool`, optional): Set to True to extrapolate 
+            values below ground.  Default is False.
+            
+        field_type (:obj:`str`, optional): 
+            The type of field.  Default is None.
+            
+            Valid strings are:
+                * 'none': None
+                * 'pressure', 'pres', 'p': pressure
+                * 'z', 'ght': geopotential height
+                * 'tc': temperature [degC]
+                * 'tk': temperature [K]
+                * 'theta', 'th': potential temperature [K]
+                * 'theta-e', 'thetae', 'eth': equivalent potential temperature
+            
+        log_p (:obj:`bool`, optional): Use the log of the pressure for 
+            interpolation instead of pressure. Default is False.
+            
+        timeidx (:obj:`int`, optional):
+            The time index to use when extracting auxiallary variables used in 
+            the interpolation.  This value must be set to match the same value
+            used when the `field` variable was extracted.  Default is 0.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
         
-    extrapolate : {True, False}, optional
-        Set to True to extrapolate values below ground.  Default is False.
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
         
-    field_type : {'none', 'pressure', 'pres', 'p', 'z', 'tc', 'tk', 'theta', 'th', 'theta-e', 'thetae', 'eth', 'ght'}, optional
-        The type of field. Default is None.
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
         
-    log_p : {True, False}
-        Use the log of the pressure for interpolation instead of just pressure.
-        Default is False.
-        
-    timeidx : int, optional
-        The time index to use when extracting auxiallary variables used in 
-        the interpolation.  This value must be set to match the same value
-        used when the `field` variable was extracted.  Default is 0.
-        
-    method : {'cat', 'join'}, optional
-        The aggregation method to use for sequences, either 'cat' or 'join'.  
-        'cat' combines the data along the Time index. 'join' is creates a new 
-        index for the file.  This must be set to the same method used when 
-        extracting the `field` variable. The default is 'cat'.
-        
-    squeeze : {True, False}, optional
-        Set to False to prevent dimensions with a size of 1 from being removed
-        from the shape of the output.  Default is True.
-        
-    cache : dict, optional
-        A dictionary of (varname, ndarray) which can be used to supply 
-        pre-extracted NetCDF variables to the computational routines.  This can 
-        be used to prevent the repeated variable extraction from large
-        sequences of data files.  Default is None.
-        
-    meta : {True, False}, optional
-        Set to False to disable metadata and return `numpy.ndarray` instead of 
-        `xarray.DataArray`.  Default is True.
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
     
+    Returns:
     
-    Returns
-    -------
-    `xarray.DataArray` or `numpy.ndarray`
-        Returns the interpolated variable.  If xarray is enabled and 
-        the meta parameter is True, then the result will be an 
-        `xarray.DataArray` object.  Otherwise, the result will be a 
-        `numpy.ndarray` object with no metadata.
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`:
+        The interpolated variable.  If xarray is enabled and 
+        the *meta* parameter is True, then the result will be a 
+        :class:`xarray.DataArray` object.  Otherwise, the result will be a 
+        :class:`numpy.ndarray` object with no metadata.
         
     """
-    _key = get_id(wrfnc)
+    _key = get_id(wrfin)
     
     # Remove case sensitivity
     field_type = field_type.lower() if field_type is not None else "none"
@@ -341,7 +391,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         interp_levels = np.asarray(interp_levels, np.float64)
         
     # TODO: Check if field is staggered
-    if is_staggered(field, wrfnc):
+    if is_staggered(wrfin, field):
         raise RuntimeError("Please unstagger field in the vertical")
     
     # Check for valid coord
@@ -364,29 +414,29 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
     
     # Extract vriables
     #timeidx = -1 # Should this be an argument?
-    ncvars = extract_vars(wrfnc, timeidx, ("PSFC", "QVAPOR", "F"), 
+    ncvars = extract_vars(wrfin, timeidx, ("PSFC", "QVAPOR", "F"), 
                           method, squeeze, cache, meta=False, _key=_key)
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]
     coriolis = ncvars["F"]
     
-    terht = get_terrain(wrfnc, timeidx, units="m", 
+    terht = get_terrain(wrfin, timeidx, units="m", 
                         method=method, squeeze=squeeze, cache=cache,
                         meta=False, _key=_key)
-    t = get_theta(wrfnc, timeidx,  units="k", 
+    t = get_theta(wrfin, timeidx,  units="k", 
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
-    tk = get_temp(wrfnc, timeidx, units="k",  
+    tk = get_temp(wrfin, timeidx, units="k",  
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
-    p = get_pressure(wrfnc, timeidx, units="pa",  
+    p = get_pressure(wrfin, timeidx, units="pa",  
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
-    ght = get_height(wrfnc, timeidx, msl=True, units="m", 
+    ght = get_height(wrfin, timeidx, msl=True, units="m", 
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
-    ht_agl = get_height(wrfnc, timeidx, msl=False, units="m",
+    ht_agl = get_height(wrfin, timeidx, msl=False, units="m",
                         method=method, squeeze=squeeze, cache=cache,
                         meta=False, _key=_key)
     
@@ -427,7 +477,7 @@ def vinterp(wrfnc, field, vert_coord, interp_levels, extrapolate=False,
         idir = 1
         delta = 0.01
         
-        eth = get_eth(wrfnc, timeidx, method=method, squeeze=squeeze, 
+        eth = get_eth(wrfin, timeidx, method=method, squeeze=squeeze, 
             cache=cache, meta=False, _key=_key)
         
         p_hpa = p * ConversionFactors.PA_TO_HPA
