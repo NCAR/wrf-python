@@ -180,7 +180,8 @@ def _calc_xy(xdim, ydim, pivot_point=None, angle=None,
 
 
 def get_xy_z_params(z, pivot_point=None, angle=None,
-                    start_point=None, end_point=None):
+                    start_point=None, end_point=None,
+                    levels=None):
     """Return the cross section parameters.
     
     This function returns the xy horizontal cross section line coordinates, 
@@ -215,6 +216,10 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
             [x, y] (or [west_east, south_north]), which indicates the end x,y 
             location through which the plane will pass.
             
+        levels (sequence): A sequence of :obj:`float` for the desired
+            vertical levels in the output array.  If None, a fixed set of 
+            vertical levels is provided.  Default is None.
+            
     Returns:
     
         :obj:`tuple`:  A tuple containing the xy horizontal cross section  
@@ -234,22 +239,25 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
     idx1 = tuple([0]*extra_dim_num + [0,0])
     idx2 = tuple([0]*extra_dim_num + [-1,0])
     
-    #  interp to constant z grid
-    if(var2dz[idx1] > var2dz[idx2]):  # monotonically decreasing coordinate
-        z_max = floor(np.amax(z)/10) * 10     # bottom value
-        z_min = ceil(np.amin(z)/10) * 10      # top value
-        dz = 10
-        nlevels = int((z_max - z_min)/dz)
-        z_var2d = np.zeros((nlevels), dtype=z.dtype)
-        z_var2d[0] = z_max
-        dz = -dz
+    if levels is None:
+        #  interp to constant z grid
+        if(var2dz[idx1] > var2dz[idx2]):  # monotonically decreasing coordinate
+            z_max = floor(np.amax(z)/10) * 10     # bottom value
+            z_min = ceil(np.amin(z)/10) * 10      # top value
+            dz = 10
+            nlevels = int((z_max - z_min)/dz)
+            z_var2d = np.zeros((nlevels), dtype=z.dtype)
+            z_var2d[0] = z_max
+            dz = -dz
+        else:
+            z_max = np.amax(z)
+            z_min = 0.
+            dz = 0.01*z_max
+            nlevels = int(z_max/dz)
+            z_var2d = np.zeros((nlevels), dtype=z.dtype)
+            z_var2d[0] = z_min
     else:
-        z_max = np.amax(z)
-        z_min = 0.
-        dz = 0.01*z_max
-        nlevels = int(z_max/dz)
-        z_var2d = np.zeros((nlevels), dtype=z.dtype)
-        z_var2d[0] = z_min
+        z_var2d = np.asarray(levels)
     
     for i in py3range(1,nlevels):
         z_var2d[i] = z_var2d[0] + i*dz

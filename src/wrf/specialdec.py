@@ -13,7 +13,7 @@ if xarray_enabled():
     from xarray import DataArray
 
 
-def uvmet_left_iter_nocopy(alg_dtype=np.float64):
+def uvmet_left_iter(alg_dtype=np.float64):
     """A decorator to handle iterating over the leftmost dimensions for the 
     uvmet diagnostic.
     

@@ -440,7 +440,7 @@ def temp(pres, theta, meta=True, units="K"):
 def tk(pres, theta, meta=True):
     """Return the temperature in Kelvin.
     
-    This is an alias for :meth:`wrf.temp(pres, theta, meta, units='K'). This 
+    This is an alias for *wrf.temp(pres, theta, meta, units='K')*. This 
     function is here for users that are familiar with NCL's wrf_tk.
     
     This is the raw computational algorithm and does not extract any variables 
@@ -1181,7 +1181,7 @@ def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False,
             in [K] with same dimensionality as *pres*.
             
         qv (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Water vapor 
-            mixing ratio in [kg/kg] with the same dimensionality as *pres_hpa*.
+            mixing ratio in [kg/kg] with the same dimensionality as *pres*.
             
         qr (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Rain water 
             vapor mixing ratio in [kg/kg] with the same dimensionality as 

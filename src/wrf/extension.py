@@ -17,7 +17,7 @@ from .decorators import (left_iteration, cast_type,
                          extract_and_transpose, check_args)
 from .util import combine_dims, npbytes_to_str, psafilepath
 from .py3compat import py3range
-from .specialdec import (uvmet_left_iter_nocopy, cape_left_iter, 
+from .specialdec import (uvmet_left_iter, cape_left_iter, 
                          cloudfrac_left_iter)
 
 class FortranError(Exception):
@@ -360,7 +360,7 @@ def _eth(qv, tk, p, outview=None):
     return result
 
 
-@uvmet_left_iter_nocopy()
+@uvmet_left_iter()
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False, 

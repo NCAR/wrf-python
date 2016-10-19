@@ -90,7 +90,7 @@ def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
 
 
 @set_interp_metadata("cross")
-def vertcross(field3d, vert, missing=Constants.DEFAULT_FILL, 
+def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
               latlon=False, cache=None, meta=True):
@@ -101,10 +101,12 @@ def vertcross(field3d, vert, missing=Constants.DEFAULT_FILL,
     *pivot_point* and *angle* parameters, or the *start_point* and 
     *end_point* parameters.
     
-    The vertical levels for the cross section are fixed, and are determined by 
-    dividing the vertical coordinate in to grid boxes of roughly 1% of the 
-    maximum vertical distance from top to bottom.  If all vertical levels are 
-    desired, use the lower level :meth:`wrf.interp2dxy` function.
+    The vertical levels for the cross section are fixed if *levels* is not 
+    specified, and are determined by dividing the vertical coordinate in to 
+    grid boxes of roughly 1% of the maximum vertical distance from top to 
+    bottom.  Otherwise, the *levels*argument can be used to specify specific 
+    vertical levels.  If all vertical levels are desired, use the raw 
+    :meth:`wrf.interp2dxy` function.
     
     See Also:
     
@@ -120,6 +122,10 @@ def vertcross(field3d, vert, missing=Constants.DEFAULT_FILL,
             three-dimensional variable for the vertical coordinate, typically 
             pressure or height. This array must have the same dimensionality
             as *field3d*
+            
+        levels (sequence, optional): A sequence of :obj:`float` for the desired
+            vertical levels in the output array.  If None, a fixed set of 
+            vertical levels is provided.  Default is None.
             
         missing (:obj:`float`): The fill value to use for the output.  
             Default is :data:`wrf.Constants.DEFAULT_FILL`.
@@ -149,7 +155,7 @@ def vertcross(field3d, vert, missing=Constants.DEFAULT_FILL,
             two-dimensional latitude and longitude coordinates along the same 
             horizontal line and include this information in the metadata 
             (if enabled).  This can be helpful for plotting.  Default is False.
-            
+             
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 
             computational routines.  It is primarily used for internal 
@@ -182,7 +188,8 @@ def vertcross(field3d, vert, missing=Constants.DEFAULT_FILL,
         z_var2d = cache["z_var2d"]
     except (KeyError, TypeError):
         xy, var2dz, z_var2d = get_xy_z_params(npvalues(vert), pivot_point, 
-                                              angle, start_point, end_point)
+                                              angle, start_point, end_point,
+                                              levels)
     
     if not multi:
         result = _vertcross(field3d, xy, var2dz, z_var2d, missing)

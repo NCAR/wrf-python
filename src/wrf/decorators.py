@@ -32,12 +32,11 @@ def convert_units(unit_type, alg_unit):
     Returns:
     
         :class:`numpy.ndarray`: The wrapped function's output in the desired 
-            units.
+        units.
             
     """
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        
         desired_units = from_args(wrapped, "units", *args, **kwargs)["units"]
         u_cleaned = dealias_and_clean_unit(desired_units)
         check_units(u_cleaned, unit_type)
@@ -117,8 +116,8 @@ def left_iteration(ref_var_expected_dims,
             that indicate the wrapped function's keyword argument to use 
             as the output variable(s) in the wrapped function.
         
-        alg_dtype (:class:`np.dtype` or :obj:`str`): The numpy data type used 
-            in the wrapped function.
+        alg_dtype (:class:`numpy.dtype` or :obj:`str`): The numpy data type 
+            used in the wrapped function.
             
         cast_output (:obj:`bool`): Set to True to cast the wrapped function's 
             output to the same type as the reference variable.
@@ -271,7 +270,7 @@ def cast_type(ref_idx=0, arg_idxs=None, karg_names=None,
             arguments to cast.  Must be specified if *arg_idxs* is None. 
             Default is None.
             
-        alg_dtype (:class:`np.dtype` or :obj:`str`): The numpy data type used 
+        alg_dtype (:class:`numpy.dtype` or :obj:`str`): The numpy data type used 
             in the wrapped function.
             
         outviews (:obj:`str` or a sequence): A single key or sequence of keys 

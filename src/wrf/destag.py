@@ -24,7 +24,7 @@ def destagger(var, stagger_dim, meta=False):
         
         meta (:obj:`bool`, optional): Set to False to disable metadata and 
             return :class:`numpy.ndarray` instead of 
-            :class:`xarray.DataArray`.  Default is True.
+            :class:`xarray.DataArray`.  Default is False.
     
     Returns:
          

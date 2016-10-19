@@ -81,7 +81,7 @@ def get_coord_pairs(coord_varname):
     
     Args:
     
-        coord_varname (:obj:`strq): The coordinate variable name.
+        coord_varname (:obj:`str`): The coordinate variable name.
         
     Returns:
     
@@ -1980,17 +1980,17 @@ def combine_files(wrfin, varname, timeidx, is_moving=None,
     Two aggregation methodologies are available to combine the sequence:
     
         - 'cat': Concatenate the files along the 'Time' dimension.  The Time 
-        dimension will be the leftmost dimension.  No sorting is performed, 
-        so files must be properly ordered in the sequence prior to calling this
-        function.
+          dimension will be the leftmost dimension.  No sorting is performed, 
+          so files must be properly ordered in the sequence prior to calling 
+          this function.
         
         - 'join': Join the files by creating a new leftmost dimension for the 
-        file index. In situations where there are multiple files with 
-        multiple times, and the last file contains less times than the previous 
-        files, the remaining arrays will be arrays filled with missing values.  
-        There are checks in place within the wrf-python algorithms to look for 
-        these missing arrays, but be careful when calling compiled routines 
-        outside of wrf-python.
+          file index. In situations where there are multiple files with 
+          multiple times, and the last file contains less times than the 
+          previous files, the remaining arrays will be arrays filled with 
+          missing values. There are checks in place within the wrf-python 
+          algorithms to look for these missing arrays, but be careful when 
+          calling compiled routines outside of wrf-python.
     
     
     Args:
@@ -2506,13 +2506,13 @@ def get_left_indexes(var, expected_dims):
     if (extra_dim_num == 0):
         return []
     
-    return tuple([var.shape[x] for x in py3range(extra_dim_num)]) 
+    return var.shape[0:extra_dim_num] 
 
 
 def iter_left_indexes(dims):
     """Yield the iteration tuples for a sequence of dimensions sizes.
     
-    For example, if *dims* is (3,3), then this will yield:
+    For example, if *dims* is (2,2), then this will yield:
     
     (0,0), (0,1), (1,0), (1,1)
     
@@ -2526,7 +2526,6 @@ def iter_left_indexes(dims):
     
         :obj:`tuple`: The leftmost indexing iteration sizes.
         
-    
     """
     arg = [py3range(dim) for dim in dims]
     for idxs in product(*arg):
@@ -2620,16 +2619,16 @@ def get_proj_params(wrfin, timeidx=0, varname=None):
 def from_args(func, argnames, *args, **kwargs):
     """Return a mapping of argument name to value for the called function.
     
-    This function parses the function *args and **kwargs to obtain the desired 
-    argument value. If the argument has not been passed in, the value is taken 
-    from the default keyword argument value.
+    This function parses the function \*args and \*\*kwargs to obtain the \
+    desired argument value. If the argument has not been passed in, the value 
+    is taken from the default keyword argument value.
     
     This func is usually called from within a decorator.
     
     Note:
     
         This function currently does not work with functions that contain 
-        *args or **kwargs arguments.
+        \*args or \*\*kwargs arguments.
     
     Args:
     
@@ -2745,11 +2744,12 @@ def _args_to_list3(func, args, kwargs):
 def args_to_list(func, args, kwargs):
     """Return all of the function arguments, including defaults, as a list.
     
-    The result can then be passed to the function via *result.
+    The result can then be passed to the function via *result*.
+    
     Note:
     
         This function currently does not work with functions that contain 
-        *args or **kwargs arguments.
+        \*args or \*\*kwargs arguments.
     
     Args:
     
