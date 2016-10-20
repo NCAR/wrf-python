@@ -104,7 +104,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
     The vertical levels for the cross section are fixed if *levels* is not 
     specified, and are determined by dividing the vertical coordinate in to 
     grid boxes of roughly 1% of the maximum vertical distance from top to 
-    bottom.  Otherwise, the *levels*argument can be used to specify specific 
+    bottom.  Otherwise, the *levels* argument can be used to specify specific 
     vertical levels.  If all vertical levels are desired, use the raw 
     :meth:`wrf.interp2dxy` function.
     

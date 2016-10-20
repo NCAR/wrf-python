@@ -20,10 +20,10 @@ from .py3compat import py3range
 from .specialdec import (uvmet_left_iter, cape_left_iter, 
                          cloudfrac_left_iter)
 
-class FortranError(Exception):
-    """Raised when an error occurs in a Fortran routine."""
+class DiagnosticError(Exception):
+    """Raised when an error occurs in a diagnostic routine."""
     def __init__(self, message=None):
-        """Initialize a :class:`wrf.FortranError` objection.
+        """Initialize a :class:`wrf.DiagnosticError` objection.
         
         Args:
         
@@ -206,7 +206,7 @@ def _slp(z, t, p, q, outview=None):
                             errmsg=errmsg)
     
     if int(errstat) != 0:
-        raise FortranError("".join(npbytes_to_str(errmsg)).strip())
+        raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
 
@@ -465,7 +465,7 @@ def _wetbulb(p, tk, qv,  psafile=psafilepath(), outview=None):
                          errmsg)
     
     if int(errstat) != 0:
-        raise FortranError("".join(npbytes_to_str(errmsg)).strip())
+        raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
 
@@ -613,7 +613,7 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
                          errmsg)
     
     if int(errstat) != 0:
-        raise FortranError("".join(npbytes_to_str(errmsg)).strip())
+        raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
 
@@ -681,7 +681,7 @@ def _lltoxy(map_proj, truelat1, truelat2, stdlon,
                      errmsg)
     
     if int(errstat) != 0:
-        raise FortranError("".join(npbytes_to_str(errmsg)).strip())
+        raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
 
@@ -721,7 +721,7 @@ def _xytoll(map_proj, truelat1, truelat2, stdlon, lat1, lon1,
                      errmsg)
     
     if int(errstat) != 0:
-        raise FortranError("".join(npbytes_to_str(errmsg)).strip())
+        raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
 
@@ -855,7 +855,7 @@ def _vintrp(field, pres, tk, qvp, ght, terrain, sfp, smsfp,
                         errmsg)
     
     if int(errstat) != 0:
-        raise FortranError("".join(npbytes_to_str(errmsg)).strip())
+        raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
     
     return result
     

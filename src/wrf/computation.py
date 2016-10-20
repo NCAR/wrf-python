@@ -334,7 +334,7 @@ def slp(height, tkel, pres, qv, meta=True, units="hPa"):
             Geopotential height in [m] with the rightmost dimensions being 
             bottom_top x south_north x west_east.
             
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *height*.  
             
         pres (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Full 
@@ -382,8 +382,8 @@ def slp(height, tkel, pres, qv, meta=True, units="hPa"):
 
 @set_alg_metadata(3, "pres", description="temperature")
 @convert_units("temp", "k")
-def temp(pres, theta, meta=True, units="K"):
-    """Return the temperature in the specified units.
+def tk(pres, theta, meta=True, units="K"):
+    """Return the temperature.
     
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
@@ -435,59 +435,6 @@ def temp(pres, theta, meta=True, units="K"):
     """
     
     return _tk(pres, theta)
-
-
-def tk(pres, theta, meta=True):
-    """Return the temperature in Kelvin.
-    
-    This is an alias for *wrf.temp(pres, theta, meta, units='K')*. This 
-    function is here for users that are familiar with NCL's wrf_tk.
-    
-    This is the raw computational algorithm and does not extract any variables 
-    from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
-    diagnostic variables.
-    
-    Args: 
-            
-        pres (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Full 
-            pressure (perturbation + base state pressure) in [Pa] with at least
-            three dimensions.  The rightmost dimensions are bottom_top x 
-            south_north x west_east.  
-            
-            Note:
-            
-                This variable must be 
-                supplied as a :class:`xarray.DataArray` in order to copy the 
-                dimension names to the output.  Otherwise, default names will
-                be used.
-            
-        theta (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Potential
-            temperature (perturbation plus reference temperature) in [K] with
-            the same dimensionality as *pres*.
-            
-        meta (:obj:`bool`): Set to False to disable metadata and return 
-            :class:`numpy.ndarray` instead of 
-            :class:`xarray.DataArray`.  Default is True.
-    
-    Warning:
-    
-        The input arrays must not contain any missing/fill values or 
-        :data:`numpy.nan` values.
-        
-    Returns:
-        
-        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
-        temperature in Kelvin.  If xarray is enabled and 
-        the *meta* parameter is True, then the result will be an 
-        :class:`xarray.DataArray` object.  Otherwise, the result will 
-        be a :class:`numpy.ndarray` object with no metadata.
-    
-    See Also:
-    
-        :meth:`wrf.getvar`, :meth:`wrf.temp`
-    
-    """
-    return temp(pres, theta, meta, units="K")
 
 
 @set_alg_metadata(3, "pres", description="dew point temperature")
@@ -570,7 +517,7 @@ def rh(qv, pres, tkel, meta=True):
                 dimension names to the output.  Otherwise, default names will
                 be used.
             
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *qv*.
             
             Note:
@@ -816,7 +763,7 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
                 dimension names to the output.  Otherwise, default names will
                 be used.
             
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *pres_hpa*.
             
         qv (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Water vapor 
@@ -938,7 +885,7 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
                 dimension names to the output.  Otherwise, default names will
                 be used.
             
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *pres_hpa*.
             
         qv (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Water vapor 
@@ -1088,7 +1035,7 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
                 dimension names to the output.  Otherwise, default names will
                 be used.
         
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *pres_hpa*.
             
         qv (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Water vapor 
@@ -1177,7 +1124,7 @@ def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False,
                 dimension names to the output.  Otherwise, default names will
                 be used.
         
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *pres*.
             
         qv (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Water vapor 
@@ -1614,7 +1561,7 @@ def eth(qv, tkel, pres, meta=True, units="K"):
             mixing ratio in [kg/kg] that is at least three dimensions, with 
             the rightmost dimensions of bottom_top x south_north x west_east.
             
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *qv*.
             
             Note:
@@ -1682,7 +1629,7 @@ def wetbulb(pres, tkel, qv, meta=True, units="K"):
                 dimension names to the output.  Otherwise, default names will
                 be used.
                 
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with same dimensionality as *pres*.
     
         qv (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Water vapor 
@@ -1731,7 +1678,7 @@ def tvirtual(tkel, qv, meta=True, units="K"):
     
     Args: 
     
-        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Temperature
+        tkel (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Temperature
             in [K] with the rightmost dimensions as bottom_top x south_north 
             x west_east.
             

@@ -293,11 +293,6 @@ class IterWrapper(Iterable):
     If the wrapped object is a custom type, then the :meth:`copy.copy` is 
     called and a new instance is returned.  In both cases, the original 
     iterable object is unchanged.
-    
-    Args:
-    
-        wrapped (an iterable object): Any iterable object that contains the 
-            *__iter__* method.
             
     Note:
         
@@ -305,6 +300,14 @@ class IterWrapper(Iterable):
         
     """
     def __init__(self, wrapped):
+        """Initialize an :class:`wrf.IterWrapper` object.
+        
+        Args:
+    
+            wrapped (an iterable object): Any iterable object that contains the 
+                *__iter__* method.
+            
+        """
         self._wrapped = wrapped
         
     def __iter__(self):

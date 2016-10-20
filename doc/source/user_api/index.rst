@@ -1,8 +1,13 @@
 User API
 =============
 
+-----------------
+
+Routines
+------------------
+
 Diagnostic Routine
--------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The routine below is the primary routine for extracting variables from a 
 WRF-ARW NetCDF file (or sequence of files) and performing diagnostic 
@@ -16,7 +21,7 @@ calculations.
    
    
 Interpolation Routines
-----------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The routines below are the primary routines used for performing interpolation 
 calculations.  
@@ -29,15 +34,29 @@ calculations.
    wrf.vertcross
    wrf.interpline
    wrf.vinterp
+   
+Lat-Lon to/from XY Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The routines below are used for converting back and forth between xy-grid 
+space and latitude-longitude space.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.ll_to_xy
+   wrf.xy_to_ll
+   wrf.ll_to_xy_proj
+   wrf.xy_to_ll_proj
 
 
 Numpy Extraction Routine
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The routine below is used to extract a :class:`numpy.ndarray` from a 
 :class:`xarray.DataArray`.  This routine must be used before passing 
-the array object to a compiled extension.  Otherwise, unusually crashes
-may occur.
+the array object to a compiled extension.
 
 .. autosummary::
    :nosignatures:
@@ -47,7 +66,7 @@ may occur.
    
     
 Variable Extraction Routines
------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The routines below are primarily used internally by :meth:`wrf.getvar`, but 
 some users may find them useful to manually extract variables from a 
@@ -60,13 +79,12 @@ WRF NetCDF file (or a sequence of NetCDF files).
     wrf.extract_vars
     wrf.combine_files
     wrf.extract_dim
-    wrf.extract_extract_global_attrs
+    wrf.extract_global_attrs
     wrf.extract_times
     
    
-   
 Raw Diagnostic Routines
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The routines below can be used when working with variables that are not 
 contained in a WRF-ARW NetCDF file.  They can also be used with non-WRF data.
@@ -78,7 +96,6 @@ may vary when working with non-WRF data.  Also, the vast majority of these
 routines do not allow for missing values in any of the input arrays, so make 
 sure they are removed before calling these routines.
 
- 
 
 .. autosummary::
    :nosignatures:
@@ -89,7 +106,6 @@ sure they are removed before calling these routines.
    wrf.interp2dxy
    wrf.interpz3d
    wrf.slp
-   wrf.temp
    wrf.tk
    wrf.td
    wrf.rh
@@ -111,23 +127,40 @@ sure they are removed before calling these routines.
    wrf.pw
 
 
-CoordPair Class
-----------------------
+Configuration Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The class below is used for coordinate metadata. 
+The routines below are used to configure wrf-python by enabling or 
+disabling third party packages.  For the most part, these settings are 
+configured automatically based on the presence of a third party package.  
+However, disabling xarray can be useful when you want to turn off all metadata 
+in one place.
 
 .. autosummary::
    :nosignatures:
    :toctree: ./generated/
    
-   wrf.CoordPair
+   wrf.xarray_enabled
+   wrf.disable_xarray
+   wrf.enable_xarray
+   wrf.cartopy_enabled
+   wrf.disable_cartopy
+   wrf.enable_cartopy
+   wrf.basemap_enabled
+   wrf.disable_basemap
+   wrf.enable_basemap
+   wrf.pyngl_enabled
+   wrf.enable_pyngl
+   wrf.disable_pyngl
+   wrf.set_cache_size
+   wrf.get_cache_size
    
 
 Miscellaneous Routines
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The routines below are primarily used internally, but some users may find 
-them helpful.  
+them helpful for other purposes.  
 
 .. autosummary::
    :nosignatures:
@@ -152,6 +185,100 @@ them helpful.
    wrf.get_proj_params
    wrf.psafilepath
    wrf.get_id
+   wrf.getproj
+   wrf.cache_item
+   wrf.get_cached_item
+ 
+ 
+------------------------
+
+ 
+Classes
+----------------------
+
+Exceptions
+^^^^^^^^^^^^^^
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+
+   wrf.DiagnosticError
+   
+
+CoordPair Class
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The class below is used for storing coordinate metadata from routines that 
+use a single point for an (x, y) or (lat, lon) location. 
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.CoordPair
+   
+CoordPair Methods
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.CoordPair.latlon_str
+   wrf.CoordPair.xy_str
+ 
+   
+Projection Classes
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+The classes below are used to hold the projection information in the 
+'projection' entry within a :attr:`xarray.DataArray.attrs` attribute.
+
+Projection Base Class
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+The base class for all map projection types.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.WrfProj
+   
+Projection Base Class Methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The class methods for all projection types.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+
+   wrf.WrfProj.basemap
+   wrf.WrfProj.cartopy
+   wrf.WrfProj.cartopy_xlim
+   wrf.WrfProj.cartopy_ylim
+   wrf.WrfProj.pyngl
+   wrf.WrfProj.cf
+   wrf.WrfProj.proj4
+   
+   
+Projection Subclasses
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+See :class:`wrf.WrfProj` for methods and attributes.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+
+   wrf.NullProjection
+   wrf.LambertConformal
+   wrf.Mercator
+   wrf.PolarStereographic
+   wrf.LatLon
+   wrf.RotatedLatLon
    
    
    

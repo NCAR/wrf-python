@@ -67,6 +67,9 @@ extensions = [
 
 intersphinx_mapping = {
                        'matplotlib': ('http://matplotlib.org/', None),
+                       'basemap' : ('http://matplotlib.org/basemap/', None),
+                       'cartopy' : (
+                'http://scitools.org.uk/cartopy/docs/latest/index.html', None),
                        'python': ('http://docs.python.org/3/', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy/', None),
                        'xarray': ('http://xarray.pydata.org/en/stable/', None),

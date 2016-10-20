@@ -43,6 +43,7 @@ Thumbs.db
 *.project
 *.pydevproject
 doc/build
-doc/source/api/generated
+doc/source/internal_api/generated
+doc/source/user_api/generated
 test/ipynb/.ipynb_checkpoints
 

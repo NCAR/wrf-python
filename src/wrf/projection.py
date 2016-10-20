@@ -105,13 +105,13 @@ class WrfProj(object):
     
     Attributes:
     
-        ll_lat (:obj:`float): Lower left corner latitude.
+        ll_lat (:obj:`float`): Lower left corner latitude.
         
-        ll_lat (:obj:`float): Lower left corner longitude.
+        ll_lat (:obj:`float`): Lower left corner longitude.
         
-        ur_lat (:obj:`float): Upper right corner latitude.
+        ur_lat (:obj:`float`): Upper right corner latitude.
         
-        ur_lon (:obj:`float): Upper right corner longitude.
+        ur_lon (:obj:`float`): Upper right corner longitude.
         
         bottom_left (indexable sequence): A pair of (ll_lat, ll_lon).
         
