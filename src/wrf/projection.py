@@ -3,8 +3,10 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 import math
 
+from .coordpair import CoordPair
 from .config import basemap_enabled, cartopy_enabled, pyngl_enabled
 from .constants import Constants, ProjectionTypes
+from .projutils import dict_keys_to_upper
 
 if cartopy_enabled():
     from cartopy import crs
@@ -78,6 +80,7 @@ if cartopy_enabled():
             
             self._threshold = np.diff(self.x_limits)[0] / 720
 
+
 def _ismissing(val):
     """Return True if a value is None, greater than 90.0, or less than -90.
     
@@ -94,6 +97,7 @@ def _ismissing(val):
     
     """
     return val is None or val > 90. or val < -90.
+
 
 class WrfProj(object):
     """A base class for storing map projection information from WRF data.
@@ -116,6 +120,25 @@ class WrfProj(object):
         bottom_left (indexable sequence): A pair of (ll_lat, ll_lon).
         
         top_right (indexable sequence): A pair of (ur_lat, ur_lon).
+        
+        map_proj (:obj:`int`): Model projection integer id.
+        
+        truelat1 (:obj:`float`): True latitude 1.  
+        
+        truelat2 (:obj:`float`): True latitude 2.  
+        
+        moad_cen_lat (:obj:`float`): Mother of all domains center latitude.
+        
+        stand_lon (:obj:`float`): Standard longitude. 
+        
+        pole_lat (:obj:`float`): The pole latitude.
+        
+        pole_lon (:obj:`float`): The pole longitude.
+        
+        dx (:obj:`float`): The x grid spacing.
+        
+        dy (:obj:`float`): The y grid spacing.
+          
     
     """
     def __init__(self, bottom_left=None, top_right=None, 
@@ -124,13 +147,13 @@ class WrfProj(object):
         
         Args:
         
-            bottom_left (indexable sequence, optional): The lower left corner 
-                as a (latitude, longitude) pair. Must also specify *top_right* 
-                if used.  Default is None.
+            bottom_left (:class:`wrf.CoordPair`, optional): The lower left 
+                corner. Must also specify *top_right* if used.  
+                Default is None.
                 
-            top_right (indexable sequence): The upper right corner as a 
-                (latitude, longitude) pair.  Must also specify *bottom_left*
-                if used.  Default is None.
+            top_right (:class:`wrf.CoordPair`, optional): The upper right 
+                corner. Must also specify *bottom_left* if used.  
+                Default is None.
                 
             lats (:class:`numpy.ndarray`, optional): An array of at least 
                 two dimensions containing all of the latitude values.  Must 
@@ -142,11 +165,9 @@ class WrfProj(object):
                 
             **proj_params:  Map projection optional keyword arguments, that
                 have the same names as found in WRF output NetCDF global 
-                attributes:
+                attributes (case insensitive):
                 
                 - 'MAP_PROJ': The map projection type as an integer.
-                - 'CEN_LAT': Center latitude.
-                - 'CEN_LON': Center longitude.
                 - 'TRUELAT1': True latitude 1.
                 - 'TRUELAT2': True latitude 2.
                 - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -157,10 +178,10 @@ class WrfProj(object):
         """
         
         if bottom_left is not None and top_right is not None:
-            self.ll_lat = bottom_left[0]
-            self.ll_lon = bottom_left[1]
-            self.ur_lat = top_right[0]
-            self.ur_lon = top_right[1]
+            self.ll_lat = bottom_left.lat
+            self.ll_lon = bottom_left.lon
+            self.ur_lat = top_right.lat
+            self.ur_lon = top_right.lon
             self.bottom_left = bottom_left
             self.top_right = top_right
         elif lats is not None and lons is not None:
@@ -168,24 +189,33 @@ class WrfProj(object):
             self.ur_lat = lats[-1,-1]
             self.ll_lon = lons[0,0]
             self.ur_lon = lons[-1,-1]
-            self.bottom_left = [self.ll_lat, self.ll_lon]
-            self.top_right = [self.ur_lat, self.ur_lon]
+            self.bottom_left = CoordPair(lat=self.ll_lat, lon=self.ll_lon)
+            self.top_right = CoordPair(self.ur_lat, self.ur_lon)
         else:
             raise ValueError("invalid corner point arguments")
         
+        
+        up_proj_params = dict_keys_to_upper(proj_params)
+        
+        self.map_proj = up_proj_params.get("MAP_PROJ", None)
+        
         # These indicate the center of the nest/domain, not necessarily the 
         # center of the projection
-        self._cen_lat = proj_params.get("CEN_LAT", None)
-        self._cen_lon = proj_params.get("CEN_LON", None)
+        self._cen_lat = up_proj_params.get("CEN_LAT", None)
+        self._cen_lon = up_proj_params.get("CEN_LON", None)
         
-        self.truelat1 = proj_params.get("TRUELAT1", None)
-        self.truelat2 = (proj_params.get("TRUELAT2", None)
-                         if not _ismissing(proj_params.get("TRUELAT2", None)) 
+        self.truelat1 = up_proj_params.get("TRUELAT1", None)
+        self.truelat2 = (up_proj_params.get("TRUELAT2", None)
+                         if not _ismissing(up_proj_params.get("TRUELAT2", 
+                                                              None)) 
                          else None)
-        self.moad_cen_lat = proj_params.get("MOAD_CEN_LAT", None)
-        self.stand_lon = proj_params.get("STAND_LON", None)
-        self.pole_lat = proj_params.get("POLE_LAT", None)
-        self.pole_lon = proj_params.get("POLE_LON", None)
+        self.moad_cen_lat = up_proj_params.get("MOAD_CEN_LAT", None)
+        self.stand_lon = up_proj_params.get("STAND_LON", None)
+        self.pole_lat = up_proj_params.get("POLE_LAT", None)
+        self.pole_lon = up_proj_params.get("POLE_LON", None)
+        
+        self.dx = up_proj_params.get("DX", None)
+        self.dy = up_proj_params.get("DY", None)
         
         # Just in case...
         if self.moad_cen_lat is None:
@@ -193,6 +223,7 @@ class WrfProj(object):
         
         if self.stand_lon is None:
             self.stand_lon = self._cen_lon
+            
             
     def _basemap(self, resolution='l'):
         return None
@@ -396,8 +427,6 @@ class LambertConformal(WrfProj):
                 have the same names as found in WRF output NetCDF global 
                 attributes:
                 
-                - 'CEN_LAT': Center latitude.
-                - 'CEN_LON': Center longitude.
                 - 'TRUELAT1': True latitude 1.
                 - 'TRUELAT2': True latitude 2.
                 - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -542,8 +571,6 @@ class Mercator(WrfProj):
                 have the same names as found in WRF output NetCDF global 
                 attributes:
                 
-                - 'CEN_LAT': Center latitude.
-                - 'CEN_LON': Center longitude.
                 - 'TRUELAT1': True latitude 1.
                 - 'TRUELAT2': True latitude 2.
                 - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -686,8 +713,6 @@ class PolarStereographic(WrfProj):
                 have the same names as found in WRF output NetCDF global 
                 attributes:
                 
-                - 'CEN_LAT': Center latitude.
-                - 'CEN_LON': Center longitude.
                 - 'TRUELAT1': True latitude 1.
                 - 'TRUELAT2': True latitude 2.
                 - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -828,8 +853,6 @@ class LatLon(WrfProj):
                 have the same names as found in WRF output NetCDF global 
                 attributes:
                 
-                - 'CEN_LAT': Center latitude.
-                - 'CEN_LON': Center longitude.
                 - 'TRUELAT1': True latitude 1.
                 - 'TRUELAT2': True latitude 2.
                 - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -971,8 +994,6 @@ class RotatedLatLon(WrfProj):
                 have the same names as found in WRF output NetCDF global 
                 attributes:
                 
-                - 'CEN_LAT': Center latitude.
-                - 'CEN_LON': Center longitude.
                 - 'TRUELAT1': True latitude 1.
                 - 'TRUELAT2': True latitude 2.
                 - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -1120,13 +1141,13 @@ def getproj(bottom_left=None, top_right=None,
     
     Args:
         
-        bottom_left (indexable sequence, optional): The lower left corner as 
-            a (latitude, longitude) pair. Must also specify *top_right* if 
-            used.  Default is None.
-            
-        top_right (indexable sequence): The upper right corner as a 
-            (latitude, longitude) pair.  Must also specify *bottom_left*
-            if used.  Default is None.
+        bottom_left (:class:`wrf.CoordPair`, optional): The lower left 
+            corner. Must also specify *top_right* if used.  
+            Default is None.
+                
+        top_right (:class:`wrf.CoordPair`, optional): The upper right 
+            corner. Must also specify *bottom_left* if used.  
+            Default is None.
             
         lats (:class:`numpy.ndarray`, optional): An array of at least 
             two dimensions containing all of the latitude values.  Must 
@@ -1141,8 +1162,6 @@ def getproj(bottom_left=None, top_right=None,
             attributes:
             
             - 'MAP_PROJ': The map projection type as an integer.
-            - 'CEN_LAT': Center latitude.
-            - 'CEN_LON': Center longitude.
             - 'TRUELAT1': True latitude 1.
             - 'TRUELAT2': True latitude 2.
             - 'MOAD_CEN_LAT': Mother of all domains center latitude.
@@ -1157,22 +1176,24 @@ def getproj(bottom_left=None, top_right=None,
     
     """
     
-    proj_type = proj_params.get("MAP_PROJ", 0)
+    up_proj_params = dict_keys_to_upper(proj_params)
+    
+    proj_type = up_proj_params.get("MAP_PROJ", 0)
     if proj_type == ProjectionTypes.LAMBERT_CONFORMAL:
         return LambertConformal(bottom_left, top_right, 
-                                    lats, lons, **proj_params)
+                                lats, lons, **proj_params)
     elif proj_type == ProjectionTypes.POLAR_STEREOGRAPHIC:
         return PolarStereographic(bottom_left, top_right, 
-                                      lats, lons, **proj_params)
+                                  lats, lons, **proj_params)
     elif proj_type == ProjectionTypes.MERCATOR:
         return Mercator(bottom_left, top_right, 
-                            lats, lons, **proj_params)
+                        lats, lons, **proj_params)
     elif (proj_type == ProjectionTypes.ZERO or 
           proj_type == ProjectionTypes.LAT_LON):
-        if (proj_params.get("POLE_LAT", None) == 90. 
-            and proj_params.get("POLE_LON", None) == 0.):
+        if (up_proj_params.get("POLE_LAT", None) == 90. 
+            and up_proj_params.get("POLE_LON", None) == 0.):
             return LatLon(bottom_left, top_right, 
-                              lats, lons, **proj_params)
+                          lats, lons, **proj_params)
         else:
             return RotatedLatLon(bottom_left, top_right, 
                                  lats, lons, **proj_params)

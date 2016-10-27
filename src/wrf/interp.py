@@ -10,7 +10,7 @@ from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d,
 from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered, get_id, npvalues
 from .py3compat import py3range
-from .interputils import get_xy, get_xy_z_params
+from .interputils import get_xy, get_xy_z_params, to_xy_coords
 from .constants import Constants, ConversionFactors
 from .terrain import get_terrain
 from .geoht import get_height
@@ -90,7 +90,8 @@ def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
 
 
 @set_interp_metadata("cross")
-def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL, 
+def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
+              wrfin=None, timeidx=0, stagger=None, projection=None, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
               latlon=False, cache=None, meta=True):
@@ -99,7 +100,10 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
     The cross section is defined by a horizontal line through the domain.  
     This horizontal line is defined by either including the 
     *pivot_point* and *angle* parameters, or the *start_point* and 
-    *end_point* parameters.
+    *end_point* parameters. The *pivot_point*, *start_point*, and *end_point* 
+    coordinates can be defined in either x,y or latitude,longitude space.  
+    If latitude,longitude coordinates are used, then a WRF input file or 
+    map projection must also be specified.
     
     The vertical levels for the cross section are fixed if *levels* is not 
     specified, and are determined by dividing the vertical coordinate in to 
@@ -124,32 +128,71 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             as *field3d*
             
         levels (sequence, optional): A sequence of :obj:`float` for the desired
-            vertical levels in the output array.  If None, a fixed set of 
-            vertical levels is provided.  Default is None.
+            vertical levels in the output array.  Must be in the same units 
+            as *vert*.  If None, a fixed set of vertical levels is provided.  
+            Default is None.
             
         missing (:obj:`float`): The fill value to use for the output.  
             Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. This is used
+            to obtain the map projection when using latitude,longitude 
+            coordinates. Default is None.
+            
+        timeidx (:obj:`int`, optional): The 
+            desired time index when obtaining map boundary information 
+            from moving nests. This value can be a positive or negative integer.
+            Only required when *wrfin* is specified and the nest is moving.
+            Currently, :data:`wrf.ALL_TIMES` is not supported.
+            Default is 0.
+            
+        stagger (:obj:`str`): If using latitude, longitude coordinate pairs 
+            for *start_point*, *end_point*, or *pivot_point*, 
+            set the appropriate grid staggering type for *field2d*. By default,
+            the mass grid is used.  The options are:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+            
+        projection (:class:`wrf.WrfProj` subclass, optional): The map 
+            projection object to use when working with latitude, longitude 
+            coordinates, and must be specified if *wrfin* is None. Default 
+            is None.
         
-        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
-            :obj:`tuple` or :obj:`list` with two entries, 
-            in the form of [x, y] (or [west_east, south_north]), which 
-            indicates the x,y location through which the plane will pass.  
-            Must also specify `angle`.
+        pivot_point (:class`wrf.CoordPair`, optional): A coordinate pair for 
+            the pivot point, which indicates the location through which 
+            the plane will pass. Must also specify *angle*.  The coordinate 
+            pair can be in x,y grid coordinates or latitude, longitude 
+            coordinates.  If using latitude, longitude coordinates, then 
+            either *wrfin* or *projection* must be specified to obtain the 
+            map projection.  Default is None.
         
         angle (:obj:`float`, optional): Only valid for cross sections where 
             a plane will be plotted through 
             a given point on the model domain. 0.0 represents a S-N cross 
             section.  90.0 is a W-E cross section. 
             
-        start_point (:obj:`tuple` or :obj:`list`, optional): A 
-            :obj:`tuple` or :obj:`list` with two entries, in the form of 
-            [x, y] (or [west_east, south_north]), which indicates the start 
-            x,y location through which the plane will pass.
+        start_point (:class:`wrf.CoordPair`, optional): A coordinate pair 
+            which indicates the start location through which the plane will 
+            pass. Must also specify *end_point*. The coordinate 
+            pair can be in x,y grid coordinates or latitude, longitude 
+            coordinates.  If using latitude, longitude coordinates, then 
+            either *wrfin* or *projection* must be specified to obtain the 
+            map projection.  Default is None.
             
-        end_point (:obj:`tuple` or :obj:`list`, optional): A 
-            :obj:`tuple` or :obj:`list` with two entries, in the form of 
-            [x, y] (or [west_east, south_north]), which indicates the end x,y 
-            location through which the plane will pass.
+        end_point (:class:`wrf.CoordPair`, optional): A coordinate pair 
+            which indicates the end location through which the plane will 
+            pass. Must also specify *end_point*. The coordinate 
+            pair can be in x,y grid coordinates or latitude, longitude 
+            coordinates.  If using latitude, longitude coordinates, then 
+            either *wrfin* or *projection* must be specified to obtain the 
+            map projection.  Default is None.
             
         latlon (:obj:`bool`, optional): Set to True to also interpolate the 
             two-dimensional latitude and longitude coordinates along the same 
@@ -178,6 +221,10 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
         :class:`numpy.ndarray` object with no metadata.
         
     """
+    if timeidx is None:
+        raise ValueError("'timeidx' must be a positive or negative integer")
+    
+    
     # Some fields like uvmet have an extra left dimension for the product
     # type, we'll handle that iteration here.
     multi = True if field3d.ndim - vert.ndim == 1 else False
@@ -187,9 +234,37 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
         var2dz = cache["var2dz"]
         z_var2d = cache["z_var2d"]
     except (KeyError, TypeError):
-        xy, var2dz, z_var2d = get_xy_z_params(npvalues(vert), pivot_point, 
-                                              angle, start_point, end_point,
-                                              levels)
+        # Convert Lat/Lon points to grid points
+        start_point_xy = None
+        end_point_xy = None
+        pivot_point_xy = None
+        
+        if pivot_point is not None:
+            if pivot_point.lat is not None and pivot_point.lon is not None:
+                xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                                         stagger, projection)
+                pivot_point_xy = (xy_coords.x, xy_coords.y)
+            else:
+                pivot_point_xy = (pivot_point.x, pivot_point.y)
+                
+        if start_point is not None and end_point is not None:
+            if start_point.lat is not None and start_point.lon is not None:
+                xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                                         stagger, projection)
+                start_point_xy = (xy_coords.x, xy_coords.y)
+            else:
+                start_point_xy = (start_point.x, start_point.y)
+                
+            if end_point.lat is not None and end_point.lon is not None:
+                xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                                         stagger, projection)
+                end_point_xy = (xy_coords.x, xy_coords.y)
+            else:
+                end_point_xy = (end_point.x, end_point.y)
+                
+        xy, var2dz, z_var2d = get_xy_z_params(npvalues(vert), pivot_point_xy, 
+                                              angle, start_point_xy, 
+                                              end_point_xy, levels)
     
     if not multi:
         result = _vertcross(field3d, xy, var2dz, z_var2d, missing)
@@ -206,36 +281,84 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
 
 @set_interp_metadata("line")
 def interpline(field2d, pivot_point=None, 
+               wrfin=None, timeidx=0, stagger=None, projection=None,
                angle=None, start_point=None,
                end_point=None, latlon=False, 
                cache=None, meta=True):
     """Return the two-dimensional field interpolated along a line.
+      
+    This line is defined by either including the 
+    *pivot_point* and *angle* parameters, or the *start_point* and 
+    *end_point* parameters. The *pivot_point*, *start_point*, and *end_point* 
+    coordinates can be defined in either x,y or latitude,longitude space.  
+    If latitude,longitude coordinates are used, then a WRF input file or 
+    map projection must also be specified.
     
     Args:
     
         field2d (:class:`xarray.DataArray` or :class:`numpy.ndarray`):
             A two-dimensional field.
     
-        pivot_point (:obj:`tuple` or :obj:`list`, optional): A 
-            :obj:`tuple` or :obj:`list` with two entries, 
-            in the form of [x, y] (or [west_east, south_north]), which 
-            indicates the x,y location through which the plane will pass.  
-            Must also specify `angle`.
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. This is used
+            to obtain the map projection when using latitude,longitude 
+            coordinates. Should not be used when working with x,y 
+            coordinates. Default is None.
+            
+        timeidx (:obj:`int`, optional): The 
+            desired time index when obtaining map boundary information 
+            from moving nests. This value can be a positive or negative integer.
+            Only required when *wrfin* is specified and the nest is moving.
+            Currently, :data:`wrf.ALL_TIMES` is not supported.
+            Default is 0. 
+            
+        stagger (:obj:`str`): If using latitude, longitude coordinate pairs 
+            for *start_point*, *end_point*, or *pivot_point*, 
+            set the appropriate grid staggering type for *field2d*. By default,
+            the mass grid is used.  The options are:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+            
+        projection (:class:`wrf.WrfProj`, optional): The map 
+            projection object to use when working with latitude, longitude 
+            coordinates, and must be specified if *wrfin* is None. Should 
+            not be used when working with x,y coordinates.  Default 
+            is None.
+            
+        pivot_point (:class`wrf.CoordPair`, optional): A coordinate pair for 
+            the pivot point, which indicates the location through which 
+            the plane will pass. Must also specify *angle*.  The coordinate 
+            pair can be in x,y grid coordinates or latitude, longitude 
+            coordinates.  If using latitude, longitude coordinates, then 
+            either *wrfin* or *projection* must be specified to obtain the 
+            map projection.  Default is None.
         
         angle (:obj:`float`, optional): Only valid for cross sections where 
             a plane will be plotted through 
             a given point on the model domain. 0.0 represents a S-N cross 
             section.  90.0 is a W-E cross section. 
             
-        start_point (:obj:`tuple` or :obj:`list`, optional): A 
-            :obj:`tuple` or :obj:`list` with two entries, in the form of 
-            [x, y] (or [west_east, south_north]), which indicates the start 
-            x,y location through which the plane will pass.
+        start_point (:class:`wrf.CoordPair`, optional): A coordinate pair 
+            which indicates the start location through which the plane will 
+            pass. Must also specify *end_point*. The coordinate 
+            pair can be in x,y grid coordinates or latitude, longitude 
+            coordinates.  If using latitude, longitude coordinates, then 
+            either *wrfin* or *projection* must be specified to obtain the 
+            map projection.  Default is None.
             
-        end_point (:obj:`tuple` or :obj:`list`, optional): A 
-            :obj:`tuple` or :obj:`list` with two entries, in the form of 
-            [x, y] (or [west_east, south_north]), which indicates the end x,y 
-            location through which the plane will pass.
+        end_point (:class:`wrf.CoordPair`, optional): A coordinate pair 
+            which indicates the end location through which the plane will 
+            pass. Must also specify *end_point*. The coordinate 
+            pair can be in x,y grid coordinates or latitude, longitude 
+            coordinates.  If using latitude, longitude coordinates, then 
+            either *wrfin* or *projection* must be specified to obtain the 
+            map projection.  Default is None.
             
         latlon (:obj:`bool`, optional): Set to True to also interpolate the 
             two-dimensional latitude and longitude coordinates along the same 
@@ -266,11 +389,41 @@ def interpline(field2d, pivot_point=None,
         
         
     """
+    if timeidx is None:
+        raise ValueError("'timeidx' must be a positive or negative integer")
     
     try:
         xy = cache["xy"]
     except (KeyError, TypeError):
-        xy = get_xy(field2d, pivot_point, angle, start_point, end_point)
+        start_point_xy = None
+        end_point_xy = None
+        pivot_point_xy = None
+        
+        if pivot_point is not None:
+            if pivot_point.lat is not None and pivot_point.lon is not None:
+                xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                                         stagger, projection)
+                pivot_point_xy = (xy_coords.x, xy_coords.y)
+            else:
+                pivot_point_xy = (pivot_point.x, pivot_point.y)
+                
+        if start_point is not None and end_point is not None:
+            if start_point.lat is not None and start_point.lon is not None:
+                xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                                         stagger, projection)
+                start_point_xy = (xy_coords.x, xy_coords.y)
+            else:
+                start_point_xy = (start_point.x, start_point.y)
+                
+            if end_point.lat is not None and end_point.lon is not None:
+                xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                                         stagger, projection)
+                end_point_xy = (xy_coords.x, xy_coords.y)
+            else:
+                end_point_xy = (end_point.x, end_point.y)
+                
+        xy = get_xy(field2d, pivot_point_xy, angle, start_point_xy, 
+                    end_point_xy)
         
     return _interpline(field2d, xy)
 

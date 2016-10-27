@@ -2596,7 +2596,8 @@ def get_proj_params(wrfin, timeidx=0, varname=None):
                                                 "CEN_LAT", "CEN_LON",
                                                 "TRUELAT1", "TRUELAT2",
                                                 "MOAD_CEN_LAT", "STAND_LON", 
-                                                "POLE_LAT", "POLE_LON"))
+                                                "POLE_LAT", "POLE_LON",
+                                                "DX", "DY"))
     multitime = is_multi_time_req(timeidx)
     if not multitime:
         time_idx_or_slice = timeidx
@@ -2930,9 +2931,16 @@ def get_id(obj):
     # For each key in the mapping, recursively call get_id until
     # until a non-mapping is found
     return {key : get_id(val) for key,val in viewitems(obj)}
+
+    
+
+
+
+
     
     
     
+
     
     
     

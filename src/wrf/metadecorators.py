@@ -12,7 +12,7 @@ from .util import (extract_vars, either, from_args, arg_location,
                    from_var, iter_left_indexes)
 from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range, ucode
-from .interputils import get_xy_z_params, get_xy
+from .interputils import get_xy_z_params, get_xy, to_xy_coords
 from .config import xarray_enabled
 
 if xarray_enabled():
@@ -830,7 +830,9 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         :mod:`wrapt`
         
     """  
-    argvars = from_args(wrapped, ("field3d", "vert", "latlon", "missing", 
+    argvars = from_args(wrapped, ("field3d", "vert", "levels", 
+                                  "latlon", "missing", 
+                                  "wrfin", "timeidx", "stagger", "projection",
                                   "pivot_point", "angle",
                                   "start_point", "end_point",
                                   "cache"), 
@@ -838,16 +840,48 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     
     field3d = argvars["field3d"]
     z = argvars["vert"]
+    levels = argvars["levels"]
     inc_latlon = argvars["latlon"]
     missingval = argvars["missing"]
+    wrfin = argvars["wrfin"]
+    timeidx = argvars["timeidx"]
+    stagger = argvars["stagger"]
+    projection = argvars["projection"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
     start_point = argvars["start_point"]
     end_point = argvars["end_point"]
     cache = argvars["cache"]
     
-    xy, var2dz, z_var2d = get_xy_z_params(npvalues(z), pivot_point, angle,
-              start_point, end_point)
+    start_point_xy = None
+    end_point_xy = None
+    pivot_point_xy = None
+    
+    if pivot_point is not None:
+        if pivot_point.lat is not None and pivot_point.lon is not None:
+            xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                                     stagger, projection)
+            pivot_point_xy = (xy_coords.x, xy_coords.y)
+        else:
+            pivot_point_xy = (pivot_point.x, pivot_point.y)
+            
+    if start_point is not None and end_point is not None:
+        if start_point.lat is not None and start_point.lon is not None:
+            xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                                     stagger, projection)
+            start_point_xy = (xy_coords.x, xy_coords.y)
+        else:
+            start_point_xy = (start_point.x, start_point.y)
+            
+        if end_point.lat is not None and end_point.lon is not None:
+            xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                                     stagger, projection)
+            end_point_xy = (xy_coords.x, xy_coords.y)
+        else:
+            end_point_xy = (end_point.x, end_point.y)
+    
+    xy, var2dz, z_var2d = get_xy_z_params(npvalues(z), pivot_point_xy, angle,
+              start_point_xy, end_point_xy, levels)
     
     # Make a copy so we don't modify a user supplied cache
     if cache is not None:
@@ -877,8 +911,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     ed_x = xy[-1,0]
     ed_y = xy[-1,1]
     
-    cross_str = "({0}, {1}) to ({2}, {3})".format(st_x, st_y, 
-                                                               ed_x, ed_y)
+    cross_str = "({0}, {1}) to ({2}, {3})".format(st_x, st_y, ed_x, ed_y)
     if angle is not None:
         cross_str += " ; center={0} ; angle={1}".format(pivot_point,
                                                         angle)
@@ -1009,12 +1042,18 @@ def _set_line_meta(wrapped, instance, args, kwargs):
         :mod:`wrapt`
         
     """   
-    argvars = from_args(wrapped, ("field2d", "pivot_point", "angle",
+    argvars = from_args(wrapped, ("field2d", 
+                                  "wrfin", "timeidx", "stagger", "projection",
+                                  "pivot_point", "angle",
                                   "start_point", "end_point", "latlon", 
                                   "cache"), 
                           *args, **kwargs)  
     
     field2d = argvars["field2d"]
+    wrfin = argvars["wrfin"]
+    timeidx = argvars["timeidx"]
+    stagger = argvars["stagger"]
+    projection = argvars["projection"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
     start_point = argvars["start_point"]
@@ -1024,8 +1063,36 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     
     if cache is None:
         cache = {}
+        
+    start_point_xy = None
+    end_point_xy = None
+    pivot_point_xy = None
+        
+    if pivot_point is not None:
+        if pivot_point.lat is not None and pivot_point.lon is not None:
+            xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                                     stagger, projection)
+            pivot_point_xy = (xy_coords.x, xy_coords.y)
+        else:
+            pivot_point_xy = (pivot_point.x, pivot_point.y)      
     
-    xy = get_xy(field2d, pivot_point, angle, start_point, end_point)
+            
+    if start_point is not None and end_point is not None:
+        if start_point.lat is not None and start_point.lon is not None:
+            xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                                     stagger, projection)
+            start_point_xy = (xy_coords.x, xy_coords.y)
+        else:
+            start_point_xy = (start_point.x, start_point.y)
+            
+        if end_point.lat is not None and end_point.lon is not None:
+            xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                                     stagger, projection)
+            end_point_xy = (xy_coords.x, xy_coords.y)
+        else:
+            end_point_xy = (end_point.x, end_point.y)
+    
+    xy = get_xy(field2d, pivot_point_xy, angle, start_point_xy, end_point_xy)
     
     # Make a copy so we don't modify a user supplied cache
     new_cache = dict(cache) 
@@ -1050,8 +1117,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     ed_x = xy[-1,0]
     ed_y = xy[-1,1]
     
-    cross_str = "({0}, {1}) to ({2}, {3})".format(st_x, st_y, 
-                                                ed_x, ed_y)
+    cross_str = "({0}, {1}) to ({2}, {3})".format(st_x, st_y, ed_x, ed_y)
     if angle is not None:
         cross_str += " ; center={0} ; angle={1}".format(pivot_point,
                                                         angle)

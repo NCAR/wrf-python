@@ -290,11 +290,17 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
         dy (:obj:`float`) - The y spacing in meters at the true latitude.  
             Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
         
-        latinc (:obj:`float`): The lower left corner latitude at (0,0).
-            Required for *map_proj* = 6.
+        latinc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+            
+            .. code-block:: python
+            
+                latinc = (dy*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
         
-        loninc (:obj:`float`) - The lower left corner longitude at (0,0).
-            Required for *map_proj* = 6.
+        loninc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+            
+            .. code-block:: python
+            
+                loninc = (dx*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
 
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
@@ -450,11 +456,17 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
         dy (:obj:`float`) - The y spacing in meters at the true latitude.  
             Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
         
-        latinc (:obj:`float`): The lower left corner latitude at (0,0).
-            Required for *map_proj* = 6.
+        latinc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+            
+            .. code-block:: python
+            
+                latinc = (dy*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
         
-        loninc (:obj:`float`) - The lower left corner longitude at (0,0).
-            Required for *map_proj* = 6.
+        loninc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+            
+            .. code-block:: python
+            
+                loninc = (dx*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
 
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
@@ -472,6 +484,11 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
                                             "latinc", "loninc")}
     return _xy_to_ll(x, y, None, 0, None, "cat", squeeze, None, None,
                      **projparams)
+
+    
+    
+    
+    
     
     
     

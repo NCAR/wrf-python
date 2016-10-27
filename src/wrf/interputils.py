@@ -2,11 +2,15 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from math import floor, ceil
+from collections import Iterable
 
 import numpy as np
 
 from .extension import _interp2dxy
 from .py3compat import py3range
+from .coordpair import CoordPair
+from .constants import Constants, ProjectionTypes
+from .latlonutils import _ll_to_xy
 
 
 def to_positive_idxs(shape, coord):
@@ -256,11 +260,11 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
             nlevels = int(z_max/dz)
             z_var2d = np.zeros((nlevels), dtype=z.dtype)
             z_var2d[0] = z_min
+            
+        for i in py3range(1,nlevels):
+            z_var2d[i] = z_var2d[0] + i*dz
     else:
-        z_var2d = np.asarray(levels)
-    
-    for i in py3range(1,nlevels):
-        z_var2d[i] = z_var2d[0] + i*dz
+        z_var2d = np.asarray(levels, z.dtype)
         
     return xy, var2dz, z_var2d
 
@@ -323,3 +327,107 @@ def get_xy(var, pivot_point=None, angle=None,
     xy = _calc_xy(xdim, ydim, pos_pivot, angle, pos_start, pos_end)
     
     return xy
+
+def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
+    """Return the coordinate pairs in grid space.
+    
+    This function converts latitude,longitude coordinate pairs to 
+    x,y coordinate pairs.
+    
+    Args:
+    
+        pairs (:class:`CoordPair` or sequence): A single coordinate pair or 
+            a sequence of coordinate pairs to be converted.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. This is used
+            to obtain the map projection when using latitude,longitude 
+            coordinates. Should not be used when working with x,y 
+            coordinates. Default is None.
+            
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index when obtaining map boundary information 
+            from moving nests. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Only required when 
+            *wrfin* is specified and the nest is moving.  Default is 0.
+            
+        stagger (:obj:`str`): If using latitude, longitude coordinate pairs 
+            for *start_point*, *end_point*, or *pivot_point*, 
+            set the appropriate grid staggering type for *field2d*. By default,
+            the mass grid is used.  The options are:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+            
+        projection (:class:`wrf.WrfProj`, optional): The map 
+            projection object to use when working with latitude, longitude 
+            coordinates, and must be specified if *wrfin* is None. Default 
+            is None.
+                    
+    Returns:
+        
+        :class:`wrf.CoordPair` or sequence: The coordinate pair(s) in 
+        x,y grid coordinates.
+        
+    """
+    
+    if wrfin is None and projection is None:
+        raise ValueError ("'wrfin' or 'projection' parameter is required")
+    
+    if isinstance(pairs, Iterable):
+        lat = [pair.lat for pair in pairs]
+        lon = [pair.lon for pair in pairs]
+    else:
+        lat = pairs.lat
+        lon = pairs.lon
+        
+    if wrfin is not None:
+        xy_vals = _ll_to_xy(lat, lon, wrfin=wrfin, timeidx=timeidx,  
+             squeeze=True, meta=False, stagger=stagger, as_int=True)
+        
+    else:
+        map_proj = projection.map_proj
+        
+        if map_proj == ProjectionTypes.LAT_LON:
+            pole_lat = projection.pole_lat
+            pole_lon = projection.pole_lon
+            latinc = ((projection.dy*360.0)/2.0 / 
+                      Constants.PI/Constants.WRF_EARTH_RADIUS)
+            loninc = ((projection.dx*360.0)/2.0 / 
+                      Constants.PI/Constants.WRF_EARTH_RADIUS)
+        else:
+            pole_lat = 90.0
+            pole_lon = 0.0
+            latinc = 0.0
+            loninc = 0.0
+
+        
+        xy_vals = _ll_to_xy(lat, lon, meta=False, squeeze=True, 
+                                as_int=True,
+                                map_proj=projection.map_proj, 
+                                truelat1=projection.truelat1, 
+                                truelat2=projection.truelat2, 
+                                stand_lon=projection.stand_lon, 
+                                ref_lat=projection.ll_lat, 
+                                ref_lon=projection.ll_lon, 
+                                pole_lat=pole_lat, 
+                                pole_lon=pole_lon, 
+                                known_x=0, 
+                                known_y=0, 
+                                dx=projection.dx, 
+                                dy=projection.dy, 
+                                latinc=latinc, 
+                                loninc=loninc)
+ 
+    if xy_vals.ndim == 1:
+        return CoordPair(x=xy_vals[0], y=xy_vals[1])
+    else:
+        return [CoordPair(x=xy_vals[0,i], y=xy_vals[1,i]) 
+                for i in py3range(xy_vals.shape[1])]

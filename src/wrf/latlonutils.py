@@ -11,6 +11,8 @@ from .util import (extract_vars, extract_global_attrs,
                    either, is_moving_domain, is_multi_time_req,
                    iter_left_indexes, is_mapping, is_multi_file)
 from .py3compat import viewkeys, viewitems
+from .projutils import dict_keys_to_upper
+ 
 
 def _lat_varname(wrfin, stagger):
     """Return the latitude variable name for the specified stagger type.
@@ -192,21 +194,7 @@ def _get_proj_params(wrfin, timeidx, stagger, method, squeeze, cache, _key):
     
     return (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon,
             pole_lat, pole_lon, known_x, known_y, dx, dy, latinc, loninc)
-
-
-def _dict_keys_to_upper(d):
-    """Return a dictionary with the keys changed to uppercase.
-    
-    Args:
-        
-        d (:obj:`dict`): A dictionary.
-        
-    Returns:
-    
-        :obj:`dict`: A dictionary with uppercase keys.
-    
-    """
-    return {key.upper(): val for key, val in viewitems(d)}        
+       
 
 # known_x and known_y are 0-based
 def _kwarg_proj_params(**projparams):
@@ -224,7 +212,7 @@ def _kwarg_proj_params(**projparams):
         :obj:`tuple`: The map projection parameters.
     
     """
-    projparams = _dict_keys_to_upper(projparams)
+    projparams = dict_keys_to_upper(projparams)
     
     map_proj = projparams.get("MAP_PROJ")
     truelat1 = projparams.get("TRUELAT1")
@@ -609,3 +597,8 @@ def _xy_to_ll(x, y, wrfin=None, timeidx=0, stagger=None,
                       loninc, x_val, y_val)
         
     return result
+
+
+
+        
+        
