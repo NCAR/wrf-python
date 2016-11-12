@@ -47,7 +47,7 @@ if cartopy_enabled():
                     extent of the projection.  Default is -80.0.
                 
                 max_latitude (:obj:`float`, optional): The maximum northerly 
-                    extent of the projection.  Default is 84.0..
+                    extent of the projection.  Default is 84.0.
                 
                 globe (:class:`cartopy.crs.Globe`, optional): A globe object.
                     If omitted, a default globe is created.
@@ -280,10 +280,13 @@ class WrfProj(object):
     def __repr__(self):
         args = ("bottom_left={}, top_right={}, "
                 "stand_lon={}, moad_cen_lat={}, "
+                "truelat1={}, truelat2={}, "
                 "pole_lat={}, pole_lon={}".format((self.ll_lat, self.ll_lon),
                                                   (self.ur_lat, self.ur_lon),
                                                   self.stand_lon, 
                                                   self.moad_cen_lat,
+                                                  self.truelat1,
+                                                  self.truelat2,
                                                   self.pole_lat,
                                                   self.pole_lon))
         return "{}({})".format(self.__class__.__name__, args)

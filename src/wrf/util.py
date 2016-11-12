@@ -920,13 +920,10 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
     
     is_moving = is_moving_domain(wrfdict, varname, _key=_key)
     
-    # Not quite sure how to handle coord caching with dictionaries, so 
-    # disabling it for now by setting _key to None.
     first_array = _extract_var(wrfdict[first_key], varname, 
                               timeidx, is_moving=is_moving, method=method, 
                               squeeze=False, cache=None, meta=meta,
                               _key=_key[first_key])
-    
     
     # Create the output data numpy array based on the first array
     outdims = [numkeys]
@@ -1587,7 +1584,6 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
             outdata[startidx:endidx, :] = vardata[:]
             
             if xarray_enabled() and meta:
-                # XTIME new in 3.7
                 if timename is not None and not timecached:
                     xtimedata = wrfnc.variables[timename][:]
                     outxtimes[startidx:endidx] = xtimedata[:]
@@ -2414,7 +2410,7 @@ def extract_times(wrfin, timeidx, method="cat", squeeze=True, cache=None,
                            dims=outdimnames, attrs=outattrs)
         
     else:
-        outarr = np.asarray(time_list) 
+        outarr = np.asarray(time_list, dtype="datetime64[ns]") 
     
     if not multitime:
         return outarr[timeidx]

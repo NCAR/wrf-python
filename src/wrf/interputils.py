@@ -408,24 +408,26 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
             latinc = 0.0
             loninc = 0.0
 
-        
         xy_vals = _ll_to_xy(lat, lon, meta=False, squeeze=True, 
-                                as_int=True,
-                                map_proj=projection.map_proj, 
-                                truelat1=projection.truelat1, 
-                                truelat2=projection.truelat2, 
-                                stand_lon=projection.stand_lon, 
-                                ref_lat=projection.ll_lat, 
-                                ref_lon=projection.ll_lon, 
-                                pole_lat=pole_lat, 
-                                pole_lon=pole_lon, 
-                                known_x=0, 
-                                known_y=0, 
-                                dx=projection.dx, 
-                                dy=projection.dy, 
-                                latinc=latinc, 
-                                loninc=loninc)
- 
+                            as_int=True,
+                            map_proj=projection.map_proj, 
+                            truelat1=projection.truelat1, 
+                            truelat2=projection.truelat2, 
+                            stand_lon=projection.stand_lon, 
+                            ref_lat=projection.ll_lat, 
+                            ref_lon=projection.ll_lon, 
+                            pole_lat=pole_lat, 
+                            pole_lon=pole_lon, 
+                            known_x=0, 
+                            known_y=0, 
+                            dx=projection.dx, 
+                            dy=projection.dy, 
+                            latinc=latinc, 
+                            loninc=loninc)
+    
+    xy_vals = xy_vals.squeeze()
+
+    
     if xy_vals.ndim == 1:
         return CoordPair(x=xy_vals[0], y=xy_vals[1])
     else:

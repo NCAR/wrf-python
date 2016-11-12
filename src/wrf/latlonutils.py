@@ -9,7 +9,8 @@ from .constants import Constants, ProjectionTypes
 from .extension import _lltoxy, _xytoll
 from .util import (extract_vars, extract_global_attrs, 
                    either, is_moving_domain, is_multi_time_req,
-                   iter_left_indexes, is_mapping, is_multi_file)
+                   iter_left_indexes, is_mapping, is_multi_file,
+                   npvalues)
 from .py3compat import viewkeys, viewitems
 from .projutils import dict_keys_to_upper
  
@@ -372,11 +373,10 @@ def _ll_to_xy(latitude, longitude, wrfin=None, timeidx=0,
         lats = np.asarray(latitude)
         lons = np.asarray(longitude)
         
-        if lats.ndim > 1:
-            lats = lats.ravel()
+        # Note:  For scalars, this will make a single element array
+        lats = lats.ravel()
         
-        if lons.ndim > 1:
-            lons = lons.ravel()
+        lons = lons.ravel()
         
         if (lats.size != lons.size):
             raise ValueError("'latitude' and 'longitude' "
@@ -541,11 +541,9 @@ def _xy_to_ll(x, y, wrfin=None, timeidx=0, stagger=None,
         x_arr = x_arr + 1
         y_arr = y_arr + 1
         
-        if x_arr.ndim > 1:
-            x_arr = x_arr.ravel()
+        x_arr = x_arr.ravel()
         
-        if y_arr.ndim > 1:
-            y_arr = y_arr.ravel()
+        y_arr = y_arr.ravel()
         
         if (x_arr.size != y_arr.size):
             raise ValueError("'x' and 'y' must be the same length")

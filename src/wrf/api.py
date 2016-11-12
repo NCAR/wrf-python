@@ -29,6 +29,7 @@ from .projection import (WrfProj, NullProjection, LambertConformal, Mercator,
                          PolarStereographic, LatLon, RotatedLatLon, 
                          getproj)
 from .coordpair import CoordPair
+from .interputils import to_xy_coords
 from cache import cache_item, get_cached_item
 from .version import __version__
 
@@ -63,6 +64,7 @@ __all__ += ["npvalues", "extract_global_attrs", "is_standard_wrf_var",
 __all__ += ["WrfProj", "NullProjection", "LambertConformal", "Mercator",
             "PolarStereographic", "LatLon", "RotatedLatLon", "getproj"]
 __all__ += ["CoordPair"]
+__all__ += ["to_xy_coords"]
 __all__ += ["cache_item", "get_cached_item"]
 __all__ += ["__version__"]
 

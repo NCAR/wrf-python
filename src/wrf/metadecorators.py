@@ -783,7 +783,7 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         outname = "field3d_{0}".format(name_levelstr)
         outattrs = OrderedDict()
         
-    outattrs["PlotLevelID"] = levelstr
+    outattrs["level"] = levelstr
     outattrs["missing_value"] = missingval
     outattrs["_FillValue"] = missingval
     

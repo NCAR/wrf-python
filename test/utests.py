@@ -8,7 +8,7 @@ import subprocess
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  disable_xarray, xarray_enabled, npvalues,
                  xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj,
-                 extract_global_attrs, viewitems)
+                 extract_global_attrs, viewitems, CoordPair)
 from wrf.util import is_multi_file
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
@@ -258,7 +258,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
-            pivot_point = (hts.shape[-1] / 2, hts.shape[-2] / 2) 
+            pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
 
             nt.assert_allclose(npvalues(ht_cross), ref_ht_cross, rtol=.01)
@@ -270,8 +270,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                                ref_p_cross, 
                                rtol=.01)
             # Test point to point
-            start_point = (0,hts.shape[-2]/2)
-            end_point = (-1,hts.shape[-2]/2)
+            start_point = CoordPair(0, hts.shape[-2]/2)
+            end_point = CoordPair(-1,hts.shape[-2]/2)
             
             p_cross2 = vertcross(p,hts,start_point=start_point, 
                                 end_point=end_point)
@@ -284,15 +284,15 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_t2_line = _get_refvals(referent, "t2_line", repeat, multi)
             
             t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
-            pivot_point = (t2.shape[-1] / 2, t2.shape[-2] / 2)
+            pivot_point = CoordPair(t2.shape[-1] / 2, t2.shape[-2] / 2)
             
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
             nt.assert_allclose(npvalues(t2_line1), ref_t2_line)
             
             # Test point to point
-            start_point = (0, t2.shape[-2]/2)
-            end_point = (-1, t2.shape[-2]/2)
+            start_point = CoordPair(0, t2.shape[-2]/2)
+            end_point = CoordPair(-1, t2.shape[-2]/2)
             
             t2_line2 = interpline(t2, start_point=start_point, 
                                   end_point=end_point)

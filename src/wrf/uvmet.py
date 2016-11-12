@@ -18,7 +18,7 @@ from .util import extract_vars, extract_global_attrs, either
 @convert_units("wind", "m s-1")
 def _get_uvmet(wrfin, timeidx=0, method="cat", squeeze=True, 
                cache=None, meta=True, _key=None,
-               ten_m=False, units ="m s-1"):
+               ten_m=False, units="m s-1"):
     """Return the u,v wind components rotated to earth coordinates.
     
     The leftmost dimension of the returned array represents two different 
@@ -426,7 +426,7 @@ def get_uvmet_wspd_wdir(wrfin, timeidx=0, method="cat", squeeze=True,
     """
     
     uvmet = _get_uvmet(wrfin, timeidx, method, squeeze, 
-                       cache, meta, _key, False, units)
+                       cache, meta, _key, False, units="m s-1")
     
     return _calc_wspd_wdir(uvmet[0,...,:,:,:], uvmet[1,...,:,:,:], 
                            False, units)
@@ -509,7 +509,7 @@ def get_uvmet10_wspd_wdir(wrfin, timeidx=0, method="cat", squeeze=True,
     """
     
     uvmet10 = _get_uvmet(wrfin, timeidx, method, squeeze, cache, meta, _key, 
-                         True, units)
+                         True, units="m s-1")
     
     return _calc_wspd_wdir(uvmet10[0,...,:,:], uvmet10[1,...,:,:], True, units)
     
