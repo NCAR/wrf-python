@@ -191,7 +191,7 @@ def _generator_copy(gen):
     """
     funcname = gen.__name__
     
-    # This is for generator comprehensions.  Only solution is to tee the 
+    # This is for generator expressions.  Only solution is to tee the 
     # original generator.
     if funcname == "<genexpr>":
         return tee(gen)
@@ -327,7 +327,7 @@ class IterWrapper(Iterable):
         if isinstance(self._wrapped, GeneratorType):
             
             gen_copy = _generator_copy(self._wrapped)
-            # If a tuple comes back, then this is a generator comprehension,
+            # If a tuple comes back, then this is a generator expression,
             # so store the first tee'd item, then return the other
             if isinstance(gen_copy, tuple):
                 self._wrapped = gen_copy[0]
