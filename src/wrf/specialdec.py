@@ -5,7 +5,7 @@ import numpy as np
 
 import wrapt 
 
-from .util import iter_left_indexes, npvalues
+from .util import iter_left_indexes, to_np
 from .config import xarray_enabled
 from .constants import Constants
 
@@ -72,11 +72,11 @@ def uvmet_left_iter(alg_dtype=np.float64):
         has_missing = False
         u_arr = u
         if isinstance(u, DataArray):
-            u_arr = npvalues(u)
+            u_arr = to_np(u)
             
         v_arr = v
         if isinstance(v, DataArray):
-            v_arr = npvalues(v)
+            v_arr = to_np(v)
           
         umissing = Constants.DEFAULT_FILL  
         if isinstance(u_arr, np.ma.MaskedArray):

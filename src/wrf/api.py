@@ -15,7 +15,7 @@ from .interp import (interplevel, vertcross, interpline, vinterp)
 from .latlon import (xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj)
 from .py3compat import (viewitems, viewkeys, viewvalues, isstr, py2round, 
                         py3range, ucode)
-from .util import (npvalues, extract_global_attrs, is_standard_wrf_var,
+from .util import (to_np, extract_global_attrs, is_standard_wrf_var,
                    extract_dim, extract_vars, extract_times, combine_files,
                    extract_times, npbytes_to_str, is_moving_domain, 
                    is_staggered, get_left_indexes, iter_left_indexes,
@@ -51,7 +51,7 @@ __all__ += ["interplevel", "vertcross", "interpline", "vinterp"]
 __all__ += ["xy_to_ll", "ll_to_xy", "xy_to_ll_proj", "ll_to_xy_proj"]
 __all__ += ["viewitems", "viewkeys", "viewvalues", "isstr", "py2round", 
             "py3range", "ucode"]
-__all__ += ["npvalues", "extract_global_attrs", "is_standard_wrf_var",
+__all__ += ["to_np", "extract_global_attrs", "is_standard_wrf_var",
             "extract_dim", "extract_vars", "extract_times", "combine_files",
             "extract_times", "npbytes_to_str", "is_moving_domain", 
             "is_staggered", "get_left_indexes", "iter_left_indexes", 

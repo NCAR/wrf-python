@@ -341,7 +341,7 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         t = ncvars["T"]
         p = ncvars["P"]
         pb = ncvars["PB"]
-        qvapor = npvalues(ncvars["QVAPOR"])
+        qvapor = to_np(ncvars["QVAPOR"])
         
         full_t = t + Constants.T_BASE
         full_p = p + pb
@@ -358,7 +358,7 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         t = ncvars["T"]
         p = ncvars["P"]
         pb = ncvars["PB"]
-        qvapor = npvalues(ncvars["QVAPOR"])
+        qvapor = to_np(ncvars["QVAPOR"])
         ph = ncvars["PH"]
         phb = ncvars["PHB"]
         
@@ -381,7 +381,7 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         
         p = ncvars["P"]
         pb = ncvars["PB"]
-        qvapor = npvalues(ncvars["QVAPOR"])
+        qvapor = to_np(ncvars["QVAPOR"])
         
         # Algorithm requires hPa
         full_p = .01*(p + pb)
@@ -535,7 +535,7 @@ def make_func(varname, wrfnc, timeidx, method, squeeze, meta):
         ref = getvar(wrfnc, varname, timeidx, method, squeeze, cache=None, 
                      meta=meta)
         
-        nt.assert_allclose(npvalues(result), npvalues(ref))
+        nt.assert_allclose(to_np(result), to_np(ref))
         
         if meta:
             self.assertEqual(result.dims, ref.dims)

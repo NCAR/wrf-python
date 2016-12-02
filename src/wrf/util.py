@@ -5,7 +5,7 @@ import os
 from sys import version_info
 from copy import copy
 from collections import Iterable, Mapping, OrderedDict
-from itertools import product
+from itertools import product, tee
 from types import GeneratorType
 import datetime as dt
 from inspect import getmodule
@@ -190,6 +190,12 @@ def _generator_copy(gen):
     
     """
     funcname = gen.__name__
+    
+    # This is for generator comprehensions.  Only solution is to tee the 
+    # original generator.
+    if funcname == "<genexpr>":
+        return tee(gen)
+    
     try:
         argvals = getargvalues(gen.gi_frame)
     except NameError:
@@ -319,7 +325,15 @@ class IterWrapper(Iterable):
         
         """
         if isinstance(self._wrapped, GeneratorType):
-            return _generator_copy(self._wrapped)
+            
+            gen_copy = _generator_copy(self._wrapped)
+            # If a tuple comes back, then this is a generator comprehension,
+            # so store the first tee'd item, then return the other
+            if isinstance(gen_copy, tuple):
+                self._wrapped = gen_copy[0]
+                return gen_copy[1]
+            
+            return gen_copy
         else:
             obj_copy = copy(self._wrapped)
             return obj_copy.__iter__()
@@ -360,7 +374,7 @@ def get_iterable(wrfseq):
     
     
 # Helper to extract masked arrays from DataArrays that convert to NaN
-def npvalues(array):
+def to_np(array):
     """Return the :class:`numpy.ndarray` contained in an 
     :class:`xarray.DataArray` instance.
     
@@ -947,7 +961,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
             if outdata.shape[1:] != vardata.shape:
                 raise ValueError("data sequences must have the "
                                    "same size for all dictionary keys")
-            outdata[idx,:] = npvalues(vardata)[:]
+            outdata[idx,:] = to_np(vardata)[:]
             idx += 1
       
     if xarray_enabled() and meta:
@@ -967,7 +981,7 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
                 break
             
             key_coordnames.append(key_coord_name)
-            coord_vals.append(npvalues(first_array.coords[key_coord_name]))
+            coord_vals.append(to_np(first_array.coords[key_coord_name]))
             
             existing_cnt += 1
         
@@ -1533,7 +1547,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
             outxtimes = get_cached_item(_key, timekey)
             if outxtimes is None:
                 outxtimes = np.empty(outdims[0])
-                outxtimes[startidx:endidx] = npvalues(first_var.coords[timename][:])
+                outxtimes[startidx:endidx] = to_np(first_var.coords[timename][:])
             else:
                 timecached = True
     
@@ -1545,7 +1559,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
                 outlats = get_cached_item(_key, latkey)
                 if outlats is None:
                     outlats = np.empty(outcoorddims, first_var.dtype)
-                    outlats[startidx:endidx, :] = npvalues(first_var.coords[latname][:])
+                    outlats[startidx:endidx, :] = to_np(first_var.coords[latname][:])
                 else:
                     latcached = True
                 
@@ -1553,7 +1567,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
                 outlons = get_cached_item(_key, lonkey)
                 if outlons is None:
                     outlons = np.empty(outcoorddims, first_var.dtype)
-                    outlons[startidx:endidx, :] = npvalues(first_var.coords[lonname][:])
+                    outlons[startidx:endidx, :] = to_np(first_var.coords[lonname][:])
                 else:
                     loncached = True
                 
@@ -2114,7 +2128,7 @@ def _extract_var(wrfin, varname, timeidx, is_moving,
             pass
         else:
             if not meta:
-                return npvalues(cache_var)
+                return to_np(cache_var)
             
             return cache_var
     

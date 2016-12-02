@@ -9,8 +9,7 @@ from .constants import Constants, ProjectionTypes
 from .extension import _lltoxy, _xytoll
 from .util import (extract_vars, extract_global_attrs, 
                    either, is_moving_domain, is_multi_time_req,
-                   iter_left_indexes, is_mapping, is_multi_file,
-                   npvalues)
+                   iter_left_indexes, is_mapping, is_multi_file)
 from .py3compat import viewkeys, viewitems
 from .projutils import dict_keys_to_upper
  

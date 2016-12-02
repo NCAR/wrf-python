@@ -8,7 +8,7 @@ import numpy.ma as ma
 
 from .extension import _interpline
 from .util import (extract_vars, either, from_args, arg_location,
-                   is_coordvar, latlon_coordvars, npvalues, 
+                   is_coordvar, latlon_coordvars, to_np, 
                    from_var, iter_left_indexes)
 from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range, ucode
@@ -308,11 +308,11 @@ def set_wind_metadata(copy_varname, name, description,
         if not wind_ncvar:
             for key,dataarray in viewitems(copy_var.coords):
                 if is_coordvar(key):
-                    outcoords[key] = dataarray.dims, npvalues(dataarray)
+                    outcoords[key] = dataarray.dims, to_np(dataarray)
                 elif key == "XTIME":
-                    outcoords[key] = dataarray.dims, npvalues(dataarray)
+                    outcoords[key] = dataarray.dims, to_np(dataarray)
                 elif key == "Time":
-                    outcoords[key] = npvalues(dataarray)
+                    outcoords[key] = to_np(dataarray)
                    
         outname = name
         outattrs["description"] = description
@@ -420,11 +420,11 @@ def set_cape_metadata(is2d):
 
         for key,dataarray in viewitems(copy_var.coords):
             if is_coordvar(key):
-                outcoords[key] = dataarray.dims, npvalues(dataarray)
+                outcoords[key] = dataarray.dims, to_np(dataarray)
             elif key == "XTIME":
-                outcoords[key] = dataarray.dims, npvalues(dataarray)
+                outcoords[key] = dataarray.dims, to_np(dataarray)
             elif key == "Time":
-                outcoords[key] = npvalues(dataarray)
+                outcoords[key] = to_np(dataarray)
         
         if is2d:
             outcoords["mcape_mcin_lcl_lfc"] = ["mcape", "mcin", "lcl", "lfc"]
@@ -516,11 +516,11 @@ def set_cloudfrac_metadata():
 
         for key,dataarray in viewitems(copy_var.coords):
             if is_coordvar(key):
-                outcoords[key] = dataarray.dims, npvalues(dataarray)
+                outcoords[key] = dataarray.dims, to_np(dataarray)
             elif key == "XTIME":
-                outcoords[key] = dataarray.dims, npvalues(dataarray)
+                outcoords[key] = dataarray.dims, to_np(dataarray)
             elif key == "Time":
-                outcoords[key] = npvalues(dataarray)
+                outcoords[key] = to_np(dataarray)
         
         outcoords["low_mid_high"] = ["low", "mid", "high"]
             
@@ -880,7 +880,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         else:
             end_point_xy = (end_point.x, end_point.y)
     
-    xy, var2dz, z_var2d = get_xy_z_params(npvalues(z), pivot_point_xy, angle,
+    xy, var2dz, z_var2d = get_xy_z_params(to_np(z), pivot_point_xy, angle,
               start_point_xy, end_point_xy, levels)
     
     # Make a copy so we don't modify a user supplied cache
@@ -1327,7 +1327,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     
     field3d = argvars["field3d"]
     xy = argvars["xy"]
-    xy = npvalues(xy)
+    xy = to_np(xy)
     
     result = wrapped(*args, **kwargs)
     

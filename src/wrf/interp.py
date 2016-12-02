@@ -8,7 +8,7 @@ from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d,
                         _monotonic, _vintrp)
 
 from .metadecorators import set_interp_metadata
-from .util import extract_vars, is_staggered, get_id, npvalues
+from .util import extract_vars, is_staggered, get_id, to_np
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
 from .constants import Constants, ConversionFactors
@@ -262,7 +262,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             else:
                 end_point_xy = (end_point.x, end_point.y)
                 
-        xy, var2dz, z_var2d = get_xy_z_params(npvalues(vert), pivot_point_xy, 
+        xy, var2dz, z_var2d = get_xy_z_params(to_np(vert), pivot_point_xy, 
                                               angle, start_point_xy, 
                                               end_point_xy, levels)
     

@@ -8,7 +8,7 @@ import numpy as np
 import numpy.ma as ma
 
 from .units import do_conversion, check_units, dealias_and_clean_unit
-from .util import iter_left_indexes, from_args, npvalues, combine_dims
+from .util import iter_left_indexes, from_args, to_np, combine_dims
 from .py3compat import viewitems, viewvalues, isstr
 from .config import xarray_enabled
 from .constants import Constants
@@ -187,7 +187,7 @@ def left_iteration(ref_var_expected_dims,
             skip_missing = False
             for arg in new_args:
                 if isinstance(arg, DataArray):
-                    arr = npvalues(arg)
+                    arr = to_np(arg)
                 elif isinstance(arg, np.ndarray):
                     arr = arg
                 else:
@@ -352,7 +352,7 @@ def _extract_and_transpose(arg, do_transpose):
     
     if xarray_enabled():
         if isinstance(arg, DataArray):
-            arg = npvalues(arg)
+            arg = to_np(arg)
     
     if do_transpose:
         if isinstance(arg, np.ndarray):
