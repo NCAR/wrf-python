@@ -24,7 +24,10 @@ from .util import (to_np, extract_global_attrs, is_standard_wrf_var,
                    from_var, combine_dims, either, get_iterable,
                    IterWrapper, is_coordvar, latlon_coordvars, is_mapping,
                    has_time_coord, is_multi_file, is_multi_time_req,
-                   get_coord_pairs, is_time_coord_var)
+                   get_coord_pairs, is_time_coord_var, geobounds, 
+                   get_cartopy, get_basemap, get_pyngl, cartopy_xlim,
+                   cartopy_ylim, latlon_coords)
+from .geobnds import GeoBounds, NullGeoBounds
 from .projection import (WrfProj, NullProjection, LambertConformal, Mercator,
                          PolarStereographic, LatLon, RotatedLatLon, 
                          getproj)
@@ -60,7 +63,10 @@ __all__ += ["to_np", "extract_global_attrs", "is_standard_wrf_var",
             "from_var", "combine_dims", "either", "get_iterable",
             "IterWrapper", "is_coordvar", "latlon_coordvars", "is_mapping",
             "has_time_coord", "is_multi_file", "is_multi_time_req",
-            "get_coord_pairs", "is_time_coord_var"]
+            "get_coord_pairs", "is_time_coord_var", "geobounds", 
+            "get_cartopy", "get_basemap", "get_pyngl", "cartopy_xlim",
+            "cartopy_ylim", "latlon_coords"]
+__all__ += ["GeoBounds", "NullGeoBounds"]
 __all__ += ["WrfProj", "NullProjection", "LambertConformal", "Mercator",
             "PolarStereographic", "LatLon", "RotatedLatLon", "getproj"]
 __all__ += ["CoordPair"]

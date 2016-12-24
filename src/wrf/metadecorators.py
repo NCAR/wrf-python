@@ -1755,7 +1755,47 @@ def set_alg_metadata(alg_ndims, refvarname,
     
     return func_wrapper
 
-
+def set_smooth_metdata():
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs): 
+        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        
+        if do_meta is None:
+            do_meta = True
+                
+        if not xarray_enabled() or not do_meta:
+            return wrapped(*args, **kwargs)
+        
+        argvars = from_args(wrapped, ("field", "passes"), 
+                            *args, **kwargs)
+        
+        field = argvars["field"]
+        passes = argvars["passes"]
+        
+        result = wrapped(*args, **kwargs)
+        
+        outname = "smooth2d"
+        outdimnames = ["dim_{}".format(i) for i in py3range(result.ndim)]
+        outcoords = OrderedDict()
+        outattrs = OrderedDict()
+        
+        if isinstance(field, DataArray):
+            outname = "smooth_" + ucode(field.name)
+            outdimnames = list(field.dims)
+            outcoords.update(field.coords)
+            outattrs.update(field.attrs)
+            outattrs["passes"] = passes
+                
+        if isinstance(result, ma.MaskedArray):
+            outattrs["_FillValue"] = result.fill_value
+            outattrs["missing_value"] = result.fill_value
+        
+        return DataArray(result, name=outname, coords=outcoords, 
+                       dims=outdimnames, attrs=outattrs)
+    
+    return func_wrapper
+    
+    
 def set_uvmet_alg_metadata(units=None, description="earth rotated u,v",
                            latarg="lat", windarg="u"):
     """A decorator that sets the metadata for the wrapped raw UVMET diagnostic 

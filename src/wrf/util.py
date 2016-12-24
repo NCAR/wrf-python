@@ -28,6 +28,9 @@ from .projection import getproj, NullProjection
 from .constants import Constants, ALL_TIMES
 from .py3compat import (viewitems, viewkeys, isstr, py3range, ucode)
 from .cache import cache_item, get_cached_item
+from .coordpair import CoordPair
+from .geobnds import GeoBounds, NullGeoBounds
+
 
 if xarray_enabled():
     from xarray import DataArray
@@ -1072,6 +1075,66 @@ def _find_max_time_size(wrfseq):
     
     return max_times
 
+def _get_coord_names(wrfin, varname):
+    
+    # Need only the first real file
+    if is_multi_file(wrfin):
+        if not is_mapping(wrfin):
+            wrfnc = next(iter(wrfin))
+        else:
+            entry = wrfin[next(iter(viewkeys(wrfin)))]
+            return _get_coord_names(entry, varname)
+    else:
+        wrfnc = wrfin
+        
+    lat_coord = None
+    lon_coord = None
+    time_coord = None
+    
+    var = wrfnc.variables[varname]
+    
+    # WRF variables will have a coordinates attribute.  MET_EM files have 
+    # a stagger attribute which indicates the coordinate variable.
+    try:
+        # WRF files
+        coord_attr = getattr(var, "coordinates")
+    except AttributeError:
+        
+        if is_coordvar(varname):
+            # Coordinate variable (most likely XLAT or XLONG)
+            lat_coord, lon_coord = get_coord_pairs(varname)
+            time_coord = None
+            
+            if has_time_coord(wrfnc):
+                time_coord = "XTIME"
+                
+        elif is_time_coord_var(varname):
+            lon_coord = None
+            lat_coord = None
+            time_coord = None
+        else:
+            try:
+                # met_em files
+                stag_attr = getattr(var, "stagger")
+            except AttributeError:
+                lon_coord = None
+                lat_coord = None
+            else:
+                # For met_em files, use the stagger name to get the lat/lon var
+                lat_coord = "XLAT_{}".format(stag_attr)
+                lon_coord = "XLONG_{}".format(stag_attr)
+    else:
+        coord_names = coord_attr.split()
+        lon_coord = coord_names[0]
+        lat_coord = coord_names[1]
+        
+        try:
+            time_coord = coord_names[2]
+        except IndexError:
+            time_coord = None
+            
+    return lat_coord, lon_coord, time_coord
+    
 
 def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile, 
                       _key):
@@ -1115,7 +1178,6 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
     time_idx_or_slice = timeidx if not multitime else slice(None)
     var = wrfnc.variables[varname]
     data = var[time_idx_or_slice, :]
-    time_coord = None
     
     # Want to preserve the time dimension
     if not multitime:
@@ -1124,45 +1186,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
     attrs = OrderedDict(var.__dict__)
     dimnames = var.dimensions[-data.ndim:]
     
-    # WRF variables will have a coordinates attribute.  MET_EM files have 
-    # a stagger attribute which indicates the coordinate variable.
-    try:
-        # WRF files
-        coord_attr = getattr(var, "coordinates")
-    except AttributeError:
-        
-        if is_coordvar(varname):
-            # Coordinate variable (most likely XLAT or XLONG)
-            lat_coord, lon_coord = get_coord_pairs(varname)
-            time_coord = None
-            
-            if has_time_coord(wrfnc):
-                time_coord = "XTIME"
-                
-        elif is_time_coord_var(varname):
-            lon_coord = None
-            lat_coord = None
-            time_coord = None
-        else:
-            try:
-                # met_em files
-                stag_attr = getattr(var, "stagger")
-            except AttributeError:
-                lon_coord = None
-                lat_coord = None
-            else:
-                # For met_em files, use the stagger name to get the lat/lon var
-                lat_coord = "XLAT_{}".format(stag_attr)
-                lon_coord = "XLONG_{}".format(stag_attr)
-    else:
-        coord_names = coord_attr.split()
-        lon_coord = coord_names[0]
-        lat_coord = coord_names[1]
-        
-        try:
-            time_coord = coord_names[2]
-        except IndexError:
-            time_coord = None
+    lat_coord, lon_coord, time_coord = _get_coord_names(wrfnc, varname)
     
     coords = OrderedDict()
     
@@ -1174,43 +1198,43 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
         lon_coord_valkey = lon_coord + "_val"
         lat_coord_dimkey = lat_coord + "_dim"
         lat_coord_valkey = lat_coord + "_val"
-        
+         
         lon_coord_dims = get_cached_item(_key, lon_coord_dimkey)
         lon_coord_vals = get_cached_item(_key, lon_coord_valkey)
         if lon_coord_dims is None or lon_coord_vals is None:
             lon_var = wrfnc.variables[lon_coord]
             lon_coord_dims = lon_var.dimensions
             lon_coord_vals = lon_var[:]
-            
+             
             # Only cache here if the domain is not moving, otherwise
             # caching is handled by cat/join
             if not is_moving_domain:
                 cache_item(_key, lon_coord_dimkey, lon_coord_dims)
                 cache_item(_key, lon_coord_valkey, lon_coord_vals)
-            
+             
         lat_coord_dims = get_cached_item(_key, lat_coord_dimkey)
         lat_coord_vals = get_cached_item(_key, lat_coord_valkey)
         if lat_coord_dims is None or lat_coord_vals is None:
             lat_var = wrfnc.variables[lat_coord]
             lat_coord_dims = lat_var.dimensions
             lat_coord_vals = lat_var[:]
-            
+             
             # Only cache here if the domain is not moving, otherwise
             # caching is done in cat/join
             if not is_moving_domain:
                 cache_item(_key, lat_coord_dimkey, lat_coord_dims)
                 cache_item(_key, lat_coord_valkey, lat_coord_vals)
-        
+         
         time_coord_vals = None
         if time_coord is not None:
             # If not from a multifile sequence, then cache the time
             # coordinate.  Otherwise, handled in cat/join/
             if not is_multifile:
                 time_coord_vals = get_cached_item(_key, time_coord)
-                
+                 
                 if time_coord_vals is None:
                     time_coord_vals = wrfnc.variables[time_coord][:]
-                    
+                     
                     if not is_multifile:
                         cache_item(_key, time_coord, time_coord_vals)
             else:
@@ -1223,24 +1247,11 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
                 coords[lon_coord] = lon_coord_dims, lon_coord_vals
                 coords[lat_coord] = lat_coord_dims, lat_coord_vals
                 
-                # Returned lats/lons arrays will have a time dimension, so proj
-                # will need to be a list due to moving corner points
-                lats, lons, proj_params = get_proj_params(wrfnc, 
-                                                          timeidx, 
-                                                          varname)
-                proj = [getproj(lats=lats[i,:], 
-                            lons=lons[i,:],
-                            **proj_params) for i in py3range(lats.shape[0])]
-                
             else:
                 coords[lon_coord] = (lon_coord_dims[1:], 
                                      lon_coord_vals[0,:])
                 coords[lat_coord] = (lat_coord_dims[1:], 
                                      lat_coord_vals[0,:])
-                
-                # Domain not moving, so just get the first time
-                lats, lons, proj_params = get_proj_params(wrfnc, 0, varname)
-                proj = getproj(lats=lats, lons=lons, **proj_params)
                 
             if time_coord is not None:
                 coords[time_coord] = (lon_coord_dims[0], time_coord_vals)
@@ -1253,11 +1264,9 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
             if time_coord is not None:
                 coords[time_coord] = (lon_coord_dims[0], 
                                       [time_coord_vals[timeidx]])
-            
-            
-            lats, lons, proj_params = get_proj_params(wrfnc, 0, varname)
-            proj = getproj(lats=lats, lons=lons, **proj_params)
         
+        proj_params = get_proj_params(wrfnc)
+        proj = getproj(**proj_params)
         attrs["projection"] = proj
         
     
@@ -1531,17 +1540,14 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
         timecached = False
         latcached = False
         loncached = False
-        projcached = False
         
         outxtimes = None
         outlats = None
         outlons = None
-        outprojs = None
         
         timekey = timename+"_cat" if timename is not None else None
         latkey = latname + "_cat" if latname is not None else None
         lonkey = lonname + "_cat" if lonname is not None else None
-        projkey = "projection_cat" if is_moving else None
         
         if timename is not None:
             outxtimes = get_cached_item(_key, timekey)
@@ -1570,16 +1576,6 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
                     outlons[startidx:endidx, :] = to_np(first_var.coords[lonname][:])
                 else:
                     loncached = True
-                
-            # Projections also need to be aggregated
-            
-            outprojs = get_cached_item(_key, projkey)
-            if outprojs is None:
-                outprojs = np.empty(outdims[0], np.object)
-                outprojs[startidx:endidx] = np.asarray(
-                    first_var.attrs["projection"], np.object)[:]
-            else:
-                projcached = True
             
     
     startidx = endidx
@@ -1610,17 +1606,6 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
                     if lonname is not None and not loncached:
                         londata = wrfnc.variables[lonname][:]
                         outlons[startidx:endidx, :] = londata[:]
-                    
-                    if not projcached:  
-                        lats, lons, proj_params = get_proj_params(wrfnc, 
-                                                              ALL_TIMES, 
-                                                              varname)
-                        projs = [getproj(lats=lats[i,:], 
-                            lons=lons[i,:],
-                            **proj_params) for i in py3range(lats.shape[0])]
-                    
-                        outprojs[startidx:endidx] = np.asarray(projs, 
-                                                               np.object)[:] 
             
             startidx = endidx
     
@@ -1631,8 +1616,6 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
             cache_item(_key, latkey, outlats)
         if not loncached and outlons is not None:
             cache_item(_key, lonkey, outlons)
-        if not projcached and outprojs is not None:
-            cache_item(_key, projkey, outprojs)
         if not timecached and outxtimes is not None:
             cache_item(_key, timekey, outxtimes)
             
@@ -1666,8 +1649,6 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
             if lonname is not None:
                 outlons = outlons[:]
                 outcoords[lonname] = outlatdims, outlons
-            
-            outattrs["projection"] = outprojs[:]
         
         outdata = outdata[:]
             
@@ -1798,17 +1779,14 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
         timecached = False
         latcached = False
         loncached = False
-        projcached = False
         
         outxtimes = None
         outlats = None
         outlons = None
-        outprojs = None
         
         timekey = timename+"_join" if timename is not None else None
         latkey = latname + "_join" if latname is not None else None
         lonkey = lonname + "_join" if lonname is not None else None
-        projkey = "projection_join" if is_moving else None
             
         if timename is not None:
             outxtimes = get_cached_item(_key, timekey)
@@ -1839,20 +1817,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
                         first_var.coords[lonname][:])
                 else:
                     loncached = True
-                
-            # Projections also need two dimensions
             
-            outprojs = get_cached_item(_key, projkey)
-            if outprojs is None:
-                outprojs = np.full(outdims[0:2], NullProjection(), np.object)
-            
-                outprojs[file_idx, 0:numtimes] = np.asarray(
-                                                first_var.attrs["projection"],
-                                                np.object)[:]
-            else:
-                projcached = True
-            
-    
     file_idx=1
     while True:
         try:
@@ -1889,17 +1854,6 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
                     if lonname is not None and not loncached:
                         londata = wrfnc.variables[lonname][:]
                         outlons[file_idx, 0:numtimes, :] = londata[:]
-                        
-                    if not projcached:
-                        lats, lons, proj_params = get_proj_params(wrfnc, 
-                                                                  ALL_TIMES, 
-                                                                  varname)
-                        projs = [getproj(lats=lats[i,:], 
-                            lons=lons[i,:],
-                            **proj_params) for i in py3range(lats.shape[0])]
-                    
-                        outprojs[file_idx, 0:numtimes] = (
-                            np.asarray(projs, np.object)[:])
             
             # Need to update coords here
             file_idx += 1
@@ -1916,8 +1870,6 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
             cache_item(_key, latkey, outlats)
         if not loncached and outlons is not None:
             cache_item(_key, lonkey, outlons)
-        if not projcached and outprojs is not None:
-            cache_item(_key, projkey, outprojs)
         if not timecached and outxtimes is not None:
             cache_item(_key, timekey, outxtimes)
         
@@ -1961,11 +1913,6 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
                 if not multitime:
                     outlons = outlons[:, np.newaxis, :]
                 outcoords[lonname] = outlatdims, outlons
-            
-            if not multitime:
-                outattrs["projection"] = outprojs[:, timeidx]
-            else:
-                outattrs["projection"] = outprojs
             
         if not multitime:
             outdata = outdata[:, timeidx, :]
@@ -2575,7 +2522,7 @@ def get_right_slices(var, right_ndims, fixed_val=0):
                  [slice(None)]*right_ndims)
 
 
-def get_proj_params(wrfin, timeidx=0, varname=None):
+def get_proj_params(wrfin):#, timeidx=0, varname=None):
     """Return a tuple of latitude, longitude, and projection parameters from 
     a WRF output file object or a sequence of WRF output file objects.
     
@@ -2608,26 +2555,28 @@ def get_proj_params(wrfin, timeidx=0, varname=None):
                                                 "MOAD_CEN_LAT", "STAND_LON", 
                                                 "POLE_LAT", "POLE_LON",
                                                 "DX", "DY"))
-    multitime = is_multi_time_req(timeidx)
-    if not multitime:
-        time_idx_or_slice = timeidx
-    else:
-        time_idx_or_slice = slice(None)
     
-    if varname is not None:
-        if not is_coordvar(varname):
-            coord_names = getattr(wrfin.variables[varname], 
-                                  "coordinates").split()
-            lon_coord = coord_names[0]
-            lat_coord = coord_names[1]
-        else:
-            lat_coord, lon_coord = get_coord_pairs(varname)
-    else:
-        lat_coord, lon_coord = latlon_coordvars(wrfin.variables)
-    
-    return (wrfin.variables[lat_coord][time_idx_or_slice,:],
-            wrfin.variables[lon_coord][time_idx_or_slice,:],
-            proj_params)
+    return proj_params
+#     multitime = is_multi_time_req(timeidx)
+#     if not multitime:
+#         time_idx_or_slice = timeidx
+#     else:
+#         time_idx_or_slice = slice(None)
+#     
+#     if varname is not None:
+#         if not is_coordvar(varname):
+#             coord_names = getattr(wrfin.variables[varname], 
+#                                   "coordinates").split()
+#             lon_coord = coord_names[0]
+#             lat_coord = coord_names[1]
+#         else:
+#             lat_coord, lon_coord = get_coord_pairs(varname)
+#     else:
+#         lat_coord, lon_coord = latlon_coordvars(wrfin.variables)
+#     
+#     return (wrfin.variables[lat_coord][time_idx_or_slice,:],
+#             wrfin.variables[lon_coord][time_idx_or_slice,:],
+#             proj_params)
         
 
 def from_args(func, argnames, *args, **kwargs):
@@ -2941,6 +2890,735 @@ def get_id(obj):
     # For each key in the mapping, recursively call get_id until
     # until a non-mapping is found
     return {key : get_id(val) for key,val in viewitems(obj)}
+
+
+def geobounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
+              squeeze=True, cache=None):
+    """Return the geographic boundaries for the variable or file(s).
+    
+    When using a :class:`xarray.DataArray` as the *var* parameter, the variable
+    must contain latitude and longitude coordinates.  If these coordinate 
+    dimensions are greater than two dimensions, then an array of 
+    :class:`wrf.GeoBounds` objects will be returned with the same shape as the 
+    leftmost dimensions of the coordinate arrays.
+    
+    When using a WRF file, or sequence of WRF files, by supplying the 
+    *wrfin* parameter, an array of :class:`wrf.GeoBounds` objects will be 
+    returned if the domain is moving and :data:`wrf.ALL_TIMES` is selected as 
+    the *timeidx* parameter when using *wrfin*. Otherwise, a single 
+    :class:`wrf.GeoBounds` object is returned.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray`, optional): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`, optional): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index when *wrfin* is not None. This value can be a 
+            positive integer, negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0. This value is 
+            ignored when *var* is used.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences when *wrfin* is not None.  Must be either 'cat' or 
+            'join'.  'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Only used when *wrfin* is used. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. Only used when *wrfin* is used.
+            Default is None.
+            
+    Returns:
+    
+        :class:`wrf.GeoBounds`:  The domain geographic bounds.
+    
+    """
+    
+    if var is None and wrfin is None:
+        raise ValueError("'var' or 'wrfin' parameter is required")
+    
+    # Getting lat/lon from xarray coordinates
+    if var is not None:
+        is_moving = None
+        try:
+            var_coords = var.coords
+        except AttributeError:
+            raise ValueError("'var' object does not contain coordinate "
+                             "attributes")
+
+        latname, lonname, _ = _find_coord_names(var_coords)
+        try:
+            lats = to_np(var_coords[latname])
+        except KeyError:
+            raise ValueError("'var' object does not contain a latitude "
+                             "coordinate")
+        try:
+            lons = to_np(var_coords[lonname])
+        except KeyError:
+            raise ValueError("'var' object does not contain a longitude "
+                             "coordinate")
+        
+    # Getting lat/lon from the file
+    elif wrfin is not None:
+        _key = get_id(wrfin)
+        is_moving = is_moving_domain(wrfin, varname=varname, 
+                                     latvar=either("XLAT", "XLAT_M"), 
+                                     lonvar=either("XLONG", "XLONG_M"), 
+                                     _key=_key)
+        if varname is not None:
+            if xarray_enabled():
+                var = extract_vars(wrfin, timeidx, varname, method, squeeze, 
+                                   cache, meta=True, _key=_key)[varname]
+                return geobounds(var)
+            else:
+                lat_coord, lon_coord, _ = _get_coord_names(wrfin, varname)
+        else:
+            lat_coord = either("XLAT", "XLAT_M")(wrfin)
+            lon_coord = either("XLONG", "XLONG_M")(wrfin)
+        
+        # If requesting all times but the domain isn't moving, just 
+        # extract one time
+        _timeidx = timeidx
+        if timeidx is None and not is_moving:
+            _timeidx = 0
+               
+        coord_data = extract_vars(wrfin, _timeidx, (lat_coord, lon_coord), 
+                                  method, squeeze, cache, meta=False, 
+                                  _key=_key)
+        lats = coord_data[lat_coord]
+        lons = coord_data[lon_coord]
+        
+    # Moving domains
+    if lats.ndim > 2:
+        # Requesting all times, works for 'cat' and 'join' data
+        # and always for xarray data
+        extra_dims = lats.shape[0:-2]
+        out_geo = np.full(extra_dims, NullGeoBounds(), np.object)
+         
+        for left_idxs in iter_left_indexes(extra_dims):
+            latlon_idx = left_idxs + (slice(None),)
+            out_geo[left_idxs] = GeoBounds(lats=lats[latlon_idx],
+                                           lons=lons[latlon_idx])
+        return out_geo
+    
+    # Non-moving domains
+    return GeoBounds(lats=lats, lons=lons)    
+
+def _get_wrf_proj_geobnds(var, wrfin, varname, timeidx, method, squeeze, 
+                          cache):
+    """Return the :class:`wrf.WrfProj` subclass and :class:`wrf.GeoBounds`.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray`): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+    Returns:
+        
+        :obj:`tuple`: A tuple of :class:`wrf.WrfProj` 
+        and :class:`wrf.GeoBounds`
+    
+    """
+    # Using a variable
+    if var is not None:
+        geobnds = geobounds(var)
+        wrf_proj = var.attrs["projection"]
+    else:
+        geobnds = geobounds(wrfin=wrfin, varname=varname, timeidx=timeidx,
+                            method=method, cache=cache)
+        proj_params = get_proj_params(wrfin)
+        wrf_proj = getproj(**proj_params)
+        
+    return wrf_proj, geobnds
+
+
+def _get_proj_obj(ob_type, var, wrfin, varname, timeidx, method, squeeze, 
+                  cache, **kwargs):
+    """Return the desired mapping object for the plotting type.
+    
+    Args:
+        
+        ob_type (:obj:`str`): Must be 'cartopy', 'basemap', or 'pyngl'.
+        
+        var (:class:`xarray.DataArray`): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+        **kwargs: Additional keyword arguments for the plotting type.
+            
+    Returns:
+        
+        mapping object:  Will be either :class:`cartopy.crs.Projection`, 
+        :class:`matplotlib.mpl_toolkits.basemap.Basemap` or 
+        :class:`Ngl.Resources`.
+    
+    """
+    
+    wrf_proj, geobnds = _get_wrf_proj_geobnds(var, wrfin, varname, timeidx, 
+                                              method, squeeze, cache)
+        
+    if ob_type == "cartopy":
+        proj_obj = wrf_proj.cartopy()
+    elif ob_type == "basemap":
+        try:
+            _ = len(geobnds)
+        except TypeError: # Only a single object
+            proj_obj = wrf_proj.basemap(geobnds, **kwargs)
+        else:            
+            proj_obj = np.empty(geobnds.shape, np.object)
+            
+            for idxs, geobnd_val in np.ndenumerate(geobnds):
+                proj_obj[idxs] = wrf_proj.basemap(geobnd_val, **kwargs)
+    elif ob_type == "pyngl":
+        try:
+            _ = len(geobnds)
+        except TypeError: # Only a single object
+            proj_obj = wrf_proj.pyngl(geobnds, **kwargs)
+        else:            
+            proj_obj = np.empty(geobnds.shape, np.object)
+            
+            for idxs, geobnd_val in np.ndenumerate(geobnds):
+                proj_obj[idxs] = wrf_proj.pyngl(geobnd_val, **kwargs)
+        
+    return proj_obj
+
+def latlon_coords(var, as_np=False):
+    """Return the latitude and longitude coordinates from a 
+    :class:`xarray.DataArray` object.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray`):  A variable.
+        
+        to_np (:obj:`bool`): Set to True to return the coordinates as 
+            :class:`numpy.ndarray` objects instead of 
+            :class:`xarray.DataArray` objects.
+            
+    Returns:
+    
+        :obj:`tuple`: The latitude and longitude coordinate variables.
+    
+    """
+    
+    try:
+        var_coords = var.coords
+    except AttributeError:
+        raise ValueError("'var' object does not contain coordinate "
+                         "attributes")
+
+    latname, lonname, _ = _find_coord_names(var_coords)
+    try:
+        lats = var_coords[latname]
+    except KeyError:
+        raise ValueError("'var' object does not contain a latitude "
+                         "coordinate")
+    try:
+        lons = var_coords[lonname]
+    except KeyError:
+        raise ValueError("'var' object does not contain a longitude "
+                         "coordinate")
+        
+    if as_np:
+        return to_np(lats), to_np(lons)
+    
+    return lats, lons
+    
+    
+
+     
+def get_cartopy(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
+              squeeze=True, cache=None):
+    """Return a :class:`cartopy.crs.Projection` subclass for the 
+    map projection.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray`, optional): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+            
+        geobounds (:class:`wrf.GeoBounds`, optional):  The geobounds to 
+            get the extents.  If set to None and using the *var* parameter,
+            the geobounds will be taken from the variable.  If using a 
+            file, then the geobounds will be taken from the native grid.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`, optional): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+    Returns:
+        
+        :class:`cartopy.crs.Projection`: A Projection subclass for the 
+        map projection.
+            
+    See Also:
+        
+        :class:`cartopy.crs.Projection`
+    
+    """
+    return _get_proj_obj("cartopy", var, wrfin, varname, timeidx, method, 
+                         squeeze, cache)
+
+    
+def get_basemap(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
+              squeeze=True, cache=None, **kwargs):
+    """Return a :class:`matplotlib.mpl_toolkits.basemap.Basemap` object 
+        for the map projection.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray`, optional): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+            
+        geobounds (:class:`wrf.GeoBounds`, optional):  The geobounds to 
+            get the extents.  If set to None and using the *var* parameter,
+            the geobounds will be taken from the variable.  If using a 
+            file, then the geobounds will be taken from the native grid.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`, optional): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        **kwargs: Keyword arguments for creating a 
+            :class:`matplotlib.mpl_toolkits.basemap.Basemap`.  By default,
+            the domain bounds will be set to the native projection, the 
+            resolution will be set to 'l', and the other projection 
+            parameters will be set by the information in the file.
+            
+    Returns:
+        
+        :class:`cartopy.crs.Projection`: A Projection subclass for the 
+        map projection.
+            
+    Returns:
+        
+            :class:`matplotlib.mpl_toolkits.basemap.Basemap`: A Basemap
+            object for the projection.
+            
+        See Also:
+        
+            :class:`matplotlib.mpl_toolkits.basemap.Basemap`
+    
+    """
+    return _get_proj_obj("basemap", var, wrfin, varname, timeidx, method, 
+                         squeeze, cache, **kwargs)
+
+    
+def get_pyngl(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
+              squeeze=True, cache=None, **kwargs):
+    """Return a :class:`Ngl.Resources` object for the map projection.
+    
+    Args:
+    
+        var (:class:`xarray.DataArray`, optional): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+            
+        geobounds (:class:`wrf.GeoBounds`, optional):  The geobounds to 
+            get the extents.  If set to None and using the *var* parameter,
+            the geobounds will be taken from the variable.  If using a 
+            file, then the geobounds will be taken from the native grid.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`, optional): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        **kwargs: Additional PyNGL resources to set while creating the 
+            :class:`Ngl.Resources` object.
+    
+    Returns:
+        
+        :class:`Ngl.Resources`: A dict-like object that contains the 
+        PyNGL resources for the map projection.
+                
+    See Also:
+    
+        `PyNGL <https://www.pyngl.ucar.edu/>`_ 
+    """
+    return _get_proj_obj("pyngl", var, wrfin, varname, timeidx, method, 
+                         squeeze, cache)
+
+    
+def cartopy_xlim(var=None, geobounds=None, wrfin=None, varname=None, timeidx=0, 
+                 method="cat", squeeze=True, cache=None):
+    """Return the x-axis limits in the projected coordinates.
+    
+    For some map projections, like :class`wrf.RotatedLatLon`, the 
+    :meth:`cartopy.GeoAxes.set_extent` method does not work correctly.  This 
+    method is equivalent to:
+    
+    .. code-block:: python
+    
+        pc = crs.PlateCarree()
+        xs, ys, _  = self._cartopy().transform_points(pc,
+                             np.array([geobounds.bottom_left.lon, 
+                                       geobounds.top_right.lon]),
+                             np.array([geobounds.bottom_left.lat,
+                                       geobounds.top_right.lat])).T
+ 
+                            
+        _xlimits = xs.tolist()
+        _ylimits = ys.tolist()
+         
+        return (_xlimits, _ylimits)[0]
+        
+    Args:
+    
+        var (:class:`xarray.DataArray`, optional): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+            
+        geobounds (:class:`wrf.GeoBounds`, optional):  The geobounds to 
+            get the extents.  If set to None and using the *var* parameter,
+            the geobounds will be taken from the variable.  If using a 
+            file, then the geobounds will be taken from the native grid.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`, optional): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+    Returns:
+    
+        :obj:`list`:  A list of [start_x, end_x] in the projected coordinate
+        system.
+    
+    """
+    wrf_proj, native_geobnds = _get_wrf_proj_geobnds(var, wrfin, varname, 
+                                    timeidx, method, squeeze, cache)
+    if geobounds is not None:
+        return wrf_proj.cartopy_xlim(geobounds)
+
+    return wrf_proj.cartopy_xlim(native_geobnds)
+    
+    
+def cartopy_ylim(var=None, geobounds=None, wrfin=None, varname=None, timeidx=0, 
+                 method="cat", squeeze=True, cache=None):
+    """Return the y-axis limits in the projected coordinates.
+    
+    For some map projections, like :class`wrf.RotatedLatLon`, the 
+    :meth:`cartopy.GeoAxes.set_extent` method does not work correctly.  This 
+    method is equivalent to:
+    
+    .. code-block:: python
+    
+        pc = crs.PlateCarree()
+        xs, ys, _  = self._cartopy().transform_points(pc,
+                             np.array([geobounds.bottom_left.lon, 
+                                       geobounds.top_right.lon]),
+                             np.array([geobounds.bottom_left.lat,
+                                       geobounds.top_right.lat])).T
+ 
+                            
+        _xlimits = xs.tolist()
+        _ylimits = ys.tolist()
+         
+        return (_xlimits, _ylimits)[1]
+        
+    Args:
+    
+        var (:class:`xarray.DataArray`, optional): A :class:`xarray.DataArray` 
+            variable that includes latitude,longitude coordinate information.
+            If not used, then *wrfin* must be provided.
+            
+        geobounds (:class:`wrf.GeoBounds`, optional):  The geobounds to 
+            get the extents.  If set to None and using the *var* parameter,
+            the geobounds will be taken from the variable.  If using a 
+            file, then the geobounds will be taken from the native grid.
+        
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable, optional): Input WRF ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types. If not used, 
+            then *var* must be provided.
+            
+        varname (:obj:`str`, optional): If using *wrfin*, then this will be the
+            variable name to use to determine the geobounds.  The variable 
+            can be a coordinate variable, or a regular variable that contains 
+            coordinate attributes.  If None, 
+            then the 'XLAT', 'XLAT_M', 'XLONG', 'XLONG_M' variables 
+            will be used.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. Default is 0.
+            
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+            
+    Returns:
+    
+        :obj:`list`:  A list of [start_y, end_y] in the projected coordinate
+        system.
+    
+    """
+    wrf_proj, native_geobnds = _get_wrf_proj_geobnds(var, wrfin, varname, 
+                                    timeidx, method, squeeze, cache)
+    if geobounds is not None:
+        return wrf_proj.cartopy_ylim(geobounds)
+
+    return wrf_proj.cartopy_ylim(native_geobnds)
+
+
+
+        
+            
 
     
 

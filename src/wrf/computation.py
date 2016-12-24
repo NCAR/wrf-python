@@ -9,11 +9,11 @@ from .extension import (_interpz3d, _interp2dxy, _interp1d, _slp, _tk, _td,
                         _rh, _uvmet, _smooth2d, _cape, _cloudfrac, _ctt, _dbz,
                         _srhel, _udhel, _avo, _pvo, _eth, _wetbulb, _tv, 
                         _omega, _pw)
-from .util import from_var
 from .decorators import convert_units
 from .metadecorators import (set_alg_metadata, set_uvmet_alg_metadata, 
                              set_interp_metadata, set_cape_alg_metadata,
-                             set_cloudfrac_alg_metadata)
+                             set_cloudfrac_alg_metadata,
+                             set_smooth_metdata)
 from .interputils import get_xy
 
 @set_interp_metadata("xy")
@@ -677,9 +677,7 @@ def uvmet(u, v, lat, lon, cen_long, cone, meta=True, units="m s-1"):
     return _uvmet(u, v, lat, lon, cen_long, cone)
 
 
-@set_alg_metadata(2, "field", 
-                  description=from_var("field", "description"), 
-                  units=from_var("field", "units"))
+@set_smooth_metdata()
 def smooth2d(field, passes, meta=True):
     """Return the field smoothed.
     
