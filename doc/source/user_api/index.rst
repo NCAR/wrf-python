@@ -60,7 +60,7 @@ the array object to a compiled extension.
    :nosignatures:
    :toctree: ./generated/
    
-   wrf.npvalues
+   wrf.to_np
    
     
 Variable Extraction Routines
@@ -80,7 +80,23 @@ WRF NetCDF file (or a sequence of NetCDF files).
     wrf.extract_global_attrs
     wrf.extract_times
     
+    
+Plotting Helper Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The routines below are used to assist with plotting.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
    
+    wrf.geo_bounds
+    wrf.get_cartopy
+    wrf.get_basemap
+    wrf.get_pyngl
+    wrf.cartopy_xlim
+    wrf.cartopy_ylim
+    
 Raw Diagnostic Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -225,7 +241,17 @@ CoordPair Methods
    
    wrf.CoordPair.latlon_str
    wrf.CoordPair.xy_str
- 
+   
+GeoBounds Class
+^^^^^^^^^^^^^^^^^^^^^^^
+
+The class below is used for specifying geographic boundaries. 
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.GeoBounds
    
 Projection Classes
 ^^^^^^^^^^^^^^^^^^^^^^^^

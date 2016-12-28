@@ -25,7 +25,7 @@ class Mock(MagicMock):
     def __getattr__(cls, name):
         return Mock()
     
-MOCK_MODULES = ["numpy", "numpy.ma", "xarray", 
+MOCK_MODULES = ["numpy", "numpy.ma", "xarray", "cartopy", 
                 "pandas", "matplotlib", "netCDF4", "mpl_toolkits.basemap",
                 "wrf._wrffortran"]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)

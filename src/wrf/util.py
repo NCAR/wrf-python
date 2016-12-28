@@ -2892,7 +2892,7 @@ def get_id(obj):
     return {key : get_id(val) for key,val in viewitems(obj)}
 
 
-def geobounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
+def geo_bounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
               squeeze=True, cache=None):
     """Return the geographic boundaries for the variable or file(s).
     
@@ -2994,7 +2994,7 @@ def geobounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
             if xarray_enabled():
                 var = extract_vars(wrfin, timeidx, varname, method, squeeze, 
                                    cache, meta=True, _key=_key)[varname]
-                return geobounds(var)
+                return geo_bounds(var)
             else:
                 lat_coord, lon_coord, _ = _get_coord_names(wrfin, varname)
         else:
@@ -3085,10 +3085,10 @@ def _get_wrf_proj_geobnds(var, wrfin, varname, timeidx, method, squeeze,
     """
     # Using a variable
     if var is not None:
-        geobnds = geobounds(var)
+        geobnds = geo_bounds(var)
         wrf_proj = var.attrs["projection"]
     else:
-        geobnds = geobounds(wrfin=wrfin, varname=varname, timeidx=timeidx,
+        geobnds = geo_bounds(wrfin=wrfin, varname=varname, timeidx=timeidx,
                             method=method, cache=cache)
         proj_params = get_proj_params(wrfin)
         wrf_proj = getproj(**proj_params)

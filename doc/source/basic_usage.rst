@@ -19,8 +19,8 @@ In the example below, sea level pressure is calculated and printed.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar
     
@@ -78,8 +78,8 @@ NetCDF variables.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar
     
@@ -141,8 +141,8 @@ The example below illustrates both.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, disable_xarray
     
@@ -169,7 +169,7 @@ Extracting a Numpy Array from a DataArray
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you need to convert an :class:`xarray.DataArray` to a :class:`numpy.ndarray`,
-wrf-python provides the :meth:`wrf.npvalues` function for this purpose. Although
+wrf-python provides the :meth:`wrf.to_np` function for this purpose. Although
 an :class:`xarray.DataArary` object already contains the 
 :attr:`xarray.DataArray.values` attribute to extract the Numpy array, there is a 
 problem when working with compiled extensions. The behavior for xarray (and pandas) 
@@ -177,19 +177,19 @@ is to convert missing/fill values to NaN, which may cause crashes when working
 with compiled extensions.  Also, some existing code may be designed to work with 
 :class:`numpy.ma.MaskedArray`, and numpy arrays with NaN may not work with it.
 
-The :meth:`wrf.npvalues` function does the following:
+The :meth:`wrf.to_np` function does the following:
 
-#. If no missing/fill values are used, :meth:`wrf.npvalues` simply returns the 
+#. If no missing/fill values are used, :meth:`wrf.to_np` simply returns the 
    :attr:`xarray.DataArray.values` attribute.
 
-#. If missing/fill values are used, then :meth:`wrf.npvalues` replaces the NaN
+#. If missing/fill values are used, then :meth:`wrf.to_np` replaces the NaN
    values with the _FillValue found in the :attr:`xarray.DataArray.attrs` 
    attribute (required) and a :class:`numpy.ma.MaskedArray` is returned.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar
     
@@ -198,7 +198,7 @@ The :meth:`wrf.npvalues` function does the following:
     # Get the Sea Level Pressure
     cape_3d = getvar(ncfile, "cape_3d")
     
-    cape_3d_ndarray = npvalues(cape_3d)
+    cape_3d_ndarray = to_np(cape_3d)
     
     print(type(cape_3d_ndarray))
 
@@ -229,11 +229,10 @@ function.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
+    from __future__ import print_function
     
     from netCDF4 import Dataset
     from wrf import getvar, ALL_TIMES
-    
     
     # Creating a simple test list with three timesteps
     wrflist = [Dataset("wrfout_d01_2016-10-07_00_00_00"), 
@@ -305,8 +304,8 @@ for most cases.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, ALL_TIMES
     
@@ -367,8 +366,8 @@ numpy's automatic squeezing of the single 'Time' dimension. To maintain the
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, ALL_TIMES
     
@@ -436,9 +435,9 @@ The *method* argument is used to describe how each sequence in the dictionary
 will be combined.
 
 .. code-block:: python
-
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
     
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, ALL_TIMES
     
@@ -504,7 +503,7 @@ a specific horizontal level, usually pressure or height.
 
 .. code-block:: python
     
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
+    from __future__ import print_function
     
     from netCDF4 import Dataset
     from wrf import getvar, interplevel
@@ -579,8 +578,8 @@ Example Using Start Point and End Point
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair
     
@@ -644,8 +643,8 @@ Example Using Pivot Point and Angle
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair  
     
@@ -710,8 +709,8 @@ Example Using Lat/Lon Coordinates
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair  
     
@@ -781,8 +780,8 @@ Example Using Specified Vertical Levels
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair  
     
@@ -861,8 +860,8 @@ Example Using Start Point and End Point
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
     
@@ -912,8 +911,8 @@ Example Using Pivot Point and Angle
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
     
@@ -962,8 +961,8 @@ Example Using Lat/Lon Coordinates
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
     
@@ -1024,8 +1023,8 @@ The surface levels to interpolate also need to be specified.
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
     
@@ -1097,8 +1096,8 @@ Example With Single Coordinates
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
-    
+    from __future__ import print_function
+
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair, xy_to_ll, ll_to_xy
     
@@ -1137,7 +1136,7 @@ Example With Multiple Coordinates
 
 .. code-block:: python
 
-    from __future__ import (absolute_import, division, print_function, unicode_literals)
+    from __future__ import print_function
     
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair, xy_to_ll, ll_to_xy
