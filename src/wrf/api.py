@@ -33,7 +33,7 @@ from .projection import (WrfProj, NullProjection, LambertConformal, Mercator,
                          getproj)
 from .coordpair import CoordPair
 from .interputils import to_xy_coords
-from cache import cache_item, get_cached_item
+from .cache import cache_item, get_cached_item
 from .version import __version__
 
 __all__ = []

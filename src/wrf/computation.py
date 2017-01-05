@@ -104,7 +104,7 @@ def xy(field, pivot_point=None, angle=None, start_point=None, end_point=None,
     
 
 @set_interp_metadata("1d")
-def interp1d(field, z_in, z_out, missingval=Constants.DEFAULT_FILL, 
+def interp1d(field, z_in, z_out, missing=Constants.DEFAULT_FILL, 
              meta=True):
     """Return the linear interpolation of a one-dimensional variable.
     
@@ -127,7 +127,7 @@ def interp1d(field, z_in, z_out, missingval=Constants.DEFAULT_FILL,
             one-dimensional array of *z_in* coordinate points to interpolate 
             to.  Must be the same type as *z_in*. 
             
-        missingval (:obj:`float`, optional): The fill value to use for the 
+        missing (:obj:`float`, optional): The fill value to use for the 
             output.  Default is :data:`wrf.Constants.DEFAULT_FILL`.
         
         meta (:obj:`bool`, optional): Set to False to disable metadata and 
@@ -174,7 +174,7 @@ def interp1d(field, z_in, z_out, missingval=Constants.DEFAULT_FILL,
             interp_vals = interp1d(p_1d, ht_1d, levels)
     
     """
-    return _interp1d(field, z_in, z_out, missingval)
+    return _interp1d(field, z_in, z_out, missing)
 
 
 @set_interp_metadata("2dxy")
@@ -713,7 +713,7 @@ def smooth2d(field, passes, meta=True):
 
 @set_cape_alg_metadata(is2d=True, copyarg="pres_hpa")
 def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
-            missingval=Constants.DEFAULT_FILL, meta=True):
+            missing=Constants.DEFAULT_FILL, meta=True):
     """Return the two-dimensional CAPE, CIN, LCL, and LFC.
     
     This function calculates the maximum convective available potential 
@@ -789,7 +789,7 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             data uses terrain following coordinates (WRF data).  Set to 
             False for pressure level data.
             
-        missingval (:obj:`float`, optional): The fill value to use for the 
+        missing (:obj:`float`, optional): The fill value to use for the 
             output.  Default is :data:`wrf.Constants.DEFAULT_FILL`.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
@@ -821,7 +821,7 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     
     i3dflag = 0
     cape_cin = _cape(pres_hpa, tkel, qv, height, terrain, psfc_hpa, 
-                     missingval, i3dflag, ter_follow)
+                     missing, i3dflag, ter_follow)
     
     left_dims = cape_cin.shape[1:-3]
     right_dims = cape_cin.shape[-2:]
@@ -838,12 +838,12 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     result[2,...,:,:] = cape_cin[1,...,-2,:,:]
     result[3,...,:,:] = cape_cin[1,...,-3,:,:]
     
-    return ma.masked_values(result, missingval)
+    return ma.masked_values(result, missing)
 
 
 @set_cape_alg_metadata(is2d=False, copyarg="pres_hpa")
 def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
-            missingval=Constants.DEFAULT_FILL, meta=True):
+            missing=Constants.DEFAULT_FILL, meta=True):
     """Return the three-dimensional CAPE and CIN.
     
     This function calculates the maximum convective available potential 
@@ -911,7 +911,7 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             data uses terrain following coordinates (WRF data).  Set to 
             False for pressure level data.
             
-        missingval (:obj:`float`, optional): The fill value to use for the 
+        missing (:obj:`float`, optional): The fill value to use for the 
             output.  Default is :data:`wrf.Constants.DEFAULT_FILL`.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
@@ -943,9 +943,9 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     
     i3dflag = 1
     cape_cin = _cape(pres_hpa, tkel, qv, height, terrain, psfc_hpa, 
-                     missingval, i3dflag, ter_follow)
+                     missing, i3dflag, ter_follow)
     
-    return ma.masked_values(cape_cin, missingval)
+    return ma.masked_values(cape_cin, missing)
 
 
 @set_cloudfrac_alg_metadata(copyarg="pres")
