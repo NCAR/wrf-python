@@ -4,7 +4,7 @@
 # continuum can release a fix.
 package:
   name: wrf-python
-  version: {{ load_setup_py_data().version }}
+  version: 1.0a3
 
 source:
   git_url: git@github.com:NCAR/wrf-python.git
@@ -17,7 +17,8 @@ requirements:
   build:
     - numpy x.x
     - wrapt
-    - gcc
+    - mingw # [win]
+    - gcc # [unix]
     - python
     - libgcc
 
@@ -25,7 +26,8 @@ requirements:
     - numpy x.x
     - python
     - wrapt 
-    - libgcc
+    - mingw # [win]
+    - libgcc # [unix]
     - xarray
 
 test:
