@@ -7,7 +7,7 @@ package:
   version: 1.0a3
 
 source:
-  git_url: git@github.com:NCAR/wrf-python.git
+  git_url: https://github.com/NCAR/wrf-python.git
 
 build:
   number: 1
