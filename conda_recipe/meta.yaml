@@ -17,16 +17,16 @@ requirements:
   build:
     - numpy x.x
     - wrapt
-    - mingw # [win]
+    - m2w64-toolchain # [win]
     - gcc # [unix]
+    - libgcc # [unix]
     - python
-    - libgcc
-
+    
   run:
     - numpy x.x
     - python
     - wrapt 
-    - mingw # [win]
+    - m2w64-toolchain # [win]
     - libgcc # [unix]
     - xarray
 
