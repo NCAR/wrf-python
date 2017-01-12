@@ -44,23 +44,26 @@ else:
         #if sys.version_info < (3,3):
         #    requirements.append("mock")
     ext_modules = [ext1]
-        
+
 
 numpy.distutils.core.setup( 
     author = "Bill Ladwig",
     author_email = "ladwig@ucar.edu",
-    description = "Diagnostic and interpolation routines for WRF-ARW data",
-    long_description = """
-    A collection of diagnostics and interpolation routines to be used with 
-    WRF-ARW data.
-    """,
+    description = "Diagnostic and interpolation routines for WRF-ARW data.",
+    long_description = ("A collection of diagnostic and interpolation routines "
+                        "to be used with WRF-ARW data.\n\n"
+                        "GitHub Repository:\n\n"
+                        "https://github.com/NCAR/wrf-python\n\n"
+                        "Documentation:\n\n"
+                        "https://wrf-python.readthedocs.io\n"),
     url = "https://github.com/NCAR/wrf-python",
     keywords = ["python", "wrf-python", "wrf", "forecast", "model",
                 "weather research and forecasting", "interpolation", 
                 "plotting", "plots", "meteorology", "nwp", 
-                "numerical weather predication", "diagnostic"],
+                "numerical weather prediction", "diagnostic",
+                "science", "numpy"],
     install_requires = requirements,
-    classifiers = ["Development Status :: 3 - Alpha",
+    classifiers = ["Development Status :: 4 - Beta",
                 "Intended Audience :: Science/Research",
                 "Intended Audience :: Developers",
                 "License :: OSI Approved",
@@ -74,11 +77,14 @@ numpy.distutils.core.setup(
                 "Operating System :: Unix",
                 "Operating System :: MacOS",
                 "Operating System :: Microsoft :: Windows"],
-    name = "wrf",
+    name = "wrf-python",
+    platforms = ["any"],
+    license = "OSI Approved",
     version =  __version__,
     packages = setuptools.find_packages("src"),
     ext_modules = ext_modules,
     package_dir = {"" : "src"},
+    download_url = "http://python.org/pypi/wrf-python",
     #namespace_packages=["wrf"],
     # Note:  If this doesn't work, you need to add the file to MANIFEST
     package_data={"wrf" : ["data/psadilookup.dat"]},

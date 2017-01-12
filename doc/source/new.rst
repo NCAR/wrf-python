@@ -18,3 +18,11 @@ v1.0a3
 - Renamed npvalues to to_np which is more intuitive.
 - Fixed issue with generator expressions.
 - Renamed some functions and arguments.
+
+
+v1.0b1
+----------
+
+- Beta release 1.
+- Added more packaging boilerplate.
+

@@ -17,7 +17,6 @@ Highly Recommended Packages
     - netCDF4-python (1.2.0 or later)
 
 
-
 Plotting Packages
 -------------------------
 

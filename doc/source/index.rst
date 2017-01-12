@@ -30,6 +30,7 @@ Documentation
    ./basic_usage
    ./plot
    ./api
+   ./license
 
 
 

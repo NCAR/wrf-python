@@ -1,6 +1,6 @@
 # wrf-python
 
-A package for users of the Weather Research and Forecasting (WRF) Model.  This package contains over 30 diagnostics calculations, interpolation routines, and utilities to help with plotting.  
+A collection of diagnostic and interpolation routines for use with output from the Weather Research and Forecasting (WRF-ARW) Model. 
 
 Documentation is available at:
 

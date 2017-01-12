@@ -195,9 +195,10 @@ The :meth:`wrf.to_np` function does the following:
     
     ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
     
-    # Get the Sea Level Pressure
+    # Get the 3D CAPE, which contains missing values
     cape_3d = getvar(ncfile, "cape_3d")
     
+    # Since there are missing values, this should return a MaskedArray
     cape_3d_ndarray = to_np(cape_3d)
     
     print(type(cape_3d_ndarray))
@@ -578,7 +579,7 @@ Example Using Start Point and End Point
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair
@@ -643,7 +644,7 @@ Example Using Pivot Point and Angle
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair  
@@ -709,7 +710,7 @@ Example Using Lat/Lon Coordinates
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair  
@@ -780,7 +781,7 @@ Example Using Specified Vertical Levels
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, vertcross, CoordPair  
@@ -860,7 +861,7 @@ Example Using Start Point and End Point
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
@@ -911,7 +912,7 @@ Example Using Pivot Point and Angle
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
@@ -961,7 +962,7 @@ Example Using Lat/Lon Coordinates
 
 .. code-block:: python
 
-    from __future__ import print_function
+    from __future__ import print_function, division
 
     from netCDF4 import Dataset
     from wrf import getvar, interpline, CoordPair  
@@ -1173,3 +1174,476 @@ Result:
       * idx           (idx) int64 0 1
 
 
+Mapping Helper Routines
+-------------------------
+
+wrf-python includes several routines to assist with plotting, primarily for 
+obtaining the mapping object used for cartopy, basemap, and PyNGL.  For all 
+three plotting systems, the mapping object can be determined directly from 
+a variable when using xarray, or can be obtained from the WRF output file(s) 
+if xarray is turned off.  
+
+Also included are utilities for extracting the geographic boundaries 
+directly from xarray variables.  This can be useful in situations where you 
+only want to work with subsets (slices) of a large domain, but don't want to 
+define the map projection over the subset region.
+
+
+Cartopy Example Using a Variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, we're going to extract the cartopy mapping object from a
+diagnostic variable (slp), the lat,lon coordinates, and the geographic 
+boundaries.  Next, we're going to take a subset of the diagnostic variable 
+and extract the geographic boundaries.  Some of the variables 
+will be printed for demonstration.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from netCDF4 import Dataset
+    from wrf import getvar, get_cartopy, latlon_coords, geo_bounds
+
+    ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
+    
+    # Use SLP for the example variable
+    slp = getvar(ncfile, "slp")
+    
+    # Get the cartopy mapping object
+    cart_proj = get_cartopy(slp)
+    
+    print (cart_proj)
+    
+    # Get the latitude and longitude coordinate.  This is usually needed for plotting.
+    lats, lons = latlon_coords(slp)
+    
+    # Get the geobounds for the SLP variable
+    bounds = geo_bounds(slp)
+    
+    print (bounds)
+    
+    # Get the geographic boundaries for a subset of the domain
+    slp_subset = slp[150:250, 150:250]
+    slp_subset_bounds = geo_bounds(slp_subset)
+    
+    print (slp_subset_bounds)
+
+
+Result:
+
+.. code-block:: none
+
+    <cartopy.crs.LambertConformal object at 0x115374290>
+    GeoBounds(CoordPair(lat=25.9246292114, lon=-119.675048828), CoordPair(lat=29.0761833191, lon=-117.46484375))
+    GeoBounds(CoordPair(lat=25.9246292114, lon=-119.675048828), CoordPair(lat=29.0761833191, lon=-117.46484375))
+
+
+Cartopy Example Using WRF Output Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, the cartopy mapping object and geographic boundaries 
+will be extracted directly from the netcdf variable.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from netCDF4 import Dataset
+    from wrf import get_cartopy, geo_bounds
+    
+    ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
+    
+    # Get the cartopy mapping object from the netcdf file
+    cart_proj = get_cartopy(wrfin=ncfile)
+    
+    print (cart_proj)
+    
+    # Get the geobounds from the netcdf file (by default, uses XLAT, XLONG)
+    # You can supply a variable name to get the staggered boundaries
+    bounds = geo_bounds(wrfin=ncfile)
+    
+    print (bounds)
+    
+Result:
+
+.. code-block:: none
+
+    <cartopy.crs.LambertConformal object at 0x11d3be650>
+    GeoBounds(CoordPair(lat=21.1381225586, lon=-122.719528198), CoordPair(lat=47.8436355591, lon=-60.9013671875))
+    
+
+Basemap Example Using a Variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, we're going to extract the basemap mapping object from a
+diagnostic variable (slp), the lat,lon coordinates, and the geographic 
+boundaries.  Next, we're going to take a subset of the diagnostic variable 
+and extract the geographic boundaries.  Some of the variables will be 
+printed for demonstration.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from netCDF4 import Dataset
+    from wrf import getvar, get_basemap, latlon_coords, geo_bounds
+
+    ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
+    
+    slp = getvar(ncfile, "slp")
+    
+    # Get the basemap mapping object
+    bm = get_basemap(slp)
+    
+    print (bm)
+    
+    # Get the latitude and longitude coordinate.  This is usually needed for plotting.
+    lats, lons = latlon_coords(slp)
+    
+    # Get the geobounds for the SLP variable
+    bounds = geo_bounds(slp)
+    
+    print(bounds)
+    
+    # Get the geographic boundaries for a subset of the domain
+    slp_subset = slp[150:250, 150:250]
+    slp_subset_bounds = geo_bounds(slp_subset)
+    
+    print (slp_subset_bounds)
+
+Result:
+
+.. code-block:: none
+
+    <mpl_toolkits.basemap.Basemap object at 0x114d65650>
+    GeoBounds(CoordPair(lat=21.1381225586, lon=-122.719528198), CoordPair(lat=47.8436355591, lon=-60.9013671875))
+    GeoBounds(CoordPair(lat=25.9246292114, lon=-119.675048828), CoordPair(lat=29.0761833191, lon=-117.46484375)
+
+
+Basemap Example Using WRF Output Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, the basemap mapping object and geographic boundaries 
+will be extracted directly from the netcdf variable.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from netCDF4 import Dataset
+    from wrf import get_basemap, geo_bounds
+    
+    ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
+    
+    # Get the basemap object from the netcdf file
+    bm = get_basemap(wrfin=ncfile)
+    
+    print (bm)
+    
+    # Get the geographic boundaries from the netcdf file
+    bounds = geo_bounds(wrfin=ncfile)
+    
+    print (bounds)
+    
+Result:
+
+.. code-block:: none
+
+    <mpl_toolkits.basemap.Basemap object at 0x125bb4750>
+    GeoBounds(CoordPair(lat=21.1381225586, lon=-122.719528198), CoordPair(lat=47.8436355591, lon=-60.9013671875))
+  
+    
+PyNGL Example Using a Variable
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, we're going to extract the basemap mapping object from a
+diagnostic variable (slp), the lat,lon coordinates, and the geographic 
+boundaries.  Next, we're going to take a subset of the diagnostic variable 
+and extract the geographic boundaries.  Some of the variables will be 
+printed for demonstration.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from netCDF4 import Dataset
+    from wrf import getvar, get_pyngl, latlon_coords, geo_bounds
+
+    ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
+    
+    # Use SLP as the example variable
+    slp = getvar(ncfile, "slp")
+    
+    # Get the pyngl resources from the variable
+    pyngl_resources = get_pyngl(slp)
+    
+    print (pyngl_resources)
+    
+    # Get the latitude and longitude coordinate.  This is needed for plotting.
+    lats, lons = latlon_coords(slp)
+    
+    # Get the geobounds from the SLP variable
+    bounds = geo_bounds(slp)
+    
+    print(bounds)
+    
+    # Get the geographic boundaries for a subset of the domain
+    slp_subset = slp[150:250, 150:250]
+    slp_subset_bounds = geo_bounds(slp_subset)
+    
+    print (slp_subset_bounds)
+
+Result:
+
+.. code-block:: none
+
+    <Ngl.Resources instance at 0x114cabbd8>
+    GeoBounds(CoordPair(lat=21.1381225586, lon=-122.719528198), CoordPair(lat=47.8436355591, lon=-60.9013671875))
+    GeoBounds(CoordPair(lat=25.9246292114, lon=-119.675048828), CoordPair(lat=29.0761833191, lon=-117.46484375))
+
+
+PyNGL Example Using WRF Output Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In this example, the basemap mapping object and geographic boundaries 
+will be extracted directly from the netcdf variable.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from netCDF4 import Dataset
+    from wrf import get_pyngl, geo_bounds
+    
+    ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
+    
+    # Get the pyngl resources from the netcdf file
+    pyngl_resources = get_pyngl(wrfin=ncfile)
+    
+    print (pyngl_resources)
+    
+    # Get the geographic boundaries from the netcdf file
+    bounds = geo_bounds(wrfin=ncfile)
+    
+    print (bounds)
+    
+Result:
+
+.. code-block:: none
+
+    <Ngl.Resources instance at 0x115391f80>
+    GeoBounds(CoordPair(lat=21.1381225586, lon=-122.719528198), CoordPair(lat=47.8436355591, lon=-60.9013671875))
+
+   
+Moving Nests
+^^^^^^^^^^^^^^^^^^^^
+
+When a domain nest is moving, the domain boundaries become a function of time when 
+combining the files using the 'cat' method.  When using 'join', the domain boundaries
+become a function of both file and time. As a result, the methods that 
+depend on geographic boundaries (:meth:`wrf.geo_bounds`, :meth:`wrf.get_basemap`, etc)
+will return arrays of objects rather than a single object when multiple times 
+and/or files are detected in the underlying coordinate variables.  
+
+An exception is :meth:`wrf.get_cartopy`, which contains no geographic 
+boundary information in the mapping object.  Instead, the 
+:meth:`wrf.cartopy_xlim` and :meth:`wrf.cartopy_ylim` methods can be used to 
+get the array of matplotlib axes boundaries (returned in the axes projection 
+coordinates).
+
+Geographic Boundaries with Moving Nest Example
+***************************************************
+
+In this example, the geographic boundaries are extracted from a sequence 
+of files that use a moving nest.  The result will be an array of 
+:class:`wrf.GeoBounds` objects.
+
+.. code-block:: python
+
+    from __future__ import print_function
+    
+    from glob import glob
+    from netCDF4 import Dataset as nc
+    
+    from wrf import getvar, ALL_TIMES, geo_bounds 
+    
+    # Get all the domain 02 files
+    wrf_filenames = glob("wrf_files/wrf_vortex_multi/wrfout_d02_*")
+    ncfiles = [nc(x) for x in wrf_filenames]
+    
+    # SLP is the example variable and includes all times
+    slp = getvar(ncfiles, "slp", timeidx=ALL_TIMES)
+    
+    # Get the geographic boundaries
+    bounds = geo_bounds(slp)
+    print (bounds)
+
+Result:
+
+.. code-block:: none
+
+    [ GeoBounds(CoordPair(lat=21.3020038605, lon=-90.5740585327), CoordPair(lat=29.0274410248, lon=-82.0291671753))
+     GeoBounds(CoordPair(lat=21.3020038605, lon=-90.3042221069), CoordPair(lat=29.0274410248, lon=-81.7593231201))
+     GeoBounds(CoordPair(lat=21.3020038605, lon=-90.8438949585), CoordPair(lat=29.0274410248, lon=-82.2990036011))
+     GeoBounds(CoordPair(lat=21.3020038605, lon=-91.1137390137), CoordPair(lat=29.0274410248, lon=-82.5688400269))
+     GeoBounds(CoordPair(lat=21.8039493561, lon=-91.6534042358), CoordPair(lat=29.4982528687, lon=-83.1085205078))
+     GeoBounds(CoordPair(lat=22.0542640686, lon=-92.193107605), CoordPair(lat=29.7328338623, lon=-83.6481933594))
+     GeoBounds(CoordPair(lat=22.5535621643, lon=-92.7327728271), CoordPair(lat=30.2003688812, lon=-84.1878738403))
+     GeoBounds(CoordPair(lat=22.8025398254, lon=-93.0026092529), CoordPair(lat=30.4333114624, lon=-84.4577102661))
+     GeoBounds(CoordPair(lat=23.0510597229, lon=-93.2724456787), CoordPair(lat=30.665681839, lon=-84.7275543213))]
+
+
+Cartopy Mapping with Moving Nest Example
+********************************************
+
+In this example, a cartopy mapping object is extracted from a variable
+that uses a moving nest.  Since cartopy objects do not include geographic 
+boundary information, only a single cartopy object is returned.  However, 
+if the axes xlimits and ylimits are desired, the :meth:`wrf.cartopy_xlim` and 
+:meth:`wrf.cartopy_ylim` functions can be used to obtain the array of 
+moving boundaries in the axes projected coordinate space.
+
+.. code-block:: python
+    
+    from __future__ import print_function
+    
+    from glob import glob
+    from netCDF4 import Dataset as nc
+    
+    from wrf import getvar, ALL_TIMES, get_cartopy, cartopy_xlim, cartopy_ylim 
+    
+    # Get all of the domain 02 WRF output files
+    wrf_filenames = glob("wrf_files/wrf_vortex_multi/wrfout_d02_*")
+    ncfiles = [nc(x) for x in wrf_filenames]
+    
+    # Use SLP as the example variable and include all times
+    slp = getvar(ncfiles, "slp", timeidx=ALL_TIMES)
+    
+    # Get the cartopy mapping object
+    cart_proj = get_cartopy(slp)
+    print (cart_proj)
+    print ("\n")
+    
+    # Get the array of axes x-limits
+    xlims = cartopy_xlim(slp)
+    print (xlims)
+    print ("\n")
+    
+    # Get the array of axes y-limits
+    ylims = cartopy_ylim(slp)
+    print (ylims)
+
+
+Result:
+
+.. code-block:: none
+
+    <wrf.projection.MercatorWithLatTS object at 0x13893c9b0>
+    
+    [[-174999.8505754546, 774999.5806103835]
+     [-145000.11853874932, 805000.1608638937]
+     [-204999.58261215844, 744999.8485736783]
+     [-235000.16286567, 715000.1165369744]
+     [-294998.77872227144, 654999.804246759]
+     [-355001.6356629085, 595000.34017335]
+     [-415000.25151950994, 535000.0278831345]
+     [-444999.98355621524, 505000.29584642925]
+     [-474999.7155929191, 474999.7155929177]]
+    
+    [[2424828.507236154, 3374828.14098255]
+     [2424828.507236154, 3374828.14098255]
+     [2424828.507236154, 3374828.14098255]
+     [2424828.507236154, 3374828.14098255]
+     [2484829.1182174017, 3434828.972518358]
+     [2514829.1041871575, 3464828.196283651]
+     [2574829.0041584675, 3524828.8880928173]
+     [2604829.1786526926, 3554829.5610342724]
+     [2634828.9016262344, 3584828.016406863]]
+
+
+Basemap Mapping with Moving Nest Example
+*******************************************
+
+In this example, basemap objects are extracted from a variable that uses a moving 
+nest.  An array of basemap objects is returned because the 
+basemap object includes geographic boundary information.  
+
+.. code-block:: python
+    
+    from __future__ import print_function
+    
+    from glob import glob
+    from netCDF4 import Dataset as nc
+    
+    from wrf import getvar, ALL_TIMES, get_basemap 
+    
+    # Get all of the domain 02 WRF output files
+    wrf_filenames = glob("wrf_files/wrf_vortex_multi/wrfout_d02_*")
+    ncfiles = [nc(x) for x in wrf_filenames]
+    
+    # Use SLP as the reference variable and include all times
+    slp = getvar(ncfiles, "slp", timeidx=ALL_TIMES)
+    
+    # Get the array of basemap objects
+    bm = get_basemap(slp)
+    print (bm)
+    print ("\n")
+    
+Result:
+
+.. code-block:: none
+
+    [<mpl_toolkits.basemap.Basemap object at 0x1327bc510>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a790>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a750>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a7d0>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a850>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a8d0>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a950>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9a9d0>
+     <mpl_toolkits.basemap.Basemap object at 0x115a9aa50>]
+    
+
+PyNGL Mapping with Moving Nest Example
+*****************************************
+
+In this example, pyngl resource objects are extracted from a variable that uses 
+a moving nest.  An array of pyngl resource objects is returned because the 
+pyngl object includes geographic boundary information.
+
+.. code-block:: python
+    
+    from __future__ import print_function
+    
+    from glob import glob
+    from netCDF4 import Dataset as nc
+    
+    from wrf import getvar, ALL_TIMES, get_pyngl 
+    
+    # Get the domain 02 WRF output files
+    wrf_filenames = glob("wrf_files/wrf_vortex_multi/wrfout_d02_*")
+    ncfiles = [nc(x) for x in wrf_filenames]
+    
+    # Use SLP as the example variable and include all times
+    slp = getvar(ncfiles, "slp", timeidx=ALL_TIMES)
+    
+    # Get the array of pyngl resource objects
+    bm = get_pyngl(slp)
+    print (bm)
+    print ("\n")
+    
+Result:
+
+.. code-block:: none
+
+    [<Ngl.Resources instance at 0x140cd30e0>
+     <Ngl.Resources instance at 0x11d3187a0>
+     <Ngl.Resources instance at 0x11d3185a8>
+     <Ngl.Resources instance at 0x11d3188c0>
+     <Ngl.Resources instance at 0x11d318878>
+     <Ngl.Resources instance at 0x11d3183f8>
+     <Ngl.Resources instance at 0x11d318950>
+     <Ngl.Resources instance at 0x11d318a70>
+     <Ngl.Resources instance at 0x11d318710>]
+    
