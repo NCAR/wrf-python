@@ -1027,12 +1027,13 @@ The surface levels to interpolate also need to be specified.
     from __future__ import print_function
 
     from netCDF4 import Dataset
-    from wrf import getvar, interpline, CoordPair  
+    from wrf import getvar, vinterp 
     
     ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")  
     
-    # Interpolate tk to theta-e levels                
-    interp_levels = [200, 300, 500, 1000]
+    tk = getvar(ncfile, "tk")
+    # Interpolate tk to theta-e levels                 
+    interp_levels = [200, 300, 500, 1000]
     
     interp_field = vinterp(ncfile, 
                    field=tk, 
