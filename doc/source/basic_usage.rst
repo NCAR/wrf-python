@@ -929,7 +929,7 @@ Example Using Pivot Point and Angle
     # Calculate the vertical cross section.  By setting latlon to True, this 
     # also calculates the latitude and longitude coordinates along the line
     # and adds them to the metadata to help with plotting labels.
-    t2_line = interpline(t2, start_point=start_point, end_point=end_point, latlon=True)
+    t2_line = interpline(t2, pivot_point=pivot_point, angle=angle, latlon=True)
     
     print(t2_line, "\n")
     
