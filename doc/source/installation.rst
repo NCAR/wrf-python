@@ -32,7 +32,7 @@ Installing via Conda
 The easiest way to install wrf-python is using 
 `Conda <http://conda.pydata.org/docs/>`_::
 
-    $ conda install -c bladwig wrf-python
+    $ conda install -c conda-forge wrf-python
     
     
 Installing via Source Code

@@ -25,4 +25,8 @@ v1.0b1
 
 - Beta release 1.
 - Added more packaging boilerplate.
+- Note:  Currently unable to build with Python 3.5 on Windows, due to
+  issues with distutils, numpy distutils, and mingw compiler.  Will attempt
+  to find a workaround before the next release. Windows users should use 
+  Python 2.7 or Python 3.4 for now.
 
