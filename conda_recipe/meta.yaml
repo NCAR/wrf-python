@@ -1,7 +1,4 @@
 
-# For the version to work, the patch in ncl_reference needs to be applied
-# to the installed conda-build.  Otherwise, it needs to be set manually until
-# continuum can release a fix.
 package:
   name: wrf-python
   version: 1.0a3
@@ -12,13 +9,10 @@ source:
 build:
   number: 1
   detect_binary_files_with_prefix: true
+  skip: True  # [win and py>=35]
 
 requirements:
   build:
-    features:
-        - vc9   # [win and py27]
-        - vc10  # [win and py34]
-        - vc14  # [win and py>=35]
     - numpy x.x
     - wrapt
     - m2w64-toolchain # [win]
