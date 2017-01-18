@@ -1,2 +1,2 @@
-pip install --global-option build --global-option --compiler=mingw32 --global-option --fcompiler=gnu95 .
+python setup.py build --compiler=mingw32 --fcompiler=gnu95 install --single-version-externally-managed --record=record.txt
 
