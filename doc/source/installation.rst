@@ -34,7 +34,12 @@ The easiest way to install wrf-python is using
 
     $ conda install -c conda-forge wrf-python
     
-    
+While some bugs are currently being ironed out with the conda-forge 
+installation, wrf-python is also available at::
+
+    $ conda install -c bladwig wrf-python
+
+
 Installing via Source Code
 --------------------------
 
@@ -50,4 +55,9 @@ To install, change to the wrf-python directory and run::
 
     $ pip install .
 
-
+Note that building on Win64 with Python 3.5+ and the mingw-64 compiler
+is very difficult, due to incompatibilities with the runtime libraries and 
+lack of support from numpy's distutils. Improved support for these 
+configurations, along with numpy distutils support, should take place this 
+year.  But for now, visual studio and the intel compiler may be required.  
+Otherwise, Python 2.7 or Python 3.4 is recommended. 
