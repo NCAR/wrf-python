@@ -22,8 +22,8 @@ from .pressure import get_pressure
 @set_interp_metadata("horiz")
 def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL, 
                 meta=True):
-    """Return the three-dimensional field horizontally interpolated to a 
-    specified vertical level.
+    """Return the three-dimensional field interpolated to a horizontal plane 
+    at the specified vertical level.
 
     Args:
     
