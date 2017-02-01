@@ -775,7 +775,10 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         outdimnames.remove(field3d.dims[-3])
-        del outcoords[field3d.dims[-3]]
+        try:
+            del outcoords[field3d.dims[-3]]
+        except KeyError:
+            pass # xarray 0.9
         outattrs.update(field3d.attrs)
         outname = "{0}_{1}".format(field3d.name, name_levelstr)
         
@@ -923,7 +926,10 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         outcoords.update(field3d.coords)
         for i in py3range(-3,0,1):
             outdimnames.remove(field3d.dims[i])
-            del outcoords[field3d.dims[i]]
+            try:
+                del outcoords[field3d.dims[i]]
+            except KeyError:
+                pass # Xarray 0.9
         
         
         # Delete any lat,lon coords    
@@ -1129,7 +1135,10 @@ def _set_line_meta(wrapped, instance, args, kwargs):
         outcoords.update(field2d.coords)
         for i in py3range(-2,0,1):
             outdimnames.remove(field2d.dims[i])
-            del outcoords[field2d.dims[i]]
+            try:
+                del outcoords[field2d.dims[i]]
+            except KeyError:
+                pass # xarray 0.9
             
         # Delete any lat,lon coords
         delkeys = [key for key in viewkeys(outcoords) if is_coordvar(key)]
@@ -1271,7 +1280,10 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
         outcoords.update(field.coords)
         
         outdimnames.remove(field.dims[-3])
-        del outcoords[field.dims[-3]]
+        try:
+            del outcoords[field.dims[-3]]
+        except KeyError:
+            pass # xarray 0.9
         
         outdimnames.insert(-2, "interp_level")
         outcoords["interp_level"] = interp_levels
@@ -1353,7 +1365,10 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
         outcoords.update(field3d.coords)
         
         for i in py3range(-2,0,1):
-            del outcoords[field3d.dims[i]]
+            try:
+                del outcoords[field3d.dims[i]]
+            except KeyError:
+                pass # xarray 0.9
             outdimnames.remove(field3d.dims[i])
             
         # Need to remove XLAT, XLONG...
