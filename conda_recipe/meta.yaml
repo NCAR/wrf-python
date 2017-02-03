@@ -12,41 +12,32 @@ source:
 build:
   number: 1
   detect_binary_files_with_prefix: true
-  skip: True  # [win32 or np>=112 or (win and py>=35)]
+  skip: True  # [win32 or (win and py>=35)]
 
 requirements:
   build:
-    - pip
+    - setuptools
     - numpy x.x
     - wrapt
     - m2w64-toolchain  # [win]
     - gcc  # [unix]
-    - libgcc  # [unix]
     - python
-    - vc 9  # [win and py27]
-    - vc 10  # [win and py34]
-    - vc 14  # [win and py>=35]
   run:
     - numpy x.x
     - python
     - wrapt 
     - m2w64-toolchain  # [win]
-    - gcc  # [unix]
+    - libgfortran  # [unix]
     - libgcc  # [unix]
-    - xarray
-    - vc 9  # [win and py27]
-    - vc 10  # [win and py34]
-    - vc 14  # [win and py>=35]
 
 test:
-  requires:
-    - nose
   imports:
     - wrf 
 
 about:
   home: https://github.com/NCAR/wrf-python
-  license: "NCL Source Code"
+  license: "UCAR"
+  license_file: '{{ environ["RECIPE_DIR"] }}/LICENSE' 
   summary: "Diagnostic and interpolation routines for WRF-ARW data."
 
 extra:

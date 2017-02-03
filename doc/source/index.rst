@@ -3,15 +3,28 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+.. meta::
+   :description: Diagnostic and interpolation routines for WRF ARW data
+   :keywords: wrf, python, wrf-python, weather research and forecasting,
+              weather research and forecasting model, model, weather,
+              numerical weather prediction, model, matplotlib, cartopy,
+              wrf-arw, arw, ncar, ucar, cisl, ncl, ncar command language,
+              national center for atmospheric research, 
+              university corporation for atmospheric research,
+              pynio, pyngl, interpolation
 
 wrf-python
 ===========
 
+A collection of diagnostic and interpolation routines for use with output from 
+the Weather Research and Forecasting (WRF-ARW) Model.
 
-wrf-python is a package to help users working with the Weather 
-Research and Forecasting Model (WRF-ARW) output.  wrf-python includes over 
-thirty diagnostics calculations along with various interpolation routines. When
-coupled with either matplotlib or PyNGL, users can create plots like this:
+This package provides over 30 diagnostic calculations, 
+several interpolation routines, and utilities to help with plotting 
+via cartopy, basemap, or PyNGL. The functionality is similar to what is 
+provided by the NCL WRF package. 
+
+When coupled with either matplotlib or PyNGL, users can create plots like this:
 
 .. image:: _static/images/matthew.png    
    :scale: 100%
@@ -31,7 +44,6 @@ Documentation
    ./plot
    ./api
    ./license
-
 
 
 Indices and tables

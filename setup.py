@@ -55,7 +55,7 @@ numpy.distutils.core.setup(
                         "GitHub Repository:\n\n"
                         "https://github.com/NCAR/wrf-python\n\n"
                         "Documentation:\n\n"
-                        "https://wrf-python.readthedocs.io\n"),
+                        "https://wrf-python.rtfd.org\n"),
     url = "https://github.com/NCAR/wrf-python",
     keywords = ["python", "wrf-python", "wrf", "forecast", "model",
                 "weather research and forecasting", "interpolation", 

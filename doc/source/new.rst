@@ -29,4 +29,15 @@ v1.0b1
   issues with distutils, numpy distutils, and mingw compiler.  Will attempt
   to find a workaround before the next release. Windows users should use 
   Python 2.7 or Python 3.4 for now.
+  
+  
+v1.0b2
+----------
+
+- Beta release 2.
+- xarray 0.9 no longer includes default index dimensions in the coordinate 
+  mappings.  This was causing a crash in the routines that cause a reduction
+  in dimension shape, mainly the interpolation routines.  This has been 
+  fixed.
+- Documentation updated to show the new output from xarray.
 

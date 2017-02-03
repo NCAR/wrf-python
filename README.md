@@ -11,5 +11,5 @@ Installation via conda:
 
 Documentation is available at:
 
-http://wrf-python.readthedocs.io
+http://wrf-python.rtfd.org
 

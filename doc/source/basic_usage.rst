@@ -36,25 +36,24 @@ Result:
 .. code-block:: none
 
     <xarray.DataArray u'slp' (south_north: 1059, west_east: 1799)>
-    array([[ 1012.22033691,  1012.29815674,  1012.24786377, ...,
-         1010.13201904,  1009.93231201,  1010.06707764],
-       [ 1012.43286133,  1012.44476318,  1012.33666992, ...,
-         1010.1072998 ,  1010.10845947,  1010.04760742],
-       [ 1012.39544678,  1012.38085938,  1012.41705322, ...,
-         1010.22937012,  1010.05596924,  1010.02679443],
-       ..., 
-        [ 1009.0423584 ,  1009.06921387,  1008.98779297, ...,
-         1019.19281006,  1019.14434814,  1019.1105957 ],
-       [ 1009.22485352,  1009.07513428,  1008.98638916, ...,
-         1019.07189941,  1019.04266357,  1019.0612793 ],
-       [ 1009.18896484,  1009.1071167 ,  1008.97979736, ...,
-         1018.91778564,  1018.95684814,  1019.04748535]], dtype=float32) 
+    array([[ 1012.220337,  1012.298157,  1012.247864, ...,  1010.132019,
+             1009.932312,  1010.067078],
+           [ 1012.432861,  1012.444763,  1012.33667 , ...,  1010.1073  ,
+             1010.108459,  1010.047607],
+           [ 1012.395447,  1012.380859,  1012.417053, ...,  1010.22937 ,
+             1010.055969,  1010.026794],
+           ..., 
+           [ 1009.042358,  1009.069214,  1008.987793, ...,  1019.19281 ,
+             1019.144348,  1019.110596],
+           [ 1009.224854,  1009.075134,  1008.986389, ...,  1019.071899,
+             1019.042664,  1019.061279],
+           [ 1009.188965,  1009.107117,  1008.979797, ...,  1018.917786,
+             1018.956848,  1019.047485]], dtype=float32)
     Coordinates:
-        XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
-        XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
-        Time         datetime64[ns] 2016-10-07
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
+        XLONG    (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
+        XLAT     (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
+        Time     datetime64[ns] 2016-10-07
+    Dimensions without coordinates: south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XY
@@ -62,10 +61,10 @@ Result:
         units: hPa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
+
     
 .. _extract_ncvars:
 
@@ -94,26 +93,35 @@ Result:
 .. code-block:: none    
 
     <xarray.DataArray u'P' (bottom_top: 50, south_north: 1059, west_east: 1799)>
-    array([[[  1.21753906e+03,   1.22532031e+03,   1.22030469e+03, ...,
-           1.00760156e+03,   9.87640625e+02,   1.00111719e+03],
-        [  1.23877344e+03,   1.24004688e+03,   1.22926562e+03, ...,
-           1.00519531e+03,   1.00529688e+03,   9.99171875e+02],
-        [  1.23503906e+03,   1.23367188e+03,   1.23731250e+03, ...,
-           1.01739844e+03,   1.00005469e+03,   9.97093750e+02],
-        ..., 
-        [  1.77978516e+00,   1.77050781e+00,   1.79003906e+00, ...,
-           4.22949219e+00,   4.25659180e+00,   4.13647461e+00],
-        [  1.73291016e+00,   1.76879883e+00,   1.77978516e+00, ...,
-           4.24047852e+00,   4.24707031e+00,   4.13549805e+00],
-        [  1.71533203e+00,   1.65722656e+00,   1.67480469e+00, ...,
-           4.06884766e+00,   4.03637695e+00,   4.04785156e+00]]], dtype=float32)
+    array([[[  1.217539e+03,   1.225320e+03, ...,   9.876406e+02,   1.001117e+03],
+            [  1.238773e+03,   1.240047e+03, ...,   1.005297e+03,   9.991719e+02],
+            ..., 
+            [  9.208594e+02,   9.059141e+02, ...,   1.902922e+03,   1.904805e+03],
+            [  9.172734e+02,   9.091094e+02, ...,   1.894375e+03,   1.903422e+03]],
+    
+           [[  1.219562e+03,   1.210273e+03, ...,   9.973984e+02,   9.907891e+02],
+            [  1.224578e+03,   1.223508e+03, ...,   9.985547e+02,   9.921172e+02],
+            ..., 
+            [  9.012734e+02,   9.052031e+02, ...,   1.897766e+03,   1.894500e+03],
+            [  9.137500e+02,   9.071719e+02, ...,   1.893273e+03,   1.893664e+03]],
+    
+           ..., 
+           [[  7.233154e+00,   7.224121e+00, ...,   3.627930e+00,   3.613770e+00],
+            [  7.226318e+00,   7.358154e+00, ...,   3.725098e+00,   3.634033e+00],
+            ..., 
+            [  5.354248e+00,   5.406006e+00, ...,   1.282715e+01,   1.264844e+01],
+            [  5.295410e+00,   5.177490e+00, ...,   1.256274e+01,   1.257642e+01]],
+    
+           [[  2.362061e+00,   2.376221e+00, ...,   1.151367e+00,   1.156982e+00],
+            [  2.342529e+00,   2.403809e+00, ...,   1.198486e+00,   1.155273e+00],
+            ..., 
+            [  1.732910e+00,   1.768799e+00, ...,   4.247070e+00,   4.135498e+00],
+            [  1.715332e+00,   1.657227e+00, ...,   4.036377e+00,   4.047852e+00]]], dtype=float32)
     Coordinates:
-        XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
-        XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
-        Time         datetime64[ns] 2016-10-07
-      * bottom_top   (bottom_top) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
+        XLONG    (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
+        XLAT     (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
+        Time     datetime64[ns] 2016-10-07
+    Dimensions without coordinates: bottom_top, south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XYZ
@@ -121,10 +129,9 @@ Result:
         units: Pa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
            
                     
 Disabling xarray and metadata
@@ -267,10 +274,8 @@ Result:
         XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
         XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
       * Time         (Time) datetime64[ns] 2016-10-07 2016-10-07 2016-10-07
-      * bottom_top   (bottom_top) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
         datetime     (Time) datetime64[ns] 2016-10-07T00:00:00 ...
+    Dimensions without coordinates: bottom_top, south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XYZ
@@ -278,10 +283,9 @@ Result:
         units: Pa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         
 
 Combining Multiple Files Using the 'join' Method
@@ -326,28 +330,19 @@ Result:
 .. code-block:: none
 
     <xarray.DataArray u'P' (file: 3, bottom_top: 50, south_north: 1059, west_east: 1799)>
-    array([[[[  1.21753906e+03,   1.22532031e+03,   1.22030469e+03, ...,
-            1.00760156e+03,   9.87640625e+02,   1.00111719e+03],
-         [  1.23877344e+03,   1.24004688e+03,   1.22926562e+03, ...,
-            1.00519531e+03,   1.00529688e+03,   9.99171875e+02],
-         [  1.23503906e+03,   1.23367188e+03,   1.23731250e+03, ...,
-            1.01739844e+03,   1.00005469e+03,   9.97093750e+02],
-         ..., 
-         [  1.77978516e+00,   1.77050781e+00,   1.79003906e+00, ...,
-            4.22949219e+00,   4.25659180e+00,   4.13647461e+00],
-         [  1.73291016e+00,   1.76879883e+00,   1.77978516e+00, ...,
-            4.24047852e+00,   4.24707031e+00,   4.13549805e+00],
-         [  1.71533203e+00,   1.65722656e+00,   1.67480469e+00, ...,
-            4.06884766e+00,   4.03637695e+00,   4.04785156e+00]]]], dtype=float32)
+    array([[[[  1.217539e+03, ...,   1.001117e+03],
+             ..., 
+             [  9.172734e+02, ...,   1.903422e+03]],
+            ..., 
+            [[  2.362061e+00, ...,   1.156982e+00],
+             ..., 
+             [  1.715332e+00, ...,   4.047852e+00]]]], dtype=float32)
     Coordinates:
-        XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
-        XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
-      * bottom_top   (bottom_top) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * file         (file) int64 0 1 2
-        datetime     (file) datetime64[ns] 2016-10-07T00:00:00 ...
-        Time         int64 0
+        XLONG     (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
+        XLAT      (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
+      * file      (file) int64 0 1 2
+        datetime  (file) datetime64[ns] 2016-10-07 ...
+    Dimensions without coordinates: bottom_top, south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XYZ
@@ -355,10 +350,9 @@ Result:
         units: Pa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
     
                         
 Note how the 'Time' dimension was replaced with the 'file' dimension, due to the 
@@ -388,28 +382,20 @@ Result
 .. code-block:: none
 
     <xarray.DataArray u'P' (file: 3, Time: 1, bottom_top: 50, south_north: 1059, west_east: 1799)>
-    array([[[[[  1.21753906e+03,   1.22532031e+03,   1.22030469e+03, ...,
-             1.00760156e+03,   9.87640625e+02,   1.00111719e+03],
-          [  1.23877344e+03,   1.24004688e+03,   1.22926562e+03, ...,
-             1.00519531e+03,   1.00529688e+03,   9.99171875e+02],
-          [  1.23503906e+03,   1.23367188e+03,   1.23731250e+03, ...,
-             1.01739844e+03,   1.00005469e+03,   9.97093750e+02],
+    array([[[[[  1.217539e+03, ...,   1.001117e+03],
           ..., 
-          [  1.77978516e+00,   1.77050781e+00,   1.79003906e+00, ...,
-             4.22949219e+00,   4.25659180e+00,   4.13647461e+00],
-          [  1.73291016e+00,   1.76879883e+00,   1.77978516e+00, ...,
-             4.24047852e+00,   4.24707031e+00,   4.13549805e+00],
-          [  1.71533203e+00,   1.65722656e+00,   1.67480469e+00, ...,
-             4.06884766e+00,   4.03637695e+00,   4.04785156e+00]]]]], dtype=float32)
+          [  9.172734e+02, ...,   1.903422e+03]],
+
+         ..., 
+         [[  2.362061e+00, ...,   1.156982e+00],
+          ..., 
+          [  1.715332e+00, ...,   4.047852e+00]]]]], dtype=float32)
     Coordinates:
-        XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
-        XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
-      * bottom_top   (bottom_top) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * file         (file) int64 0 1 2
-        datetime     (file, Time) datetime64[ns] 2016-10-07T00:00:00 ...
-      * Time         (Time) int64 0
+        XLONG     (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
+        XLAT      (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
+      * file      (file) int64 0 1 2
+        datetime  (file, Time) datetime64[ns] 2016-10-07 2016-10-07 2016-10-07
+    Dimensions without coordinates: Time, bottom_top, south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XYZ
@@ -417,10 +403,9 @@ Result
         units: Pa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
 
                    
 Dictionaries of WRF File Sequences
@@ -459,28 +444,21 @@ Result:
 .. code-block:: none
 
     <xarray.DataArray 'P' (key_0: 2, Time: 2, bottom_top: 50, south_north: 1059, west_east: 1799)>
-    array([[[[[  1.21753906e+03,   1.22532031e+03,   1.22030469e+03, ...,
-             1.00760156e+03,   9.87640625e+02,   1.00111719e+03],
-          [  1.23877344e+03,   1.24004688e+03,   1.22926562e+03, ...,
-             1.00519531e+03,   1.00529688e+03,   9.99171875e+02],
-          [  1.23503906e+03,   1.23367188e+03,   1.23731250e+03, ...,
-             1.01739844e+03,   1.00005469e+03,   9.97093750e+02],
-          ..., 
-          [  1.77978516e+00,   1.77050781e+00,   1.79003906e+00, ...,
-             4.22949219e+00,   4.25659180e+00,   4.13647461e+00],
-          [  1.73291016e+00,   1.76879883e+00,   1.77978516e+00, ...,
-             4.24047852e+00,   4.24707031e+00,   4.13549805e+00],
-          [  1.71533203e+00,   1.65722656e+00,   1.67480469e+00, ...,
-             4.06884766e+00,   4.03637695e+00,   4.04785156e+00]]]]], dtype=float32)
+    array([[[[[  1.217539e+03, ...,   1.001117e+03],
+              ..., 
+              [  9.172734e+02, ...,   1.903422e+03]],
+    
+             ..., 
+             [[  2.362061e+00, ...,   1.156982e+00],
+              ..., 
+              [  1.715332e+00, ...,   4.047852e+00]]]]], dtype=float32)
     Coordinates:
-        XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
-        XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
-      * Time         (Time) datetime64[ns] 2016-10-07T00:00:00 ...
-      * bottom_top   (bottom_top) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
-        datetime     (Time) datetime64[ns] 2016-10-07T00:00:00 ...
-      * key_0        (key_0) <U6 u'ens1' u'ens2'
+        XLONG     (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
+        XLAT      (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
+      * Time      (Time) datetime64[ns] 2016-10-07 ...
+        datetime  (Time) datetime64[ns] 2016-10-07 ...
+      * key_0     (key_0) <U6 u'label1' u'label2'
+    Dimensions without coordinates: bottom_top, south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XYZ
@@ -488,10 +466,9 @@ Result:
         units: Pa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
                         
 Interpolation Routines
 --------------------------
@@ -542,17 +519,15 @@ Result:
         XLONG        (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
         XLAT         (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
         Time         datetime64[ns] 2016-10-07
-      * south_north  (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east    (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
+    Dimensions without coordinates: south_north, west_east
     Attributes:
         FieldType: 104
         units: m
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         level: 500 hPa
         missing_value: 9.96920996839e+36
         _FillValue: 9.96920996839e+36
@@ -623,17 +598,16 @@ Result:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (idx) object CoordPair(x=0.0, y=529.0, lat=34.5279502869, lon=-127.398925781) ...
       * vertical  (vertical) float32 0.0 261.828 523.656 785.484 1047.31 1309.14 ...
-      * idx       (idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ...
+    Dimensions without coordinates: idx
     Attributes:
         FieldType: 104
         description: pressure
         units: hPa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (0.0, 529.0) to (1797.0, 529.0)
         missing_value: 9.96920996839e+36
         _FillValue: 9.96920996839e+36
@@ -689,17 +663,16 @@ Result:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (idx) object CoordPair(x=0.0, y=529.0, lat=34.5279502869, lon=-127.398925781) ...
       * vertical  (vertical) float32 0.0 261.828 523.656 785.484 1047.31 1309.14 ...
-      * idx       (idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ...
+    Dimensions without coordinates: idx
     Attributes:
         FieldType: 104
         description: pressure
         units: hPa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (0.0, 529.0) to (1797.0, 529.0) ; center=CoordPair(x=899.0, y=529.0) ; angle=90.0
         missing_value: 9.96920996839e+36
         _FillValue: 9.96920996839e+36
@@ -760,17 +733,16 @@ Result:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (idx) object CoordPair(x=0.0, y=529.0, lat=34.5279502869, lon=-127.398925781) ...
       * vertical  (vertical) float32 0.0 261.828 523.656 785.484 1047.31 1309.14 ...
-      * idx       (idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ...
+    Dimensions without coordinates: idx
     Attributes:
         FieldType: 104
         description: pressure
         units: hPa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (0.0, 529.0) to (1797.0, 529.0)
         missing_value: 9.96920996839e+36
         _FillValue: 9.96920996839e+36
@@ -827,17 +799,16 @@ Result:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (idx) object CoordPair(x=0.0, y=529.0, lat=34.5279502869, lon=-127.398925781) ...
       * vertical  (vertical) float32 1000.0 2000.0 3000.0
-      * idx       (idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ...
+    Dimensions without coordinates: idx
     Attributes:
         FieldType: 104
         description: pressure
         units: hPa
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (0.0, 529.0) to (1797.0, 529.0)
         missing_value: 9.96920996839e+36
         _FillValue: 9.96920996839e+36
@@ -893,17 +864,16 @@ Result:
     Coordinates:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (line_idx) object CoordPair(x=899.0, y=0.0, lat=24.3645858765, lon=-97.5) ...
-      * line_idx  (line_idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ...
+    Dimensions without coordinates: line_idx
     Attributes:
         FieldType: 104
         description: TEMP at 2 M
         units: K
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (899.0, 0.0) to (899.0, 1057.0) 
 
 
@@ -943,17 +913,16 @@ Result:
     Coordinates:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (line_idx) object CoordPair(x=899.0, y=0.0, lat=24.3645858765, lon=-97.5) ...
-      * line_idx  (line_idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ...
+    Dimensions without coordinates: line_idx
     Attributes:
         FieldType: 104
         description: TEMP at 2 M
         units: K
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (899.0, 0.0) to (899.0, 1057.0) ; center=CoordPair(x=899, y=529) ; angle=0.0 
 
         
@@ -1001,17 +970,16 @@ Result:
     Coordinates:
         Time      datetime64[ns] 2016-10-07
         xy_loc    (line_idx) object CoordPair(x=899.0, y=0.0, lat=24.3645858765, lon=-97.5) ...
-      * line_idx  (line_idx) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ...
+    Dimensions without coordinates: line_idx
     Attributes:
         FieldType: 104
         description: TEMP at 2 M
         units: K
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         orientation: (899.0, 0.0) to (899.0, 1057.0)    
             
 
@@ -1067,9 +1035,8 @@ Result:
         XLONG         (south_north, west_east) float32 -122.72 -122.693 -122.666 ...
         XLAT          (south_north, west_east) float32 21.1381 21.1451 21.1521 ...
         Time          datetime64[ns] 2016-10-07
-      * south_north   (south_north) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 ...
-      * west_east     (west_east) int64 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 ...
       * interp_level  (interp_level) int64 200 300 500 1000
+    Dimensions without coordinates: south_north, west_east
     Attributes:
         FieldType: 104
         MemoryOrder: XYZ
@@ -1077,10 +1044,9 @@ Result:
         units: K
         stagger: 
         coordinates: XLONG XLAT
-        projection: LambertConformal(bottom_left=(21.138123, -122.71953), 
-                    top_right=(47.843636, -60.901367), stand_lon=-97.5, 
-                    moad_cen_lat=38.5000038147, truelat1=38.5, truelat2=38.5, 
-                    pole_lat=90.0, pole_lon=0.0)
+        projection: LambertConformal(stand_lon=-97.5, moad_cen_lat=38.5000038147, 
+                                     truelat1=38.5, truelat2=38.5, pole_lat=90.0, 
+                                     pole_lon=0.0)
         vert_interp_type: eth
 
             
@@ -1122,7 +1088,7 @@ Result:
     Coordinates:
       * lat_lon   (lat_lon) <U3 u'lat' u'lon'
         xy_coord  object CoordPair(x=400, y=200)
-        idx       int64 0
+    Dimensions without coordinates: idx
         
         
     <xarray.DataArray u'xy' (x_y: 2)>
@@ -1130,7 +1096,7 @@ Result:
     Coordinates:
         latlon_coord  object CoordPair(lat=28.5581640822, lon=-112.678276173)
       * x_y           (x_y) <U1 u'x' u'y'
-        idx           int64 0
+    Dimensions without coordinates: idx
     
     
 Example With Multiple Coordinates
@@ -1163,7 +1129,7 @@ Result:
     Coordinates:
       * lat_lon   (lat_lon) <U3 u'lat' u'lon'
         xy_coord  (idx) object CoordPair(x=400, y=200) CoordPair(x=105, y=205)
-      * idx       (idx) int64 0 1
+    Dimensions without coordinates: idx
         
         
     <xarray.DataArray u'xy' (x_y: 2, idx: 2)>
@@ -1172,7 +1138,7 @@ Result:
     Coordinates:
         latlon_coord  (idx) object CoordPair(lat=28.5581640822, lon=-112.678276173) ...
       * x_y           (x_y) <U1 u'x' u'y'
-      * idx           (idx) int64 0 1
+    Dimensions without coordinates: idx
 
 
 Mapping Helper Routines
