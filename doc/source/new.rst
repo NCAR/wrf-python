@@ -1,6 +1,16 @@
 What's New
 ===========
 
+v1.0b3
+----------
+
+- Beta release 3.
+- This is an internal release for conda-forge integration testing.
+- Fixed an incorrectly initialized variable issue with vinterp.  This issue 
+  mainly impacts the unit tests for continuous integration testing with 
+  conda-forge, since the data set used for these tests is heavily cropped.
+
+
 v1.0b2
 ----------
 
@@ -39,7 +49,22 @@ v1.0a3
 - Fixed issue with generator expressions.
 - Renamed some functions and arguments.
 
+
+-------------
+
   
-  
+Known Issues
+--------------
+
+v1.0b3
+^^^^^^^^^^^^^^^
+
+- Currently unable to build on Windows with Python 3.5+ using open source 
+  mingw compiler.  The mingwpy project is working on resolving the 
+  incompatibilities between mingw and Visual Studio 2015 that was used to 
+  build Python 3.5+.
+- Numpy distutils compiler options for win64 are hard-coded to turn 
+  optimizations off.  Will work on a patch before 1.0.0 is released, as 
+  part of the v1.0b3 continuous integration changes.  
 
 

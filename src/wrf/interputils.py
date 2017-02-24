@@ -340,7 +340,7 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
             a sequence of coordinate pairs to be converted.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. This is used
             to obtain the map projection when using latitude,longitude 

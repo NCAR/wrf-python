@@ -24,7 +24,7 @@ def get_dbz(wrfin, timeidx=0, method="cat",
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -138,7 +138,7 @@ def get_max_dbz(wrfin, timeidx=0, method="cat",
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         

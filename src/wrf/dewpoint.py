@@ -21,7 +21,7 @@ def get_dp(wrfin, timeidx=0, method="cat", squeeze=True,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -98,7 +98,7 @@ def get_dp_2m(wrfin, timeidx=0, method="cat", squeeze=True,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         

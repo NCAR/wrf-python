@@ -17,7 +17,7 @@ def get_lat(wrfin, timeidx=0, method="cat", squeeze=True,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -90,7 +90,7 @@ def get_lon(wrfin, timeidx=0, method="cat", squeeze=True,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -170,7 +170,7 @@ def ll_to_xy(wrfin, latitude, longitude, timeidx=0,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -336,7 +336,7 @@ def xy_to_ll(wrfin, x, y, timeidx=0, stagger=None, squeeze=True, meta=True):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             

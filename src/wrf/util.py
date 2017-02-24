@@ -119,7 +119,7 @@ def is_multi_file(wrfin):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -141,7 +141,7 @@ def has_time_coord(wrfin):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -160,7 +160,7 @@ def is_mapping(wrfin):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -439,7 +439,7 @@ class either(object):
             Args:
              
                 wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-                iterable): Input WRF ARW NetCDF 
+                iterable): WRF-ARW NetCDF 
                     data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
                     or an iterable sequence of the aforementioned types. 
         
@@ -672,7 +672,7 @@ def is_moving_domain(wrfin, varname=None, latvar=either("XLAT", "XLAT_M"),
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -820,7 +820,7 @@ def extract_global_attrs(wrfin, attrs):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -855,7 +855,7 @@ def extract_dim(wrfin, dim):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2211,7 +2211,7 @@ def _file_times(wrfin, do_xtime):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2243,7 +2243,7 @@ def _extract_time_map(wrfin, timeidx, do_xtime, meta=False):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2281,7 +2281,7 @@ def extract_times(wrfin, timeidx, method="cat", squeeze=True, cache=None,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2388,7 +2388,7 @@ def is_standard_wrf_var(wrfin, varname):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2417,7 +2417,7 @@ def is_staggered(wrfin, var):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2529,7 +2529,7 @@ def get_proj_params(wrfin):#, timeidx=0, varname=None):
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
             
@@ -2915,7 +2915,7 @@ def geo_bounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
             If not used, then *wrfin* must be provided.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3040,7 +3040,7 @@ def _get_wrf_proj_geobnds(var, wrfin, varname, timeidx, method, squeeze,
             If not used, then *wrfin* must be provided.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3109,7 +3109,7 @@ def _get_proj_obj(ob_type, var, wrfin, varname, timeidx, method, squeeze,
             If not used, then *wrfin* must be provided.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3245,7 +3245,7 @@ def get_cartopy(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
             file, then the geobounds will be taken from the native grid.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3313,7 +3313,7 @@ def get_basemap(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
             file, then the geobounds will be taken from the native grid.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3391,7 +3391,7 @@ def get_pyngl(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
             file, then the geobounds will be taken from the native grid.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3479,7 +3479,7 @@ def cartopy_xlim(var=None, geobounds=None, wrfin=None, varname=None, timeidx=0,
             file, then the geobounds will be taken from the native grid.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.
@@ -3565,7 +3565,7 @@ def cartopy_ylim(var=None, geobounds=None, wrfin=None, varname=None, timeidx=0,
             file, then the geobounds will be taken from the native grid.
         
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. If not used, 
             then *var* must be provided.

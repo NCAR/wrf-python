@@ -29,7 +29,7 @@ def get_2dcape(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         
@@ -145,7 +145,7 @@ def get_3dcape(wrfin, timeidx=0, method="cat",
     Args:
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): Input WRF ARW NetCDF 
+            iterable): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types.
         

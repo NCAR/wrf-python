@@ -136,7 +136,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             Default is :data:`wrf.Constants.DEFAULT_FILL`.
             
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. This is used
             to obtain the map projection when using latitude,longitude 
@@ -300,7 +300,7 @@ def interpline(field2d, pivot_point=None,
             A two-dimensional field.
     
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable, optional): Input WRF ARW NetCDF 
+            iterable, optional): WRF-ARW NetCDF 
             data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
             or an iterable sequence of the aforementioned types. This is used
             to obtain the map projection when using latitude,longitude 
@@ -438,7 +438,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     Args:
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`,\
         or an iterable):
-            Input WRF ARW NetCDF data as a :class:`netCDF4.Dataset`, 
+            WRF-ARW NetCDF data as a :class:`netCDF4.Dataset`, 
             :class:`Nio.NioFile` or an iterable sequence of the 
             aforementioned types.
             

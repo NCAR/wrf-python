@@ -938,7 +938,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
             del outcoords[key]
         
         outdimnames.append("vertical")
-        outdimnames.append("idx")
+        outdimnames.append("cross_line_idx")
         outattrs.update(field3d.attrs)
         
         outname = "{0}_cross".format(field3d.name)
@@ -961,7 +961,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                     lats = _interpline(latcoord, xy)
                     lons = _interpline(loncoord, xy)
                     
-                    outcoords["xy_loc"] = ("idx", 
+                    outcoords["xy_loc"] = ("cross_line_idx", 
                                            np.asarray(tuple(
                                                 CoordPair(x=xy[i,0], y=xy[i,1],
                                                     lat=lats[i], lon=lons[i]) 
@@ -986,16 +986,16 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                         
                     
                     extra_dimnames = latcoord.dims[0:-2]
-                    loc_dimnames = extra_dimnames + ("idx",)
+                    loc_dimnames = extra_dimnames + ("cross_line_idx",)
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
-                outcoords["xy_loc"] = ("idx", np.asarray(tuple(
+                outcoords["xy_loc"] = ("cross_line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
             
         else:    
-            outcoords["xy_loc"] = ("idx", np.asarray(tuple(
+            outcoords["xy_loc"] = ("cross_line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
         

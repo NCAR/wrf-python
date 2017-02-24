@@ -21,7 +21,7 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
     INTEGER :: i, j, k, ripk, k300
 
-    k300 = 0 ! removes the warning
+    k300 = 1 ! removes the warning
 
     DO j=1,ns
         DO i=1,ew
