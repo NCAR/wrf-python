@@ -38,7 +38,6 @@ test:
     - test/ci_tests
   imports:
     - wrf
-    - netCDF4
   commands:
     - cd test/ci_tests && python utests.py 
 
