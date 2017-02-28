@@ -7,7 +7,7 @@ package:
 source:
   fn: wrf-python-{{ version }}.tar.gz
   url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
-  sha256: 26aab5fc36f1a84cdb09b68cf77d70c7e16a893b50ecd6711d07ddf8f1b6968b
+  sha256: 6fc6a268d91129ba3c16facb1b53194a551d6336582a1f2162ced584e646aa7e
 
 build:
   number: 0
