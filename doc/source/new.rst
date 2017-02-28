@@ -1,18 +1,23 @@
 What's New
 ===========
 
+Beta Releases
+--------------
+
 v1.0b3
-----------
+^^^^^^^^^^^^^
 
 - Beta release 3.
-- This is an internal release for conda-forge integration testing.
+- Improvements made for conda-forge integration testing.
 - Fixed an incorrectly initialized variable issue with vinterp.  This issue 
   mainly impacts the unit tests for continuous integration testing with 
   conda-forge, since the data set used for these tests is heavily cropped.
-
+- Back-ported the inspect.BoundArguments.apply_defaults so that Python 3.4
+  works.  Windows users that want to try out wrf-python with Python 3.4
+  can use the bladwig conda channel to get it.
 
 v1.0b2
-----------
+^^^^^^^^^^^^^^
 
 - Beta release 2.
 - xarray 0.9 no longer includes default index dimensions in the coordinate 
@@ -22,7 +27,7 @@ v1.0b2
 - Documentation updated to show the new output from xarray.
 
 v1.0b1
-----------
+^^^^^^^^^^^^^
 
 - Beta release 1.
 - Added more packaging boilerplate.
@@ -31,8 +36,14 @@ v1.0b1
   to find a workaround before the next release. Windows users should use 
   Python 2.7 or Python 3.4 for now.
 
+
+----------------
+
+Alpha Releases
+----------------
+
 v1.0a3
------------
+^^^^^^^^^^^^
 
 - Alpha release 3.
 - Added docstrings.
@@ -62,9 +73,8 @@ v1.0b3
 - Currently unable to build on Windows with Python 3.5+ using open source 
   mingw compiler.  The mingwpy project is working on resolving the 
   incompatibilities between mingw and Visual Studio 2015 that was used to 
-  build Python 3.5+.
-- Numpy distutils compiler options for win64 are hard-coded to turn 
-  optimizations off.  Will work on a patch before 1.0.0 is released, as 
-  part of the v1.0b3 continuous integration changes.  
+  build Python 3.5+.  Numpy 1.13 also has improved f2py support for 
+  Python 3.5+ on Windows, so this will be revisited when it is released.
+  
 
 
