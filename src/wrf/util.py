@@ -20,16 +20,21 @@ try:
 except ImportError:
     from inspect import getgeneratorlocals
 
+# Needed for Python 3.4 to use apply_defaults
+try:
+    from inspect import _empty, _VAR_POSITIONAL, _VAR_KEYWORD
+except ImportError:
+    pass
+
 import numpy as np
 import numpy.ma as ma
 
 from .config import xarray_enabled
-from .projection import getproj, NullProjection
 from .constants import Constants, ALL_TIMES
 from .py3compat import (viewitems, viewkeys, isstr, py3range, ucode)
 from .cache import cache_item, get_cached_item
-from .coordpair import CoordPair
 from .geobnds import GeoBounds, NullGeoBounds
+from .projection import getproj
 
 
 if xarray_enabled():
@@ -2671,6 +2676,48 @@ def _args_to_list2(func, args, kwargs):
     return outargs
 
 
+# For Python 3.4, this will run the BoundArguments.apply_defaults method that 
+# was introduced in Python 3.5.
+def _apply_defaults(bound):
+    """Set default values for missing arguments.
+    
+    For variable-positional arguments (*args) the default is an
+    empty tuple.
+    
+    For variable-keyword arguments (**kwargs) the default is an
+    empty dict.
+    
+    Args:
+    
+        bound (:class:`inspect.BoundArguments`): A BoundArguments object.
+        
+    Returns:
+        
+        None
+    
+    """
+    arguments = bound.arguments
+    
+    new_arguments = []
+    for name, param in bound._signature.parameters.items():
+        try:
+            new_arguments.append((name, arguments[name]))
+        except KeyError:
+            if param.default is not _empty:
+                val = param.default
+            elif param.kind is _VAR_POSITIONAL:
+                val = ()
+            elif param.kind is _VAR_KEYWORD:
+                val = {}
+            else:
+                # This BoundArguments was likely produced by
+                # Signature.bind_partial().
+                continue
+            new_arguments.append((name, val))
+            
+    bound.arguments = OrderedDict(new_arguments)
+    
+    
 def _args_to_list3(func, args, kwargs):
     """Return all of the function arguments, including defaults, as a list.
     
@@ -2698,7 +2745,10 @@ def _args_to_list3(func, args, kwargs):
     """
     sig = signature(func)
     bound = sig.bind(*args, **kwargs)
-    bound.apply_defaults()
+    try:
+        bound.apply_defaults()
+    except AttributeError:
+        _apply_defaults(bound)
     
     return [x for x in bound.arguments.values()]
   
