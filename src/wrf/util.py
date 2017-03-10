@@ -2203,8 +2203,11 @@ def _make_time(timearr):
         :class:`datetime.datetime`: A datetime object.
     
     """
-    return dt.datetime.strptime("".join(npbytes_to_str(timearr)), 
+    try:
+        return dt.datetime.strptime("".join(npbytes_to_str(timearr)), 
                                 "%Y-%m-%d_%H:%M:%S")
+    except ValueError:
+        return np.datetime64("NaT")
 
 
 def _file_times(wrfin, do_xtime):
@@ -3233,6 +3236,7 @@ def _get_proj_obj(ob_type, var, wrfin, varname, timeidx, method, squeeze,
                 proj_obj[idxs] = wrf_proj.pyngl(geobnd_val, **kwargs)
         
     return proj_obj
+
 
 def latlon_coords(var, as_np=False):
     """Return the latitude and longitude coordinates from a 
