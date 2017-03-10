@@ -127,7 +127,7 @@ def disable_pyngl():
     
     
 def set_cache_size(size):
-    """Set the maximum number of items that the threadsafe cache can retain.
+    """Set the maximum number of items that the threadlocal cache can retain.
     
     This cache is primarily used for coordinate variables.
     
@@ -145,7 +145,7 @@ def set_cache_size(size):
     
     
 def get_cache_size():
-    """Return the maximum number of items that the threadsafe cache can retain.
+    """Return the maximum number of items that the threadlocal cache can retain.
     
     Returns:
     

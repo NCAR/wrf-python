@@ -4,12 +4,39 @@ from __future__ import (absolute_import, division, print_function,
 from threading import local
 from collections import OrderedDict
 
+from .py3compat import py3range
 from .config import get_cache_size
 
 _local_storage = local()
 
+
+def _shrink_cache():
+    """Shrink the cache if applicable.
+    
+    This only applies if a user has modified the cache size, otherwise it 
+    just returns.
+    
+    Returns:
+    
+        None
+        
+    """
+    global _local_storage
+    
+    try:
+        cache = _local_storage.cache
+    except AttributeError:
+        return
+    
+    diff = len(cache) - get_cache_size()
+    
+    if diff > 0:
+        for _ in py3range(diff):
+            cache.popitem(last=False)
+            
+
 def cache_item(key, product, value):
-    """Store an item in the cache.
+    """Store an item in the threadlocal cache.
     
     The cache should be viewed as two nested dictionaries.  The outer key is 
     usually the id for the sequence where the cached item was generated.  The 
@@ -43,7 +70,9 @@ def cache_item(key, product, value):
     """
     global _local_storage
     
-    if key is None:
+    _shrink_cache()
+    
+    if key is None or get_cache_size() == 0:
         return
     
     try:
@@ -64,7 +93,7 @@ def cache_item(key, product, value):
     
     
 def get_cached_item(key, product):
-    """Return an item from the cache.
+    """Return an item from the threadlocal cache.
     
     The cache should be viewed as two nested dictionaries.  The outer key is 
     usually the id for the sequence where the cached item was generated.  The 
@@ -94,12 +123,19 @@ def get_cached_item(key, product):
         :meth:`cache_item`
         
     """
-    if key is None:
+    global _local_storage
+    
+    _shrink_cache()
+    
+    if key is None or get_cache_size == 0:
         return None
     
     cache = getattr(_local_storage, "cache", None)
     
     if cache is None:
+        return None
+    
+    if len(cache) == 0:
         return None
     
     prod_dict = cache.get(key, None)
@@ -111,8 +147,9 @@ def get_cached_item(key, product):
         
     return result
 
+
 def _get_cache():
-    """Return the cache.
+    """Return the threadlocal cache.
     
     This is primarily used for testing.
     
@@ -121,6 +158,9 @@ def _get_cache():
         :class:`threading.local`
     
     """
+    global _local_storage
+    
+    _shrink_cache()
     return getattr(_local_storage, "cache", None)
     
     
