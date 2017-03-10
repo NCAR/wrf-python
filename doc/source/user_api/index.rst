@@ -91,6 +91,7 @@ The routines below are used to assist with plotting.
    :toctree: ./generated/
    
     wrf.geo_bounds
+    wrf.latlon_coords
     wrf.get_cartopy
     wrf.get_basemap
     wrf.get_pyngl
