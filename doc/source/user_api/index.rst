@@ -186,6 +186,7 @@ them helpful for other purposes.
    wrf.is_multi_file
    wrf.has_time_coord
    wrf.is_mapping
+   wrf.latlon_coords
    wrf.latlon_coordvars
    wrf.is_coordvar
    wrf.get_iterable
