@@ -9,7 +9,7 @@ A mailing list is available on Google Groups.
       src="javascript:void(0)"
       scrolling="no"
       frameborder="0"
-      width="768"
+      width="700"
       height="700">
     </iframe>
     <script type="text/javascript">
