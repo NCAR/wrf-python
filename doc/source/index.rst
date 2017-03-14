@@ -43,6 +43,7 @@ Documentation
    ./basic_usage
    ./plot
    ./api
+   ./support
    ./license
 
 
