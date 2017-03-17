@@ -137,7 +137,7 @@ def is_multi_file(wrfin):
     return (isinstance(wrfin, Iterable) and not isstr(wrfin))
 
 
-def has_time_coord(wrfin):
+def has_time_coord(wrfnc):
     """Return True if the input file or sequence contains the time 
     coordinate variable.
     
@@ -145,18 +145,16 @@ def has_time_coord(wrfin):
     
     Args:
     
-        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
-            iterable): WRF-ARW NetCDF 
-            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
-            or an iterable sequence of the aforementioned types.
+        wrfnc (:class:`netCDF4.Dataset` or :class:`Nio.NioFile`): A single 
+            NetCDF file object.
         
     Returns:
     
-        :obj:`bool`: True if the input contains the time coordinate 
+        :obj:`bool`: True if the netcdf file contains the time coordinate 
         variable, False otherwise.
     
     """
-    return "XTIME" in wrfin.variables
+    return "XTIME" in wrfnc.variables
 
 
 def is_mapping(wrfin):

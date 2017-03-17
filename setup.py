@@ -63,7 +63,7 @@ numpy.distutils.core.setup(
                 "numerical weather prediction", "diagnostic",
                 "science", "numpy"],
     install_requires = requirements,
-    classifiers = ["Development Status :: 4 - Beta",
+    classifiers = ["Development Status :: 5 - Production/Stable",
                 "Intended Audience :: Science/Research",
                 "Intended Audience :: Developers",
                 "License :: OSI Approved",
@@ -71,6 +71,7 @@ numpy.distutils.core.setup(
                 "Programming Language :: Python :: 2.7",
                 "Programming Language :: Python :: 3.4",
                 "Programming Language :: Python :: 3.5",
+                "Programming Language :: Python :: 3.6",
                 "Topic :: Scientific/Engineering :: Atmospheric Science",
                 "Topic :: Software Development",
                 "Operating System :: POSIX",
@@ -85,8 +86,6 @@ numpy.distutils.core.setup(
     ext_modules = ext_modules,
     package_dir = {"" : "src"},
     download_url = "http://python.org/pypi/wrf-python",
-    #namespace_packages=["wrf"],
-    # Note:  If this doesn't work, you need to add the file to MANIFEST
     package_data={"wrf" : ["data/psadilookup.dat"]},
     scripts=[]
 )  
