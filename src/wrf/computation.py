@@ -859,6 +859,11 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
         - return_val[0,...] will contain CAPE [J kg-1]
         - return_val[1,...] will contain CIN [J kg-1]
     
+    This function also supports computing CAPE along a single vertical 
+    column.  In this mode, the *pres_hpa*, *tkel*, *qv* and *height* arguments
+    must be one-dimensional vertical columns, and the *terrain* and 
+    *psfc_hpa* arguments must be scalar values 
+    (:obj:`float`, :class:`numpy.float32` or :class:`numpy.float64`).
     
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
@@ -868,9 +873,12 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             
         pres_hpa (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Full 
             pressure (perturbation + base state pressure) in [hPa] with at 
-            least three dimensions. The rightmost dimensions can be 
-            top_bottom x south_north x west_east or bottom_top x south_north x
-            west_east.
+            least three dimensions when operating on a grid of values. The 
+            rightmost dimensions can be top_bottom x south_north x west_east 
+            or bottom_top x south_north x west_east.  
+            When operating on only a single column of values, the vertical 
+            column can be bottom_top or top_bottom.  In this case, *terrain* 
+            and *psfc_hpa* must be scalars.
             
             Note:
             
@@ -893,15 +901,21 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             Geopotential height in [m] with the same dimensionality as 
             *pres_hpa*.
             
-        terrain (:class:`xarray.DataArray` or :class:`numpy.ndarray`): 
-            Terrain height in [m].  This is at least a two-dimensional array 
+        terrain (:class:`xarray.DataArray`, :class:`numpy.ndarray`, \
+            or a scalar): Terrain height in [m].  When operating on a grid of 
+            values, this argument is at least a two-dimensional array 
             with the same dimensionality as *pres_hpa*, excluding the vertical 
-            (bottom_top/top_bottom) dimension.
+            (bottom_top/top_bottom) dimension.  When operating on a single 
+            vertical column, this argument must be a scalar (:obj:`float`, 
+            :class:`numpy.float32`, or :class:`numpy.float64`).
             
-        psfc_hpa (:class:`xarray.DataArray` or :class:`numpy.ndarray`): 
-            The surface pressure in [hPa].  This is at least a two-dimensional 
-            array with the same dimensionality as *pres_hpa*, excluding the 
-            vertical (bottom_top/top_bottom) dimension.
+        psfc_hpa (:class:`xarray.DataArray`, :class:`numpy.ndarray`, \
+            or a scalar): Surface pressure in [hPa].  When operating on a 
+            grid of values, this argument is at least a two-dimensional array 
+            with the same dimensionality as *pres_hpa*, excluding the vertical 
+            (bottom_top/top_bottom) dimension.  When operating on a single 
+            vertical column, this argument must be a scalar (:obj:`float`, 
+            :class:`numpy.float32`, or :class:`numpy.float64`).
             
             Note:
             
