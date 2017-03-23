@@ -218,7 +218,7 @@ def cape_left_iter(alg_dtype=np.float64):
         i3dflag = args[7]
         ter_follow = args[8]
         
-        is2d = i3dflag != 0
+        is2d = i3dflag == 0
         is1d = np.isscalar(sfp)
         
         orig_dtype = p_hpa.dtype
