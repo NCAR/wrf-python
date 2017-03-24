@@ -1,4 +1,4 @@
-{% set version = "1.0b3" %}
+{% set version = "1.0.0" %}
 
 package:
   name: wrf-python
@@ -7,7 +7,7 @@ package:
 source:
   fn: wrf-python-{{ version }}.tar.gz
   url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
-  sha256: 6fc6a268d91129ba3c16facb1b53194a551d6336582a1f2162ced584e646aa7e
+  sha256: a5d368ecbe418968a9635d7d0768949b666194366f909a0bf37465f39652406e
 
 build:
   number: 0
