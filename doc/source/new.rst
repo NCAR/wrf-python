@@ -1,6 +1,23 @@
 What's New
 ===========
 
+Releases
+-------------
+
+v1.0.0
+^^^^^^^^^^^^^
+
+- Release 1.0.0.
+- Fixed issue with not being able to set the thread-local coordinate cache to 
+  0 to disable it.  Also, the cache will now correctly resize itself when 
+  the size is reduced to less than its current setting.
+- Fixed an issue with the '0000-00-00 00:00:00' time used in geo_em files 
+  causing crashes due to the invalid time.  The time is now set to 
+  numpy.datetime64('NaT').
+- Fixed issue with wrf.cape_3d not working correctly with a single 
+  column of data.
+
+
 Beta Releases
 --------------
 
@@ -67,8 +84,8 @@ v1.0a3
 Known Issues
 --------------
 
-v1.0b3
-^^^^^^^^^^^^^^^
+v1.0.0
+^^^^^^^^
 
 - Currently unable to build on Windows with Python 3.5+ using open source 
   mingw compiler.  The mingwpy project is working on resolving the 
