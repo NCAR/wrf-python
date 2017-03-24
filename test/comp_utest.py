@@ -515,7 +515,6 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         return (full_p, relh)
         
         
-                
 class WRFVarsTest(ut.TestCase):
     longMessage = True
     
@@ -541,6 +540,60 @@ def make_func(varname, wrfnc, timeidx, method, squeeze, meta):
             self.assertEqual(result.dims, ref.dims)
     
     return func
+
+
+def test_cape3d_1d(wrfnc):
+    
+    def func(self):
+        varnames = ("T", "P", "PB", "QVAPOR", "PH", "PHB", "HGT", "PSFC")
+        ncvars = extract_vars(wrfnc, 0, varnames, method="cat", squeeze=True, 
+                              cache=None, meta=True)
+        
+        t = ncvars["T"]
+        p = ncvars["P"]
+        pb = ncvars["PB"]
+        qv = ncvars["QVAPOR"]
+        ph = ncvars["PH"]
+        phb = ncvars["PHB"]
+        ter = ncvars["HGT"]
+        psfc = ncvars["PSFC"]
+        
+        col_idxs = (slice(None), t.shape[-2]//2, t.shape[-1]//2)
+        
+        t = t[col_idxs]
+        p = p[col_idxs]
+        pb = pb[col_idxs]
+        qv = qv[col_idxs]
+        ph = ph[col_idxs]
+        phb = phb[col_idxs]
+        ter = float(ter[col_idxs[1:]])
+        psfc = float(psfc[col_idxs[1:]])
+        
+        full_t = t + Constants.T_BASE
+        full_p = p + pb
+        tkel = tk(full_p, full_t, meta=False)
+        
+        geopt = ph + phb
+        geopt_unstag = destagger(geopt, -1)
+        z = geopt_unstag/Constants.G
+        
+        # Convert pressure to hPa
+        p_hpa = ConversionFactors.PA_TO_HPA * full_p
+        psfc_hpa = ConversionFactors.PA_TO_HPA * psfc 
+        
+        i3dflag = 1
+        ter_follow = 1
+        
+        result = cape_3d(p_hpa, tkel, qv, z, ter, psfc_hpa, ter_follow)
+    
+        ref = getvar(wrfnc, "cape_3d")
+
+        ref = ref[(slice(None),) + col_idxs]
+        
+        nt.assert_allclose(to_np(result), to_np(ref))
+    
+    return func
+        
         
 if __name__ == "__main__":
     varnames = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
@@ -574,6 +627,10 @@ if __name__ == "__main__":
                                                         squeeze_name, meta_name)
     
                             setattr(WRFVarsTest, test_name, func)
+    
+    func = test_cape3d_1d(wrfnc)
+    setattr(WRFVarsTest, "test_cape3d_1d", func)
+    
     
     ut.main()
     

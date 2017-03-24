@@ -18,7 +18,7 @@ from .decorators import (left_iteration, cast_type,
 from .util import combine_dims, npbytes_to_str, psafilepath
 from .py3compat import py3range
 from .specialdec import (uvmet_left_iter, cape_left_iter, 
-                         cloudfrac_left_iter)
+                         cloudfrac_left_iter, check_cape_args)
 
 class DiagnosticError(Exception):
     """Raised when an error occurs in a diagnostic routine."""
@@ -576,7 +576,7 @@ def _dbz(p, tk, qv, qr, qs, qg, sn0, ivarint, iliqskin, outview=None):
     return result
 
 
-@check_args(0, 3, (3,3,3,3,2,2))
+@check_cape_args()
 @cape_left_iter()
 @cast_type(arg_idxs=(0,1,2,3,4,5), outviews=("capeview", "cinview"))
 @extract_and_transpose(outviews=("capeview", "cinview"))

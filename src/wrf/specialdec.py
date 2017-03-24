@@ -218,28 +218,52 @@ def cape_left_iter(alg_dtype=np.float64):
         i3dflag = args[7]
         ter_follow = args[8]
         
-        is2d = False if i3dflag != 0 else True
-            
-        # Need to order in ascending pressure order
-        flip = False
-        bot_idxs = (0,) * p_hpa.ndim
-        top_idxs = list(bot_idxs)
-        top_idxs[-3] = -1
-        top_idxs = tuple(top_idxs)
+        is2d = i3dflag == 0
+        is1d = np.isscalar(sfp)
         
-        if p_hpa[bot_idxs] > p_hpa[top_idxs]:
-            flip = True
-            p_hpa = np.ascontiguousarray(p_hpa[...,::-1,:,:])
-            tk = np.ascontiguousarray(tk[...,::-1,:,:])
-            qv = np.ascontiguousarray(qv[...,::-1,:,:])
-            ht = np.ascontiguousarray(ht[...,::-1,:,:])
-            new_args[0] = p_hpa
-            new_args[1] = tk
-            new_args[2] = qv
-            new_args[3] = ht
-            
-        num_left_dims = p_hpa.ndim - 3
         orig_dtype = p_hpa.dtype
+        
+        if not is1d:
+            # Need to order in ascending pressure order
+            flip = False
+            bot_idxs = (0,) * p_hpa.ndim
+            top_idxs = list(bot_idxs)
+            top_idxs[-3] = -1
+            top_idxs = tuple(top_idxs)
+        
+            if p_hpa[bot_idxs] > p_hpa[top_idxs]:
+                flip = True
+                p_hpa = np.ascontiguousarray(p_hpa[...,::-1,:,:])
+                tk = np.ascontiguousarray(tk[...,::-1,:,:])
+                qv = np.ascontiguousarray(qv[...,::-1,:,:])
+                ht = np.ascontiguousarray(ht[...,::-1,:,:])
+                new_args[0] = p_hpa
+                new_args[1] = tk
+                new_args[2] = qv
+                new_args[3] = ht
+            
+            num_left_dims = p_hpa.ndim - 3
+        else:
+            # Need to order in ascending pressure order
+            flip = False
+        
+            if p_hpa[0] > p_hpa[-1]:
+                
+                flip = True
+                p_hpa = np.ascontiguousarray(p_hpa[::-1])
+                tk = np.ascontiguousarray(tk[::-1])
+                qv = np.ascontiguousarray(qv[::-1])
+                ht = np.ascontiguousarray(ht[::-1])
+            
+            # Need to make 3D views for the fortran code.
+            new_args[0] = p_hpa[:, np.newaxis, np.newaxis]
+            new_args[1] = tk[:, np.newaxis, np.newaxis]
+            new_args[2] = qv[:, np.newaxis, np.newaxis]
+            new_args[3] = ht[:, np.newaxis, np.newaxis]
+            new_args[4] = np.full((1,1), ter, orig_dtype)
+            new_args[5] = np.full((1,1), sfp, orig_dtype)
+            
+            num_left_dims = 0
         
         # No special left side iteration, build the output from the cape,cin
         # result
@@ -247,7 +271,11 @@ def cape_left_iter(alg_dtype=np.float64):
             cape, cin = wrapped(*new_args, **new_kwargs)
             
             output_dims = (2,)
-            output_dims += p_hpa.shape[-3:]
+            if not is1d:
+                output_dims += p_hpa.shape[-3:]
+            else:
+                output_dims += (p_hpa.shape[0], 1, 1)
+
             output = np.empty(output_dims, orig_dtype)
             
             if flip and not is2d:
@@ -258,7 +286,6 @@ def cape_left_iter(alg_dtype=np.float64):
                 output[1,:] = cin[:]
             
             return output
-                
 
         # Initial output is ...,cape_cin,nz,ny,nx to create contiguous views
         outdims = p_hpa.shape[0:num_left_dims]
@@ -430,6 +457,73 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
                             outview_array[high_idxs].astype(orig_dtype))
         
         return output
+    
+    return func_wrapper
+
+
+def check_cape_args():
+    """A decorator to check that the cape_3d arguments are valid.
+    
+    An exception is raised when an invalid argument is found.
+            
+    Returns:
+    
+        None
+        
+    Raises:
+    
+        :class:`ValueError`: Raised when an invalid argument is detected.
+        
+    """
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        
+        p_hpa = args[0]
+        tk = args[1]
+        qv = args[2]
+        ht = args[3]
+        ter = args[4]
+        sfp = args[5]
+        missing = args[6]
+        i3dflag = args[7]
+        ter_follow = args[8]
+        
+        is2d = False if i3dflag != 0 else True
+        
+        if not (p_hpa.shape == tk.shape == qv.shape == ht.shape):
+            raise ValueError("arguments 0, 1, 2, 3 must be the same shape")
+
+        # 2D CAPE does not allow for scalars
+        if is2d:
+            if np.isscalar(ter) or np.isscalar(sfp):
+                raise ValueError("arguments 4 and 5 cannot be scalars with "
+                                 "cape_2d routine")
+                
+            if ter.ndim != p_hpa.ndim-1 or sfp.ndim != p_hpa.ndim-1:
+                raise ValueError("arguments 4 and 5 must have "
+                                 "{} dimensions".format(p_hpa.ndim-1))
+                
+        # 3D cape is allowed to be just a vertical column with scalars
+        # for terrain and psfc_hpa.
+        else:
+            if np.isscalar(ter) and np.isscalar(sfp):
+                if p_hpa.ndim != 1:
+                    raise ValueError("arguments 0-3 "
+                                     "must be 1-dimensional when "
+                                     "arguments 4 and 5 are scalars")
+                if is2d:
+                    raise ValueError("argument 7 must be 0 when using 1D data")
+            else:
+                if ((np.isscalar(ter) and not np.isscalar(sfp)) or 
+                    (not np.isscalar(ter) and np.isscalar(sfp))):
+                    raise ValueError("arguments 4 and 5 must both be scalars")
+                else:
+                    if ter.ndim != p_hpa.ndim-1 or sfp.ndim != p_hpa.ndim-1:
+                        raise ValueError("arguments 4 and 5 "
+                                         "must have {} dimensions".format(
+                                             p_hpa.ndim-1))
+      
+        return wrapped(*args, **kwargs)
     
     return func_wrapper
 
