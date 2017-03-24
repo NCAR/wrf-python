@@ -1921,8 +1921,19 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
             
         if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
-            
+    
         result = wrapped(*args, **kwargs)
+        
+        argvals = from_args(wrapped, (copyarg,"missing"), *args, **kwargs)
+        p = argvals[copyarg]
+        missing = argvals["missing"]
+        
+        # Note: cape_3d supports using only a single column of data
+        is1d = p.ndim == 1
+        
+        # Need to squeeze the right dimensions for 1D cape
+        if is1d:
+            result = np.squeeze(result)
         
         # Default dimension names
         outdims = ["dim_{}".format(i) for i in py3range(result.ndim)]
@@ -1935,15 +1946,18 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
             outattrs["units"] = "J kg-1 ; J kg-1 ; m ; m"
             outattrs["MemoryOrder"] = "XY"
         else:
-            outname = "cape_3d"
-            outattrs["description"] = "cape; cin"
-            outattrs["units"] = "J kg-1 ; J kg-1"
-            outattrs["MemoryOrder"] = "XYZ"
+            if not is1d:
+                outname = "cape_3d"
+                outattrs["description"] = "cape; cin"
+                outattrs["units"] = "J kg-1 ; J kg-1"
+                outattrs["MemoryOrder"] = "XYZ"
+            else:
+                outname = "cape_column"
+                outattrs["description"] = "cape; cin"
+                outattrs["units"] = "J kg-1 ; J kg-1"
+                outattrs["MemoryOrder"] = "Z"
+                
         
-        argvals = from_args(wrapped, (copyarg,"missing"), *args, **kwargs)
-        p = argvals[copyarg]
-        missing = argvals["missing"]
-            
         if isinstance(p, DataArray):
             if is2d:
                 # Right dims
@@ -1952,10 +1966,13 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
                 outdims[1:-2] = p.dims[0:-3]
                 
             else:
-                # Right dims
-                outdims[-3:] = p.dims[-3:]
-                # Left dims
-                outdims[1:-3] = p.dims[0:-3]
+                if not is1d:
+                    # Right dims
+                    outdims[-3:] = p.dims[-3:]
+                    # Left dims
+                    outdims[1:-3] = p.dims[0:-3]
+                else:
+                    outdims[1] = p.dims[0]
         
         outcoords = {}     
         # Left-most is always cape_cin or cape_cin_lcl_lfc

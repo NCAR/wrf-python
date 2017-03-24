@@ -69,8 +69,10 @@ Plotting a Two-dimensional Field
     ax.coastlines('50m', linewidth=0.8)
     
     # Make the contour outlines and filled contours for the smoothed sea level pressure.
-    plt.contour(to_np(lons), to_np(lats), to_np(smooth_slp), 10, colors="black", transform=crs.PlateCarree())
-    plt.contourf(to_np(lons), to_np(lats), to_np(smooth_slp), 10, transform=crs.PlateCarree(), cmap=get_cmap("jet"))
+    plt.contour(to_np(lons), to_np(lats), to_np(smooth_slp), 10, colors="black", 
+                transform=crs.PlateCarree())
+    plt.contourf(to_np(lons), to_np(lats), to_np(smooth_slp), 10, transform=crs.PlateCarree(), 
+                 cmap=get_cmap("jet"))
     
     # Add a color bar
     plt.colorbar(ax=ax, shrink=.62)
@@ -85,6 +87,7 @@ Plotting a Two-dimensional Field
     plt.title("Sea Level Pressure (hPa)")
 
     plt.show()
+
 
 Horizontal Interpolation to a Pressure Level
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -139,7 +142,7 @@ Horizontal Interpolation to a Pressure Level
     # Add the 500 hPa geopotential height contours
     levels = np.arange(520., 580., 6.)
     contours = plt.contour(to_np(lons), to_np(lats), to_np(ht_500), levels=levels, colors="black", 
-                transform=crs.PlateCarree())
+                           transform=crs.PlateCarree())
     plt.clabel(contours, inline=1, fontsize=10, fmt="%i")
     
     # Add the wind speed contours
@@ -194,8 +197,8 @@ plot, see :ref:`cross_example`.
     slp = getvar(ncfile, "slp")
     smooth_slp = smooth2d(slp, 3)
     ctt = getvar(ncfile, "ctt")
-    z = getvar(ncfile, "z", timeidx=0)
-    dbz = getvar(ncfile, "dbz", timeidx=0)
+    z = getvar(ncfile, "z")
+    dbz = getvar(ncfile, "dbz")
     Z = 10**(dbz/10.)
     wspd =  getvar(ncfile, "wspd_wdir", units="kt")[0,:]
     
@@ -203,10 +206,12 @@ plot, see :ref:`cross_example`.
     start_point = CoordPair(lat=26.76, lon=-80.0)
     end_point = CoordPair(lat=26.76, lon=-77.8)
     
-    # Compute the vertical cross-section interpolation.  Also, include the lat/lon points along the cross-section 
-    # in the metadata by setting latlon to True.
-    z_cross = vertcross(Z, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True, meta=True)
-    wspd_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True, meta=True)
+    # Compute the vertical cross-section interpolation.  Also, include the lat/lon 
+    # points along the cross-section in the metadata by setting latlon to True.
+    z_cross = vertcross(Z, z, wrfin=ncfile, start_point=start_point, end_point=end_point, 
+                        latlon=True, meta=True)
+    wspd_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point, end_point=end_point, 
+                           latlon=True, meta=True)
     dbz_cross = 10.0 * np.log10(z_cross)
     
     # Get the lat/lon points
@@ -223,7 +228,7 @@ plot, see :ref:`cross_example`.
     
     # Download and create the states, land, and oceans using cartopy features
     states = cfeature.NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
-                                 name='admin_1_states_provinces_shp')
+                                          name='admin_1_states_provinces_shp')
     land = cfeature.NaturalEarthFeature(category='physical', name='land', scale='50m', 
                                         facecolor=cfeature.COLORS['land'])
     ocean = cfeature.NaturalEarthFeature(category='physical', name='ocean', scale='50m', 
@@ -232,15 +237,15 @@ plot, see :ref:`cross_example`.
     # Make the pressure contours
     contour_levels = [960, 965, 970, 975, 980, 990]
     c1 = ax_ctt.contour(lons, lats, to_np(smooth_slp), levels=contour_levels, colors="white", 
-                transform=crs.PlateCarree(), zorder=3, linewidths=1.0)
+                        transform=crs.PlateCarree(), zorder=3, linewidths=1.0)
     
     # Create the filled cloud top temperature contours
     contour_levels = [-80.0, -70.0, -60, -50, -40, -30, -20, -10, 0, 10]
-    ctt_contours = ax_ctt.contourf(to_np(lons), to_np(lats), to_np(ctt), contour_levels, cmap=get_cmap("Greys"),
-                 transform=crs.PlateCarree(), zorder=2)
+    ctt_contours = ax_ctt.contourf(to_np(lons), to_np(lats), to_np(ctt), contour_levels, 
+                                   cmap=get_cmap("Greys"), transform=crs.PlateCarree(), zorder=2)
     
-    ax_ctt.plot([start_point.lon, end_point.lon], [start_point.lat, end_point.lat], color="yellow", 
-                marker="o", transform=crs.PlateCarree(), zorder=3)
+    ax_ctt.plot([start_point.lon, end_point.lon], [start_point.lat, end_point.lat], 
+                color="yellow", marker="o", transform=crs.PlateCarree(), zorder=3)
     
     # Create the color bar for cloud top temperature
     cb_ctt = fig.colorbar(ctt_contours, ax=ax_ctt, shrink=.60)
@@ -298,7 +303,8 @@ plot, see :ref:`cross_example`.
     ax_dbz.set_title("Cross-Section of Reflectivity (dBZ)", {"fontsize" : 7})
     
     plt.show()
-    
+
+
 Matplotlib with Basemap
 -----------------------
 
@@ -306,8 +312,7 @@ Although basemap is in maintenance mode only and becoming deprecated, it is stil
 widely used by many programmers.  Cartopy is becoming the preferred package for 
 mapping, however it suffers from growing pains in some areas 
 (can't use latitude/longitude labels for many map projections).  If you 
-run in to these issues, basemap is likely to accomplish what you need, despite 
-slower performance.
+run in to these issues, basemap is likely to accomplish what you need.
 
 
 Plotting a Two-Dimensional Field
@@ -418,7 +423,7 @@ Horizontal Interpolation to a Pressure Level
     # Add the wind speed contours
     levels = [25, 30, 35, 40, 50, 60, 70, 80, 90, 100, 110, 120]
     wspd_contours = bm.contourf(x, y, to_np(wspd_500), levels=levels,
-                                 cmap=get_cmap("rainbow"))
+                                cmap=get_cmap("rainbow"))
     plt.colorbar(wspd_contours, ax=ax, orientation="horizontal", pad=.05)
     
     # Add the geographic boundaries
@@ -428,7 +433,7 @@ Horizontal Interpolation to a Pressure Level
     
     # Add the 500 hPa wind barbs, only plotting every 125th data point.
     bm.barbs(x[::125,::125], y[::125,::125], to_np(u_500[::125, ::125]), 
-              to_np(v_500[::125, ::125]), length=6)
+             to_np(v_500[::125, ::125]), length=6)
     
     plt.title("500 MB Height (dm), Wind Speed (kt), Barbs (kt)")
     
@@ -462,8 +467,8 @@ plot, see :ref:`cross_example`.
     slp = getvar(ncfile, "slp")
     smooth_slp = smooth2d(slp, 3)
     ctt = getvar(ncfile, "ctt")
-    z = getvar(ncfile, "z", timeidx=0)
-    dbz = getvar(ncfile, "dbz", timeidx=0)
+    z = getvar(ncfile, "z")
+    dbz = getvar(ncfile, "dbz")
     Z = 10**(dbz/10.)
     wspd =  getvar(ncfile, "wspd_wdir", units="kt")[0,:]
     
@@ -471,10 +476,12 @@ plot, see :ref:`cross_example`.
     start_point = CoordPair(lat=26.76, lon=-80.0)
     end_point = CoordPair(lat=26.76, lon=-77.8)
     
-    # Compute the vertical cross-section interpolation.  Also, include the lat/lon points along the cross-section in 
-    # the metadata by setting latlon to True.
-    z_cross = vertcross(Z, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True, meta=True)
-    wspd_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True, meta=True)
+    # Compute the vertical cross-section interpolation.  Also, include the lat/lon points 
+    # along the cross-section in the metadata by setting latlon to True.
+    z_cross = vertcross(Z, z, wrfin=ncfile, start_point=start_point, end_point=end_point, 
+                        latlon=True, meta=True)
+    wspd_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point, end_point=end_point, 
+                           latlon=True, meta=True)
     dbz_cross = 10.0 * np.log10(z_cross)
     
     # Get the latitude and longitude points
@@ -500,11 +507,11 @@ plot, see :ref:`cross_example`.
     # Create the filled cloud top temperature contours
     contour_levels = [-80.0, -70.0, -60, -50, -40, -30, -20, -10, 0, 10]
     ctt_contours = bm.contourf(x, y, to_np(ctt), contour_levels, cmap=get_cmap("Greys"),
-                                   zorder=2, ax=ax_ctt)
+                               zorder=2, ax=ax_ctt)
     
     point_x, point_y = bm([start_point.lon, end_point.lon], [start_point.lat, end_point.lat])
     bm.plot([point_x[0], point_x[1]], [point_y[0], point_y[1]], color="yellow", 
-                marker="o", zorder=3, ax=ax_ctt)
+            marker="o", zorder=3, ax=ax_ctt)
     
     # Create the color bar for cloud top temperature
     cb_ctt = fig.colorbar(ctt_contours, ax=ax_ctt, shrink=.60)
@@ -609,8 +616,10 @@ plotted using the standard matplotlib API.
     start_point = CoordPair(lat=26.76, lon=-80.0)
     end_point = CoordPair(lat=26.76, lon=-77.8)
     
-    # Compute the vertical cross-section interpolation.  Also, include the lat/lon points along the cross-section.
-    wspd_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True, meta=True)
+    # Compute the vertical cross-section interpolation.  Also, include the lat/lon 
+    # points along the cross-section.
+    wspd_cross = vertcross(wspd, z, wrfin=ncfile, start_point=start_point, end_point=end_point, 
+                           latlon=True, meta=True)
     
     # Create the figure
     fig = plt.figure(figsize=(12,6))
