@@ -1135,7 +1135,13 @@ def _get_coord_names(wrfin, varname):
             time_coord = coord_names[2]
         except IndexError:
             time_coord = None
-            
+        else:
+            # Make sure they time variable wasn't removed
+            try:
+                _ = wrfnc.variables[time_coord]
+            except KeyError:
+                time_coord = None
+                
     return lat_coord, lon_coord, time_coord
     
 
