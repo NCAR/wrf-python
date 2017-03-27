@@ -10,6 +10,9 @@ v1.0.1
 - Release 1.0.1
 - Fixed issue with initialization of PolarStereographic and LatLon map 
   projection objects.
+- Fixed issue where XTIME could be included in the coordinate list of a 
+  variable, but the actual XTIME variable could be missing.  NCL allows this,
+  so wrf-python should as well.
   
 
 v1.0.0
