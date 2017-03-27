@@ -4,6 +4,14 @@ What's New
 Releases
 -------------
 
+v1.0.1
+^^^^^^^^^^^^^
+
+- Release 1.0.1
+- Fixed issue with initialization of PolarStereographic and LatLon map 
+  projection objects.
+  
+
 v1.0.0
 ^^^^^^^^^^^^^
 
