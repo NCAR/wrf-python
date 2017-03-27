@@ -675,8 +675,7 @@ class PolarStereographic(WrfProj):
                 - 'POLE_LON': Pole longitude.
 
         """
-        super(PolarStereographic, self).__init__(bottom_left, 
-                        top_right, lats, lons, **proj_params)
+        super(PolarStereographic, self).__init__(**proj_params)
         self._hemi = -90. if self.truelat1 < 0 else 90.
         self._lat_ts = (None 
                   if _ismissing(self.truelat1) 
@@ -792,8 +791,7 @@ class LatLon(WrfProj):
                 - 'POLE_LON': Pole longitude.
 
         """
-        super(LatLon, self).__init__(bottom_left, top_right, 
-                                         lats, lons, **proj_params)
+        super(LatLon, self).__init__(**proj_params)
     
     
     def _cf_params(self):
