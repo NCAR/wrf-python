@@ -608,9 +608,9 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
         es = EZERO*EXP(ESLCON1*(temperature - CELKEL)/(temperature - ESLCON2))
         ! qvs = ep_2*es/(pressure-es)
         qvs = EPS*es/(0.01D0*pressure - (1.D0 - EPS)*es)
-        ! rh = 100*amax1(1., qv(i)/qvs)
+        ! rh = 100*MAX(1., qv(i)/qvs)
         ! rh(i) = 100.*qv(i)/qvs
-        rh(i) = 100.D0*DMAX1(DMIN1(qv(i)/qvs, 1.0D0), 0.0D0)
+        rh(i) = 100.D0*MAX(MIN(qv(i)/qvs, 1.0D0), 0.0D0)
     END DO
 
     RETURN
@@ -645,7 +645,7 @@ SUBROUTINE DGETIJLATLONG(lat_array, long_array, lat, longitude, ii, jj, nx, ny, 
         DO i = 1,nx
             latd = (lat_array(i,j) - lat)**2
             longd = (long_array(i,j) - longitude)**2
-            ! longd = dmin1((long_array(i,j)-longitude)**2, &
+            ! longd = MIN((long_array(i,j)-longitude)**2, &
             !               (long_array(i,j)+longitude)**2)
             dist = SQRT(latd + longd)
             IF (dist_min .GT. dist) THEN
@@ -792,12 +792,12 @@ SUBROUTINE DCOMPUTETD(td, pressure, qv_in, nx)
     INTEGER :: i
 
     DO i = 1,nx
-      qv = DMAX1(qv_in(i), 0.D0)
+      qv = MAX(qv_in(i), 0.D0)
       ! vapor pressure
       tdc = qv*pressure(i)/(.622D0 + qv)
 
       ! avoid problems near zero
-      tdc = DMAX1(tdc, 0.001D0)
+      tdc = MAX(tdc, 0.001D0)
       td(i) = (243.5D0*LOG(tdc) - 440.8D0)/(19.48D0 - LOG(tdc))
     END DO
 
@@ -834,7 +834,7 @@ SUBROUTINE DCOMPUTEICLW(iclw, pressure, qc_in, nx, ny, nz)
     DO j = 3,ny - 2
         DO i = 3,nx - 2
             DO k = 1,nz
-                qclw = DMAX1(qc_in(i,j,k), 0.D0)
+                qclw = MAX(qc_in(i,j,k), 0.D0)
                 IF (k.EQ.1) THEN
                     dp = pressure(i,j,k-1) - pressure(i,j,k)
                 ELSE IF (k.EQ.nz) then
