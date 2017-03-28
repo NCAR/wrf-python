@@ -142,14 +142,14 @@ SUBROUTINE DLLTOIJ(map_proj, truelat1, truelat2, stdlon, lat1, lon1,&
         ! the rsw tag.
         rsw = 0.D0
         IF (lat1 .NE. 0.D0) THEN
-            rsw = (DLOG(TAN(0.5D0*((lat1 + 90.D0)*RAD_PER_DEG))))/dlon
+            rsw = (LOG(TAN(0.5D0*((lat1 + 90.D0)*RAD_PER_DEG))))/dlon
         END IF
 
         deltalon = lon - lon1
         IF (deltalon .LT. -180.D0) deltalon = deltalon + 360.D0
         IF (deltalon .GT. 180.D0) deltalon = deltalon - 360.D0
         i = knowni + (deltalon/(dlon*DEG_PER_RAD))
-        j = knownj + (DLOG(TAN(0.5D0*((lat + 90.D0)*RAD_PER_DEG))))/dlon - rsw
+        j = knownj + (LOG(TAN(0.5D0*((lat + 90.D0)*RAD_PER_DEG))))/dlon - rsw
 
     ! ps
     ELSE IF (map_proj .EQ. 2) THEN
@@ -183,9 +183,9 @@ SUBROUTINE DLLTOIJ(map_proj, truelat1, truelat2, stdlon, lat1, lon1,&
         END IF
 
         IF (ABS(truelat1 - truelat2) .GT. 0.1D0) THEN
-            cone = (DLOG(COS(truelat1*RAD_PER_DEG))-DLOG(COS(truelat2*RAD_PER_DEG)))/&
-                 (DLOG(TAN((90.D0 - ABS(truelat1))*RAD_PER_DEG*0.5D0))-&
-                 DLOG(TAN((90.D0 - ABS(truelat2))*RAD_PER_DEG*0.5D0)))
+            cone = (LOG(COS(truelat1*RAD_PER_DEG))-LOG(COS(truelat2*RAD_PER_DEG)))/&
+                 (LOG(TAN((90.D0 - ABS(truelat1))*RAD_PER_DEG*0.5D0))-&
+                 LOG(TAN((90.D0 - ABS(truelat2))*RAD_PER_DEG*0.5D0)))
         ELSE
             cone = SIN(ABS(truelat1)*RAD_PER_DEG)
         END IF
@@ -358,7 +358,7 @@ SUBROUTINE DIJTOLL(map_proj, truelat1, truelat2, stdlon, lat1, lon1,&
         ! the rsw tag.
         rsw = 0.D0
         IF (lat1 .NE. 0.D0) THEN
-            rsw = (DLOG(TAN(0.5D0*((lat1 + 90.D0)*RAD_PER_DEG))))/dlon
+            rsw = (LOG(TAN(0.5D0*((lat1 + 90.D0)*RAD_PER_DEG))))/dlon
         END IF
 
         lat = 2.0D0*ATAN(EXP(dlon*(rsw + aj - knownj)))*DEG_PER_RAD - 90.D0
@@ -418,9 +418,9 @@ SUBROUTINE DIJTOLL(map_proj, truelat1, truelat2, stdlon, lat1, lon1,&
         END IF
 
         IF (ABS(truelat1 - truelat2) .GT. 0.1D0) THEN
-            cone = (DLOG(COS(truelat1*RAD_PER_DEG)) - DLOG(COS(truelat2*RAD_PER_DEG)))/&
-                 (DLOG(TAN((90.D0 - ABS(truelat1))*RAD_PER_DEG*0.5D0)) - &
-                  DLOG(TAN((90.D0 - ABS(truelat2))*RAD_PER_DEG*0.5D0)))
+            cone = (LOG(COS(truelat1*RAD_PER_DEG)) - LOG(COS(truelat2*RAD_PER_DEG)))/&
+                 (LOG(TAN((90.D0 - ABS(truelat1))*RAD_PER_DEG*0.5D0)) - &
+                  LOG(TAN((90.D0 - ABS(truelat2))*RAD_PER_DEG*0.5D0)))
         ELSE
             cone = SIN(ABS(truelat1)*RAD_PER_DEG)
         END IF

@@ -137,8 +137,8 @@ SUBROUTINE DZSTAG(znew, nx, ny, nz, z, nxz, nyz ,nzz, terrain)
         DO k = 1,nz
             DO j = 1,ny
                 DO i = 1,nx
-                    ii = MIN0(i,nxz)
-                    im1 = MAX0(i-1,1)
+                    ii = MIN(i,nxz)
+                    im1 = MAX(i-1,1)
                     znew(i,j,k) = 0.5D0*(z(ii,j,k) + z(im1,j,k))
                 END DO
             END DO
@@ -147,8 +147,8 @@ SUBROUTINE DZSTAG(znew, nx, ny, nz, z, nxz, nyz ,nzz, terrain)
     ELSE IF (ny .GT. nyz) THEN
         DO k = 1,nz
             DO j = 1,NY
-                jj = MIN0(j,nyz)
-                jm1 = MAX0(j-1,1)
+                jj = MIN(j,nyz)
+                jm1 = MAX(j-1,1)
                 DO i = 1,nx
                     znew(i,j,k) = 0.5D0*(z(i,jj,k) + z(i,jm1,k))
                 END DO
@@ -196,8 +196,8 @@ SUBROUTINE DINTERP2DXY(v3d, v2d, xy, nx, ny, nz, nxy)
     REAL(KIND=8) :: w11, w12, w21, w22, wx, wy
 
     DO ij = 1,nxy
-      i = MAX0(1,MIN0(nx-1,INT(xy(1,ij)+1)))
-      j = MAX0(1,MIN0(ny-1,INT(xy(2,ij)+1)))
+      i = MAX(1,MIN(nx-1,INT(xy(1,ij)+1)))
+      j = MAX(1,MIN(ny-1,INT(xy(2,ij)+1)))
       wx = DBLE(i+1) - (xy(1,ij)+1)
       wy = DBLE(j+1) - (xy(2,ij)+1)
       w11 = wx*wy
@@ -255,7 +255,7 @@ SUBROUTINE DINTERP1D(v_in, v_out, z_in, z_out, vmsg, nz_in, nz_out)
       DO WHILE ((.NOT. interp) .AND. (kp .GE. 2))
           IF (((z_in(kp-im) .LE. height) .AND. (z_in(kp-ip) .GT. height))) THEN
               w2 = (height - z_in(kp-im))/(z_in(kp-ip) - z_in(kp-im))
-              w1 = 1.d0 - w2
+              w1 = 1.D0 - w2
               v_out(k) = w1*v_in(kp-im) + w2*v_in(kp-ip)
               interp = .TRUE.
           END IF
