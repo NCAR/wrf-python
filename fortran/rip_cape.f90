@@ -374,17 +374,17 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                   G/(RD*tvirtual(tmk(i,j,kpar1), qvp(i,j,kpar1)))
               p2 = MIN(prs(i,j,kpar1)+.5d0*pavg, prsf(i,j,mkzh))
               p1 = p2 - pavg
-              totthe = 0.d0
-              totqvp = 0.d0
-              totprs = 0.d0
+              totthe = 0.D0
+              totqvp = 0.D0
+              totprs = 0.D0
               DO k = mkzh,2,-1
                   IF (prsf(i,j,k) .LE. p1) EXIT !GOTO 35
                   IF (prsf(i,j,k-1) .GE. p2) CYCLE !GOTO 34
                   p = prs(i,j,k)
                   pup = prsf(i,j,k)
                   pdn = prsf(i,j,k-1)
-                  q = MAX(qvp(i,j,k),1.d-15)
-                  th = tmk(i,j,k)*(1000.d0/p)**(GAMMA*(1.d0 + GAMMAMD*q))
+                  q = MAX(qvp(i,j,k),1.D-15)
+                  th = tmk(i,j,k)*(1000.D0/p)**(GAMMA*(1.D0 + GAMMAMD*q))
                   pp1 = MAX(p1,pdn)
                   pp2 = MIN(p2,pup)
                   IF (pp2 .GT. pp1) THEN
@@ -398,7 +398,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 !    35        CONTINUE
               qvppari = totqvp/totprs
               tmkpari = (totthe/totprs)*&
-                  (prs(i,j,kpar1)/1000.d0)**(GAMMA*(1.d0+GAMMAMD*qvp(i,j,kpar1)))
+                  (prs(i,j,kpar1)/1000.D0)**(GAMMA*(1.D0+GAMMAMD*qvp(i,j,kpar1)))
           END IF
 
           DO kpar = kpar1, kpar2
@@ -412,13 +412,13 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               END IF
               prspari = prs(i,j,kpar)
               ghtpari = ght(i,j,kpar)
-              gammam = GAMMA * (1.d0 + GAMMAMD*qvppari)
-              cpm = CP * (1.d0 + CPMD*qvppari)
+              gammam = GAMMA * (1.D0 + GAMMAMD*qvppari)
+              cpm = CP * (1.D0 + CPMD*qvppari)
 
-              e = MAX(1.d-20,qvppari*prspari/(EPS + qvppari))
+              e = MAX(1.D-20,qvppari*prspari/(EPS + qvppari))
               tlcl = TLCLC1/(LOG(tmkpari**TLCLC2/e) - TLCLC3) + TLCLC4
-              ethpari = tmkpari*(1000.d0/prspari)**(GAMMA*(1.d0 + GAMMAMD*qvppari))*&
-                  EXP((THTECON1/tlcl - THTECON2)*qvppari*(1.d0 + THTECON3*qvppari))
+              ethpari = tmkpari*(1000.D0/prspari)**(GAMMA*(1.D0 + GAMMAMD*qvppari))*&
+                  EXP((THTECON1/tlcl - THTECON2)*qvppari*(1.D0 + THTECON3*qvppari))
               zlcl = ghtpari + (tmkpari - tlcl)/(G/cpm)
 
               ! Calculate buoyancy and relative height of lifted parcel at
@@ -476,13 +476,13 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                   buoy(kk) = G*(tvlift - tvenv)/tvenv
                   zrel(kk) = ghtlift - ghtpari
 
-                  IF ((kk .GT. 1) .AND. (buoy(kk)*buoy(kk-1) .LT. 0.0d0)) THEN
+                  IF ((kk .GT. 1) .AND. (buoy(kk)*buoy(kk-1) .LT. 0.0D0)) THEN
                       ! Parcel ascent curve crosses sounding curve, so create a new level
                       ! in the bottom-up array at the crossing.
                       kk = kk + 1
                       buoy(kk) = buoy(kk-1)
                       zrel(kk) = zrel(kk-1)
-                      buoy(kk-1) = 0.d0
+                      buoy(kk-1) = 0.D0
                       zrel(kk-1) = zrel(kk-2) + buoy(kk-2)/&
                           (buoy(kk-2) - buoy(kk))*(zrel(kk) - zrel(kk-2))
                   END IF
@@ -511,11 +511,11 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
               ! Get the accumulated buoyant energy from the parcel's starting
               ! point, at all levels up to the top level.
-              benaccum(1) = 0.0d0
+              benaccum(1) = 0.0D0
               benamin = 9d9
               DO k = 2,kmax
                   dz = zrel(k) - zrel(k-1)
-                  benaccum(k) = benaccum(k-1) + .5d0*dz*(buoy(k-1) + buoy(k))
+                  benaccum(k) = benaccum(k-1) + .5D0*dz*(buoy(k-1) + buoy(k))
                   IF (benaccum(k) .LT. benamin) THEN
                       benamin = benaccum(k)
                   END IF
@@ -527,7 +527,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
               elfound = .FALSE.
               DO k = kmax,klcl,-1
-                  IF (buoy(k) .GE. 0.d0) THEN
+                  IF (buoy(k) .GE. 0.D0) THEN
                       ! k of equilibrium level
                       kel = k
                       elfound = .TRUE.
@@ -549,8 +549,8 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               ! to a more appropriate missing value, which is passed into this
               ! routine as cmsg.
 
-              ! cape(i,j,kpar) = -0.1d0
-              ! cin(i,j,kpar) = -0.1d0
+              ! cape(i,j,kpar) = -0.1D0
+              ! cin(i,j,kpar) = -0.1D0
               IF (.NOT. elfound) THEN
                   cape(i,j,kpar) = cmsg
                   cin(i,j,kpar)  = cmsg
@@ -572,7 +572,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               !   inhibition (cin).
 
               !   First get the lfc according to the above definition.
-              benamin = 9d9
+              benamin = 9D9
               klfc = kmax
               DO k = klcl,kel
                   IF (benaccum(k) .LT. benamin) THEN
@@ -583,8 +583,8 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
               ! Now we can assign values to cape and cin
 
-              cape(i,j,kpar) = MAX(benaccum(kel)-benamin, 0.1d0)
-              cin(i,j,kpar) = MAX(-benamin, 0.1d0)
+              cape(i,j,kpar) = MAX(benaccum(kel)-benamin, 0.1D0)
+              cin(i,j,kpar) = MAX(-benamin, 0.1D0)
 
               ! cin is uninteresting when cape is small (< 100 j/kg), so set
               ! cin to -0.1 (see note about missing values in v6.1.0) in
@@ -595,8 +595,8 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               ! to a more appropriate missing value, which is passed into this
               ! routine as cmsg.
 
-              ! IF (cape(i,j,kpar).lt.100.d0) cin(i,j,kpar) = -0.1d0
-              IF (cape(i,j,kpar) .LT. 100.d0) cin(i,j,kpar) = cmsg
+              ! IF (cape(i,j,kpar).lt.100.D0) cin(i,j,kpar) = -0.1D0
+              IF (cape(i,j,kpar) .LT. 100.D0) cin(i,j,kpar) = cmsg
 !    102   CONTINUE
 
           END DO
