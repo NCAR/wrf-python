@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+#HPCI -n wrapt
+#HPCI -v 1.10.10
+#HPCI -a wrapt-1.10.10.tar.gz
+#HPCI -p gnu/4.8.2
+#HPCI -p python/2.7.7 
+
+set -e
+
+PKG="wrapt"
+VERSION="1.10.10"
+PKGSRC=$PKG"-"$VERSION
+
+tar -xvf $PKGSRC".tar.gz" > /dev/null
+cd $PKGSRC
+python setup.py build
+
+# Create the module directory
+mkdir -p $HPCI_MOD_DIR/pythonpkgs/$HPCI_SW_NAME/
+
+# Create the module with the following template
+cat << EOF > $HPCI_MOD_DIR/pythonpkgs/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
+require("posix")
+
+whatis("wrapt v$HPCI_SW_VERSION")
+
+help([[
+This module loads wrapt, a Python package that provides fully functional 
+decorators.  See https://wrapt.readthedocs.io/en/latest/ for details.
+]])
+
+local verpath = "$HPCI_SW_DIR" -- specific version path
+local pytestpath = pathJoin(verpath, "lib/python2.7/site-packages/") -- internal python libs
+
+prepend_path("PYTHONPATH", pytestpath)
+
+conflict("all-python-libs")
+prereq("python/2.7.7")
+EOF
+
+mkdir -p $HPCI_SW_DIR/lib/python2.7/site-packages/  # create the install directory (python does not install in not existing dirs)
+
+python setup.py install --prefix=$HPCI_SW_DIR
+
