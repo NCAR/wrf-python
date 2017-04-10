@@ -1,15 +1,16 @@
 #!/bin/bash
 #
-#HPCI -n wrapt
-#HPCI -v 1.10.10
-#HPCI -a wrapt-1.10.10.tar.gz
+#HPCI -n wrf-python
+#HPCI -v 1.0.1
+#HPCI -a wrf-python-1.0.1.tar.gz
 #HPCI -p gnu/4.8.2
-#HPCI -p python/2.7.7 
+#HPCI -p python/2.7.7
+#HPCI -p numpy/1.11.0
 
 set -e
 
-PKG="wrapt"
-VERSION="1.10.10"
+PKG="wrf-python"
+VERSION="1.0.1"
 PKGSRC=$PKG"-"$VERSION
 
 tar -xvf $PKGSRC".tar.gz" > /dev/null
@@ -26,8 +27,9 @@ require("posix")
 whatis("wrapt v$HPCI_SW_VERSION")
 
 help([[
-This module loads wrapt, a Python package that provides fully functional 
-decorators.  See https://wrapt.readthedocs.io/en/latest/ for details.
+This module loads wrf-python, a Python package that provides diagnostic and 
+interpolation routines for users of the WRF-ARW model.  
+See http://wrf-python.rtfd.org for details.
 ]])
 
 local verpath = "$HPCI_SW_DIR" -- specific version path
@@ -37,9 +39,16 @@ prepend_path("PYTHONPATH", pytestpath)
 
 conflict("all-python-libs")
 prereq("python/2.7.7")
+prereq("numpy/1.11.0")
+prereq("wrapt/1.10.10")
+prereq("xarray/0.8.2")
+
 EOF
 
 mkdir -p $HPCI_SW_DIR/lib/python2.7/site-packages/  # create the install directory (python does not install in not existing dirs)
+
+# Need to set pythonpath in order to dump the .pth files
+export PYTHONPATH=${HPCI_SW_DIR}/lib/python2.7/site-packages:$PYTHONPATH
 
 python setup.py install --prefix=$HPCI_SW_DIR
 
