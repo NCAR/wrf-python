@@ -24,7 +24,7 @@ mkdir -p $HPCI_MOD_DIR/pythonpkgs/$HPCI_SW_NAME/
 cat << EOF > $HPCI_MOD_DIR/pythonpkgs/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
 require("posix")
 
-whatis("wrapt v$HPCI_SW_VERSION")
+whatis("wrf-python v$HPCI_SW_VERSION")
 
 help([[
 This module loads wrf-python, a Python package that provides diagnostic and 
