@@ -186,25 +186,28 @@ def left_iteration(ref_var_expected_dims,
             # Skip the possible empty/missing arrays for the join method
             skip_missing = False
             for arg in new_args:
-                if isinstance(arg, DataArray):
-                    arr = to_np(arg)
-                elif isinstance(arg, np.ndarray):
-                    arr = arg
+                try:
+                    _ = arg.ndim
+                except AttributeError:
+                    continue # Not an array object
                 else:
-                    continue
+                    arr = to_np(arg)
                 
-                if isinstance(arr, np.ma.MaskedArray):
-                    if arr.mask.all():
-                        
+                try:
+                    all_masked = arr.mask.all()
+                except AttributeError:
+                    pass # Not a masked array
+                else:
+                    if all_masked:
                         for output in viewvalues(outd):
                             output[left_and_slice_idxs] = (
-                                            Constants.DEFAULT_FILL)
+                                Constants.DEFAULT_FILL)
                         skip_missing = True
                         mask_output = True
+                        break
             
             if skip_missing:
                 continue
-            
             
             # Insert the output views if one hasn't been provided
             if "outview" not in new_kargs:

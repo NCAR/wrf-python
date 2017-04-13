@@ -70,13 +70,9 @@ def uvmet_left_iter(alg_dtype=np.float64):
                 mode = 2 # probably 3D with 2D lat/lon plus Time
         
         has_missing = False
-        u_arr = u
-        if isinstance(u, DataArray):
-            u_arr = to_np(u)
+        u_arr = to_np(u)
             
-        v_arr = v
-        if isinstance(v, DataArray):
-            v_arr = to_np(v)
+        v_arr = to_np(v)
           
         umissing = Constants.DEFAULT_FILL  
         if isinstance(u_arr, np.ma.MaskedArray):
