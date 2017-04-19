@@ -26,7 +26,7 @@ def xy(field, pivot_point=None, angle=None, start_point=None, end_point=None,
     
     Args:
     
-        field3d (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
+        field (:class:`xarray.DataArray` or :class:`numpy.ndarray`): A 
             field with at least two dimensions.
                     
         pivot_point (:obj:`tuple` or :obj:`list`, optional): A 

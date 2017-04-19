@@ -3021,6 +3021,9 @@ def geo_bounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
     
     # Getting lat/lon from xarray coordinates
     if var is not None:
+        if not xarray_enabled():
+            raise ValueError("xarray is not installed or is disabled")
+        
         is_moving = None
         try:
             var_coords = var.coords
@@ -3142,8 +3145,15 @@ def _get_wrf_proj_geobnds(var, wrfin, varname, timeidx, method, squeeze,
     """
     # Using a variable
     if var is not None:
+        if not xarray_enabled():
+            raise ValueError("xarray is not installed or is disabled")
+        
         geobnds = geo_bounds(var)
-        wrf_proj = var.attrs["projection"]
+        try:
+            wrf_proj = var.attrs["projection"]
+        except AttributeError:
+            raise ValueError("variable does not contain projection "
+                             "information")
     else:
         geobnds = geo_bounds(wrfin=wrfin, varname=varname, timeidx=timeidx,
                             method=method, cache=cache)
@@ -3260,6 +3270,9 @@ def latlon_coords(var, as_np=False):
     
     """
     
+    if not xarray_enabled():
+        raise ValueError("xarray is not installed or is disabled")
+    
     try:
         var_coords = var.coords
     except AttributeError:
@@ -3284,8 +3297,6 @@ def latlon_coords(var, as_np=False):
     return lats, lons
     
     
-
-     
 def get_cartopy(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
               squeeze=True, cache=None):
     """Return a :class:`cartopy.crs.Projection` subclass for the 
