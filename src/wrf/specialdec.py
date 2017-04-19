@@ -244,7 +244,6 @@ def cape_left_iter(alg_dtype=np.float64):
             flip = False
         
             if p_hpa[0] > p_hpa[-1]:
-                
                 flip = True
                 p_hpa = np.ascontiguousarray(p_hpa[::-1])
                 tk = np.ascontiguousarray(tk[::-1])
@@ -252,10 +251,13 @@ def cape_left_iter(alg_dtype=np.float64):
                 ht = np.ascontiguousarray(ht[::-1])
             
             # Need to make 3D views for the fortran code.
-            new_args[0] = p_hpa[:, np.newaxis, np.newaxis]
-            new_args[1] = tk[:, np.newaxis, np.newaxis]
-            new_args[2] = qv[:, np.newaxis, np.newaxis]
-            new_args[3] = ht[:, np.newaxis, np.newaxis]
+            # Going to make these fortran ordered, since the f_contiguous and
+            # c_contiguous flags are broken in numpy 1.11 (always false).  This 
+            # should work across all numpy versions. 
+            new_args[0] = p_hpa.reshape((1, 1, p_hpa.shape[0]), order='F')
+            new_args[1] = tk.reshape((1, 1, tk.shape[0]), order='F')
+            new_args[2] = qv.reshape((1, 1, qv.shape[0]), order='F')
+            new_args[3] = ht.reshape((1, 1, ht.shape[0]), order='F')
             new_args[4] = np.full((1,1), ter, orig_dtype)
             new_args[5] = np.full((1,1), sfp, orig_dtype)
             
