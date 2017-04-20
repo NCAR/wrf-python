@@ -29,6 +29,7 @@ requirements:
     - mingwpy  # [win]
     - libgfortran  # [unix]
     - libgcc  # [unix]
+    - xarray
 
 test:
   requires:
