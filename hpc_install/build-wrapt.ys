@@ -8,11 +8,9 @@
 
 set -e
 
-PKG="wrapt"
-VERSION="1.10.10"
-PKGSRC=$PKG"-"$VERSION
+PKGSRC=$HPCI_SW_NAME"-"${HPCI_SW_VERSION}
 
-tar -xvf $PKGSRC".tar.gz" > /dev/null
+tar -xf $PKGSRC".tar.gz"
 cd $PKGSRC
 python setup.py build
 
@@ -36,13 +34,12 @@ local pytestpath = pathJoin(verpath, "lib/python2.7/site-packages/") -- internal
 prepend_path("PYTHONPATH", pytestpath)
 
 conflict("all-python-libs")
-prereq("python/2.7.7")
 EOF
 
 mkdir -p $HPCI_SW_DIR/lib/python2.7/site-packages/  # create the install directory (python does not install in not existing dirs)
 
 # Need to set pythonpath in order to dump the .pth files
-export PYTHONPATH=${HPCI_SW_DIR}/lib/python2.7/site-packages:$PYTHONPATH
+ml use $HPCI_MOD_DIR/pythonpkgs
+ml $HPCI_SW_NAME/${HPCI_SW_VERSION}
 
 python setup.py install --prefix=$HPCI_SW_DIR
-
