@@ -47,6 +47,19 @@ space and latitude-longitude space.
    wrf.xy_to_ll
    wrf.ll_to_xy_proj
    wrf.xy_to_ll_proj
+   
+   
+Grid Destaggering Routine
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The routine below is used to convert a variable on a staggered grid to the 
+unstaggered grid.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.destagger
 
 
 Numpy Extraction Routine
