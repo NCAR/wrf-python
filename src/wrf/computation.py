@@ -589,7 +589,7 @@ def uvmet(u, v, lat, lon, cen_long, cone, meta=True, units="m s-1"):
             unstaggered, but must be at least two dimensions. If staggered,
             the rightmost dimensions are south_north x west east.
             
-            IF staggered, the rightmost dimensions are south_north_stag x 
+            If staggered, the rightmost dimensions are south_north_stag x 
             west_east.
             
         lat (:class:`xarray.DataArray` or :class:`numpy.ndarray`): The 
@@ -630,7 +630,7 @@ def uvmet(u, v, lat, lon, cen_long, cone, meta=True, units="m s-1"):
         
         cen_long (:obj:`float`): The standard longitude for the map projection.
         
-        cone (:obj:`float`): The cone factor used for the map project. IF the 
+        cone (:obj:`float`): The cone factor used for the map project. If the 
             projection is not a conic projection, the *cone* is simply 1.0. 
             For conic projections, the cone factor is given by:
             
@@ -1093,7 +1093,7 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
     
     See Also:
     
-        :meth:`wrf.getvar`, :meth:`wrf.cfrac`
+        :meth:`wrf.getvar`, :meth:`wrf.cloudfrac`
     
     """
     
@@ -1185,7 +1185,7 @@ def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False,
     
     See Also:
     
-        :meth:`wrf.getvar`, :meth:`wrf.cfrac`
+        :meth:`wrf.getvar`
     
     """
     

@@ -151,7 +151,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             
         stagger (:obj:`str`): If using latitude, longitude coordinate pairs 
             for *start_point*, *end_point*, or *pivot_point*, 
-            set the appropriate grid staggering type for *field2d*. By default,
+            set the appropriate grid staggering type for *field3d*. By default,
             the mass grid is used.  The options are:
             
                 - 'm': Use the mass grid (default).
@@ -164,8 +164,8 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             projection object to use when working with latitude, longitude 
             coordinates, and must be specified if *wrfin* is None. Default 
             is None.
-        
-        pivot_point (:class`wrf.CoordPair`, optional): A coordinate pair for 
+            
+        pivot_point (:class:`wrf.CoordPair`, optional): A coordinate pair for 
             the pivot point, which indicates the location through which 
             the plane will pass. Must also specify *angle*.  The coordinate 
             pair can be in x,y grid coordinates or latitude, longitude 
@@ -331,7 +331,7 @@ def interpline(field2d, pivot_point=None,
             not be used when working with x,y coordinates.  Default 
             is None.
             
-        pivot_point (:class`wrf.CoordPair`, optional): A coordinate pair for 
+        pivot_point (:class:`wrf.CoordPair`, optional): A coordinate pair for 
             the pivot point, which indicates the location through which 
             the plane will pass. Must also specify *angle*.  The coordinate 
             pair can be in x,y grid coordinates or latitude, longitude 
