@@ -40,7 +40,7 @@ Plotting a Two-dimensional Field
     import cartopy.crs as crs
     from cartopy.feature import NaturalEarthFeature
     
-    from wrf import to_np, getvar, smooth2d, get_cartopy, cartopy_xlim, cartopy_ylim
+    from wrf import to_np, getvar, smooth2d, get_cartopy, cartopy_xlim, cartopy_ylim, latlon_coords
     
     # Open the NetCDF file
     ncfile = Dataset("wrfout_d01_2016-10-07_00_00_00")
