@@ -4,6 +4,14 @@ What's New
 Releases
 -------------
 
+v1.0.2
+^^^^^^^^^^^^^^
+
+- Release 1.0.2
+- Fixed issue with the wspd_wdir product types when sequences of files are 
+  used.
+
+
 v1.0.1
 ^^^^^^^^^^^^^
 

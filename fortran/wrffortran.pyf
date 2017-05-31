@@ -556,6 +556,23 @@ python module _wrffortran ! in
             integer intent(inout) :: errstat
             character*(*) intent(inout) :: errmsg
         end subroutine wrf_vintrp
+        subroutine dcomputewspd(wspd,u,v,nx,ny) ! in :_wrffortran:wrf_wind.f90
+            threadsafe 
+            real(kind=8) dimension(nx,ny),intent(out,in) :: wspd
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: u
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: v
+            integer, optional,intent(in),check(shape(wspd,0)==nx),depend(wspd) :: nx=shape(wspd,0)
+            integer, optional,intent(in),check(shape(wspd,1)==ny),depend(wspd) :: ny=shape(wspd,1)
+        end subroutine dcomputewspd
+        subroutine dcomputewdir(wdir,u,v,nx,ny) ! in :_wrffortran:wrf_wind.f90
+            threadsafe 
+            use wrf_constants, only: deg_per_rad
+            real(kind=8) dimension(nx,ny),intent(out,in) :: wdir
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: u
+            real(kind=8) dimension(nx,ny),intent(in),depend(nx,ny) :: v
+            integer, optional,intent(in),check(shape(wdir,0)==nx),depend(wdir) :: nx=shape(wdir,0)
+            integer, optional,intent(in),check(shape(wdir,1)==ny),depend(wdir) :: ny=shape(wdir,1)
+        end subroutine dcomputewdir
     end interface 
 end python module _wrffortran
 
