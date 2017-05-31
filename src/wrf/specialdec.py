@@ -151,6 +151,20 @@ def uvmet_left_iter(alg_dtype=np.float64):
             new_lon = lon[lat_left_and_slice]
             outview = outview_array[left_and_slice_idxs]
             
+            # Skip the possible empty/missing arrays for the join method
+            skip_missing = False
+            for arg in (new_u, new_v, new_lat, new_lon):
+                if isinstance(arg, np.ma.MaskedArray):
+                    if arg.mask.all():
+                        output[u_output_idxs] = uvmetmissing
+                        output[v_output_idxs] = uvmetmissing
+                        
+                        skip_missing = True
+                        has_missing = True
+            
+            if skip_missing:
+                continue
+            
             # Call the numerical routine
             result = wrapped(new_u, new_v, new_lat, new_lon, cen_long, cone,
                              isstag=is_stag, has_missing=has_missing, 
@@ -324,6 +338,25 @@ def cape_left_iter(alg_dtype=np.float64):
             capeview = outview_array[cape_idxs]
             cinview = outview_array[cin_idxs]
             
+            # Skip the possible empty/missing arrays for the join method
+            # Note: Masking handled by cape.py or computation.py, so only 
+            # supply the fill values here.
+            skip_missing = False
+            for arg in (new_args[0:6]):
+                if isinstance(arg, np.ma.MaskedArray):
+                    if arg.mask.all():
+                        if flip and not is2d:
+                            output[cape_output_idxs] = missing
+                            output[cin_output_idxs] = missing
+                        else:
+                            output[cape_output_idxs] = missing
+                            output[cin_output_idxs] = missing
+                        
+                        skip_missing = True
+            
+            if skip_missing:
+                continue
+            
             # Call the numerical routine
             new_kwargs["capeview"] = capeview
             new_kwargs["cinview"] = cinview
@@ -420,6 +453,8 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
         output_dims += p.shape[-2:]
         output = np.empty(output_dims, orig_dtype)
         
+        has_missing = False
+        missing = Constants.DEFAULT_FILL
         for left_idxs in iter_left_indexes(extra_dims):
             left_and_slice_idxs = left_idxs + (slice(None),)
             low_idxs = left_idxs + (0, slice(None))
@@ -432,6 +467,23 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
             
             new_args[0] = p[left_and_slice_idxs]
             new_args[1] = rh[left_and_slice_idxs]
+            
+            # Skip the possible empty/missing arrays for the join method
+            # Note: Masking handled by cape.py or computation.py, so only 
+            # supply the fill values here.
+            skip_missing = False
+            for arg in (new_args[0:2]):
+                if isinstance(arg, np.ma.MaskedArray):
+                    if arg.mask.all():
+                        output[low_output_idxs] = missing
+                        output[med_output_idxs] = missing
+                        output[high_output_idxs] = missing
+                        
+                        skip_missing = True
+                        has_missing = True
+            
+            if skip_missing:
+                continue
             
             lowview = outview_array[low_idxs]
             medview = outview_array[med_idxs]
@@ -456,6 +508,9 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
             output[high_output_idxs] = (
                             outview_array[high_idxs].astype(orig_dtype))
         
+        if has_missing:
+            output = np.ma.masked_values(output, missing)
+            
         return output
     
     return func_wrapper

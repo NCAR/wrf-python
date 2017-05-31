@@ -11,7 +11,8 @@ from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
                           dcomputeabsvort, dlltoij, dijtoll, deqthecalc,
                           omgcalc, virtual_temp, wetbulbcalc, dcomputepw,
-                          wrf_monotonic, wrf_vintrp)
+                          wrf_monotonic, wrf_vintrp, dcomputewspd, 
+                          dcomputewdir)
 
 from .decorators import (left_iteration, cast_type, 
                          extract_and_transpose, check_args)
@@ -856,6 +857,45 @@ def _vintrp(field, pres, tk, qvp, ght, terrain, sfp, smsfp,
     
     if int(errstat) != 0:
         raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
+    
+    return result
+
+@check_args(0, 2, (2,2))                         
+@left_iteration(2, 2, ref_var_idx=0)
+@cast_type(arg_idxs=(0,1))
+@extract_and_transpose()
+def _wspd(u, v, outview=None):
+    """Wrapper for dcomputewspd.
+    
+    Located in wrf_wind.f90.
+    
+    """
+    if outview is None:
+        outview = np.empty_like(u)
+        
+    result = dcomputewspd(outview,
+                          u,
+                          v)
+    
+    return result
+
+
+@check_args(0, 2, (2,2))                         
+@left_iteration(2, 2, ref_var_idx=0)
+@cast_type(arg_idxs=(0,1))
+@extract_and_transpose()
+def _wdir(u, v, outview=None):
+    """Wrapper for dcomputewdir.
+    
+    Located in wrf_wind.f90.
+    
+    """
+    if outview is None:
+        outview = np.empty_like(u)
+        
+    result = dcomputewdir(outview,
+                          u,
+                          v)
     
     return result
     

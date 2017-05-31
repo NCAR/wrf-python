@@ -46,6 +46,7 @@ Documentation
    ./faq
    ./support
    ./license
+   ./workshop
 
 
 Indices and tables

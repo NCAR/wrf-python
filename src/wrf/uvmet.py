@@ -134,9 +134,16 @@ def _get_uvmet(wrfin, timeidx=0, method="cat", squeeze=True,
         # For 3D array, this makes (0,...,:,:,:) and (1,...,:,:,:)
         idx0 = (0,) + (Ellipsis,) + (slice(None),)*(-end_idx)
         idx1 = (1,) + (Ellipsis,) + (slice(None),)*(-end_idx)
-    
-        result[idx0] = u[:]
-        result[idx1] = v[:]
+        
+        try:
+            fill = u.fill_value
+        except AttributeError:
+            result[idx0] = u[:]
+            result[idx1] = v[:]
+        else:
+            result[idx0] = np.ma.filled(u[:], fill)
+            result[idx1] = np.ma.filled(v[:], fill)
+            result = np.ma.masked_values(result, fill)
         
         return result
     elif map_proj in (1,2):
