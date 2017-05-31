@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as np
 
-from .constants import Constants
+from .extension import _wspd, _wdir
 from .destag import destagger
 from .util import extract_vars, either
 from .decorators import convert_units
@@ -29,7 +29,7 @@ def _calc_wspd(u, v, units="m s-1"):
         :class:`numpy.ndarray`: The wind speed.
     
     """
-    return np.sqrt(u**2 + v**2)
+    return _wspd(u, v)
 
 
 def _calc_wdir(u, v):
@@ -46,8 +46,7 @@ def _calc_wdir(u, v):
         :class:`numpy.ndarray`: The wind direction.
     
     """
-    wdir = 270.0 - np.arctan2(v,u) * (180.0/Constants.PI)
-    return np.remainder(wdir, 360.0)
+    return _wdir(u, v)
 
 
 def _calc_wspd_wdir(u, v, two_d, units):
@@ -79,26 +78,35 @@ def _calc_wspd_wdir(u, v, two_d, units):
         leftmost dimension is 2 (0=WSPD, 1=WDIR).
     
     """
+
     wspd = _calc_wspd(u, v, units)
     wdir = _calc_wdir(u, v)
+    
+    try:
+        fill = wspd.fill_value
+    except AttributeError:
+        fill = None
 
     idx_end = -2 if two_d else -3
     
-    outdims = list(wspd.shape[0:idx_end]) + [2] + list(wspd.shape[idx_end:])
-
+    outdims = [2] + list(wspd.shape[0:idx_end]) + list(wspd.shape[idx_end:])
+    
     result = np.zeros(outdims, wspd.dtype)
     
     idxs0 = ((0,Ellipsis, slice(None), slice(None), slice(None)) 
             if not two_d else 
-            (1, Ellipsis, slice(None), slice(None)))
+            (0, Ellipsis, slice(None), slice(None)))
     
     idxs1 = ((1, Ellipsis, slice(None), slice(None), slice(None)) 
             if not two_d else 
-            (0, Ellipsis, slice(None), slice(None)))
+            (1, Ellipsis, slice(None), slice(None)))
     
     result[idxs0] = wspd[:]
     result[idxs1] = wdir[:]
     
+    if fill is not None:
+        result = np.ma.masked_equal(result, fill)
+        
     return result
 
 
