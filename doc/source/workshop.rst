@@ -10,10 +10,10 @@ Prerequisites
 ---------------
 
 This tutorial assumes that you have basic knowledge of how to type commands 
-in to a command terminal using your preferred operating system.  The student 
+in to a command terminal using your preferred operating system.  You 
 should know some basic directory commands like *cd*, *mkdir*, *cp*, *mv*.
 
-Regarding Python, to understand the examples in this tutorial, the student 
+Regarding Python, to understand the examples in this tutorial, you
 should have some experience with Python basics.  This includes:
 
 - Opening a Python interpreter and entering commands.
@@ -28,7 +28,7 @@ should have some experience with Python basics.  This includes:
 - Familiarity with matplotlib would be helpful, as only a very brief 
   introduction is provided.
   
-If a student is completely new to Python, that shouldn't be a problem, since 
+If you are completely new to Python, that shouldn't be a problem, since 
 most of the examples consist of basic container types and function calls.  It 
 would be helpful to look at some introductory material before arriving at the 
 tutorial.  If you've programmed before, picking up Python is fairly easy.  
@@ -77,24 +77,6 @@ going to use Python 2.7, but it should also work with Python 3.5+.  However,
 due to limitations with open source compilers on conda-forge, only Python 2.7 
 is available for Windows.
 
-**What is Miniconda?**
-
-If you have used the Anaconda distribution for Python before, then you will be 
-familiar with Miniconda.  The Anaconda Python distribution includes numerous 
-scientific packages out of box, which can be difficult for users to build and 
-install. More importantly, Anaconda includes the conda package manager. 
-
-The conda package manager is a utility (similar to yum or apt-get) that installs 
-packages from a repository of pre-compiled Python packages.  These repositories 
-are called channels.  Conda makes it easy for Python users to install and 
-uninstall packages, and also can be used to create isolated Python environments 
-(more on that later).
-
-Miniconda is a bare bones implementation of Anaconda and only includes the 
-conda package manager.  Since we are going to use the conda-forge channel to 
-install our scientific packages, Miniconda avoids any complications between 
-packages provided by Anaconda and conda-forge. 
-
 Please use the appropriate link below to download Miniconda for your operating 
 system. 
 
@@ -109,6 +91,26 @@ system.
 `Linux <https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh>`_
 
 For more information, see: https://conda.io/miniconda.html
+
+.. note::
+
+    **What is Miniconda?**
+
+    If you have used the Anaconda distribution for Python before, then you will be 
+    familiar with Miniconda.  The Anaconda Python distribution includes numerous 
+    scientific packages out of box, which can be difficult for users to build and 
+    install. More importantly, Anaconda includes the conda package manager. 
+    
+    The conda package manager is a utility (similar to yum or apt-get) that installs 
+    packages from a repository of pre-compiled Python packages.  These repositories 
+    are called channels.  Conda makes it easy for Python users to install and 
+    uninstall packages, and also can be used to create isolated Python environments 
+    (more on that later).
+    
+    Miniconda is a bare bones implementation of Anaconda and only includes the 
+    conda package manager.  Since we are going to use the conda-forge channel to 
+    install our scientific packages, Miniconda avoids any complications between 
+    packages provided by Anaconda and conda-forge. 
 
 
 Step 3: Install Miniconda
@@ -197,12 +199,12 @@ Follow the instructions below to create the tutorial_2017 environment.
    
       Type or copy this command in to your command terminal::
       
-          conda create -n tutorial_2017 python=2.7 matplotlib=1.5.3 cartopy netcdf4 jupyter git wrf-python
+          conda create -n tutorial_2017 python=2.7 matplotlib=1.5.3 cartopy netcdf4 jupyter git ffmpeg wrf-python
           
       Type "y" when prompted.  It will take several minutes to install everything.
           
       This command creates an isolated Python environment named *tutorial_2017*, and installs 
-      the python interpreter, matplotlib, cartopy, netcdf4, jupyter, git, and wrf-python 
+      the python interpreter, matplotlib, cartopy, netcdf4, jupyter, git, ffmpeg, and wrf-python 
       packages.  
       
       .. note:: 
@@ -214,16 +216,28 @@ Follow the instructions below to create the tutorial_2017 environment.
    5. Activate the conda environment.
    
       To activate the tutorial_2017 Python environment, type the following 
-      in to the command terminal::
+      in to the command terminal:
       
+      For Linux and Mac (using bash)::
+          
           source activate tutorial_2017.
+          
+      For Windows::
+      
+          activate tutorial_2017
           
       You should see (tutorial_2017) on your command prompt.
       
       To deactivate your conda environment, type the following in to the 
-      command terminal::
+      command terminal:
+      
+      For Linux and Mac::
       
           source deactivate
+          
+      For Windows::
+      
+          deactivate tutorial_2017
       
 
 Step 5: Download the Student Workbook
@@ -239,7 +253,8 @@ how to do this yourself.
 To download the student workbook, follow these instructions:
 
     1. Activate the tutorial_2017 conda environment following the instructions 
-       in the previous step (*source activate tutorial_2017*).
+       in the previous step (*source activate tutorial_2017* or 
+       *activate tutorial_2017*).
     
     2. Change your working directory to the home directory by typing the 
        following command in to the command terminal:
@@ -255,7 +270,7 @@ To download the student workbook, follow these instructions:
     3. Download the git repository for the tutorial by typing the following 
        in to the command terminal::
        
-           git checkout https://github.com/NCAR/wrf_python_tutorial
+           git clone https://github.com/NCAR/wrf_python_tutorial.git
            
     4. There may be additional changes to the tutorial after you have downloaded 
        it. To pull down the latest changes, type the following in to the 
@@ -271,7 +286,7 @@ To download the student workbook, follow these instructions:
            
        For Windows::
        
-           source activate tutorial_2017
+           activate tutorial_2017
            
            cd %HOMEPATH%\wrf_python_tutorial
            
