@@ -220,7 +220,7 @@ Follow the instructions below to create the tutorial_2017 environment.
       
       For Linux and Mac (using bash)::
           
-          source activate tutorial_2017.
+          source activate tutorial_2017
           
       For Windows::
       
