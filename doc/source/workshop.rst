@@ -14,15 +14,18 @@ in to a command terminal using your preferred operating system.  You
 should know some basic directory commands like *cd*, *mkdir*, *cp*, *mv*.
 
 Regarding Python, to understand the examples in this tutorial, you
-should have some experience with Python basics.  This includes:
+should have some experience with Python basics.  Below is a list of some 
+Python concepts that you will see in the examples, but don't worry if you aren't 
+familiar with everything.  
 
 - Opening a Python interpreter and entering commands.
 - Importing packages via the import statement.
-- Using the basic Python types: str, list, tuple, dict, boolean, numeric, None.
-- Creating a list, tuple, or dict with "[ ]", "( )", "{ }" syntax.
-- Accessing dict/list/tuple items with the "x[ ]" syntax.
-- Slicing str/list/tuple with the ":" syntax.
-- Using object methods and attributes with the "x.y" syntax.
+- Familiarity with some of the basic Python types: str, list, tuple, dict, bool, float, int, None.
+- Creating a list, tuple, or dict with "[ ]", "( )", "{ }" syntax (e.g. my_list = [1,2,3,4,5]).
+- Accessing dict/list/tuple items with the "x[ ]" syntax (e.g. my_list_item = my_list[0]).
+- Slicing str/list/tuple with the ":" syntax (e.g. my_slice = my_list[1:3]).
+- Using object methods and attributes with the "x.y" syntax (e.g. my_list.append(6)).
+- Calling functions (e.g. result = some_function(x, y))
 - Familiarity with numpy would be helpful, as only a very brief introduction
   is provided.
 - Familiarity with matplotlib would be helpful, as only a very brief 
@@ -31,7 +34,7 @@ should have some experience with Python basics.  This includes:
 If you are completely new to Python, that shouldn't be a problem, since 
 most of the examples consist of basic container types and function calls.  It 
 would be helpful to look at some introductory material before arriving at the 
-tutorial.  If you've programmed before, picking up Python is fairly easy.  
+tutorial.  If you've programmed before, picking up Python isn't too difficult.  
 
 Here are some links:
 
@@ -98,7 +101,7 @@ For more information, see: https://conda.io/miniconda.html
 
     If you have used the Anaconda distribution for Python before, then you will be 
     familiar with Miniconda.  The Anaconda Python distribution includes numerous 
-    scientific packages out of box, which can be difficult for users to build and 
+    scientific packages out of the box, which can be difficult for users to build and 
     install. More importantly, Anaconda includes the conda package manager. 
     
     The conda package manager is a utility (similar to yum or apt-get) that installs 
@@ -119,15 +122,18 @@ Step 3: Install Miniconda
 Windows:
 
     1. Browse to the directory where you downloaded Miniconda2-latest-Windows-x86_64.exe.
-    2. Double click on Miniconda2-latest-Windows-x86_64.exe.  
+    
+    2. Double click on Miniconda2-latest-Windows-x86_64.exe. 
+     
     3. Follow the instructions.
+    
     4. Restart your command terminal.
     
 Mac and Linux:
 
-    For Mac and Linux, the installer is a bash script.  
+    For Mac and Linux, the installer is a bash script. 
     
-    1. Using a terminal, you need to execute the shell script that you downloaded by
+    1. Using a terminal, you need to execute the bash shell script that you downloaded by
        doing::
     
             bash /path/to/Miniconda2-latest-MacOSX-x86_64.sh [Mac]
@@ -152,22 +158,38 @@ Mac and Linux:
             
     4. Restart your command terminal.
     
-.. note:: 
+    5. [Linux and Mac Users Only] Miniconda only works with bash.  If bash is 
+       not your default shell, then you need to activate the bash shell by typing 
+       the following in to your command terminal::
+       
+           bash
+           
+    6. Verify that your system is using the correct Python interpreter by typing
+       the following in to your command terminal::
+       
+           which python
+           
+       You should see the path to your miniconda installation.  If not, see the 
+       note below. 
+       
+       .. note::
 
-   If you have already installed another Python distribution, like Enthought 
-   Canopy, you will need to comment out any PATH entries for that distribution
-   in your .bashrc or .bash_profile.  Otherwise, your shell environment may 
-   pick to wrong Python installation.  You can use the command "which python" 
-   to verify the Python installation being used.
+           If you have already installed another Python distribution, like Enthought 
+           Canopy, you will need to comment out any PATH entries for that distribution
+           in your .bashrc or .bash_profile.  Otherwise, your shell environment may 
+           pick to wrong Python installation.
+           
+           If bash is not your default shell type, and the PATH variable has been 
+           set in .bash_profile by the miniconda installer, try executing 
+           "bash -l" instead of the "bash" command in step 5.  
+           
    
-    
-    
 Step 4: Set Up the Conda Environment
 --------------------------------------
 
 If you are new to the conda package manager, one of the nice features of conda 
 is that you can create isolated Python environments that prevent package 
-incompatibilities. This is similar to the virtualenv package that some 
+incompatibilities. This is similar to the *virtualenv* package that some 
 Python users may be familiar with.  However, conda is not compatible with 
 virtualenv, so only use conda environments when working with conda.
 
@@ -206,8 +228,24 @@ Follow the instructions below to create the tutorial_2017 environment.
       This command creates an isolated Python environment named *tutorial_2017*, and installs 
       the python interpreter, matplotlib, cartopy, netcdf4, jupyter, git, ffmpeg, and wrf-python 
       packages.  
-      
-      .. note:: 
+         
+     .. note::
+     
+         When the installation completes, your command terminal may post a message similar to:
+         
+         .. code-block:: none
+         
+             If this is your first install of dbus, automatically load on login with:
+             
+             mkdir -p ~/Library/LaunchAgents
+             cp /Users/ladwig/miniconda2/envs/tutorial_test/org.freedesktop.dbus-session.plist ~/Library/LaunchAgents/
+             launchctl load -w ~/Library/LaunchAgents/org.freedesktop.dbus-session.plist
+             
+         This is indicating that the dbus package can be set up to automatically load on login.  You 
+         can either ignore this message or type in the commands as indicated.  The tutorial should work fine 
+         in either case.
+         
+     .. note:: 
          
          In this tutorial, we need to use matplotlib v1.5.3 due to some issues with cartopy, which 
          should be fixed in a later version of cartopy.  Be sure to supply the version number as 
@@ -291,9 +329,46 @@ To download the student workbook, follow these instructions:
            cd %HOMEPATH%\wrf_python_tutorial
            
            git pull
+       
+       .. note::
+       
+           If you try the "git pull" command and it returns an error indicating
+           that you have made changes to the workbook, this is probably because 
+           you ran the workbook and it contains the cell output.  To fix this, 
+           first do a checkout of the workbook, then do the pull.  
+           
+           .. code-block:: none
+           
+               git checkout -- wrf_workshop_2017.ipynb
+               git pull
+               
+
+Step 6:  Verify Your Environment
+----------------------------------
+
+Verifying that your environment is correct involves importing a few 
+packages and checking for errors (you may see some warnings for matplotlib 
+or xarray, but you can safely ignore these). 
+
+    1. Activate the tutorial_2017 conda environment if it isn't already active 
+       (see instructions above).
+       
+    2. Open a python terminal by typing the following in to the command 
+       terminal::
+       
+           python
+       
+    3. Now type the following in to the Python interpreter::
+    
+           >>> import netCDF4
+           >>> import matplotlib
+           >>> import xarray
+           >>> import wrf
+       
+   4. You can exit the Python interpreter using **CTRL + D**
     
 
-Step 6: Obtain WRF Output Files
+Step 7: Obtain WRF Output Files
 ----------------------------------
 
 For this tutorial, we strongly recommend that you use your own WRF output files.  
@@ -305,6 +380,28 @@ If your files are located on another system (e.g. yellowstone), then copy 2 or
 If you do not have any of your own WRF output files, then you can download the 
 instructor data files from a link that should have been provided to you in an 
 email prior to the tutorial.
+
+If you are using the link provided in the email for your data, you can follow 
+the instructions below to place your data in the default location for your 
+workbook.
+
+    1. The link in the email should take you to a location on an Amazon cloud 
+       drive.
+       
+    2. If you hover your mouse over the wrf_tutorial_data.zip file, you'll see 
+       an empty check box appear next to the file name.  Click this check 
+       box.
+       
+    3. At the bottom of the screen, you'll see a Download button next to a 
+       cloud icon.  Click this button to start the download.
+       
+    4. The download was most likely placed in to your ~/Downloads folder 
+       [%HOMEPATH%\\Downloads for Windows]. Using your preferred method of choice 
+       for unzipping files, unzip this file in to your home directory.  Your data 
+       should now be in ~/wrf_tutorial_data 
+       [%HOMEPATH%\\wrf_tutorial_data for Windows].
+       
+    5. Verify that you have three WRF output files in that directory. 
 
 
 Getting Help
