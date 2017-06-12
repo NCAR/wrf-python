@@ -206,10 +206,14 @@ Follow the instructions below to create the tutorial_2017 environment.
       
    3. Add the conda-forge channel to your conda package manager. 
    
-      Type or copy this command in to your command terminal::
+      Type or copy the command below in to your command terminal. You should 
+      run this command even if you have already done it in the past.  
+      This will ensure that conda-forge is set as the highest priority channel.
+      
+      :: 
    
           conda config --add channels conda-forge
-        
+          
       .. note:: 
          
          Conda-forge is a community driven collection of packages that are 
@@ -231,19 +235,19 @@ Follow the instructions below to create the tutorial_2017 environment.
          
      .. note::
      
-         When the installation completes, your command terminal may post a message similar to:
+         When the installation completes, your command terminal might post a message similar to:
          
          .. code-block:: none
          
              If this is your first install of dbus, automatically load on login with:
              
              mkdir -p ~/Library/LaunchAgents
-             cp /Users/ladwig/miniconda2/envs/tutorial_test/org.freedesktop.dbus-session.plist ~/Library/LaunchAgents/
+             cp /path/to/miniconda2/envs/tutorial_test/org.freedesktop.dbus-session.plist ~/Library/LaunchAgents/
              launchctl load -w ~/Library/LaunchAgents/org.freedesktop.dbus-session.plist
              
          This is indicating that the dbus package can be set up to automatically load on login.  You 
-         can either ignore this message or type in the commands as indicated.  The tutorial should work fine 
-         in either case.
+         can either ignore this message or type in the commands as indicated on your command terminal.  
+         The tutorial should work fine in either case.
          
      .. note:: 
          
