@@ -4,6 +4,13 @@ What's New
 Releases
 -------------
 
+v1.0.3
+^^^^^^^^^^^^^^
+
+- Relase 1.0.3
+- Fixed an issue with the cartopy Mercator subclass where the xlimits were 
+  being calculated to the same value (or very close), causing blank plots.
+
 v1.0.2
 ^^^^^^^^^^^^^^
 

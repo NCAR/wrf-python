@@ -69,7 +69,7 @@ if cartopy_enabled():
             # to the same value, so make sure the left one is negative
             xlimits = limits[..., 0]
             
-            if xlimits[0] == xlimits[1]:
+            if math.fabs(xlimits[0] - xlimits[1]) < 1e-6:
                 if xlimits[0] < 0:
                     xlimits[1] = -xlimits[1]
                 else:
