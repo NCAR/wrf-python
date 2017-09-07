@@ -1,4 +1,4 @@
-{% set version = "1.0b3" %}
+{% set version = "1.0.2" %}
 
 package:
   name: wrf-python
@@ -7,7 +7,7 @@ package:
 source:
   fn: wrf-python-{{ version }}.tar.gz
   url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
-  sha256: 6fc6a268d91129ba3c16facb1b53194a551d6336582a1f2162ced584e646aa7e
+  sha256: 42df1c46c146010e8d7a14cfa4daca3c30cb530e93d26e1fba34e2118540e0b2
 
 build:
   number: 0
@@ -29,6 +29,7 @@ requirements:
     - mingwpy  # [win]
     - libgfortran  # [unix]
     - libgcc  # [unix]
+    - xarray
 
 test:
   requires:

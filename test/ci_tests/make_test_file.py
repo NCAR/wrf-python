@@ -7,7 +7,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp, py2round,
-                 CoordPair, ll_to_xy, xy_to_ll)
+                 CoordPair, ll_to_xy, xy_to_ll, to_np)
 
 VARS_TO_KEEP = ("XLAT", "XLONG", "XLAT_U", "XLAT_V", "XLONG_U", "XLONG_V",
                 "U", "V", "W", "PH", "PHB", "T", "P", "PB", "Q2", "T2",
@@ -15,7 +15,7 @@ VARS_TO_KEEP = ("XLAT", "XLONG", "XLAT_U", "XLAT_V", "XLONG_U", "XLONG_V",
                 "QGRAUP", "QRAIN", "QSNOW", "MAPFAC_M", "MAPFAC_U",
                 "MAPFAC_V", "F", "HGT", "RAINC", "RAINSH", "RAINNC")
 
-DIMS_TO_TRIM = ("west_east", "south_north", "bottom_top", "bottom_top_stag",
+DIMS_TO_TRIM = ("west_east", "south_north", #"bottom_top", "bottom_top_stag",
                 "west_east_stag", "south_north_stag")
 
 WRF_DIAGS = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
@@ -81,7 +81,9 @@ def add_to_ncfile(outfile, var, varname):
         
     ncvar = outfile.createVariable(varname, var.dtype, var.dims,
                                    zlib=True, fill_value=fill_value)
-    ncvar[:] = var[:]
+    
+    var_vals = to_np(var)
+    ncvar[:] = var_vals[:]
 
 
 def make_result_file(opts):

@@ -29,11 +29,11 @@ SUBROUTINE DCLOUDFRAC(pres, rh, lowc, midc, highc, nz, ns, ew)
 
         DO k = 1,nz-1
             IF (k .GE. kclo .AND. k .LT. kcmi) THEN
-                lowc(i,j) = AMAX1(rh(i,j,k), lowc(i,j))
+                lowc(i,j) = MAX(rh(i,j,k), lowc(i,j))
             ELSE IF (k .GE. kcmi .AND. k .LT. kchi) THEN ! mid cloud
-                midc(i,j) = AMAX1(rh(i,j,k), midc(i,j))
+                midc(i,j) = MAX(rh(i,j,k), midc(i,j))
             ELSE if (k .GE. kchi) THEN                  ! high cloud
-                highc(i,j) = AMAX1(rh(i,j,k), highc(i,j))
+                highc(i,j) = MAX(rh(i,j,k), highc(i,j))
             END IF
         END DO
 
@@ -41,12 +41,12 @@ SUBROUTINE DCLOUDFRAC(pres, rh, lowc, midc, highc, nz, ns, ew)
         midc(i,j)  = 4.0*midc(i,j)/100. - 3.0
         highc(i,j) = 2.5*highc(i,j)/100. - 1.5
 
-        lowc(i,j)  = amin1(lowc(i,j), 1.0)
-        lowc(i,j)  = amax1(lowc(i,j), 0.0)
-        midc(i,j)  = amin1(midc(i,j), 1.0)
-        midc(i,j)  = amax1(midc(i,j), 0.0)
-        highc(i,j) = amin1(highc(i,j), 1.0)
-        highc(i,j) = amax1(highc(i,j), 0.0)
+        lowc(i,j)  = MIN(lowc(i,j), 1.0)
+        lowc(i,j)  = MAX(lowc(i,j), 0.0)
+        midc(i,j)  = MIN(midc(i,j), 1.0)
+        midc(i,j)  = MAX(midc(i,j), 0.0)
+        highc(i,j) = MIN(highc(i,j), 1.0)
+        highc(i,j) = MAX(highc(i,j), 0.0)
 
        END DO
     END DO

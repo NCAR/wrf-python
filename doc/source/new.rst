@@ -4,6 +4,15 @@ What's New
 Releases
 -------------
 
+v1.0.4
+^^^^^^^^^^^^^^
+
+- Release 1.0.4
+- Fix warnings with CI tests which were caused by fill values being written 
+  as NaN to the NetCDF result file.
+- Added the __eq__ operator to the WrfProj projection base class.
+- Fixed array order issue when using the raw CAPE routine with 1D arrays.
+
 v1.0.3
 ^^^^^^^^^^^^^^
 

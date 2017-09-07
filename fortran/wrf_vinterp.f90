@@ -369,7 +369,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
 
                     ELSE   !else for checking above ground
                         ptarget = psurfsm - 150.D0
-                        dpmin = 1.e4
+                        dpmin = 1.E4
                         DO k=1,nz
                             ripk = nz-k+1
                             dp = ABS((pres(i,j,ripk) * 0.01D0) - ptarget)

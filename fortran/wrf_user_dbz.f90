@@ -136,8 +136,8 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
                 ! Calculate variable intercept parameters
                 IF (ivarint .EQ. 1) THEN
 
-                    temp_c = DMIN1(-0.001D0, tmk(i,j,k)-CELKEL)
-                    sonv = DMIN1(2.0D8, 2.0D6*EXP(-0.12D0*temp_c))
+                    temp_c = MIN(-0.001D0, tmk(i,j,k)-CELKEL)
+                    sonv = MIN(2.0D8, 2.0D6*EXP(-0.12D0*temp_c))
 
                     gonv = gon
                     IF (qgr(i,j,k) .GT. R1) THEN

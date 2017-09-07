@@ -70,11 +70,11 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
     DO k=1,nz
         DO j=1,ny
             DO i=1,nx
-                q = DMAX1(qvp(i,j,k), 1.D-15)
+                q = MAX(qvp(i,j,k), 1.D-15)
                 t = tmk(i,j,k)
                 p = prs(i,j,k)/100.
                 e = q*p/(EPS + q)
-                tlcl = TLCLC1/(DLOG(t**TLCLC2/e) - TLCLC3) + TLCLC4
+                tlcl = TLCLC1/(LOG(t**TLCLC2/e) - TLCLC3) + TLCLC4
                 eth = t*(1000./p)**(GAMMA*(1. + GAMMAMD*q))*&
                     EXP((THTECON1/tlcl - THTECON2)*q*(1. + THTECON3*q))
 

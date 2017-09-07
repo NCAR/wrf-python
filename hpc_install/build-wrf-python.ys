@@ -1,0 +1,51 @@
+#!/bin/bash
+#
+#HPCI -n wrf-python
+#HPCI -v 1.0.1
+#HPCI -a wrf-python-1.0.1.tar.gz
+#HPCI -p gnu/4.8.2
+#HPCI -p python/2.7.7
+#HPCI -p numpy/1.11.0
+#HPCI -p wrapt/1.10.10
+#HPCI -p scipy/0.17.1 bottleneck/1.1.0 numexpr/2.6.0 pyside/1.1.2 matplotlib/1.5.1 pandas/0.18.1 netcdf4python/1.2.4 xarray/0.8.2
+
+set -e
+
+PKGSRC=$HPCI_SW_NAME"-"${HPCI_SW_VERSION}
+
+tar -xf $PKGSRC".tar.gz"
+cd $PKGSRC
+python setup.py build
+
+# Create the module directory
+mkdir -p $HPCI_MOD_DIR/pythonpkgs/$HPCI_SW_NAME/
+
+# Create the module with the following template
+cat << EOF > $HPCI_MOD_DIR/pythonpkgs/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
+require("posix")
+
+whatis("wrf-python v$HPCI_SW_VERSION")
+
+help([[
+This module loads wrf-python, a Python package that provides diagnostic and 
+interpolation routines for users of the WRF-ARW model.  
+See http://wrf-python.rtfd.org for details.
+]])
+
+local verpath = "$HPCI_SW_DIR" -- specific version path
+local pypath = pathJoin(verpath, "lib/python2.7/site-packages/") -- internal python libs
+
+prepend_path("PYTHONPATH", pypath)
+
+conflict("all-python-libs")
+prereq($HPCI_MOD_PREREQ)
+EOF
+
+mkdir -p $HPCI_SW_DIR/lib/python2.7/site-packages/  # create the install directory (python does not install in not existing dirs)
+
+# Need to set pythonpath in order to dump the .pth files
+ml use $HPCI_MOD_DIR/pythonpkgs
+ml $HPCI_SW_NAME/${HPCI_SW_VERSION}
+
+python setup.py install --prefix=$HPCI_SW_DIR
+
