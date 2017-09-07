@@ -4,6 +4,14 @@ What's New
 Releases
 -------------
 
+v1.0.4
+^^^^^^^^^^^^^^
+
+- Release 1.0.4
+- Fix warnings with continuous integration tests which was caused by fill 
+  values being written as NaN to the NetCDF result file.
+- Added the __eq__ operator to the WrfProj projection base class.
+
 v1.0.3
 ^^^^^^^^^^^^^^
 
