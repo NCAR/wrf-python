@@ -2,6 +2,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import numpy as np
 import math
+from decimal import Decimal, Context, ROUND_HALF_UP
 
 from .config import basemap_enabled, cartopy_enabled, pyngl_enabled
 from .constants import Constants, ProjectionTypes
@@ -176,6 +177,73 @@ class WrfProj(object):
         
         if self.stand_lon is None:
             self.stand_lon = self._cen_lon
+    
+    
+    @staticmethod
+    def _context_equal(x, y, ctx):
+        """Return True if both objects are equal based on the provided context.
+        
+        Args:
+    
+            x (numeric): A numeric value.
+            
+            y (numeric): A numeric value.
+            
+            ctx (:class:`decimal.Context`): A decimal Context object.
+            
+        Returns:
+        
+            :obj:`bool`: True if the values are equal based on the provided 
+            context, False otherwise.
+        
+        """
+        if x is not None:
+            if y is None:
+                return False
+            
+            # Note:  The float conversion is because these may come in as 
+            # numpy.float32 or numpy.float64, which Decimal does not know
+            # how to handle.
+            if (Decimal(float(x)).normalize(ctx) != 
+                Decimal(float(y)).normalize(ctx)):
+                return False
+        else:
+            if y is not None:
+                return False
+        
+        return True
+        
+    
+    def __eq__(self, other):
+        """Return True if this projection object is the same as *other*.
+        
+        Note:  WRF can use either floats or doubles, so only going to 
+        guarantee floating point precision equivalence, in case the different 
+        types are ever compared (or a projection is hand constructed). For WRF
+        domains, 7-digit equivalence should be good enough.
+        
+        """
+        
+        if self.map_proj is not None:
+            if self.map_proj != other.map_proj:
+                return False
+        else:
+            if other.map_proj is not None:
+                return False
+        
+        # Only checking for floating point equal.
+        ctx = Context(prec=7, rounding=ROUND_HALF_UP)
+        
+        return (WrfProj._context_equal(self.truelat1, other.truelat1, ctx) and
+                WrfProj._context_equal(self.truelat2, other.truelat2, ctx) and
+                WrfProj._context_equal(self.moad_cen_lat, other.moad_cen_lat, 
+                                      ctx) and
+                WrfProj._context_equal(self.stand_lon, other.stand_lon, 
+                                       ctx) and
+                WrfProj._context_equal(self.pole_lat, other.pole_lat, ctx) and
+                WrfProj._context_equal(self.pole_lon, other.pole_lon, ctx) and
+                WrfProj._context_equal(self.dx, other.dx, ctx) and
+                WrfProj._context_equal(self.dy, other.dy, ctx))
             
             
     def _basemap(self, geobounds, **kwargs):
@@ -291,7 +359,7 @@ class WrfProj(object):
         """Return a :class:`matplotlib.mpl_toolkits.basemap.Basemap` object 
         for the map projection.
         
-        Arguments:
+        Args:
             
             geobounds (:class:`wrf.GeoBounds`, optional):  The geobounds to 
                 get the extents.  If set to None and using the *var* parameter,
