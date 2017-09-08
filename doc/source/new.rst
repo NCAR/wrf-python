@@ -4,6 +4,13 @@ What's New
 Releases
 -------------
 
+v1.0.5
+^^^^^^^^^^^^^^
+
+- Release 1.0.5
+- Reduced the CI test file sizes by half.  
+
+
 v1.0.4
 ^^^^^^^^^^^^^^
 
