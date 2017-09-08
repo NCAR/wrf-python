@@ -15,7 +15,7 @@ VARS_TO_KEEP = ("XLAT", "XLONG", "XLAT_U", "XLAT_V", "XLONG_U", "XLONG_V",
                 "QGRAUP", "QRAIN", "QSNOW", "MAPFAC_M", "MAPFAC_U",
                 "MAPFAC_V", "F", "HGT", "RAINC", "RAINSH", "RAINNC")
 
-DIMS_TO_TRIM = ("west_east", "south_north", #"bottom_top", "bottom_top_stag",
+DIMS_TO_TRIM = ("west_east", "south_north", "bottom_top", "bottom_top_stag",
                 "west_east_stag", "south_north_stag")
 
 WRF_DIAGS = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
