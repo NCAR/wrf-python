@@ -1117,15 +1117,29 @@ def _get_coord_names(wrfin, varname):
             time_coord = None
         else:
             try:
-                # met_em files
+                # met_em files or old WRF files
                 stag_attr = getattr(var, "stagger")
             except AttributeError:
                 lon_coord = None
                 lat_coord = None
+                
+                # Let's just check for xlat and xlong in this case
+                if "XLAT" in wrfnc.variables:
+                    lat_coord = "XLAT"
+                    lon_coord = "XLONG"
             else:
                 # For met_em files, use the stagger name to get the lat/lon var
                 lat_coord = "XLAT_{}".format(stag_attr)
                 lon_coord = "XLONG_{}".format(stag_attr)
+                
+                # If this coord name is missing, it might be an old WRF file
+                if lat_coord not in wrfnc.variables:
+                    lat_coord = None
+                    lon_coord = None
+                    
+                    if "XLAT" in wrfnc.variables:
+                        lat_coord = "XLAT"
+                        lon_coord = "XLONG"
     else:
         coord_names = coord_attr.split()
         lon_coord = coord_names[0]
