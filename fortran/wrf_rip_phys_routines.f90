@@ -50,13 +50,15 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
 !NCLEND
 
     INTEGER :: i, j, k
-    INTEGER :: jtch, jt, ipch, ip
+    INTEGER :: jt, ip
     REAL(KIND=8) :: q, t, p, e, tlcl, eth
     REAL(KIND=8) :: fracip, fracip2, fracjt, fracjt2
     REAL(KIND=8), DIMENSION(150) :: PSADITHTE, PSADIPRS
     REAL(KIND=8), DIMENSION(150,150) :: PSADITMK
     REAL(KIND=8) :: tonpsadiabat
 
+    INTEGER :: l1, h1, mid1, rang1, l2, h2, mid2, rang2
+    !INTEGER :: ip, ipch, jt, jtch
 
     !  Before looping, set lookup table for getting temperature on
     !  a pseudoadiabat.
@@ -92,21 +94,53 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
                     tonpsadiabat = eth*(p/1000.)**GAMMA
                 ELSE
                     ! Otherwise, look for the given thte/prs point in the lookup table.
-                    jt=-1
-                    DO jtch=1,150-1
-                        IF (eth .GE. PSADITHTE(jtch) .AND. eth .LT. PSADITHTE(jtch+1)) THEN
-                            jt = jtch
-                            EXIT
-                        ENDIF
+                    jt = -1
+                    l1 = 1
+                    h1 = 149
+                    rang1 = h1 - l1
+                    mid1 = (h1 + l1) / 2
+                    DO WHILE(rang1 .GT. 1)
+                        if(eth .GE. psadithte(mid1)) then
+                             l1 = mid1
+                        else
+                             h1 = mid1
+                        end if
+                        rang1 = h1 - l1
+                        mid1 = (h1 + l1) / 2
                     END DO
+                    jt = l1
 
-                    ip=-1
-                    DO ipch=1,150-1
-                        IF (p .LE. PSADIPRS(ipch) .AND. p .GT. PSADIPRS(ipch+1)) THEN
-                            ip = ipch
-                            EXIT
-                        ENDIF
-                    END DO
+!                    jt=-1
+!                    DO jtch=1,150-1
+!                        IF (eth .GE. PSADITHTE(jtch) .AND. eth .LT. PSADITHTE(jtch+1)) THEN
+!                            jt = jtch
+!                            EXIT
+!                        ENDIF
+!                    END DO
+
+                     ip = -1
+                     l2 = 1
+                     h2 = 149
+                     rang2 = h2 - l2
+                     mid2 = (h2 + l2) / 2
+                     DO WHILE(rang2 .GT. 1)
+                         if(p .LE. psadiprs(mid2)) then
+                              l2 = mid2
+                         else
+                              h2 = mid2
+                         end if
+                         rang2 = h2 - l2
+                         mid2 = (h2 + l2) / 2
+                     END DO
+                     ip = l2
+
+!                    ip=-1
+!                    DO ipch=1,150-1
+!                        IF (p .LE. PSADIPRS(ipch) .AND. p .GT. PSADIPRS(ipch+1)) THEN
+!                            ip = ipch
+!                            EXIT
+!                        ENDIF
+!                    END DO
 
                     IF (jt .EQ. -1 .OR. ip .EQ. -1) THEN
                         errstat = ALGERR

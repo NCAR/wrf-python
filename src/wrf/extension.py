@@ -7,8 +7,8 @@ from .constants import Constants
 
 from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeseaprs, dfilter2d, dcomputerh, dcomputeuvmet,
-                          dcomputetd, dcapecalc3d, dcloudfrac, wrfcttcalc, 
-                          calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
+                          dcomputetd, dcapecalc2d, dcapecalc3d, dcloudfrac, 
+                          wrfcttcalc, calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
                           dcomputeabsvort, dlltoij, dijtoll, deqthecalc,
                           omgcalc, virtual_temp, wetbulbcalc, dcomputepw,
                           wrf_monotonic, wrf_vintrp, dcomputewspd, 
@@ -597,8 +597,13 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
     errstat = np.array(0)
     errmsg = np.zeros(Constants.ERRLEN, "c")
     
+    if i3dflag:
+        cape_routine = dcapecalc3d
+    else:
+        cape_routine = dcapecalc2d
+        
     # note that p_hpa, tk, qv, and ht have the vertical flipped
-    result = dcapecalc3d(p_hpa,
+    result = cape_routine(p_hpa,
                          tk,
                          qv,
                          ht,
@@ -607,7 +612,6 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
                          capeview,
                          cinview,
                          missing,
-                         i3dflag,
                          ter_follow,
                          psafile,
                          errstat,

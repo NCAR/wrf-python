@@ -64,16 +64,17 @@ python module _wrffortran ! in
             character*(*) intent(inout) :: errmsg
         end subroutine dlookup_table
         subroutine dpfcalc(prs,sfp,pf,miy,mjx,mkzh,ter_follow) ! in :_wrffortran:rip_cape.f90
-            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
+            real(kind=8) dimension(mkzh,miy,mjx),intent(in) :: prs
             real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: sfp
-            real(kind=8) dimension(miy,mjx,mkzh),intent(out),depend(miy,mjx,mkzh) :: pf
-            integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
-            integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
-            integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
+            real(kind=8) dimension(mkzh,miy,mjx),intent(out),depend(mkzh,miy,mjx) :: pf
+            integer, optional,intent(in),check(shape(prs,1)==miy),depend(prs) :: miy=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==mjx),depend(prs) :: mjx=shape(prs,2)
+            integer, optional,intent(in),check(shape(prs,0)==mkzh),depend(prs) :: mkzh=shape(prs,0)
             integer intent(in) :: ter_follow
         end subroutine dpfcalc
-        subroutine dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,miy,mjx,mkzh,i3dflag,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+        subroutine dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,miy,mjx,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
             threadsafe 
+            use omp_lib
             use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,algerr,ezero,thtecon2
             real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
             real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: tmk
@@ -87,12 +88,32 @@ python module _wrffortran ! in
             integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
             integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
             integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
-            integer intent(in) :: i3dflag
             integer intent(in) :: ter_follow
             character*(*) intent(in) :: psafile
             integer intent(inout) :: errstat
             character*(*) intent(inout) :: errmsg
         end subroutine dcapecalc3d
+        subroutine dcapecalc2d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,miy,mjx,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+            threadsafe 
+            use omp_lib
+            use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,algerr,ezero,thtecon2
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in) :: prs
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: tmk
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: qvp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(in),depend(miy,mjx,mkzh) :: ght
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: ter
+            real(kind=8) dimension(miy,mjx),intent(in),depend(miy,mjx) :: sfp
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out,in),depend(miy,mjx,mkzh) :: cape
+            real(kind=8) dimension(miy,mjx,mkzh),intent(out,in),depend(miy,mjx,mkzh) :: cin
+            real(kind=8) intent(in) :: cmsg
+            integer, optional,intent(in),check(shape(prs,0)==miy),depend(prs) :: miy=shape(prs,0)
+            integer, optional,intent(in),check(shape(prs,1)==mjx),depend(prs) :: mjx=shape(prs,1)
+            integer, optional,intent(in),check(shape(prs,2)==mkzh),depend(prs) :: mkzh=shape(prs,2)
+            integer intent(in) :: ter_follow
+            character*(*) intent(in) :: psafile
+            integer intent(inout) :: errstat
+            character*(*) intent(inout) :: errmsg
+        end subroutine dcapecalc2d
         subroutine dcloudfrac(pres,rh,lowc,midc,highc,nz,ns,ew) ! in :_wrffortran:wrf_cloud_fracf.f90
             threadsafe 
             real(kind=8) dimension(ew,ns,nz),intent(in) :: pres
