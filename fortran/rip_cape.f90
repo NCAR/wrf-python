@@ -37,7 +37,7 @@ END FUNCTION TVIRTUAL
 REAL(KIND=8) FUNCTION TONPSADIABAT(thte, prs, psadithte, psadiprs, psaditmk, gamma,&
                                    errstat, errmsg)
     USE wrf_constants, ONLY : ALGERR
-!$OMP DECLARE SIMD (TONPSADIABAT) 
+!!$OMP DECLARE SIMD (TONPSADIABAT)
 !!uniform(thte,prs,psadithte,psadiprs,psaditmk)
     !f2py threadsafe
     !f2py intent(in,out) :: cape, cin
@@ -218,17 +218,17 @@ END SUBROUTINE DLOOKUP_TABLE
 !     which case it assumes the lower bounding pressure level is as far
 !     below the lowest vertical level as the upper bounding pressure
 !     level is above.
-SUBROUTINE DPFCALC(prs, sfp, pf, miy, mjx, mkzh, ter_follow)
+SUBROUTINE DPFCALC(prs, sfp, pf, mix, mjy, mkzh, ter_follow)
 
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx), INTENT(IN) :: prs
-    REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) :: sfp
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx), INTENT(OUT) :: pf
-    INTEGER, INTENT(IN) :: ter_follow,miy,mjx,mkzh
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(IN) :: prs
+    REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) :: sfp
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(OUT) :: pf
+    INTEGER, INTENT(IN) :: ter_follow,mix,mjy,mkzh
 
     INTEGER :: i,j,k
     
-    DO j = 1,mjx
-      DO i = 1,miy
+    DO j = 1,mjy
+      DO i = 1,mix
           DO k = 1,mkzh
               IF (k .EQ. mkzh) THEN
     !  terrain-following data
@@ -270,7 +270,7 @@ END SUBROUTINE DPFCALC
 
 ! NCLFORTSTART
 SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
-            cmsg,miy,mjx,mkzh,ter_follow,&
+            cmsg,mix,mjy,mkzh,ter_follow,&
             psafile, errstat, errmsg)
     USE wrf_constants, ONLY : ALGERR, CELKEL, G, EZERO, ESLCON1, ESLCON2, &
                           EPS, RD, CP, GAMMA, CPMD, RGASMD, GAMMAMD, TLCLC1, &
@@ -282,15 +282,15 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !f2py threadsafe
     !f2py intent(in,out) :: cape, cin
 
-    INTEGER, INTENT(IN) :: miy, mjx, mkzh, ter_follow
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: prs
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: tmk
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: qvp
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: ght
-    REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) :: ter
-    REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) ::sfp
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(OUT) :: cape
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(OUT) :: cin
+    INTEGER, INTENT(IN) :: mix, mjy, mkzh, ter_follow
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: prs
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: tmk
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: qvp
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: ght
+    REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) :: ter
+    REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) ::sfp
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cape
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cin
     REAL(KIND=8), INTENT(IN) :: cmsg
     CHARACTER(LEN=*), INTENT(IN) :: psafile
     INTEGER, INTENT(INOUT) :: errstat
@@ -306,16 +306,16 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz
     REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: prsf
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prsf
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
     REAL :: t1,t2
 
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: prs_new
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: tmk_new
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: qvp_new
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: ght_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prs_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: tmk_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: qvp_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: ght_new
 
     ! To remove compiler warnings
     tmkpari = 0
@@ -354,19 +354,19 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !CALL cpu_time(t1)
     !CALL OMP_SET_NUM_THREADS(16)
 !$OMP PARALLEL DO
-    DO i = 1,mjx
-       DO j = 1,miy
+    DO j = 1,mjy
+       DO i = 1,mix
           DO k = 1,mkzh
-             prs_new(k,j,i) = prs(j,i,k)
-             tmk_new(k,j,i) = tmk(j,i,k)
-             qvp_new(k,j,i) = qvp(j,i,k)
-             ght_new(k,j,i) = ght(j,i,k)
+             prs_new(k,i,j) = prs(i,j,k)
+             tmk_new(k,i,j) = tmk(i,j,k)
+             qvp_new(k,i,j) = qvp(i,j,k)
+             ght_new(k,i,j) = ght(i,j,k)
           END DO
        END DO
     END DO
 !$OMP END PARALLEL DO
     
-    CALL DPFCALC(prs_new, sfp, prsf, miy, mjx, mkzh, ter_follow)
+    CALL DPFCALC(prs_new, sfp, prsf, mix, mjy, mkzh, ter_follow)
 
     !  before looping, set lookup table for getting temperature on
     !  a pseudoadiabat.
@@ -383,12 +383,12 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 !$OMP benaccum, zrel, kmax, dz, elfound, &
 !$OMP kel, klfc, &
 !$OMP i,j,k,kpar)
-    DO j = 1,mjx
-      DO i = 1,miy
+    DO j = 1,mjy
+      DO i = 1,mix
           cape(i,j,1) = 0.d0
           cin(i,j,1) = 0.d0
              
-!$OMP SIMD          
+!!$OMP SIMD
            DO kpar = 2, mkzh
 
               ! Calculate temperature and moisture properties of parcel
@@ -420,7 +420,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                   klcl = 1
               END IF
 
-!$OMP SIMD lastprivate(qvplift,tmklift,ghtlift,tvlift,tmkenv,qvpenv,tvenv,eslift,facden) 
+!!$OMP SIMD lastprivate(qvplift,tmklift,ghtlift,tvlift,tmkenv,qvpenv,tvenv,eslift,facden)
             DO k = kpar,1,-1   
                ! For arrays that go bottom to top
                   kk = kk + 1
@@ -601,7 +601,7 @@ END SUBROUTINE DCAPECALC3D
 
 ! NCLFORTSTART
 SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
-            cmsg,miy,mjx,mkzh,ter_follow,&
+            cmsg,mix,mjy,mkzh,ter_follow,&
             psafile, errstat, errmsg)
     USE wrf_constants, ONLY : ALGERR, CELKEL, G, EZERO, ESLCON1, ESLCON2, &
                           EPS, RD, CP, GAMMA, CPMD, RGASMD, GAMMAMD, TLCLC1, &
@@ -613,15 +613,15 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !f2py threadsafe
     !f2py intent(in,out) :: cape, cin
 
-    INTEGER, INTENT(IN) :: miy, mjx, mkzh, ter_follow
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: prs
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: tmk
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: qvp
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: ght
-    REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) :: ter
-    REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) ::sfp
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(OUT) :: cape
-    REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(OUT) :: cin
+    INTEGER, INTENT(IN) :: mix, mjy, mkzh, ter_follow
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: prs
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: tmk
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: qvp
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(IN) :: ght
+    REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) :: ter
+    REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) ::sfp
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cape
+    REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cin
     REAL(KIND=8), INTENT(IN) :: cmsg
     CHARACTER(LEN=*), INTENT(IN) :: psafile
     INTEGER, INTENT(INOUT) :: errstat
@@ -639,16 +639,16 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz, pup, pdn
     REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: prsf
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prsf
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
     INTEGER :: nthreads
     REAL(KIND=8), DIMENSION(mkzh) :: eth_temp
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: prs_new
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: tmk_new
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: qvp_new
-    REAL(KIND=8), DIMENSION(mkzh,miy,mjx) :: ght_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prs_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: tmk_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: qvp_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: ght_new
 
     ! To remove compiler warnings
     errstat = 0
@@ -684,13 +684,13 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !
 
 !$OMP PARALLEL DO
-    DO i = 1,mjx
-       DO j = 1,miy
+    DO j = 1,mjy
+       DO i = 1,mix
           DO k = 1,mkzh
-             prs_new(k,j,i) = prs(j,i,k)
-             tmk_new(k,j,i) = tmk(j,i,k)
-             qvp_new(k,j,i) = qvp(j,i,k)
-             ght_new(k,j,i) = ght(j,i,k)
+             prs_new(k,i,j) = prs(i,j,k)
+             tmk_new(k,i,j) = tmk(i,j,k)
+             qvp_new(k,i,j) = qvp(i,j,k)
+             ght_new(k,i,j) = ght(i,j,k)
           END DO
        END DO
     END DO
@@ -699,7 +699,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
     !  calculated the pressure at full sigma levels (a set of pressure
     !  levels that bound the layers represented by the vertical grid points)
-    CALL DPFCALC(prs_new, sfp, prsf, miy, mjx, mkzh, ter_follow)
+    CALL DPFCALC(prs_new, sfp, prsf, mix, mjy, mkzh, ter_follow)
 
     !  before looping, set lookup table for getting temperature on
     !  a pseudoadiabat.
@@ -713,15 +713,16 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !CALL OMP_SET_NUM_THREADS(16)
     !nthreads = omp_get_num_threads()
 
+
 !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(tlcl, ethpari, &
 !$OMP zlcl, kk, ilcl, klcl, tmklift, tvenv, tvlift, ghtlift, & 
 !$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
 !$OMP benaccum, zrel, kmax, dz, elfound, &
 !$OMP kel, klfc, pavg, p2, p1, totthe, totqvp, totprs, &
-!$OMP i,j,k,kpar, qvppari, tmkpari,p, pup, pdn, q, th, &
-!$OMP pp1, pp2)
-    DO j = 1,mjx
-      DO i = 1,miy
+!$OMP i,j,k,kpar, kpar1, kpar2, qvppari, tmkpari,p, pup, pdn, q, th, &
+!$OMP pp1, pp2, ethmax, eth_temp, klev)
+    DO j = 1,mjy
+      DO i = 1,mix
           cape(i,j,1) = 0.d0
           cin(i,j,1) = 0.d0
           ! find parcel with max theta-e in lowest 3 km agl.
