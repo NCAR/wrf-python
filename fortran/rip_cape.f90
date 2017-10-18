@@ -683,7 +683,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !           kg/kg (should range from 0.000 to 0.025)
     !
 
-!$OMP PARALLEL DO
+!$OMP PARALLEL DO COLLAPSE(3)
     DO j = 1,mjy
        DO i = 1,mix
           DO k = 1,mkzh
@@ -731,7 +731,8 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
           DO k = 1, mkzh
               IF (ght_new(k,i,j)-ter(i,j) .LT. 3000.d0) THEN
                   tlcl = TLCLC1 / (LOG(tmk_new(k,i,j)**TLCLC2/&
-                  (MAX(qvp_new(k,i,j), 1.d-15)*prs_new(k,i,j)/(EPS+MAX(qvp_new(k,i,j), 1.d-15))))-TLCLC3)+TLCLC4
+                         (MAX(qvp_new(k,i,j), 1.d-15)*prs_new(k,i,j)/(EPS+MAX(qvp_new(k,i,j), 1.d-15))))-TLCLC3)+&
+                         TLCLC4
                   eth_temp(k) = tmk_new(k,i,j) * (1000.d0/prs_new(k,i,j))**&
                                      (GAMMA*(1.d0 + GAMMAMD*(MAX(qvp_new(k,i,j), 1.d-15))))*&
                                      EXP((THTECON1/tlcl - THTECON2)*(MAX(qvp_new(k,i,j), 1.d-15))*&
