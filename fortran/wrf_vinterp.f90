@@ -12,7 +12,7 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
     INTEGER, INTENT(IN) :: idir, ew, ns, nz, icorsw
     REAL(KIND=8), INTENT(IN) :: delta
-    REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: in
+    REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(INOUT) :: in
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(OUT) :: out
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: lvprs
     REAL(KIND=8), DIMENSION(ew,ns), INTENT(IN) :: cor
@@ -24,6 +24,7 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
     k300 = 1 ! removes the warning
 
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, ripk) FIRSTPRIVATE(k300)
     DO j=1,ns
         DO i=1,ew
             IF (icorsw .EQ. 1 .AND. cor(i,j) .LT. 0.) THEN
@@ -59,6 +60,7 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
             END DO
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -125,7 +127,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     USE wrf_constants, ONLY : ALGERR, SCLHT, EXPON, EXPONI, GAMMA, GAMMAMD, TLCLC1, &
                           TLCLC2, TLCLC3, TLCLC4, THTECON1, THTECON2, THTECON3, &
                           CELKEL, EPS, USSALR
-    USE omp_lib
 
     IMPLICIT NONE
 
@@ -207,16 +208,15 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
             vlev = interp_levels(nreqlvs)
         END IF
 
-!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, ifound, &
-!$OMP ripk, vcp1, vcp0, valp0, valp1, tmpvlev, interp_errstat, &
-!$OMP vclhsl, vctophsl, diff, isign, plhsl, zlhsl, ezlhsl, tlhsl, &
-!$OMP zsurf, qvapor, psurf, psurfsm, ezsurf, plev, ezlev, zlev, &
-!$OMP ptarget, dpmin, kupper, pbot, zbot, pratio, tbotextrap, &
-!$OMP vt, tlev, gammam, e, tlcl) REDUCTION (+:log_errcnt, interp_errcnt)
+        !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, ifound, &
+        !$OMP ripk, vcp1, vcp0, valp0, valp1, tmpvlev, interp_errstat, &
+        !$OMP vclhsl, vctophsl, diff, isign, plhsl, zlhsl, ezlhsl, tlhsl, &
+        !$OMP zsurf, qvapor, psurf, psurfsm, ezsurf, plev, ezlev, zlev, &
+        !$OMP ptarget, dpmin, kupper, pbot, zbot, pratio, tbotextrap, &
+        !$OMP vt, tlev, gammam, e, tlcl) REDUCTION (+:log_errcnt, interp_errcnt)
         DO j=1,ns
             DO i=1,ew
                 ! Get the interpolated value that is within the model domain
-                thd = omp_get_thread_num()
                 ifound = 0
                 DO k = 1,nz-1
                     ripk = nz-k+1
@@ -413,7 +413,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
 
             END DO
         END DO
-!$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
         IF (log_errcnt > 0) THEN
             errstat = ALGERR
@@ -427,13 +427,13 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
             RETURN
         END IF
 
-!$OMP PARALLEL DO
+        !$OMP PARALLEL DO
         DO j = 1,ns
             DO i = 1,ew
                 dataout(i,j,nreqlvs) = tempout(i,j)
             END DO
         END DO
-!$OMP END PARALLEL DO
+        !$OMP END PARALLEL DO
 
     END DO !end for the nreqlvs
 
