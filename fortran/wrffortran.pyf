@@ -123,6 +123,22 @@ python module _wrffortran ! in
             integer, optional,check(shape(pres,1)==ns),depend(pres) :: ns=shape(pres,1)
             integer, optional,check(shape(pres,0)==ew),depend(pres) :: ew=shape(pres,0)
         end subroutine dcloudfrac
+        subroutine dcloudfrac2(vert,rh,vert_inc_w_height,low_thresh,mid_thresh,high_thresh,msg,lowc,midc,highc,nz,ns,ew) ! in :_wrffortran:wrf_cloud_fracf.f90
+            threadsafe 
+            real(kind=8) dimension(ew,ns,nz),intent(in) :: vert
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: rh
+            integer intent(in) :: vert_inc_w_height
+            real(kind=8) intent(in) :: low_thresh
+            real(kind=8) intent(in) :: mid_thresh
+            real(kind=8) intent(in) :: high_thresh
+            real(kind=8) intent(in) :: msg
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: lowc
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: midc
+            real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: highc
+            integer, optional,check(shape(vert,2)==nz),depend(vert) :: nz=shape(vert,2)
+            integer, optional,check(shape(vert,1)==ns),depend(vert) :: ns=shape(vert,1)
+            integer, optional,check(shape(vert,0)==ew),depend(vert) :: ew=shape(vert,0)
+        end subroutine dcloudfrac2
         module wrf_constants ! in :_wrffortran:wrf_constants.f90
             real(kind=8), parameter,optional :: wrf_earth_radius=6370000.d0
             real(kind=8), parameter,optional :: rhowat=1000.d0
@@ -527,8 +543,8 @@ python module _wrffortran ! in
             threadsafe 
             real(kind=8) dimension(ew,ns,nz),intent(out,in) :: out
             real(kind=8) dimension(ew,ns,nz),intent(inout),depend(ew,ns,nz) :: in
-            real(kind=8) dimension(ew,ns,nz),depend(ew,ns,nz) :: lvprs
-            real(kind=8) dimension(ew,ns),depend(ew,ns) :: cor
+            real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: lvprs
+            real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: cor
             integer intent(in) :: idir
             real(kind=8) intent(in) :: delta
             integer, optional,intent(in),check(shape(out,0)==ew),depend(out) :: ew=shape(out,0)
@@ -536,7 +552,7 @@ python module _wrffortran ! in
             integer, optional,intent(in),check(shape(out,2)==nz),depend(out) :: nz=shape(out,2)
             integer intent(in) :: icorsw
         end subroutine wrf_monotonic
-        function wrf_intrp_value(wvalp0,wvalp1,vlev,vcp0,vcp1,icase,errstat,errmsg) ! in :_wrffortran:wrf_vinterp.f90
+        function wrf_intrp_value(wvalp0,wvalp1,vlev,vcp0,vcp1,icase,errstat) ! in :_wrffortran:wrf_vinterp.f90
             threadsafe 
             use wrf_constants, only: sclht,algerr
             real(kind=8) intent(in) :: wvalp0
@@ -546,7 +562,6 @@ python module _wrffortran ! in
             real(kind=8) intent(in) :: vcp1
             integer intent(in) :: icase
             integer intent(inout) :: errstat
-            character*(*) intent(inout) :: errmsg
             real(kind=8) :: wrf_intrp_value
         end function wrf_intrp_value
         subroutine wrf_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,sfp,smsfp,vcarray,interp_levels,numlevels,icase,ew,ns,nz,extrap,vcor,logp,rmsg,errstat,errmsg) ! in :_wrffortran:wrf_vinterp.f90

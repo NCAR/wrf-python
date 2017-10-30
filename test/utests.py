@@ -170,7 +170,11 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             tol = 2/100.
             atol = 0.1
             #print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
-            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            try:
+                nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            except:
+                print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
+                raise
     
     
     return test

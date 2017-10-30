@@ -7,7 +7,7 @@ from .constants import Constants
 
 from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeseaprs, dfilter2d, dcomputerh, dcomputeuvmet,
-                          dcomputetd, dcapecalc2d, dcapecalc3d, dcloudfrac, 
+                          dcomputetd, dcapecalc2d, dcapecalc3d, dcloudfrac2, 
                           wrfcttcalc, calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
                           dcomputeabsvort, dlltoij, dijtoll, deqthecalc,
                           omgcalc, virtual_temp, wetbulbcalc, dcomputepw,
@@ -624,28 +624,34 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
 
 @check_args(0, 3, (3,3))
 @cloudfrac_left_iter()
-@cast_type(arg_idxs=(0, 1), outviews=("lowview", "medview", "highview"))
-@extract_and_transpose(outviews=("lowview", "medview", "hightview"))
-def _cloudfrac(p, rh, lowview=None, medview=None, highview=None):
-    """Wrapper for dcloudfrace.
+@cast_type(arg_idxs=(0, 1), outviews=("lowview", "midview", "highview"))
+@extract_and_transpose(outviews=("lowview", "midview", "highview"))
+def _cloudfrac(vert, rh, vert_inc_w_height, low_thresh, mid_thresh,
+               high_thresh, missing, lowview=None, midview=None, highview=None):
+    """Wrapper for dcloudfrac2.
     
     Located in wrf_cloud_fracf.f90.
     
     """
     if lowview is None:
-        lowview = np.zeros(p.shape[0:2], p.dtype, order="F")
+        lowview = np.zeros(vert.shape[0:2], vert.dtype, order="F")
         
-    if medview is None:
-        medview = np.zeros(p.shape[0:2], p.dtype, order="F")
+    if midview is None:
+        midview = np.zeros(vert.shape[0:2], vert.dtype, order="F")
         
     if highview is None:
-        highview = np.zeros(p.shape[0:2], p.dtype, order="F")
+        highview = np.zeros(vert.shape[0:2], vert.dtype, order="F")
     
-    result = dcloudfrac(p, 
-                        rh, 
-                        lowview, 
-                        medview, 
-                        highview)
+    result = dcloudfrac2(vert, 
+                         rh,
+                         vert_inc_w_height,
+                         low_thresh,
+                         mid_thresh,
+                         high_thresh,
+                         missing,
+                         lowview, 
+                         midview, 
+                         highview)
     
     return result
 

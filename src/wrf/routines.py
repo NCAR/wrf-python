@@ -111,7 +111,8 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "uvmet_wspd_wdir" : ["units"],
              "uvmet10_wspd_wdir" : ["units"],  
              "ctt" : [],
-             "cloudfrac" : [],
+             "cloudfrac" : ["vert_type", "low_thresh", 
+                            "mid_thresh", "high_thresh"],
              "default" : []
             }
   

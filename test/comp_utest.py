@@ -512,7 +512,7 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         tkel = tk(full_p, full_t)
         relh = rh(qv, full_p, tkel)
         
-        return (full_p, relh)
+        return (full_p, relh, 0, 97000., 80000., 45000.)
         
         
 class WRFVarsTest(ut.TestCase):
@@ -538,7 +538,7 @@ def make_func(varname, wrfnc, timeidx, method, squeeze, meta):
         
         if meta:
             self.assertEqual(result.dims, ref.dims)
-    
+        
     return func
 
 

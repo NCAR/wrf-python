@@ -962,8 +962,9 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     return ma.masked_values(cape_cin, missing)
 
 
-@set_cloudfrac_alg_metadata(copyarg="pres")
-def cloudfrac(pres, relh, meta=True):
+@set_cloudfrac_alg_metadata(copyarg="vert")
+def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
+              high_thresh, missing=Constants.DEFAULT_FILL, meta=True):
     """Return the cloud fraction.
     
     The leftmost dimension of the returned array represents three different 
@@ -972,6 +973,33 @@ def cloudfrac(pres, relh, meta=True):
         - return_val[0,...] will contain LOW level cloud fraction
         - return_val[1,...] will contain MID level cloud fraction
         - return_val[2,...] will contain HIGH level cloud fraction
+        
+    For backwards compatibility, the default vertical coordinate type is 
+    pressure, with default cloud levels defined as: 
+    
+        97000 Pa <= low_cloud < 80000 Pa
+        80000 Pa <= mid_cloud < 45000 Pa
+        45000 Pa <= high_cloud
+        
+    If the vertical coordinate type is 'height_agl' or 'height_msl', the 
+    default cloud levels are defined as:
+    
+        300 m <= low_cloud < 2000 m
+        2000 m <= mid_cloud < 6000 m
+        6000 m <= high_cloud
+        
+    Note that the default low cloud levels are chosen to
+    exclude clouds near the surface (fog). If you want fog included, set 
+    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pres', or 15 m if using 
+    'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid points 
+    are slightly above the ground, and in order to find clouds, the 
+    *low_thresh* needs to be set to values that are slightly greater than 
+    (less than) the lowest height (pressure) values.
+    
+    When using 'pres' or 'height_agl' for *vert_type*, there is a possibility 
+    that the lowest WRF level will be higher than the low_cloud or mid_cloud 
+    threshold, particularly for mountainous regions.  When this happens, a 
+    fill value will be used in the output.
     
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
@@ -979,8 +1007,8 @@ def cloudfrac(pres, relh, meta=True):
     
     Args:  
             
-        pres (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Full 
-            pressure (perturbation + base state pressure) in [Pa], with the 
+        vert (:class:`xarray.DataArray` or :class:`numpy.ndarray`): The  
+            vertical coordinate variable (usually pressure or height) with the 
             rightmost dimensions as bottom_top x south_north x west_east
             
             Note:
@@ -990,8 +1018,21 @@ def cloudfrac(pres, relh, meta=True):
                 dimension names to the output.  Otherwise, default names will
                 be used.
             
-        relh (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Relative 
-            humidity with the same dimensionality as *pres*
+        relh (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Relative 
+            humidity with the same dimensionality as *vert*
+            
+        vert_inc_w_height (:obj:`int`): Set to 1 if the vertical coordinate 
+            values increase with height (height values). Set to 0 if the 
+            vertical coordinate values decrease with height (pressure values).
+            
+        low_thresh (:obj:`float`): The bottom vertical threshold for what is 
+            considered a low cloud.
+            
+        mid_thresh (:obj:`float`): The bottom vertical threshold for what is 
+            considered a mid level cloud.
+            
+        high_thresh (:obj:`float`): The bottom vertical threshold for what is 
+            considered a high cloud.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -1016,7 +1057,10 @@ def cloudfrac(pres, relh, meta=True):
         :meth:`wrf.getvar`, :meth:`wrf.rh`
     
     """
-    return _cloudfrac(pres, relh)
+    cfrac = _cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh, 
+                      high_thresh, missing)
+    
+    return ma.masked_values(cfrac, missing)
 
 
 @set_alg_metadata(2, "pres_hpa", refvarndims=3, 

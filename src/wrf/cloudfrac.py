@@ -5,11 +5,16 @@ from .constants import Constants
 from .extension import _tk, _rh, _cloudfrac
 from .metadecorators import set_cloudfrac_metadata
 from .util import extract_vars
+from .geoht import _get_geoht
+
+import numpy.ma as ma
 
 @set_cloudfrac_metadata()
 def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True, 
-                 cache=None, meta=True, _key=None):
-    """Return the cloud fraction.
+                 cache=None, meta=True, _key=None,
+                 vert_type="pres", low_thresh=None, mid_thresh=None, 
+                 high_thresh=None, missing=Constants.DEFAULT_FILL):
+    """Return the cloud fraction for low, mid, and high level clouds.
     
     The leftmost dimension of the returned array represents three different 
     quantities:
@@ -17,6 +22,33 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
         - return_val[0,...] will contain LOW level cloud fraction
         - return_val[1,...] will contain MID level cloud fraction
         - return_val[2,...] will contain HIGH level cloud fraction
+    
+    For backwards compatibility, the default vertical coordinate type is 
+    pressure, with default cloud levels defined as: 
+    
+        97000 Pa <= low_cloud < 80000 Pa
+        80000 Pa <= mid_cloud < 45000 Pa
+        45000 Pa <= high_cloud
+        
+    If the vertical coordinate type is 'height_agl' or 'height_msl', the 
+    default cloud levels are defined as:
+    
+        300 m <= low_cloud < 2000 m
+        2000 m <= mid_cloud < 6000 m
+        6000 m <= high_cloud
+        
+    Note that the default low cloud levels are chosen to
+    exclude clouds near the surface (fog). If you want fog included, set 
+    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pres', or 15 m if using 
+    'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid points 
+    are slightly above the ground, and in order to find clouds, the 
+    *low_thresh* needs to be set to values that are slightly greater than 
+    (less than) the lowest height (pressure) values.
+    
+    When using 'pres' or 'height_agl' for *vert_type*, there is a possibility 
+    that the lowest WRF level will be higher than the low_cloud or mid_cloud 
+    threshold, particularly for mountainous regions.  When this happens, a 
+    fill value will be used in the output.
     
     This functions extracts the necessary variables from the NetCDF file 
     object in order to perform the calculation.
@@ -59,7 +91,27 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
             
         _key (:obj:`int`, optional): A caching key. This is used for internal 
             purposes only.  Default is None.
-   
+            
+        vert_type (:obj:`str`, optional):  The type of vertical coordinate used 
+            to determine cloud type thresholds.  Must be 'pres', 'height_msl',
+            or 'height_agl'.  For backwards compatibility, the default 
+            is 'pres'.
+            
+        low_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a low cloud.  If *vert_type* is 'pres', the default is 
+            97000 Pa.  If *vert_type* is 'height_agl' or 'height_msl', then the 
+            default is 300 m. 
+            
+        mid_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a mid level cloud.  If *vert_type* is 'pres', the 
+            default is 80000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 2000 m. 
+            
+        high_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a high level cloud.  If *vert_type* is 'pres', the 
+            default is 45000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 6000 m.  
+            
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
         cloud fraction array whose leftmost dimension is 3 (LOW=0, MID=1, 
@@ -84,5 +136,29 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
     
     tk = _tk(full_p, full_t)
     rh = _rh(qv, full_p, tk)
+                
+    if vert_type.lower() == "pres" or vert_type.lower() == "pressure":
+        v_coord = full_p
+        _low_thresh = 97000. if low_thresh is None else low_thresh
+        _mid_thresh = 80000. if mid_thresh is None else mid_thresh
+        _high_thresh = 45000. if high_thresh is None else high_thresh
+        vert_inc_w_height = 0
+    elif (vert_type.lower() == "height_msl" 
+          or vert_type.lower() == "height_agl"):
+        is_msl = vert_type.lower() == "height_msl"
+        v_coord = _get_geoht(wrfin, timeidx, method, squeeze, 
+                             cache, meta=False, _key=_key, height=True, 
+                             msl=is_msl)
+        _low_thresh = 300. if low_thresh is None else low_thresh
+        _mid_thresh = 2000. if mid_thresh is None else mid_thresh
+        _high_thresh = 6000. if high_thresh is None else high_thresh
+        vert_inc_w_height = 1
+    else:
+        raise ValueError("'vert_type' must be 'pres', 'height_msl', "
+                         "or 'height_agl'")
     
-    return _cloudfrac(full_p, rh)
+    cfrac = _cloudfrac(v_coord, rh, vert_inc_w_height, 
+                      _low_thresh, _mid_thresh, _high_thresh, missing)
+    
+    return ma.masked_values(cfrac, missing)
+

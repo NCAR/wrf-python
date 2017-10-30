@@ -353,7 +353,8 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
     !CALL cpu_time(t1)
     !CALL OMP_SET_NUM_THREADS(16)
-!$OMP PARALLEL DO
+
+    !$OMP PARALLEL DO
     DO j = 1,mjy
        DO i = 1,mix
           DO k = 1,mkzh
@@ -364,7 +365,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
           END DO
        END DO
     END DO
-!$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
     
     CALL DPFCALC(prs_new, sfp, prsf, mix, mjy, mkzh, ter_follow)
 
@@ -377,12 +378,12 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
         RETURN
     END IF
 
-!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(tlcl, ethpari, &
-!$OMP zlcl, kk, ilcl, klcl, tmklift, tvenv, tvlift, ghtlift, & 
-!$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
-!$OMP benaccum, zrel, kmax, dz, elfound, &
-!$OMP kel, klfc, &
-!$OMP i,j,k,kpar)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(tlcl, ethpari, &
+    !$OMP zlcl, kk, ilcl, klcl, tmklift, tvenv, tvlift, ghtlift, &
+    !$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
+    !$OMP benaccum, zrel, kmax, dz, elfound, &
+    !$OMP kel, klfc, &
+    !$OMP i,j,k,kpar)
     DO j = 1,mjy
       DO i = 1,mix
           cape(i,j,1) = 0.d0
@@ -395,10 +396,10 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
               ! (note, qvppari and tmkpari already calculated above for 2d case.)
              
               tlcl = TLCLC1/(LOG(tmk_new(kpar,i,j)**TLCLC2/(MAX(1.D-20,qvp_new(kpar,i,j)*prs_new(kpar,i,j)/ &
-              (EPS + qvp_new(kpar,i,j))))) - TLCLC3) + TLCLC4
+                     (EPS + qvp_new(kpar,i,j))))) - TLCLC3) + TLCLC4
              
               ethpari = tmk_new(kpar,i,j)*(1000.D0/prs_new(kpar,i,j))**(GAMMA*(1.D0 + GAMMAMD*qvp_new(kpar,i,j)))* &
-                  EXP((THTECON1/tlcl - THTECON2)*qvp_new(kpar,i,j)*(1.D0 + THTECON3*qvp_new(kpar,i,j)))
+                        EXP((THTECON1/tlcl - THTECON2)*qvp_new(kpar,i,j)*(1.D0 + THTECON3*qvp_new(kpar,i,j)))
                 
               zlcl = ght_new(kpar,i,j) + (tmk_new(kpar,i,j) - tlcl)/(G/CP * (1.D0 + CPMD*qvp_new(kpar,i,j)))
 
