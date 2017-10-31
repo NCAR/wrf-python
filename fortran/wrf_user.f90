@@ -325,7 +325,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     INTEGER :: i, j, k
     INTEGER :: klo, khi
-    INTEGER :: errcnt
+    INTEGER :: errcnt, bad_i, bad_j, bad_sfp
 
     !REAL(KIND=8) :: plo, phi, tlo, thi, zlo, zhi
     !REAL(KIND=8) :: p_at_pconst, t_at_pconst, z_at_pconst
@@ -340,6 +340,9 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     errstat = 0
     errcnt = 0
+    bad_i = -1
+    bad_j = -1
+    bad_sfp = -1
 
     !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k,found) REDUCTION(+:errcnt)
     DO j = 1,ny
@@ -358,6 +361,14 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
             IF (level(i,j) == -1) THEN
                 errcnt = errcnt + 1
+                !$OMP CRITICAL
+                ! Only do this the first time
+                IF (bad_i .EQ. -1) THEN
+                    bad_i = i
+                    bad_j = j
+                    bad_sfp = p(i,j,1) / 100.
+                END IF
+                !$OMP END CRITICAL
             END IF
         END DO
     END DO
@@ -365,7 +376,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     IF (errcnt > 0) THEN
         errstat = ALGERR
-        errmsg = "Error in finding 100 hPa up"
+        WRITE(errmsg,*) "Error in finding 100 hPa up.  i=", bad_i, "j=", bad_j, "sfc_p=", bad_sfp
         RETURN
     END IF
 
@@ -380,6 +391,12 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
             IF (klo == khi) THEN
                 errcnt = errcnt + 1
+                !$OMP CRITICAL
+                IF (bad_i .EQ. -1) THEN
+                    bad_i = i
+                    bad_j = j
+                END IF
+                !$OMP END CRITICAL
             END IF
 
             ! This is the readable version of the code below. Don't delete this!
@@ -414,7 +431,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     IF (errcnt > 0) THEN
         errstat = ALGERR
-        errmsg = "Error trapping levels"
+        WRITE(errmsg,*) "Error trapping levels at i=", bad_i, "j=", bad_j
         RETURN
     END IF
 
