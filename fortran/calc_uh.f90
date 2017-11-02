@@ -61,7 +61,10 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
 
     twodx = 2.0*dx
     twody = 2.0*dy
-    !$OMP PARALLEL DO COLLAPSE(3)
+
+    !$OMP PARALLEL
+
+    !$OMP DO COLLAPSE(3)
     DO k=2,nz-2
         DO j=2,ny-1
             DO i=2,nx-1
@@ -73,13 +76,13 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
             END DO
         END DO
     END DO
-    !$OMP END PARALLEL DO
+    !$OMP END DO
 
     ! Integrate over depth uhminhgt to uhmxhgt AGL
     !
     !  WRITE(6,'(a,f12.1,a,f12.1,a)') &
     !        'Calculating UH from ',uhmnhgt,' to ',uhmxhgt,' m AGL'
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, zbot, ztop, kbot, ktop, &
+    !$OMP DO COLLAPSE(2) PRIVATE(i, j, k, zbot, ztop, kbot, ktop, &
     !$OMP wgtlw, wbot, wtop, wsum, wmean, sum, helbot, heltop)
     DO j=2,ny-2
         DO i=2,nx-2
@@ -147,7 +150,9 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
             END IF
         END DO
     END DO
-    !$OMP END PARALLEL DO
+    !$OMP END DO
+
+    !$OMP END PARALLEL
 
     uh = uh*1000.   ! Scale according to Kain et al. (2008)
 

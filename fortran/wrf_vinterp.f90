@@ -20,24 +20,24 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
 !NCLEND
 
-    INTEGER :: i, j, k, ripk, k300
+    INTEGER :: i, j, k, k300
 
-    k300 = 1 ! removes the warning
-
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, ripk) FIRSTPRIVATE(k300)
+    !$OMP PARALLEL DO COLLAPSE(2)
     DO j=1,ns
         DO i=1,ew
+
             IF (icorsw .EQ. 1 .AND. cor(i,j) .LT. 0.) THEN
                 DO k=1,nz
                     in(i,j,k) = -in(i,j,k)
                 END DO
             END IF
 
+            k300 = nz
+
             ! First find k index that is at or below (height-wise)
             ! the 300 hPa level.
-            DO k = 1,nz
-                ripk = nz-k+1
-                IF (lvprs(i,j,k) .LE. 300.D0) THEN
+            DO k = nz,1,-1
+                IF (lvprs(i,j,k) .GE. 300.D0) THEN
                     k300 = k
                     EXIT
                 END IF
@@ -184,18 +184,13 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
         cvcord = 't'
     END IF
 
-    !miy = ns
-    !mjx = ew
-    !njx = ew
-    !niy = ns
-
-!$OMP PARALLEL DO
+    !$OMP PARALLEL DO COLLAPSE(2)
     DO j = 1,ns
         DO i = 1,ew
             tempout(i,j) = rmsg
         END DO
     END DO
-!$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
 
     DO nreqlvs = 1,numlevels
         IF (cvcord .EQ. 'z') THEN
@@ -257,6 +252,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                                 ifound = 1
                             END IF
                         END IF
+
                         EXIT
                     END IF
                 END DO !end for the k loop
@@ -415,6 +411,8 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
         END DO
         !$OMP END PARALLEL DO
 
+
+
         IF (log_errcnt > 0) THEN
             errstat = ALGERR
             WRITE(errmsg, *) "Pres=0.  Unable to take log of 0."
@@ -427,7 +425,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
             RETURN
         END IF
 
-        !$OMP PARALLEL DO
+        !$OMP PARALLEL DO COLLAPSE(2)
         DO j = 1,ns
             DO i = 1,ew
                 dataout(i,j,nreqlvs) = tempout(i,j)

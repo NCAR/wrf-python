@@ -18,23 +18,15 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
 
     ! LOCAL VARIABLES
     INTEGER i,j,k,ripk
-    !INTEGER :: mjx,miy,mkzh
-    REAL(KIND=8) :: vt, opdepthu, opdepthd, dp
-    REAL(KIND=8) :: ratmix, arg1, arg2, agl_hgt
-    REAL(KIND=8) :: fac, prsctt
-    !REAL(KIND=8) :: eps,ussalr,rgas,grav,abscoefi,abscoef,celkel,wrfout
-    !REAL(KIND=8) ::    ght(ew,ns,nz),stuff(ew,ns)
-    !REAL(KIND=8), DIMENSION(ew,ns,nz) ::     pf(ns,ew,nz),p1,p2
+    REAL(KIND=8) :: opdepthu, opdepthd, dp, arg1, fac, prsctt, ratmix
+    REAL(KIND=8) :: arg2, agl_hgt, vt
     REAL(KIND=8), DIMENSION(ew,ns,nz) :: pf
     REAL(KIND=8) :: p1, p2
 
-    !mjx = ew
-    !miy = ns
-    !mkzh = nz
+    !$OMP PARALLEL
 
-    prsctt = 0 ! removes the warning
-
-! Calculate the surface pressure
+    ! Calculate the surface pressure
+    !$OMP DO COLLAPSE(2)
     DO j=1,ns
         DO i=1,ew
            ratmix = .001D0*qvp(i,j,1)
@@ -46,7 +38,9 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
            pf(i,j,nz) = prs(i,j,1)*(vt/(vt + USSALR*(agl_hgt)))**(arg1)
         END DO
     END DO
+    !$OMP END DO
 
+    !$OMP DO COLLAPSE(3)
     DO k=1,nz-1
         DO j=1,ns
             DO i=1,ew
@@ -55,26 +49,27 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
             END DO
         END DO
     END DO
+    !$OMP END DO
 
+    !$OMP DO COLLAPSE(2) PRIVATE(i, j, k, ripk, opdepthd, opdepthu, &
+    !$OMP prsctt, dp, p1, p2, fac, arg1)
     DO j=1,ns
         DO i=1,ew
             opdepthd = 0.D0
             k = 0
+            prsctt = 0
 
-!      Integrate downward from model top, calculating path at full
-!      model vertical levels.
-
-!20          opdepthu=opdepthd
+            ! Integrate downward from model top, calculating path at full
+            ! model vertical levels.
 
             DO k=1, nz
                 opdepthu = opdepthd
-                !k=k+1
                 ripk = nz - k + 1
 
-                IF (k .EQ. 1) THEN
-                    dp = 200.D0*(pf(i,j,1) - prs(i,j,nz))  ! should be in Pa
-                ELSE
+                IF (k .NE. 1) THEN
                     dp = 100.D0*(pf(i,j,k) - pf(i,j,k-1))  ! should be in Pa
+                ELSE
+                    dp = 200.D0*(pf(i,j,1) - prs(i,j,nz))  ! should be in Pa
                 END IF
 
                 IF (haveqci .EQ. 0) then
@@ -89,7 +84,6 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
                 END IF
 
                 IF (opdepthd .LT. 1. .AND. k .LT. nz) THEN
-                    !GOTO 20
                     CYCLE
 
                 ELSE IF (opdepthd .LT. 1. .AND. k .EQ. nz) THEN
@@ -111,15 +105,14 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
                     fac = (prsctt - p1)/(p2 - p1)
                     arg1 = fac*(tk(i,j,ripk) - tk(i,j,ripk+1)) - CELKEL
                     ctt(i,j) = tk(i,j,ripk+1) + arg1
-                    !GOTO 40
                     EXIT
                 END IF
             END DO
         END DO
     END DO
-!   30    CONTINUE
-!   40    CONTINUE
-! 190  CONTINUE
+    !$OMP END DO
+
+    !$OMP END PARALLEL
     RETURN
 
 END SUBROUTINE wrfcttcalc

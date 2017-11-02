@@ -327,9 +327,9 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     INTEGER :: klo, khi
     INTEGER :: errcnt, bad_i, bad_j, bad_sfp
 
-    !REAL(KIND=8) :: plo, phi, tlo, thi, zlo, zhi
-    !REAL(KIND=8) :: p_at_pconst, t_at_pconst, z_at_pconst
-    !REAL(KIND=8) :: z_half_lowest
+    REAL(KIND=8) :: plo, phi, tlo, thi, zlo, zhi
+    REAL(KIND=8) :: p_at_pconst, t_at_pconst, z_at_pconst
+    REAL(KIND=8) :: z_half_lowest
 
     LOGICAL :: l1, l2, l3, found
 
@@ -399,32 +399,18 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
                 !$OMP END CRITICAL
             END IF
 
-            ! This is the readable version of the code below. Don't delete this!
-            !plo = p(i,j,klo)
-            !phi = p(i,j,khi)
-            !tlo = t(i,j,klo)*(1.D0 + 0.608D0*q(i,j,klo))
-            !thi = t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi))
-            !zlo = z(i,j,klo)
-            !zhi = z(i,j,khi)
-            !p_at_pconst = p(i,j,1) - PCONST
-            !t_at_pconst = thi - (thi-tlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
-            !z_at_pconst = zhi - (zhi-zlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
+            plo = p(i,j,klo)
+            phi = p(i,j,khi)
+            tlo = t(i,j,klo)*(1.D0 + 0.608D0*q(i,j,klo))
+            thi = t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi))
+            zlo = z(i,j,klo)
+            zhi = z(i,j,khi)
+            p_at_pconst = p(i,j,1) - PCONST
+            t_at_pconst = thi - (thi-tlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
+            z_at_pconst = zhi - (zhi-zlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
             !
-            !t_surf(i,j) = t_at_pconst * (p(i,j,1)/p_at_pconst)**(USSALR*RD/G)
-            !t_sea_level(i,j) = t_at_pconst + USSALR*z_at_pconst
-
-            ! The same code as above with temporaries removed to improve vectorization
-            t_surf(i,j) = ((t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi))) - &
-                          ((t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi)))-(t(i,j,klo)*&
-                          (1.D0 + 0.608D0*q(i,j,klo))))*LOG((p(i,j,1) - PCONST)/p(i,j,khi))&
-                          *LOG(p(i,j,klo)/p(i,j,khi))) * (p(i,j,1)/(p(i,j,1) - PCONST))**(USSALR*RD/G)
-
-            t_sea_level(i,j) = t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi)) - &
-                               ((t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi)))-(t(i,j,klo)*&
-                               (1.D0 + 0.608D0*q(i,j,klo))))*LOG((p(i,j,1) - PCONST)/&
-                               p(i,j,khi))*LOG(p(i,j,klo)/p(i,j,khi)) + &
-                               USSALR*(z(i,j,khi) - (z(i,j,khi)-z(i,j,klo))*&
-                               LOG((p(i,j,1) - PCONST)/p(i,j,khi))*LOG(p(i,j,klo)/p(i,j,khi)))
+            t_surf(i,j) = t_at_pconst * (p(i,j,1)/p_at_pconst)**(USSALR*RD/G)
+            t_sea_level(i,j) = t_at_pconst + USSALR*z_at_pconst
         END DO
     END DO
     !$OMP END PARALLEL DO
@@ -581,16 +567,18 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
 
     INTEGER :: i, j, iter
 
+    !$OMP PARALLEL
+
     DO iter=1,it
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2)
         DO j=1,ny
             DO i = 1,nx
                 b(i,j) = a(i,j)
             END DO
         END DO
-        !$OMP END PARALLEL DO
+        !$OMP END DO
 
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2)
         DO j=2,ny-1
             DO i=1,nx
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -601,9 +589,9 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
                 END IF
             END DO
         END DO
-        !$OMP END PARALLEL DO
+        !$OMP END DO
 
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2)
         DO j=1,ny
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -614,7 +602,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
                 END IF
             END DO
         END DO
-        !$OMP END PARALLEL DO
+        !$OMP END DO
     !        do j=1,ny
     !        do i=1,nx
     !          b(i,j) = a(i,j)
@@ -631,6 +619,8 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
     !        enddo
     !        enddo
     END DO
+
+    !$OMP END PARALLEL
 
     RETURN
 
@@ -768,7 +758,9 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
     ! msg stands for missing value in this code
     ! WRITE (6,FMT=*) ' in compute_uvmet ',NX,NY,NXP1,NYP1,ISTAG
 
-    !$OMP PARALLEL DO COLLAPSE(2)
+    !$OMP PARALLEL
+
+    !$OMP DO COLLAPSE(2)
     DO j = 1,ny
         DO i = 1,nx
 
@@ -790,23 +782,23 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
 
         END DO
     END DO
-    !$OMP END PARALLEL DO
+    !$OMP END DO
 
     ! Note:  Intentionally removed as many IF statements as possible from loops
     ! to improve vectorization.
 
     IF (istag .EQ. 0) THEN ! Not staggered
         IF (.NOT. is_msg_val) THEN ! No missing values used
-            !$OMP PARALLEL DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2)
             DO j = 1,ny
                 DO i = 1,nx
                     uvmet(i,j,1) = v(i,j)*longcb(i,j) + u(i,j)*longca(i,j)
                     uvmet(i,j,2) = v(i,j)*longca(i,j) - u(i,j)*longcb(i,j)
                 END DO
             END DO
-            !$OMP END PARALLEL DO
+            !$OMP END DO
         ELSE ! Missing values used
-            !$OMP PARALLEL DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2)
             DO j = 1,ny
                 DO i = 1,nx
                     IF ((u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg)) THEN
@@ -818,14 +810,14 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
                     END IF
                 END DO
             END DO
-            !$OMP END PARALLEL DO
+            !$OMP END DO
         END IF
     ELSE ! Staggered
         IF (.NOT. is_msg_val) THEN ! No missing values used
-            !$OMP PARALLEL DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2)
             DO j = 1,ny
                 DO i = 1,nx
-                    ! This is the more readable version.  Do not delete.
+                    ! This is the more readable version.
                     !uk = 0.5D0*(u(i,j) + u(i+1,j))
                     !vk = 0.5D0*(v(i,j) + v(i,j+1))
                     !uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
@@ -838,13 +830,13 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
 
                 END DO
             END DO
-            !$OMP END PARALLEL DO
+            !$OMP END DO
         ELSE ! Missing values used
-            !$OMP PARALLEL DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2)
             DO j = 1,ny
                 DO i = 1,nx
                     IF (u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg .AND. u(i+1,j) .NE. umsg .AND. v(i,j+1) .NE. vmsg) THEN
-                        ! This is the more readable version.  Do not delete.
+                        ! This is the more readable version.
                         !uk = 0.5D0*(u(i,j) + u(i+1,j))
                         !vk = 0.5D0*(v(i,j) + v(i,j+1))
                         !uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
@@ -860,9 +852,11 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
                     END IF
                 END DO
             END DO
-            !$OMP END PARALLEL DO
+            !$OMP END DO
         END IF
     END IF
+
+    !$OMP END PARALLEL
 
     RETURN
 

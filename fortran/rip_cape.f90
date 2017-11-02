@@ -85,11 +85,11 @@ REAL(KIND=8) FUNCTION TONPSADIABAT(thte, prs, psadithte, psadiprs, psaditmk, gam
     rang1 = h1 - l1
     mid1 = (h1 + l1) / 2
     DO WHILE(rang1 .GT. 1)
-        if(thte .GE. psadithte(mid1)) then
+        IF (thte .GE. psadithte(mid1)) THEN
            l1 = mid1 
-        else
+        ELSE
            h1 = mid1 
-        end if 
+        END IF
         rang1 = h1 - l1
         mid1 = (h1 + l1) / 2
     END DO
@@ -103,17 +103,17 @@ REAL(KIND=8) FUNCTION TONPSADIABAT(thte, prs, psadithte, psadiprs, psaditmk, gam
   !      END IF
   !  END DO
 
-        ip = -1
+    ip = -1
     l2 = 1
     h2 = 149
     rang2 = h2 - l2
     mid2 = (h2 + l2) / 2
     DO WHILE(rang2 .GT. 1)
-        if(prs .LE. psadiprs(mid2)) then
+        IF (prs .LE. psadiprs(mid2)) THEN
            l2 = mid2 
-        else
+        ELSE
            h2 = mid2 
-        end if
+        END IF
         rang2 = h2 - l2
         mid2 = (h2 + l2) / 2
     END DO
@@ -386,8 +386,8 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !$OMP i,j,k,kpar)
     DO j = 1,mjy
       DO i = 1,mix
-          cape(i,j,1) = 0.d0
-          cin(i,j,1) = 0.d0
+          cape(i,j,1) = 0.D0
+          cin(i,j,1) = 0.D0
              
 !!$OMP SIMD
            DO kpar = 2, mkzh
@@ -421,7 +421,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
                   klcl = 1
               END IF
 
-!!$OMP SIMD lastprivate(qvplift,tmklift,ghtlift,tvlift,tmkenv,qvpenv,tvenv,eslift,facden)
+            !!$OMP SIMD lastprivate(qvplift,tmklift,ghtlift,tvlift,tmkenv,qvpenv,tvenv,eslift,facden)
             DO k = kpar,1,-1   
                ! For arrays that go bottom to top
                   kk = kk + 1
@@ -684,7 +684,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !           kg/kg (should range from 0.000 to 0.025)
     !
 
-!$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3)
     DO j = 1,mjy
        DO i = 1,mix
           DO k = 1,mkzh
@@ -695,7 +695,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
           END DO
        END DO
     END DO
-!$OMP END PARALLEL DO
+    !$OMP END PARALLEL DO
 
 
     !  calculated the pressure at full sigma levels (a set of pressure
@@ -715,29 +715,29 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !nthreads = omp_get_num_threads()
 
 
-!$OMP PARALLEL DO COLLAPSE(2) PRIVATE(tlcl, ethpari, &
-!$OMP zlcl, kk, ilcl, klcl, tmklift, tvenv, tvlift, ghtlift, & 
-!$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
-!$OMP benaccum, zrel, kmax, dz, elfound, &
-!$OMP kel, klfc, pavg, p2, p1, totthe, totqvp, totprs, &
-!$OMP i,j,k,kpar, kpar1, kpar2, qvppari, tmkpari,p, pup, pdn, q, th, &
-!$OMP pp1, pp2, ethmax, eth_temp, klev)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(tlcl, ethpari, &
+    !$OMP zlcl, kk, ilcl, klcl, tmklift, tvenv, tvlift, ghtlift, &
+    !$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
+    !$OMP benaccum, zrel, kmax, dz, elfound, &
+    !$OMP kel, klfc, pavg, p2, p1, totthe, totqvp, totprs, &
+    !$OMP i,j,k,kpar, kpar1, kpar2, qvppari, tmkpari,p, pup, pdn, q, th, &
+    !$OMP pp1, pp2, ethmax, eth_temp, klev)
     DO j = 1,mjy
       DO i = 1,mix
-          cape(i,j,1) = 0.d0
-          cin(i,j,1) = 0.d0
+          cape(i,j,1) = 0.D0
+          cin(i,j,1) = 0.D0
           ! find parcel with max theta-e in lowest 3 km agl.
-          ethmax = -1.d0
-          eth_temp = -1.d0
+          ethmax = -1.D0
+          eth_temp = -1.D0
           DO k = 1, mkzh
-              IF (ght_new(k,i,j)-ter(i,j) .LT. 3000.d0) THEN
+              IF (ght_new(k,i,j)-ter(i,j) .LT. 3000.D0) THEN
                   tlcl = TLCLC1 / (LOG(tmk_new(k,i,j)**TLCLC2/&
                          (MAX(qvp_new(k,i,j), 1.d-15)*prs_new(k,i,j)/(EPS+MAX(qvp_new(k,i,j), 1.d-15))))-TLCLC3)+&
                          TLCLC4
-                  eth_temp(k) = tmk_new(k,i,j) * (1000.d0/prs_new(k,i,j))**&
-                                     (GAMMA*(1.d0 + GAMMAMD*(MAX(qvp_new(k,i,j), 1.d-15))))*&
+                  eth_temp(k) = tmk_new(k,i,j) * (1000.D0/prs_new(k,i,j))**&
+                                     (GAMMA*(1.D0 + GAMMAMD*(MAX(qvp_new(k,i,j), 1.d-15))))*&
                                      EXP((THTECON1/tlcl - THTECON2)*(MAX(qvp_new(k,i,j), 1.d-15))*&
-                                         (1.d0 + THTECON3*(MAX(qvp_new(k,i,j), 1.d-15))))
+                                         (1.D0 + THTECON3*(MAX(qvp_new(k,i,j), 1.d-15))))
               END IF
           END DO
           klev = mkzh
@@ -755,8 +755,8 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
           ! Establish average properties of that parcel
           ! (over depth of approximately davg meters)
 
-          !davg = 500.d0
-          pavg = 500.d0 * prs_new(kpar1,i,j)*&
+          !davg = 500.D0
+          pavg = 500.D0 * prs_new(kpar1,i,j)*&
               G/(RD*tvirtual(tmk_new(kpar1,i,j), qvp_new(kpar1,i,j)))
           p2 = MIN(prs_new(kpar1,i,j)+.5d0*pavg, prsf(mkzh,i,j))
           p1 = p2 - pavg
