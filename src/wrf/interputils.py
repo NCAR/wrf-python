@@ -158,18 +158,19 @@ def _calc_xy(xdim, ydim, pivot_point=None, angle=None,
             raise ValueError("end_point {} is outside of domain "
                              "with shape {}".format(end_point, (xdim, ydim)))
         
+        # From the original NCL code, but the error above will be thrown
+        # instead.
         if ( x1 > xdim-1 ): 
-            x1 = xdim
+            x1 = xdim - 1
         if ( y1 > ydim-1): 
-            y1 = ydim
+            y1 = ydim - 1
     else:
         raise ValueError("invalid start/end or pivot/angle arguments")
     
     dx = x1 - x0
     dy = y1 - y0
     distance = (dx*dx + dy*dy)**0.5
-    npts = int(distance)
-    dxy = distance/npts
+    npts = int(distance) + 1
     
     xy = np.zeros((npts,2), "float")
 
