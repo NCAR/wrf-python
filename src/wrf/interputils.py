@@ -174,8 +174,8 @@ def _calc_xy(xdim, ydim, pivot_point=None, angle=None,
     
     xy = np.zeros((npts,2), "float")
 
-    dx = dx/npts
-    dy = dy/npts
+    dx = dx/(npts-1)
+    dy = dy/(npts-1)
     
     for i in py3range(npts):
         xy[i,0] = x0 + i*dx
