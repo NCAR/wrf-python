@@ -143,7 +143,11 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             tol = .5/100.0
             atol = 0 # NCL uses different constants and doesn't use same
                      # handrolled virtual temp in method
-            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            try:
+                nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            except AssertionError:
+                print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
+                raise
         elif (varname == "cape_2d"):
             cape_2d = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 0/100.
@@ -264,22 +268,25 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
-
-            nt.assert_allclose(to_np(ht_cross), ref_ht_cross, rtol=.01)
+            
+            # Note:  Until the bug is fixed in NCL, the wrf-python cross 
+            # sections will contain one extra point
+            nt.assert_allclose(to_np(ht_cross)[...,0:-1], ref_ht_cross, rtol=.01)
             
             # Test opposite
             p_cross1 = vertcross(p,hts,pivot_point=pivot_point, angle=90.0)
- 
-            nt.assert_allclose(to_np(p_cross1), 
+            
+            nt.assert_allclose(to_np(p_cross1)[...,0:-1], 
                                ref_p_cross, 
                                rtol=.01)
             # Test point to point
             start_point = CoordPair(0, hts.shape[-2]/2)
             end_point = CoordPair(-1,hts.shape[-2]/2)
-            
+          
+             
             p_cross2 = vertcross(p,hts,start_point=start_point, 
                                 end_point=end_point)
-             
+            
             nt.assert_allclose(to_np(p_cross1), 
                                to_np(p_cross2))
               
@@ -292,7 +299,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
-            nt.assert_allclose(to_np(t2_line1), ref_t2_line)
+            # Note:  After NCL is fixed, remove the slice.
+            nt.assert_allclose(to_np(t2_line1)[...,0:-1], ref_t2_line)
             
             # Test point to point
             start_point = CoordPair(0, t2.shape[-2]/2)

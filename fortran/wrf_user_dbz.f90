@@ -77,7 +77,10 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
     REAL(KIND=8), PARAMETER :: RN0_S = 2.D7
     REAL(KIND=8), PARAMETER :: RN0_G = 4.D6
 
+    !$OMP PARALLEL
+
     !   Force all Q arrays to be 0.0 or greater.
+    !$OMP DO COLLAPSE(3)
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx
@@ -96,10 +99,12 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
             END DO
         END DO
     END DO
+    !$OMP END DO
 
     !   Input pressure is Pa, but we need hPa in calculations
 
     IF (sn0 .EQ. 0) THEN
+        !$OMP DO COLLAPSE(3)
         DO k = 1,nz
             DO j = 1,ny
                 DO i = 1,nx
@@ -110,12 +115,17 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
                 END DO
             END DO
         END DO
+        !$OMP END DO
     END IF
 
     factor_r = GAMMA_SEVEN*1.D18*(1.D0/(PI*RHO_R))**1.75D0
     factor_s = GAMMA_SEVEN*1.D18*(1.D0/(PI*RHO_S))**1.75D0*(RHO_S/RHOWAT)**2*ALPHA
     factor_g = GAMMA_SEVEN*1.D18*(1.D0/(PI*RHO_G))**1.75D0*(RHO_G/RHOWAT)**2*ALPHA
 
+
+    !$OMP DO COLLAPSE(3) PRIVATE(i, j, k, temp_c, virtual_t, gonv, ronv, sonv, &
+    !$OMP factorb_g, factorb_s, rhoair, z_e) &
+    !$OMP FIRSTPRIVATE(factor_r, factor_s, factor_g)
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx
@@ -171,6 +181,9 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
             END DO
         END DO
     END DO
+    !$OMP END DO
+
+    !$OMP END PARALLEL
 
     RETURN
 
