@@ -574,12 +574,16 @@ class LambertConformal(WrfProj):
     def _cartopy(self):
         if not cartopy_enabled():
             return None
-            
+        
+        # Set cutoff to -30 for NH, +30.0 for SH.
+        cutoff = -30.0 if self.moad_cen_lat >= 0 else 30.0
+          
         _cartopy = crs.LambertConformal(
             central_longitude = self.stand_lon,
             central_latitude = self.moad_cen_lat,
             standard_parallels = self._std_parallels,
-            globe = self._globe())
+            globe = self._globe(),
+            cutoff = cutoff)
         
         return _cartopy
     
