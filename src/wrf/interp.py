@@ -584,9 +584,6 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     terht = get_terrain(wrfin, timeidx, units="m", 
                         method=method, squeeze=squeeze, cache=cache,
                         meta=False, _key=_key)
-    t = get_theta(wrfin, timeidx,  units="k", 
-                  method=method, squeeze=squeeze, cache=cache, 
-                  meta=False, _key=_key)
     tk = get_temp(wrfin, timeidx, units="k",  
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
@@ -596,9 +593,6 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     ght = get_height(wrfin, timeidx, msl=True, units="m", 
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
-    ht_agl = get_height(wrfin, timeidx, msl=False, units="m",
-                        method=method, squeeze=squeeze, cache=cache,
-                        meta=False, _key=_key)
     
     smsfp = _smooth2d(sfp, 3)        
 
@@ -613,10 +607,18 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         vcord_array = np.exp(-ght/sclht)
         
     elif vert_coord == "ght_agl":
+        ht_agl = get_height(wrfin, timeidx, msl=False, units="m",
+                        method=method, squeeze=squeeze, cache=cache,
+                        meta=False, _key=_key)
+        
         vcor = 3
         vcord_array = np.exp(-ht_agl/sclht)
     
     elif vert_coord in ("theta", "th"):
+        t = get_theta(wrfin, timeidx,  units="k", 
+                  method=method, squeeze=squeeze, cache=cache, 
+                  meta=False, _key=_key)
+        
         vcor = 4
         idir = 1
         icorsw = 0
