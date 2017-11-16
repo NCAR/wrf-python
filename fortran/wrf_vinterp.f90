@@ -184,14 +184,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
         cvcord = 't'
     END IF
 
-    !$OMP PARALLEL DO COLLAPSE(2)
-    DO j = 1,ns
-        DO i = 1,ew
-            tempout(i,j) = rmsg
-        END DO
-    END DO
-    !$OMP END PARALLEL DO
-
     DO nreqlvs = 1,numlevels
         IF (cvcord .EQ. 'z') THEN
             ! Convert rlevel to meters from km
@@ -211,6 +203,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
         !$OMP vt, tlev, gammam, e, tlcl) REDUCTION (+:log_errcnt, interp_errcnt)
         DO j=1,ns
             DO i=1,ew
+                tempout(i,j) = rmsg
                 ! Get the interpolated value that is within the model domain
                 ifound = 0
                 DO k = 1,nz-1
@@ -410,8 +403,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
             END DO
         END DO
         !$OMP END PARALLEL DO
-
-
 
         IF (log_errcnt > 0) THEN
             errstat = ALGERR
