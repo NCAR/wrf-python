@@ -20,24 +20,24 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
 !NCLEND
 
-    INTEGER :: i, j, k, k300
+    INTEGER :: i, j, k, ripk, k300
 
-    !$OMP PARALLEL DO COLLAPSE(2)
+    k300 = 1 ! removes the warning
+
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, ripk) FIRSTPRIVATE(k300)
     DO j=1,ns
         DO i=1,ew
-
             IF (icorsw .EQ. 1 .AND. cor(i,j) .LT. 0.) THEN
                 DO k=1,nz
                     in(i,j,k) = -in(i,j,k)
                 END DO
             END IF
 
-            k300 = nz
-
             ! First find k index that is at or below (height-wise)
             ! the 300 hPa level.
-            DO k = nz,1,-1
-                IF (lvprs(i,j,k) .GE. 300.D0) THEN
+            DO k = 1,nz
+                ripk = nz-k+1
+                IF (lvprs(i,j,k) .LE. 300.D0) THEN
                     k300 = k
                     EXIT
                 END IF
