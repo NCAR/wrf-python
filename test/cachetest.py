@@ -2,7 +2,10 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from threading import Thread
-from Queue import Queue
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
 from collections import OrderedDict
 
 import unittest as ut

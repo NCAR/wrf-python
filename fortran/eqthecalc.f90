@@ -32,8 +32,7 @@ SUBROUTINE DEQTHECALC(qvp, tmk, prs, eth, miy, mjx, mkzh)
     REAL(KIND=8) :: tlcl
     INTEGER :: i, j, k
 
-    ! Note:  removing temporaries did not improve performance for this algorithm.
-    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,k,q,t,p,e,tlcl)
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, q, t, p, e, tlcl)
     DO k = 1,mkzh
         DO j = 1,mjx
             DO i = 1,miy

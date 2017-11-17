@@ -209,11 +209,30 @@ def _generator_copy(gen):
     module = getmodule(gen.gi_frame)
     
     if module is not None:
-        res = module.get(funcname)(**argvals.locals)
+        try:
+            try:
+                argd = {key:argvals.locals[key] for key in argvals.args}
+                res = module.get(funcname)(**argd)
+            except AttributeError:
+                res = getattr(module, funcname)(**argd)
+        except:
+            # This is the old way it used to work, but it looks like this was
+            # fixed by Python.  
+            try:
+                res = module.get(funcname)(**argvals.locals)
+            except AttributeError:
+                res = getattr(module, funcname)(**argvals.locals)    
     else:
         # Created in jupyter or the python interpreter
         import __main__
-        res = getattr(__main__, funcname)(**argvals.locals)
+        
+        try:
+            argd = {key:argvals.locals[key] for key in argvals.args}
+            res = getattr(__main__, funcname)(**argd)
+        except:
+            # This was the old way it used to work, but appears to have 
+            # been fixed by Python.
+            res = getattr(__main__, funcname)(**argvals.locals)
         
     return res
 
@@ -2583,26 +2602,6 @@ def get_proj_params(wrfin):#, timeidx=0, varname=None):
                                                 "DX", "DY"))
     
     return proj_params
-#     multitime = is_multi_time_req(timeidx)
-#     if not multitime:
-#         time_idx_or_slice = timeidx
-#     else:
-#         time_idx_or_slice = slice(None)
-#     
-#     if varname is not None:
-#         if not is_coordvar(varname):
-#             coord_names = getattr(wrfin.variables[varname], 
-#                                   "coordinates").split()
-#             lon_coord = coord_names[0]
-#             lat_coord = coord_names[1]
-#         else:
-#             lat_coord, lon_coord = get_coord_pairs(varname)
-#     else:
-#         lat_coord, lon_coord = latlon_coordvars(wrfin.variables)
-#     
-#     return (wrfin.variables[lat_coord][time_idx_or_slice,:],
-#             wrfin.variables[lon_coord][time_idx_or_slice,:],
-#             proj_params)
         
 
 def from_args(func, argnames, *args, **kwargs):
@@ -2936,17 +2935,30 @@ def psafilepath():
     return os.path.join(os.path.dirname(__file__), "data", "psadilookup.dat")
 
 
-def get_id(obj):
-    """Return the object id.
+def get_filepath(obj):
     
-    The object id is used as a caching key for various routines.  If the
+    try:
+        path = obj.filepath()
+    except AttributeError:
+        try:
+            path = obj.file.path
+        except:
+            raise ValueError("file contains no path information")
+    
+    return path
+
+def get_id(obj, prefix=''):
+    """Return the cache id.
+    
+    The cache id is used as a caching key for various routines. If the
     object type is a mapping, then the result will also be a 
-    mapping of each key to the object id for the value.  Otherwise, only the 
-    object id is returned.
+    mapping of each key to the object id for the value.
     
     Args:
     
         obj (:obj:`object`): Any object type.
+        
+        prefix (:obj:`str`): A string to help with recursive calls.
         
     Returns:
     
@@ -2955,12 +2967,18 @@ def get_id(obj):
         key to the object id for the value is returned.
     
     """
+    if not is_multi_file(obj):
+        return hash(prefix + get_filepath(obj))
+    
+    # For sequences, the hashing string will be the list ID and the 
+    # path for the first file in the sequence
     if not is_mapping(obj):
-        return id(obj)
+        _next = next(iter(obj))
+        return get_id(_next, prefix + str(id(obj)))
     
     # For each key in the mapping, recursively call get_id until
     # until a non-mapping is found
-    return {key : get_id(val) for key,val in viewitems(obj)}
+    return {key : get_id(val, prefix) for key,val in viewitems(obj)}
 
 
 def geo_bounds(var=None, wrfin=None, varname=None, timeidx=0, method="cat",
