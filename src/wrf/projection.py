@@ -787,7 +787,7 @@ class PolarStereographic(WrfProj):
         return _pyngl
     
     
-    def _basemap(self, **kwargs):
+    def _basemap(self, geobounds, **kwargs):
         if not basemap_enabled():
             return None
         
