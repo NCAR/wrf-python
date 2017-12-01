@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 
 from .py3compat import viewitems
-from wrf._wrffortran import wrf_constants
+from wrf._wrffortran import wrf_constants, omp_constants
 
 #: Indicates that all times should be used in a diagnostic routine.
 ALL_TIMES = None
@@ -14,6 +14,12 @@ class Constants(object):
     
 for key,val in viewitems(wrf_constants.__dict__):
     setattr(Constants, key.upper(), np.asscalar(val))
+
+setattr(Constants, "OMP_SCHED_STATIC", omp_constants.fomp_sched_static)
+setattr(Constants, "OMP_SCHED_DYNAMIC", omp_constants.fomp_sched_dynamic)
+setattr(Constants, "OMP_SCHED_GUIDED", omp_constants.fomp_sched_guided)
+setattr(Constants, "OMP_SCHED_AUTO", omp_constants.fomp_sched_auto)
+
 
 class ConversionFactors(object):
     PA_TO_HPA = .01
@@ -29,6 +35,7 @@ class ConversionFactors(object):
     M_TO_FT = 3.28084
     M_TO_MILES = .000621371
     
+
 class ProjectionTypes(object):
     ZERO = 0
     LAMBERT_CONFORMAL = 1

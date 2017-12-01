@@ -12,7 +12,23 @@ from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeabsvort, dlltoij, dijtoll, deqthecalc,
                           omgcalc, virtual_temp, wetbulbcalc, dcomputepw,
                           wrf_monotonic, wrf_vintrp, dcomputewspd, 
-                          dcomputewdir)
+                          dcomputewdir,
+                          fomp_set_num_threads, fomp_get_num_threads, 
+                          fomp_get_max_threads, fomp_get_thread_num,
+                          fomp_get_num_procs, fomp_in_parallel, 
+                          fomp_set_dynamic, fomp_get_dynamic, fomp_set_nested,
+                          fomp_get_nested, fomp_set_schedule, 
+                          fomp_get_schedule, fomp_get_thread_limit, 
+                          fomp_set_max_active_levels, 
+                          fomp_get_max_active_levels, fomp_get_level,
+                          fomp_get_ancestor_thread_num, fomp_get_team_size,
+                          fomp_get_active_level, fomp_in_final,
+                          fomp_init_lock, fomp_init_nest_lock,
+                          fomp_destroy_lock, fomp_destroy_nest_lock,
+                          fomp_set_lock, fomp_set_nest_lock,
+                          fomp_unset_lock, fomp_unset_nest_lock,
+                          fomp_test_lock, fomp_test_nest_lock,
+                          fomp_get_wtime, fomp_get_wtick)
 
 from .decorators import (left_iteration, cast_type, 
                          extract_and_transpose, check_args)
@@ -908,5 +924,136 @@ def _wdir(u, v, outview=None):
                           v)
     
     return result
+
+
+# OpenMP wrappers
+
+def omp_set_num_threads(num_threads):
+    fomp_set_num_threads(num_threads)
+
+
+def omp_get_num_threads():
+    return fomp_get_num_threads()
+
+
+def omp_get_max_threads():
+    return fomp_get_max_threads()
+
+
+def omp_get_thread_num():
+    return fomp_get_thread_num()
+                          
+                          
+def omp_get_num_procs():
+    return fomp_get_num_procs()
+
+
+def omp_in_parallel():
+    return fomp_in_parallel()
+
+
+def omp_set_dynamic(dynamic_threads):
+    fomp_set_dynamic(dynamic_threads)
+
+
+def omp_get_dynamic():
+    return fomp_get_dynamic()
+
+
+def omp_set_nested(nested):
+    fomp_set_nested(nested)
+
+
+def omp_get_nested():
+    return fomp_get_nested()
+
+
+def omp_set_schedule(kind, modifier):
+    fomp_set_schedule(kind, modifier) 
+
+
+def omp_get_schedule():
+    return fomp_get_schedule()
+
+
+def omp_get_thread_limit(): 
+    return fomp_get_thread_limit()
+
+
+def omp_set_max_active_levels(max_levels):
+    omp_set_max_active_levels(max_levels) 
+
+
+def omp_get_max_active_levels():
+    return fomp_get_max_active_levels()
+
+
+def omp_get_level():
+    return fomp_get_level()
+   
+                          
+def omp_get_ancestor_thread_num(level):
+    return fomp_get_ancestor_thread_num(level)
+
+
+def omp_get_team_size(level):
+    return fomp_get_team_size(level)
+
+
+def omp_get_active_level():
+    return fomp_get_active_level() 
+
+
+def omp_in_final():
+    return fomp_in_final()
+
+
+def omp_init_lock():
+    return fomp_init_lock()
+
+
+def omp_init_nest_lock():
+    return fomp_init_nest_lock()
+
+
+def omp_destroy_lock(svar):
+    fomp_destroy_lock(svar)
+
+
+def omp_destroy_nest_lock(nvar):
+    fomp_destroy_nest_lock(nvar)
+
+
+def omp_set_lock(svar):
+    fomp_set_lock(svar)
+
+
+def omp_set_nest_lock(nvar):
+    fomp_set_nest_lock(nvar)
+
+
+def omp_unset_lock(svar):
+    fomp_unset_lock(svar)
+
+
+def omp_unset_nest_lock(nvar):
+    fomp_unset_nest_lock(nvar)
+    
+
+def omp_test_lock(svar):
+    return fomp_test_lock(svar)
+
+
+def omp_test_nest_lock(nvar):
+    return fomp_test_nest_lock(nvar)
+
+
+def omp_get_wtime():
+    return fomp_get_wtime()
+
+
+def omp_get_wtick():
+    return fomp_get_wtick()
+
     
 

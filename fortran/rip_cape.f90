@@ -40,7 +40,6 @@ REAL(KIND=8) FUNCTION TONPSADIABAT(thte, prs, psadithte, psadiprs, psaditmk, gam
 !!$OMP DECLARE SIMD (TONPSADIABAT)
 !!uniform(thte,prs,psadithte,psadiprs,psaditmk)
     !f2py threadsafe
-    !f2py intent(in,out) :: cape, cin
 
     IMPLICIT NONE
     REAL(KIND=8), INTENT(IN) :: thte

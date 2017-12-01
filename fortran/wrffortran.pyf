@@ -33,6 +33,161 @@ python module _wrffortran ! in
             integer, optional,intent(in),check(shape(qvp,1)==mjx),depend(qvp) :: mjx=shape(qvp,1)
             integer, optional,intent(in),check(shape(qvp,2)==mkzh),depend(qvp) :: mkzh=shape(qvp,2)
         end subroutine deqthecalc
+        module omp_constants ! in :_wrffortran:omp.f90
+            integer, parameter,optional :: fomp_nest_lock_kind=8
+            integer(kind=4), parameter,optional :: fomp_sched_dynamic=2
+            integer(kind=4), parameter,optional :: fomp_sched_guided=3
+            integer, parameter,optional :: fomp_sched_kind=4
+            integer(kind=4), parameter,optional :: fomp_sched_static=1
+            integer, parameter,optional :: fomp_lock_kind=4
+            integer(kind=4), parameter,optional :: fomp_sched_auto=4
+        end module omp_constants
+        subroutine fomp_set_num_threads(num_threads) ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer intent(in) :: num_threads
+        end subroutine fomp_set_num_threads
+        function fomp_get_num_threads() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_num_threads
+        end function fomp_get_num_threads
+        function fomp_get_max_threads() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_max_threads
+        end function fomp_get_max_threads
+        function fomp_get_thread_num() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_thread_num
+        end function fomp_get_thread_num
+        function fomp_get_num_procs() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_num_procs
+        end function fomp_get_num_procs
+        function fomp_in_parallel() ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical :: fomp_in_parallel
+        end function fomp_in_parallel
+        subroutine fomp_set_dynamic(dynamic_threads) ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical intent(in) :: dynamic_threads
+        end subroutine fomp_set_dynamic
+        function fomp_get_dynamic() ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical :: fomp_get_dynamic
+        end function fomp_get_dynamic
+        subroutine fomp_set_nested(nested) ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical intent(in) :: nested
+        end subroutine fomp_set_nested
+        function fomp_get_nested() ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical :: fomp_get_nested
+        end function fomp_get_nested
+        subroutine fomp_set_schedule(kind,modifier) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_sched_kind
+            integer(kind=4) intent(in) :: kind
+            integer intent(in) :: modifier
+        end subroutine fomp_set_schedule
+        subroutine fomp_get_schedule(kind,modifier) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_sched_kind
+            integer(kind=4) intent(out) :: kind
+            integer intent(out) :: modifier
+        end subroutine fomp_get_schedule
+        function fomp_get_thread_limit() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_thread_limit
+        end function fomp_get_thread_limit
+        subroutine fomp_set_max_active_levels(max_levels) ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer intent(in) :: max_levels
+        end subroutine fomp_set_max_active_levels
+        function fomp_get_max_active_levels() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_max_active_levels
+        end function fomp_get_max_active_levels
+        function fomp_get_level() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_level
+        end function fomp_get_level
+        function fomp_get_ancestor_thread_num(level) ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer intent(in) :: level
+            integer :: fomp_get_ancestor_thread_num
+        end function fomp_get_ancestor_thread_num
+        function fomp_get_team_size(level) ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer intent(in) :: level
+            integer :: fomp_get_team_size
+        end function fomp_get_team_size
+        function fomp_get_active_level() ! in :_wrffortran:omp.f90
+            threadsafe 
+            integer :: fomp_get_active_level
+        end function fomp_get_active_level
+        function fomp_in_final() ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical :: fomp_in_final
+        end function fomp_in_final
+        subroutine fomp_init_lock(svar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_lock_kind
+            integer(kind=4) intent(out) :: svar
+        end subroutine fomp_init_lock
+        subroutine fomp_init_nest_lock(nvar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_nest_lock_kind
+            integer(kind=8) intent(out) :: nvar
+        end subroutine fomp_init_nest_lock
+        subroutine fomp_destroy_lock(svar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_lock_kind
+            integer(kind=4) intent(inout) :: svar
+        end subroutine fomp_destroy_lock
+        subroutine fomp_destroy_nest_lock(nvar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_nest_lock_kind
+            integer(kind=8) intent(inout) :: nvar
+        end subroutine fomp_destroy_nest_lock
+        subroutine fomp_set_lock(svar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_lock_kind
+            integer(kind=4) intent(inout) :: svar
+        end subroutine fomp_set_lock
+        subroutine fomp_set_nest_lock(nvar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_nest_lock_kind
+            integer(kind=8) intent(inout) :: nvar
+        end subroutine fomp_set_nest_lock
+        subroutine fomp_unset_lock(svar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_lock_kind
+            integer(kind=4) intent(inout) :: svar
+        end subroutine fomp_unset_lock
+        subroutine fomp_unset_nest_lock(nvar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_nest_lock_kind
+            integer(kind=8) intent(inout) :: nvar
+        end subroutine fomp_unset_nest_lock
+        function fomp_test_lock(svar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_lock_kind
+            integer(kind=4) intent(inout) :: svar
+            logical :: fomp_test_lock
+        end function fomp_test_lock
+        function fomp_test_nest_lock(nvar) ! in :_wrffortran:omp.f90
+            threadsafe 
+            use omp_constants, only: fomp_nest_lock_kind
+            integer(kind=8) intent(inout) :: nvar
+            integer :: fomp_test_nest_lock
+        end function fomp_test_nest_lock
+        function fomp_get_wtime() ! in :_wrffortran:omp.f90
+            threadsafe 
+            real(kind=8) :: fomp_get_wtime
+        end function fomp_get_wtime
+        function fomp_get_wtick() ! in :_wrffortran:omp.f90
+            threadsafe 
+            real(kind=8) :: fomp_get_wtick
+        end function fomp_get_wtick
         function tvirtual(temp,ratmix) ! in :_wrffortran:rip_cape.f90
             threadsafe 
             use wrf_constants, only: eps
