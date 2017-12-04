@@ -929,34 +929,187 @@ def _wdir(u, v, outview=None):
 # OpenMP wrappers
 
 def omp_set_num_threads(num_threads):
+    """Specify the number of threads to use.
+    
+    The omp_set_num_threads routine affects the number of threads to be used 
+    for subsequent parallel regions that do not specify a num_threads 
+    clause, by setting the value of the first element of the nthreads-var 
+    ICV of the current task.
+    
+    Args:
+    
+        num_threads (a positive :obj:`int`): The number of threads.  Must be 
+            positive.
+    
+    Returns:
+    
+        None.
+        
+    """
+    if num_threads < 0:
+        raise ValueError("'num_threads' must be a positive integer.")
+    
     fomp_set_num_threads(num_threads)
 
 
 def omp_get_num_threads():
+    """Return the number of threads in the current team.
+    
+    The omp_get_num_threads routine returns the number of threads in the 
+    team executing the parallel region to which the routine region binds. 
+    If called from the sequential part of a program, this routine returns 1.
+    
+    Note:
+    
+        This function always returns 1 when called from within Python.
+    
+    Returns:
+    
+        :obj:`int`: The number of threads in the current team.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_max_threads`, :meth:`wrf.omp_set_num_threads`
+        
+    """
     return fomp_get_num_threads()
 
 
 def omp_get_max_threads():
+    """Return the maximum number of threads that can be used in a parallel
+    region.
+    
+    The omp_get_max_threads routine returns an upper bound on the number of 
+    threads that could be used to form a new team if a parallel construct 
+    without a num_threads clause were encountered after execution returns from 
+    this routine.
+    
+    Returns:
+    
+        :obj:`int`: The number of threads in the current team.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_num_threads`
+        
+    """
     return fomp_get_max_threads()
 
 
 def omp_get_thread_num():
+    """Return the thread number, within the current team, of the 
+    calling thread.
+    
+    The omp_get_thread_num routine returns the thread number of the calling 
+    thread, within the team executing the parallel region to which the routine 
+    region binds. The thread number is an integer between 0 and one less than 
+    the value returned by omp_get_num_threads, inclusive. The thread number of 
+    the master thread of the team is 0. The routine returns 0 if it is called 
+    from the sequential part of a program.
+    
+    Note:
+    
+        This function always returns 0 when called from within Python.
+    
+    Returns:
+    
+        :obj:`int`: The thread number.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_num_procs`
+        
+    """
     return fomp_get_thread_num()
                           
                           
 def omp_get_num_procs():
+    """Return the number of processors on the device.
+    
+    The omp_get_num_procs routine returns the number of processors that are 
+    available to the device at the time the routine is called. This value may 
+    change between the time that it is determined by the omp_get_num_procs 
+    routine and the time that it is read in the calling context due to system 
+    actions outside the control of the OpenMP implementation.
+    
+    Returns:
+    
+        :obj:`int`: The number of processors.
+        
+    """
     return fomp_get_num_procs()
 
 
 def omp_in_parallel():
+    """Returns 1 if the active-levels-var ICV is greater than zero; otherwise, 
+    it returns 0.
+    
+    The effect of the omp_in_parallel routine is to return 1 if the current 
+    task is enclosed by an active parallel region, and the parallel region is 
+    enclosed by the outermost initial task region on the device; otherwise it 
+    returns 0.
+    
+    Note:
+    
+        This function always returns 0 when called from within Python.
+    
+    Returns:
+    
+        :obj:`int`: Returns 1 if the active-levels-var ICV is greater than 
+        zero.  Otherwise, it returns 0.
+        
+    """
     return fomp_in_parallel()
 
 
 def omp_set_dynamic(dynamic_threads):
+    """Enables or disables dynamic adjustment of the number of threads 
+    available for the execution of subsequent parallel regions by setting the 
+    value of the dyn-var ICV.
+    
+    For implementations that support dynamic adjustment of the number of 
+    threads, if the argument to omp_set_dynamic evaluates to True, dynamic 
+    adjustment is enabled for the current task; otherwise, dynamic adjustment 
+    is disabled for the current task. For implementations that do not support 
+    dynamic adjustment of the number of threads this routine has no effect: 
+    the value of dyn-var remains false.
+    
+    Args:
+    
+        dynamic_threads (:obj:`bool`): Set to True to support the dynamic 
+            adjustment of the number of threads.  Otherwise, set to False.
+    
+    Returns:
+    
+        None.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_dynamic`
+        
+    """
     fomp_set_dynamic(dynamic_threads)
 
 
 def omp_get_dynamic():
+    """Returns the value of the dyn-var ICV, which determines whether
+    dynamic adjustment of the number of threads is enabled or disabled.
+    
+    This routine returns 1 if dynamic adjustment of the number of threads 
+    is enabled for the current task; it returns 0, otherwise. If an 
+    implementation does not support dynamic adjustment of the 
+    number of threads, then this routine always returns false.
+    
+    Returns:
+    
+        :obj:`int`: Returns 1 if dynamic thread adjustment is enabled, 0 
+        if disabled.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_dynamic`
+        
+    """
     return fomp_get_dynamic()
 
 
@@ -981,7 +1134,7 @@ def omp_get_thread_limit():
 
 
 def omp_set_max_active_levels(max_levels):
-    omp_set_max_active_levels(max_levels) 
+    fomp_set_max_active_levels(max_levels) 
 
 
 def omp_get_max_active_levels():
