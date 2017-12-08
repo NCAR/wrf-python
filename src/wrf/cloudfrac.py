@@ -1,19 +1,21 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .constants import Constants
+import numpy as np
+import numpy.ma as ma
+
+from .constants import Constants, default_fill
 from .extension import _tk, _rh, _cloudfrac
 from .metadecorators import set_cloudfrac_metadata
 from .util import extract_vars
 from .geoht import _get_geoht
 
-import numpy.ma as ma
 
 @set_cloudfrac_metadata()
 def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True, 
                  cache=None, meta=True, _key=None,
                  vert_type="pres", low_thresh=None, mid_thresh=None, 
-                 high_thresh=None, missing=Constants.DEFAULT_FILL):
+                 high_thresh=None, missing=default_fill(np.float64)):
     """Return the cloud fraction for low, mid, and high level clouds.
     
     The leftmost dimension of the returned array represents three different 

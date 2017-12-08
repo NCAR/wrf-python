@@ -7,7 +7,7 @@ import wrapt
 
 from .util import iter_left_indexes, to_np
 from .config import xarray_enabled
-from .constants import Constants
+from .constants import default_fill
 
 if xarray_enabled():
     from xarray import DataArray
@@ -74,12 +74,12 @@ def uvmet_left_iter(alg_dtype=np.float64):
             
         v_arr = to_np(v)
           
-        umissing = Constants.DEFAULT_FILL  
+        umissing = default_fill(np.float64)  
         if isinstance(u_arr, np.ma.MaskedArray):
             has_missing = True
             umissing = u_arr.fill_value
         
-        vmissing = Constants.DEFAULT_FILL 
+        vmissing = default_fill(np.float64) 
         if isinstance(v_arr, np.ma.MaskedArray):
             has_missing = True
             vmissing = v_arr.fill_value
@@ -452,7 +452,7 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
         output = np.empty(output_dims, orig_dtype)
         
         has_missing = False
-        missing = Constants.DEFAULT_FILL
+        missing = default_fill(np.float64)
         for left_idxs in iter_left_indexes(extra_dims):
             left_and_slice_idxs = left_idxs + (slice(None),)
             low_idxs = left_idxs + (0, slice(None))

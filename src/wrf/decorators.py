@@ -11,7 +11,7 @@ from .units import do_conversion, check_units, dealias_and_clean_unit
 from .util import iter_left_indexes, from_args, to_np, combine_dims
 from .py3compat import viewitems, viewvalues, isstr
 from .config import xarray_enabled
-from .constants import Constants
+from .constants import default_fill
 
 if xarray_enabled():
     from xarray import DataArray
@@ -201,7 +201,7 @@ def left_iteration(ref_var_expected_dims,
                     if all_masked:
                         for output in viewvalues(outd):
                             output[left_and_slice_idxs] = (
-                                Constants.DEFAULT_FILL)
+                                default_fill(np.float64))
                         skip_missing = True
                         mask_output = True
                         break
@@ -240,9 +240,9 @@ def left_iteration(ref_var_expected_dims,
         # Mostly when used with join
         if mask_output:
             if isinstance(output, np.ndarray):
-                output = ma.masked_values(output, Constants.DEFAULT_FILL)
+                output = ma.masked_values(output, default_fill(np.float64))
             else:
-                output = tuple(ma.masked_values(arr, Constants.DEFAULT_FILL) 
+                output = tuple(ma.masked_values(arr, default_fill(np.float64)) 
                                for arr in output)
         
         return output

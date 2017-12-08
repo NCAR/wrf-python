@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as np
 
-from .constants import Constants
+from .constants import Constants, default_fill
 
 from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeseaprs, dfilter2d, dcomputerh, dcomputeuvmet,
@@ -381,8 +381,8 @@ def _eth(qv, tk, p, outview=None):
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False, 
-           umissing=Constants.DEFAULT_FILL, vmissing=Constants.DEFAULT_FILL, 
-           uvmetmissing=Constants.DEFAULT_FILL, outview=None):
+           umissing=default_fill(np.float64), vmissing=default_fill(np.float64), 
+           uvmetmissing=default_fill(np.float64), outview=None):
     """Wrapper for dcomputeuvmet.
     
     Located in wrf_user.f90.
@@ -795,7 +795,7 @@ def _smooth2d(field, passes, outview=None):
     if isinstance(field, np.ma.MaskedArray):
         missing = field.fill_value
     else:
-        missing = Constants.DEFAULT_FILL
+        missing = default_fill(np.float64)
     
     if outview is None:
         outview = field.copy(order="A")

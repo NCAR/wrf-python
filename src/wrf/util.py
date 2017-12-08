@@ -30,7 +30,7 @@ import numpy as np
 import numpy.ma as ma
 
 from .config import xarray_enabled
-from .constants import Constants, ALL_TIMES
+from .constants import default_fill, ALL_TIMES
 from .py3compat import (viewitems, viewkeys, isstr, py3range, ucode)
 from .cache import cache_item, get_cached_item
 from .geobnds import GeoBounds, NullGeoBounds
@@ -39,7 +39,6 @@ from .projection import getproj
 
 if xarray_enabled():
     from xarray import DataArray
-    from pandas import NaT
 
 
 _COORD_PAIR_MAP = {"XLAT" : ("XLAT", "XLONG"),
@@ -1097,6 +1096,7 @@ def _find_max_time_size(wrfseq):
     
     return max_times
 
+
 def _get_coord_names(wrfin, varname):
     
     # Need only the first real file
@@ -1219,16 +1219,29 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
     multitime = is_multi_time_req(timeidx)
     time_idx_or_slice = timeidx if not multitime else slice(None)
     var = wrfnc.variables[varname]
-    data = var[time_idx_or_slice, :]
+    if len(var.shape) > 1:
+        data = var[time_idx_or_slice, :]
+    else:
+        data = var[time_idx_or_slice]
     
     # Want to preserve the time dimension
     if not multitime:
-        data = data[np.newaxis, :]
+        if len(var.shape) > 1:
+            data = data[np.newaxis, :]
+        else:
+            data = data[np.newaxis]
     
     attrs = OrderedDict(var.__dict__)
     dimnames = var.dimensions[-data.ndim:]
     
-    lat_coord, lon_coord, time_coord = _get_coord_names(wrfnc, varname)
+    lat_coord = lon_coord = time_coord = None
+    
+    try:
+        if dimnames[-2] == "south_north" and dimnames[-1] == "west_east":
+            lat_coord, lon_coord, time_coord = _get_coord_names(wrfnc, varname)
+    except IndexError:
+        pass
+        
     
     coords = OrderedDict()
     
@@ -1307,10 +1320,9 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
                 coords[time_coord] = (lon_coord_dims[0], 
                                       [time_coord_vals[timeidx]])
         
-        proj_params = get_proj_params(wrfnc)
-        proj = getproj(**proj_params)
-        attrs["projection"] = proj
-        
+    proj_params = get_proj_params(wrfnc)
+    proj = getproj(**proj_params)
+    attrs["projection"] = proj
     
     if dimnames[0] == "Time":
         t = extract_times(wrfnc, timeidx, meta=False, do_xtime=False)
@@ -1374,8 +1386,13 @@ def _find_forward(wrfseq, varname, timeidx, is_moving, meta, _key):
                     return _build_data_array(wrfnc, varname, filetimeidx, 
                                              is_moving, True, _key)
                 else:
-                    result = wrfnc.variables[varname][filetimeidx, :]
-                    return result[np.newaxis, :]  # So that nosqueeze works
+                    var = wrfnc.variables[varname]
+                    if len(var.shape) > 1:
+                        result = var[filetimeidx, :]
+                        return result[np.newaxis, :]  # So that nosqueeze works
+                    else:
+                        result = var[filetimeidx]
+                        return result[np.newaxis]  # So that nosqueeze works
                 
             else:
                 comboidx += numtimes
@@ -1574,7 +1591,10 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
     startidx = 0
     endidx = numtimes
     
-    outdata[startidx:endidx, :] = first_var[:]
+    if first_var.ndim > 1:
+        outdata[startidx:endidx, :] = first_var[:]
+    else:
+        outdata[startidx:endidx] = first_var[:]
     
     if xarray_enabled() and meta:
         latname, lonname, timename = _find_coord_names(first_var.coords)
@@ -1633,7 +1653,10 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
                 
             endidx = startidx + numtimes
             
-            outdata[startidx:endidx, :] = vardata[:]
+            if vardata.ndim > 1:
+                outdata[startidx:endidx, :] = vardata[:]
+            else:
+                outdata[startidx:endidx] = vardata[:]
             
             if xarray_enabled() and meta:
                 if timename is not None and not timecached:
@@ -1795,7 +1818,8 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
     if xarray_enabled() and meta:
         first_var = _build_data_array(wrfnc, varname, ALL_TIMES, is_moving, 
                                       True, _key)
-        time_coord = np.full((numfiles, maxtimes), int(NaT), "datetime64[ns]")
+        time_coord = np.full((numfiles, maxtimes), np.datetime64("NaT"), 
+                             "datetime64[ns]")
         time_coord[file_idx, 0:numtimes] = first_var.coords["Time"][:]
     else:
         first_var = wrfnc.variables[varname][:]
@@ -1810,8 +1834,11 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
     outdims += first_var.shape[1:]
     
     # For join, always need to start with full masked values
-    outdata = np.full(outdims, Constants.DEFAULT_FILL, first_var.dtype)
-    outdata[file_idx, 0:numtimes, :] = first_var[:]
+    outdata = np.full(outdims, default_fill(first_var.dtype), first_var.dtype)
+    if first_var.ndim > 1:
+        outdata[file_idx, 0:numtimes, :] = first_var[:]
+    else:
+        outdata[file_idx, 0:numtimes] = first_var[:]
     
     # Create the secondary coordinate arrays
     if xarray_enabled() and meta:
@@ -1833,8 +1860,9 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
         if timename is not None:
             outxtimes = get_cached_item(_key, timekey)
             if outxtimes is None:
-                outxtimes = np.full(outdims[0:2], Constants.DEFAULT_FILL, 
-                                first_var.dtype)
+                outxtimes = np.full(outdims[0:2], 
+                                    default_fill(first_var.dtype), 
+                                    first_var.dtype)
                 outxtimes[file_idx, 0:numtimes] = first_var.coords[timename][:]
             else:
                 timecached = True
@@ -1843,8 +1871,9 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
             if latname is not None:
                 outlats = get_cached_item(_key, latkey)
                 if outlats is None:
-                    outlats = np.full(outcoorddims, Constants.DEFAULT_FILL, 
-                                  first_var.dtype)
+                    outlats = np.full(outcoorddims, 
+                                      default_fill(first_var.dtype), 
+                                      first_var.dtype)
                     outlats[file_idx, 0:numtimes, :] = (
                         first_var.coords[latname][:])
                 else:
@@ -1853,8 +1882,9 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
             if lonname is not None:
                 outlons = get_cached_item(_key, lonkey)
                 if outlons is None:
-                    outlons = np.full(outcoorddims, Constants.DEFAULT_FILL, 
-                                  first_var.dtype)
+                    outlons = np.full(outcoorddims, 
+                                      default_fill(first_var.dtype), 
+                                      first_var.dtype)
                     outlons[file_idx, 0:numtimes, :] = (
                         first_var.coords[lonname][:])
                 else:
@@ -1874,8 +1904,11 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
             
             if not multitime:
                 outvar = outvar[np.newaxis, :]
-                
-            outdata[file_idx, 0:numtimes, :] = outvar[:]
+            
+            if outvar.ndim > 1: 
+                outdata[file_idx, 0:numtimes, :] = outvar[:]
+            else:
+                outdata[file_idx, 0:numtimes] = outvar[:]
             
             if xarray_enabled() and meta:
                 # For join, the times are a function of fileidx
@@ -1904,7 +1937,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
     # then a mask array is needed to flag all the missing arrays with 
     # missing values
     if file_times_less_than_max:
-        outdata = np.ma.masked_values(outdata, Constants.DEFAULT_FILL)
+        outdata = np.ma.masked_values(outdata, default_fill(outdata.dtype))
         
     if xarray_enabled() and meta:
         # Cache the coords if applicable
@@ -1931,8 +1964,8 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
         outcoords["datetime"] = outdimnames[0:2], time_coord
         
         if isinstance(outdata, np.ma.MaskedArray):
-            outattrs["_FillValue"] = Constants.DEFAULT_FILL
-            outattrs["missing_value"] = Constants.DEFAULT_FILL
+            outattrs["_FillValue"] = default_fill(outdata.dtype)
+            outattrs["missing_value"] = default_fill(outdata.dtype)
             
         if timename is not None:
             outxtimes = outxtimes[:, time_idx_or_slice]
@@ -2378,15 +2411,35 @@ def extract_times(wrfin, timeidx, method="cat", squeeze=True, cache=None,
     else:
         wrf_list = wrfin
     
+    dt = "datetime64[ns]" if not do_xtime else np.float64
+    fill_value = (np.datetime64('NaT') if not do_xtime else 
+                  default_fill(np.float64))
+    
     try:
         if method.lower() == "cat":
             time_list = [file_time 
                          for wrf_file in wrf_list 
                          for file_time in _file_times(wrf_file, do_xtime)]
+            time_arr = np.asarray(time_list, dtype=dt)
+            
         elif method.lower() == "join":
             time_list = [[file_time 
                           for file_time in _file_times(wrf_file, do_xtime)]
-                         for wrf_file in wrf_list] 
+                         for wrf_file in wrf_list]
+            
+            num_rows = len(time_list)
+            num_cols = len(time_list[0])
+            
+            time_arr = np.full((num_rows, num_cols), fill_value, dtype=dt)
+            for i,row in enumerate(time_list):
+                if len(row) == num_cols:
+                    time_arr[i,:] = row[:]
+                else:
+                    for j,val in enumerate(row):
+                        time_arr[i,j] = val
+            
+            time_arr = ma.masked_values(time_arr, fill_value)
+            
         else:
             raise ValueError("invalid method argument '{}'".format(method))
     except KeyError:
@@ -2400,6 +2453,8 @@ def extract_times(wrfin, timeidx, method="cat", squeeze=True, cache=None,
             outdimnames = ["Time"]
         else:
             outdimnames = ["fileidx", "Time"]
+            outattrs["missing_value"] = fill_value
+            outattrs["_FillValue"] = fill_value
         
         if not do_xtime:
             outname = "times"
@@ -2412,11 +2467,12 @@ def extract_times(wrfin, timeidx, method="cat", squeeze=True, cache=None,
             
             outname = "XTIME"
         
-        outarr = DataArray(time_list, name=outname, coords=outcoords, 
+        
+        outarr = DataArray(time_arr, name=outname, coords=outcoords, 
                            dims=outdimnames, attrs=outattrs)
         
     else:
-        outarr = np.asarray(time_list, dtype="datetime64[ns]") 
+        outarr = time_arr
     
     if not multitime:
         return outarr[timeidx]

@@ -11,7 +11,7 @@ from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered, get_id, to_np
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
-from .constants import Constants, ConversionFactors
+from .constants import Constants, default_fill, ConversionFactors
 from .terrain import get_terrain
 from .geoht import get_height
 from .temp import get_theta, get_temp, get_eth
@@ -20,7 +20,7 @@ from .pressure import get_pressure
 
 #  Note:  Extension decorator is good enough to handle left dims
 @set_interp_metadata("horiz")
-def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL, 
+def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64), 
                 meta=True):
     """Return the three-dimensional field interpolated to a horizontal plane 
     at the specified vertical level.
@@ -40,7 +40,7 @@ def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
             Must be in the same units as the *vert* parameter.
         
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(numpy.float64)`.
         
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -90,7 +90,7 @@ def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
 
 
 @set_interp_metadata("cross")
-def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
+def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
               wrfin=None, timeidx=0, stagger=None, projection=None, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
@@ -133,7 +133,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             Default is None.
             
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(numpy.float64)`.
             
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
             iterable, optional): WRF-ARW NetCDF 
@@ -653,7 +653,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     if isinstance(field, ma.MaskedArray):
         missing = field.fill_value
     else:
-        missing = Constants.DEFAULT_FILL
+        missing = default_fill(np.float64)
     
     if (field.shape != p.shape):
         raise ValueError("'field' shape does not match other variable shapes. "
