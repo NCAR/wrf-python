@@ -28,6 +28,7 @@ def make_test(ncfiles, varname):
         t3 = getvar(ncfiles, varname, ALL_TIMES)
         t4 = getvar(ncfiles, varname, ALL_TIMES, meta=False)
         t5 = getvar(ncfiles, varname, ALL_TIMES, method="join")
+        t6 = getvar(ncfiles, varname, ALL_TIMES, method="join", meta=False)
         
     return test
         
