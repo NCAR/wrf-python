@@ -22,7 +22,8 @@ SUBROUTINE DCLOUDFRAC(pres, rh, lowc, midc, highc, nz, ns, ew)
     midc = 0
     highc = 0
 
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, kchi, kcmi, kclo)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, kchi, kcmi, kclo) &
+    !$OMP SCHEDULE(runtime)
     DO j = 1,ns
         DO i = 1,ew
             DO k = 1,nz-1
@@ -85,7 +86,8 @@ SUBROUTINE DCLOUDFRAC2(vert, rh, vert_inc_w_height, low_thresh, mid_thresh, &
     midc = 0
     highc = 0
 
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, kchi, kcmi, kclo)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, kchi, kcmi, kclo) &
+    !$OMP SCHEDULE(runtime)
     DO j = 1,ns
         DO i = 1,ew
             ! A value of -1 means 'not found'.  This is needed to handle

@@ -24,7 +24,7 @@ SUBROUTINE DCOMPUTEABSVORT(av, u, v, msfu, msfv, msft, cor, dx, dy, nx, ny, nz,&
     REAL(KIND=8) :: mm
 
     !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, jp1, jm1, ip1, im1, &
-    !$OMP dsx, dsy, mm, dudy, dvdx, avort)
+    !$OMP dsx, dsy, mm, dudy, dvdx, avort) SCHEDULE(runtime)
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx
@@ -82,7 +82,7 @@ SUBROUTINE DCOMPUTEPV(pv, u, v, theta, prs, msfu, msfv, msft, cor, dx, dy, nx, &
 
     !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, kp1, km1, jp1, jm1, ip1, &
     !$OMP im1, dsx, dsy, mm, dudy, dvdx, avort, &
-    !$OMP dp, dudp, dvdp, dthdp, dthdx, dthdy)
+    !$OMP dp, dudp, dvdp, dthdp, dthdx, dthdy) SCHEDULE(runtime)
     DO k = 1,nz
         DO J = 1,ny
             DO i = 1,nx

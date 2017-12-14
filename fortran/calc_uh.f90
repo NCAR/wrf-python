@@ -64,7 +64,7 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
 
     !$OMP PARALLEL
 
-    !$OMP DO COLLAPSE(3)
+    !$OMP DO COLLAPSE(3) SCHEDULE(runtime)
     DO k=2,nz-2
         DO j=2,ny-1
             DO i=2,nx-1
@@ -83,7 +83,7 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
     !  WRITE(6,'(a,f12.1,a,f12.1,a)') &
     !        'Calculating UH from ',uhmnhgt,' to ',uhmxhgt,' m AGL'
     !$OMP DO COLLAPSE(2) PRIVATE(i, j, k, zbot, ztop, kbot, ktop, &
-    !$OMP wgtlw, wbot, wtop, wsum, wmean, sum, helbot, heltop)
+    !$OMP wgtlw, wbot, wtop, wsum, wmean, sum, helbot, heltop) SCHEDULE(runtime)
     DO j=2,ny-2
         DO i=2,nx-2
             zbot = zp(i,j,2) + uhmnhgt

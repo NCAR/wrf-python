@@ -226,7 +226,7 @@ SUBROUTINE DPFCALC(prs, sfp, pf, mix, mjy, mkzh, ter_follow)
 
     INTEGER :: i,j,k
     
-    !$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO j = 1,mjy
         DO i = 1,mix
             DO k = 1,mkzh
@@ -353,7 +353,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !  calculated the pressure at full sigma levels (a set of pressure
     !  levels that bound the layers represented by the vertical grid points)
 
-    !$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO j = 1,mjy
         DO i = 1,mix
             DO k = 1,mkzh
@@ -382,7 +382,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
     !$OMP benaccum, zrel, kmax, dz, elfound, &
     !$OMP kel, klfc, &
-    !$OMP i, j, k, kpar)
+    !$OMP i, j, k, kpar) SCHEDULE(runtime)
     DO j = 1,mjy
         DO i = 1,mix
             cape(i,j,1) = 0.D0
@@ -679,7 +679,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !           kg/kg (should range from 0.000 to 0.025)
     !
 
-    !$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO j = 1,mjy
         DO i = 1,mix
             DO k = 1,mkzh
@@ -712,7 +712,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !$OMP benaccum, zrel, kmax, dz, elfound, &
     !$OMP kel, klfc, pavg, p2, p1, totthe, totqvp, totprs, &
     !$OMP i, j, k, kpar, kpar1, kpar2, qvppari, tmkpari,p, pup, pdn, q, th, &
-    !$OMP pp1, pp2, ethmax, eth_temp, klev)
+    !$OMP pp1, pp2, ethmax, eth_temp, klev) SCHEDULE(runtime)
     DO j = 1,mjy
         DO i = 1,mix
             cape(i,j,1) = 0.D0

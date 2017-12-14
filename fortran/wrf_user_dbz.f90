@@ -80,7 +80,7 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
     !$OMP PARALLEL
 
     !   Force all Q arrays to be 0.0 or greater.
-    !$OMP DO COLLAPSE(3)
+    !$OMP DO COLLAPSE(3) SCHEDULE(runtime)
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx
@@ -104,7 +104,7 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
     !   Input pressure is Pa, but we need hPa in calculations
 
     IF (sn0 .EQ. 0) THEN
-        !$OMP DO COLLAPSE(3)
+        !$OMP DO COLLAPSE(3) SCHEDULE(runtime)
         DO k = 1,nz
             DO j = 1,ny
                 DO i = 1,nx
@@ -125,7 +125,7 @@ SUBROUTINE CALCDBZ(prs, tmk, qvp, qra, qsn, qgr, sn0, ivarint, iliqskin, dbz, nx
 
     !$OMP DO COLLAPSE(3) PRIVATE(i, j, k, temp_c, virtual_t, gonv, ronv, sonv, &
     !$OMP factorb_g, factorb_s, rhoair, z_e) &
-    !$OMP FIRSTPRIVATE(factor_r, factor_s, factor_g)
+    !$OMP FIRSTPRIVATE(factor_r, factor_s, factor_g) SCHEDULE(runtime)
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx

@@ -79,7 +79,8 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
 
     !$OMP PARALLEL DO COLLAPSE(3) PRIVATE (i, j, k, jt, ip, q, t, p, e, tlcl, &
     !$OMP eth, fracip, fracip2, fracjt, fracjt2, l1, h1, mid1, rang1, l2, h2, &
-    !$OMP mid2, rang2, tonpsadiabat) REDUCTION(+:errcnt1, errcnt2)
+    !$OMP mid2, rang2, tonpsadiabat) REDUCTION(+:errcnt1, errcnt2) &
+    !$OMP SCHEDULE(runtime)
     DO k=1,nz
         DO j=1,ny
             DO i=1,nx
@@ -256,7 +257,7 @@ SUBROUTINE OMGCALC(qvp, tmk, www, prs, omg, mx, my, mz)
     INTEGER :: i, j, k
     !REAL(KIND=8), PARAMETER :: GRAV=9.81, RGAS=287.04, EPS=0.622
 
-    !$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO k=1,mz
         DO j=1,my
             DO i=1,mx
@@ -318,7 +319,7 @@ SUBROUTINE VIRTUAL_TEMP(temp, ratmix, tv, nx, ny, nz)
     INTEGER :: i,j,k
     !REAL(KIND=8),PARAMETER :: EPS = 0.622D0
 
-    !$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO k=1,nz
         DO j=1,ny
             DO i=1,nx

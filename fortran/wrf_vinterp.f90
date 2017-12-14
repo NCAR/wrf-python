@@ -22,7 +22,7 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
     INTEGER :: i, j, k, k300
 
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, k300)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, k300) SCHEDULE(runtime)
     DO j=1,ns
         DO i=1,ew
             k300 = -1
@@ -205,7 +205,8 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
         !$OMP vclhsl, vctophsl, diff, isign, plhsl, zlhsl, ezlhsl, tlhsl, &
         !$OMP zsurf, qvapor, psurf, psurfsm, ezsurf, plev, ezlev, zlev, &
         !$OMP ptarget, dpmin, kupper, pbot, zbot, pratio, tbotextrap, &
-        !$OMP vt, tlev, gammam, e, tlcl) REDUCTION (+:log_errcnt, interp_errcnt)
+        !$OMP vt, tlev, gammam, e, tlcl) REDUCTION (+:log_errcnt, interp_errcnt) &
+        !$OMP SCHEDULE(runtime)
         DO j=1,ns
             DO i=1,ew
                 tempout(i,j) = rmsg
@@ -421,7 +422,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
             RETURN
         END IF
 
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j = 1,ns
             DO i = 1,ew
                 dataout(i,j,nreqlvs) = tempout(i,j)

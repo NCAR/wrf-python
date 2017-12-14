@@ -32,7 +32,8 @@ SUBROUTINE DEQTHECALC(qvp, tmk, prs, eth, miy, mjx, mkzh)
     REAL(KIND=8) :: tlcl
     INTEGER :: i, j, k
 
-    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, q, t, p, e, tlcl)
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, q, t, p, e, tlcl) &
+    !$OMP SCHEDULE(runtime)
     DO k = 1,mkzh
         DO j = 1,mjx
             DO i = 1,miy

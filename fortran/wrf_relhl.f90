@@ -57,7 +57,7 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
     !REAL(KIND=8), PARAMETER :: DTR=PI/180.d0, DPR=180.d0/PI
 
     !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k,k10,k3,ktop, cu, cv, x, &
-    !$OMP sum, dh, sdh, su, sv, ua, va, asp, adr, bsp, bdr)
+    !$OMP sum, dh, sdh, su, sv, ua, va, asp, adr, bsp, bdr) SCHEDULE(runtime)
     DO j=1, mjx
         DO i=1, miy
             sdh = 0.D0

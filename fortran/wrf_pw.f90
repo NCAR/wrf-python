@@ -22,7 +22,7 @@ SUBROUTINE DCOMPUTEPW(p, tv, qv, ht, pw, nx, ny, nz, nzh)
     !$OMP PARALLEL
 
     DO k=1,nz
-        !$OMP DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i=1,nx
                 pw(i,j) = pw(i,j) + ((p(i,j,k)/(RD*tv(i,j,k)))*qv(i,j,k)*(ht(i,j,k+1) - ht(i,j,k)))

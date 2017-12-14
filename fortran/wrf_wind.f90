@@ -13,7 +13,7 @@ SUBROUTINE DCOMPUTEWSPD(wspd, u, v, nx, ny)
 
     INTEGER i, j
 
-    !$OMP PARALLEL DO COLLAPSE(2)
+    !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
             wspd(i,j) = SQRT(u(i,j)*u(i,j) + v(i,j)*v(i,j))
@@ -40,7 +40,7 @@ SUBROUTINE DCOMPUTEWDIR(wdir, u, v, nx, ny)
 
     INTEGER i, j
 
-    !$OMP PARALLEL DO COLLAPSE(2)
+    !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
             wdir(i,j) = MOD(270.0 - ATAN2(v(i,j), u(i,j)) * DEG_PER_RAD, 360.)

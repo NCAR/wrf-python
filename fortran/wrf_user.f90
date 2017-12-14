@@ -16,7 +16,7 @@ SUBROUTINE DCOMPUTEPI(pi, pressure, nx, ny, nz)
 
     !REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, R_D=287.D0, CP=7.D0*R_D/2.D0
 
-    !$OMP PARALLEL DO COLLAPSE(3)
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO k = 1,nz
         DO j = 1,ny
             DO i = 1,nx
@@ -50,7 +50,7 @@ SUBROUTINE DCOMPUTETK(tk, pressure, theta, nx)
 
     !REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, RD=287.D0, CP=7.D0*RD/2.D0
 
-    !$OMP PARALLEL DO
+    !$OMP PARALLEL DO SCHEDULE(runtime)
     DO i = 1,nx
         !pi = (pressure(i)/P1000MB)**(RD/CP)
         !tk(i) = pi * theta(i)
@@ -94,7 +94,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
     END IF
 
     !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,kp,dointerp,w1,w2) &
-    !$OMP FIRSTPRIVATE(ip,im)
+    !$OMP FIRSTPRIVATE(ip,im) SCHEDULE(runtime)
     DO i = 1,nx
         DO j = 1,ny
             ! Initialize to missing.  Was initially hard-coded to -999999.
@@ -200,7 +200,8 @@ SUBROUTINE DINTERP2DXY(v3d, v2d, xy, nx, ny, nz, nxy)
     INTEGER :: i, j, k, ij
     REAL(KIND=8) :: w11, w12, w21, w22, wx, wy
 
-    !$OMP PARALLEL DO PRIVATE(i,j,k,ij,w11,w12,w21,w22,wx,wy)
+    !$OMP PARALLEL DO PRIVATE(i,j,k,ij,w11,w12,w21,w22,wx,wy) &
+    !$OMP SCHEDULE(runtime)
     DO ij = 1,nxy
         i = MAX(1,MIN(nx-1,INT(xy(1,ij)+1)))
         j = MAX(1,MIN(ny-1,INT(xy(2,ij)+1)))
@@ -252,7 +253,8 @@ SUBROUTINE DINTERP1D(v_in, v_out, z_in, z_out, vmsg, nz_in, nz_out)
         im = 0
     END IF
 
-    !$OMP PARALLEL DO PRIVATE(kp, k, interp, height, w1, w2) FIRSTPRIVATE(ip, im)
+    !$OMP PARALLEL DO PRIVATE(kp, k, interp, height, w1, w2) &
+    !$OMP FIRSTPRIVATE(ip, im) SCHEDULE(runtime)
     DO k = 1,nz_out
         v_out(k) = vmsg
 
@@ -344,7 +346,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     bad_j = -1
     bad_sfp = -1
 
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k,found) REDUCTION(+:errcnt)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k,found) REDUCTION(+:errcnt) &
+    !$OMP SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
             level(i,j) = -1
@@ -382,7 +385,8 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     !     Get temperature PCONST Pa above surface.  Use this to extrapolate
     !     the temperature at the surface and down to sea level.
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,klo,khi) REDUCTION(+:errcnt)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,klo,khi) REDUCTION(+:errcnt) &
+    !$OMP SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
 
@@ -426,7 +430,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     ! temperatures are *too* hot.
 
     IF (ridiculous_mm5_test) THEN
-        !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(l1,l2,l3)
+        !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(l1,l2,l3) SCHEDULE(runtime)
         DO j = 1,ny
             DO i = 1,nx
                 l1 = t_sea_level(i,j) < TC
@@ -443,7 +447,7 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     END IF
 
     !     The grand finale: ta da!
-    !$OMP PARALLEL DO COLLAPSE(2)
+    !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
             !z_half_lowest = z(i,j,1)
@@ -492,7 +496,7 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
     INTEGER :: i, j, iter
 
     DO iter=1,it
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i = 1,nx
                 b(i,j) = a(i,j)
@@ -500,7 +504,7 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
         END DO
         !$OMP END PARALLEL DO
 
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
             DO i=1,nx
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -513,7 +517,7 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
         END DO
         !$OMP END PARALLEL DO
 
-        !$OMP PARALLEL DO COLLAPSE(2)
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -570,7 +574,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
     !$OMP PARALLEL
 
     DO iter=1,it
-        !$OMP DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i = 1,nx
                 b(i,j) = a(i,j)
@@ -578,7 +582,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
         END DO
         !$OMP END DO
 
-        !$OMP DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
             DO i=1,nx
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -591,7 +595,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
         END DO
         !$OMP END DO
 
-        !$OMP DO COLLAPSE(2)
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -645,7 +649,7 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
     INTEGER :: i
     REAL(KIND=8) :: qvs,es,pressure,temperature
 
-    !$OMP PARALLEL DO PRIVATE(qvs, es, pressure, temperature)
+    !$OMP PARALLEL DO PRIVATE(qvs, es, pressure, temperature) SCHEDULE(runtime)
     DO i = 1,nx
         pressure = p(i)
         temperature = t(i)
@@ -760,7 +764,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
 
     !$OMP PARALLEL
 
-    !$OMP DO COLLAPSE(2)
+    !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
 
@@ -789,7 +793,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
 
     IF (istag .EQ. 0) THEN ! Not staggered
         IF (.NOT. is_msg_val) THEN ! No missing values used
-            !$OMP DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
             DO j = 1,ny
                 DO i = 1,nx
                     uvmet(i,j,1) = v(i,j)*longcb(i,j) + u(i,j)*longca(i,j)
@@ -798,7 +802,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
             END DO
             !$OMP END DO
         ELSE ! Missing values used
-            !$OMP DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
             DO j = 1,ny
                 DO i = 1,nx
                     IF ((u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg)) THEN
@@ -814,7 +818,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
         END IF
     ELSE ! Staggered
         IF (.NOT. is_msg_val) THEN ! No missing values used
-            !$OMP DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
             DO j = 1,ny
                 DO i = 1,nx
                     ! This is the more readable version.
@@ -832,7 +836,7 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
             END DO
             !$OMP END DO
         ELSE ! Missing values used
-            !$OMP DO COLLAPSE(2)
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
             DO j = 1,ny
                 DO i = 1,nx
                     IF (u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg .AND. u(i+1,j) .NE. umsg .AND. v(i,j+1) .NE. vmsg) THEN
@@ -887,7 +891,7 @@ SUBROUTINE DCOMPUTETD(td, pressure, qv_in, nx)
 
     INTEGER :: i
 
-    !$OMP PARALLEL DO PRIVATE(i,qv,tdc)
+    !$OMP PARALLEL DO PRIVATE(i,qv,tdc) SCHEDULE(runtime)
     DO i = 1,nx
         qv = MAX(qv_in(i), 0.D0)
          ! vapor pressure
