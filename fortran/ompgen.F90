@@ -74,7 +74,10 @@ SUBROUTINE fomp_set_num_threads(num_threads)
 
 #ifdef _OPENMP
     CALL omp_set_num_threads(num_threads)
+#else
+    IF (.FALSE.) PRINT *, num_threads
 #endif
+
 
 END SUBROUTINE fomp_set_num_threads
 
@@ -192,6 +195,8 @@ SUBROUTINE fomp_set_dynamic(dynamic_threads)
 
 #ifdef _OPENMP
     CALL omp_set_dynamic(dynamic_threads)
+#else
+    IF (.FALSE.) PRINT *, dynamic_threads
 #endif
 
 END SUBROUTINE fomp_set_dynamic
@@ -230,6 +235,8 @@ SUBROUTINE fomp_set_nested(nested)
 
 #ifdef _OPENMP
     CALL omp_set_nested(nested)
+#else
+    IF (.FALSE.) PRINT *, nested
 #endif
 
 END SUBROUTINE fomp_set_nested
@@ -270,6 +277,8 @@ SUBROUTINE fomp_set_schedule(kind, modifier)
 
 #ifdef _OPENMP
     CALL omp_set_schedule(kind, modifier)
+#else
+    IF (.FALSE.) PRINT *, kind, modifier
 #endif
 
 END SUBROUTINE fomp_set_schedule
@@ -327,14 +336,12 @@ SUBROUTINE fomp_set_max_active_levels(max_levels)
 
     !f2py threadsafe
 
-#ifdef _OPENMP
     INTEGER, INTENT(IN) :: max_levels
-#else
-    INTEGER, INTENT(IN) :: max_levels
-#endif
 
 #ifdef _OPENMP
     CALL omp_set_max_active_levels(max_levels)
+#else
+    IF (.FALSE.) PRINT *, max_levels
 #endif
 
 END SUBROUTINE fomp_set_max_active_levels
@@ -395,6 +402,7 @@ FUNCTION fomp_get_ancestor_thread_num(level)
 #ifdef _OPENMP
     fomp_get_ancestor_thread_num = omp_get_ancestor_thread_num(level)
 #else
+    IF (.FALSE.) PRINT *, level
     fomp_get_ancestor_thread_num = -1
 #endif
 
@@ -416,6 +424,7 @@ FUNCTION fomp_get_team_size(level)
 #ifdef _OPENMP
     fomp_get_team_size = omp_get_team_size(level)
 #else
+    IF (.FALSE.) PRINT *, level
     fomp_get_team_size = -1
 #endif
 
@@ -518,7 +527,10 @@ SUBROUTINE fomp_destroy_lock(svar)
 
 #ifdef _OPENMP
     CALL omp_destroy_lock(svar)
+#else
+    IF (.FALSE.) PRINT *, svar
 #endif
+
 
 END SUBROUTINE fomp_destroy_lock
 
@@ -537,6 +549,8 @@ SUBROUTINE fomp_destroy_nest_lock(nvar)
 
 #ifdef _OPENMP
     CALL omp_destroy_nest_lock(nvar)
+#else
+    IF (.FALSE.) PRINT *, nvar
 #endif
 
 END SUBROUTINE fomp_destroy_nest_lock
@@ -556,6 +570,8 @@ SUBROUTINE fomp_set_lock(svar)
 
 #ifdef _OPENMP
     CALL omp_set_lock(svar)
+#else
+    IF (.FALSE.) PRINT *, svar
 #endif
 
 END SUBROUTINE fomp_set_lock
@@ -575,6 +591,8 @@ SUBROUTINE fomp_set_nest_lock(nvar)
 
 #ifdef _OPENMP
     CALL omp_set_nest_lock(nvar)
+#else
+    IF (.FALSE.) PRINT *, nvar
 #endif
 
 END SUBROUTINE fomp_set_nest_lock
@@ -594,6 +612,8 @@ SUBROUTINE fomp_unset_lock(svar)
 
 #ifdef _OPENMP
     CALL omp_unset_lock(svar)
+#else
+    IF (.FALSE.) PRINT *, svar
 #endif
 
 END SUBROUTINE fomp_unset_lock
@@ -613,6 +633,8 @@ SUBROUTINE fomp_unset_nest_lock(nvar)
 
 #ifdef _OPENMP
     CALL omp_unset_nest_lock(nvar)
+#else
+    IF (.FALSE.) PRINT *, nvar
 #endif
 
 END SUBROUTINE fomp_unset_nest_lock
@@ -634,6 +656,7 @@ FUNCTION fomp_test_lock(svar)
 #ifdef _OPENMP
     fomp_test_lock =  omp_test_lock(svar)
 #else
+    IF (.FALSE.) PRINT *, svar
     fomp_test_lock = .FALSE.
 #endif
 
@@ -658,6 +681,7 @@ FUNCTION fomp_test_nest_lock(nvar)
 #ifdef _OPENMP
     fomp_test_nest_lock =  omp_test_nest_lock(nvar)
 #else
+    IF (.FALSE.) PRINT *, nvar
     fomp_test_nest_lock = -1
 #endif
 

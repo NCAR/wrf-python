@@ -169,7 +169,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     REAL(KIND=8) :: pbot, zbot, tbotextrap, e
     REAL(KIND=8) :: tlcl, gammam
     CHARACTER(LEN=1) :: cvcord
-    INTEGER :: thd
 
     ! Removes the warnings for uninitialized variables
     cvcord = ''

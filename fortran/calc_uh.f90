@@ -47,7 +47,7 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
 
     ! Misc local variables
     INTEGER :: i, j, k, kbot, ktop
-    REAL(KIND=8) :: twodx, twody, wgtlw, sum, wmean, wsum, wavg
+    REAL(KIND=8) :: twodx, twody, wgtlw, sum, wmean, wsum !,wavg
     REAL(KIND=8) :: helbot, heltop, wbot, wtop
     REAL(KIND=8) :: zbot, ztop
 

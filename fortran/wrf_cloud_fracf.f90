@@ -78,7 +78,7 @@ SUBROUTINE DCLOUDFRAC2(vert, rh, vert_inc_w_height, low_thresh, mid_thresh, &
 
 ! NCLEND
 
-    INTEGER i, j, k, kstart, kend
+    INTEGER i, j, k
     INTEGER kchi, kcmi, kclo
 
     ! Initialize the output

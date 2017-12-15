@@ -17,6 +17,7 @@ SUBROUTINE fomp_set_num_threads(num_threads)
     !f2py threadsafe
 
     INTEGER, INTENT(IN) :: num_threads
+    IF (.FALSE.) PRINT *, num_threads
 
 END SUBROUTINE fomp_set_num_threads
 
@@ -93,6 +94,7 @@ SUBROUTINE fomp_set_dynamic(dynamic_threads)
     !f2py threadsafe
 
     LOGICAL, INTENT(IN) :: dynamic_threads
+    IF (.FALSE.) PRINT *, dynamic_threads
 
 END SUBROUTINE fomp_set_dynamic
 
@@ -117,6 +119,7 @@ SUBROUTINE fomp_set_nested(nested)
     !f2py threadsafe
 
     LOGICAL, INTENT(IN) :: nested
+    IF (.FALSE.) PRINT *, nested
 
 END SUBROUTINE fomp_set_nested
 
@@ -144,6 +147,7 @@ SUBROUTINE fomp_set_schedule(kind, modifier)
 
     INTEGER(KIND=fomp_sched_kind), INTENT(IN) :: kind
     INTEGER, INTENT(IN) :: modifier
+    IF (.FALSE.) PRINT *, kind, modifier
 
 END SUBROUTINE fomp_set_schedule
 
@@ -185,6 +189,7 @@ SUBROUTINE fomp_set_max_active_levels(max_levels)
     !f2py threadsafe
 
     INTEGER, INTENT(IN) :: max_levels
+    IF (.FALSE.) PRINT *, max_levels
 
 END SUBROUTINE fomp_set_max_active_levels
 
@@ -223,6 +228,7 @@ FUNCTION fomp_get_ancestor_thread_num(level)
 
     INTEGER, INTENT(IN) :: level
     INTEGER :: fomp_get_ancestor_thread_num
+    IF (.FALSE.) PRINT *, level
 
     fomp_get_ancestor_thread_num = -1
 
@@ -237,6 +243,7 @@ FUNCTION fomp_get_team_size(level)
 
     INTEGER, INTENT(IN) :: level
     INTEGER :: fomp_get_team_size
+    IF (.FALSE.) PRINT *, level
 
     fomp_get_team_size = -1
 
@@ -308,6 +315,7 @@ SUBROUTINE fomp_destroy_lock(svar)
     !f2py threadsafe
 
     INTEGER(KIND=fomp_lock_kind), INTENT(INOUT) :: svar
+    IF (.FALSE.) PRINT *, svar
 
 END SUBROUTINE fomp_destroy_lock
 
@@ -321,6 +329,7 @@ SUBROUTINE fomp_destroy_nest_lock(nvar)
     !f2py threadsafe
 
     INTEGER(KIND=fomp_nest_lock_kind), INTENT(INOUT) :: nvar
+    IF (.FALSE.) PRINT *, nvar
 
 END SUBROUTINE fomp_destroy_nest_lock
 
@@ -334,6 +343,7 @@ SUBROUTINE fomp_set_lock(svar)
     !f2py threadsafe
 
     INTEGER(KIND=fomp_lock_kind), INTENT(INOUT) :: svar
+    IF (.FALSE.) PRINT *, svar
 
 END SUBROUTINE fomp_set_lock
 
@@ -347,6 +357,7 @@ SUBROUTINE fomp_set_nest_lock(nvar)
     !f2py threadsafe
 
     INTEGER(KIND=fomp_nest_lock_kind), INTENT(INOUT) :: nvar
+    IF (.FALSE.) PRINT *, nvar
 
 END SUBROUTINE fomp_set_nest_lock
 
@@ -360,6 +371,7 @@ SUBROUTINE fomp_unset_lock(svar)
     !f2py threadsafe
 
     INTEGER(KIND=fomp_lock_kind), INTENT(INOUT) :: svar
+    IF (.FALSE.) PRINT *, svar
 
 END SUBROUTINE fomp_unset_lock
 
@@ -373,6 +385,7 @@ SUBROUTINE fomp_unset_nest_lock(nvar)
     !f2py threadsafe
 
     INTEGER(KIND=fomp_nest_lock_kind), INTENT(INOUT) :: nvar
+    IF (.FALSE.) PRINT *, nvar
 
 END SUBROUTINE fomp_unset_nest_lock
 
@@ -387,6 +400,7 @@ FUNCTION fomp_test_lock(svar)
 
     INTEGER(KIND=fomp_lock_kind), INTENT(INOUT) :: svar
     LOGICAL :: fomp_test_lock
+    IF (.FALSE.) PRINT *, svar
 
     fomp_test_lock = .FALSE.
 
@@ -403,6 +417,7 @@ FUNCTION fomp_test_nest_lock(nvar)
 
     INTEGER(KIND=fomp_nest_lock_kind), INTENT(INOUT) :: nvar
     INTEGER :: fomp_test_nest_lock
+    IF (.FALSE.) PRINT *, nvar
 
     fomp_test_nest_lock = -1
 

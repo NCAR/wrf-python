@@ -327,11 +327,12 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     INTEGER :: i, j, k
     INTEGER :: klo, khi
-    INTEGER :: errcnt, bad_i, bad_j, bad_sfp
+    INTEGER :: errcnt, bad_i, bad_j
 
+    REAL(KIND=8) :: bad_sfp
     REAL(KIND=8) :: plo, phi, tlo, thi, zlo, zhi
     REAL(KIND=8) :: p_at_pconst, t_at_pconst, z_at_pconst
-    REAL(KIND=8) :: z_half_lowest
+    !REAL(KIND=8) :: z_half_lowest
 
     LOGICAL :: l1, l2, l3, found
 

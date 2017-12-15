@@ -274,7 +274,7 @@ END SUBROUTINE DPFCALC
 SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
             cmsg,mix,mjy,mkzh,ter_follow,&
             psafile, errstat, errmsg)
-    USE wrf_constants, ONLY : ALGERR, CELKEL, G, EZERO, ESLCON1, ESLCON2, &
+    USE wrf_constants, ONLY : CELKEL, G, EZERO, ESLCON1, ESLCON2, &
                           EPS, RD, CP, GAMMA, CPMD, RGASMD, GAMMAMD, TLCLC1, &
                           TLCLC2, TLCLC3, TLCLC4, THTECON1, THTECON2, THTECON3
 
@@ -312,7 +312,6 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
-    REAL :: t1,t2
 
     REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prs_new
     REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: tmk_new
@@ -325,6 +324,7 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     klev = 0
     klcl = 0
     kel = 0
+    IF (.FALSE.) PRINT *,ter
 
 
     ! the comments were taken from a mark stoelinga email, 23 apr 2007,
@@ -599,7 +599,7 @@ END SUBROUTINE DCAPECALC3D
 SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
             cmsg,mix,mjy,mkzh,ter_follow,&
             psafile, errstat, errmsg)
-    USE wrf_constants, ONLY : ALGERR, CELKEL, G, EZERO, ESLCON1, ESLCON2, &
+    USE wrf_constants, ONLY : CELKEL, G, EZERO, ESLCON1, ESLCON2, &
                           EPS, RD, CP, GAMMA, CPMD, RGASMD, GAMMAMD, TLCLC1, &
                           TLCLC2, TLCLC3, TLCLC4, THTECON1, THTECON2, THTECON3
 
@@ -628,10 +628,10 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
 
     ! local variables
     INTEGER :: i, j, k, ilcl, kel, kk, klcl, klev, klfc, kmax, kpar, kpar1, kpar2
-    REAL(KIND=8) :: ethmax, q, p, e, tlcl, zlcl
+    REAL(KIND=8) :: ethmax, p, e, tlcl, zlcl
     REAL(KIND=8) :: pavg, tvirtual, p1, p2, pp1, pp2, th, totthe, totqvp, totprs
     REAL(KIND=8) :: cpm, deltap, ethpari, gammam, qvppari, tmkpari
-    REAL(KIND=8) :: facden, qvplift, tmklift, tvenv, tvlift, ghtlift, fac1, fac2
+    REAL(KIND=8) :: facden, qvplift, tmklift, tvenv, tvlift, ghtlift
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz, pup, pdn
     REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
@@ -639,7 +639,6 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
-    INTEGER :: nthreads
     REAL(KIND=8), DIMENSION(mkzh) :: eth_temp
     REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prs_new
     REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: tmk_new
