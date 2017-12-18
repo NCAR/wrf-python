@@ -973,33 +973,14 @@ def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
         - return_val[0,...] will contain LOW level cloud fraction
         - return_val[1,...] will contain MID level cloud fraction
         - return_val[2,...] will contain HIGH level cloud fraction
-        
-    For backwards compatibility, the default vertical coordinate type is 
-    pressure, with default cloud levels defined as: 
     
-        97000 Pa <= low_cloud < 80000 Pa
-        80000 Pa <= mid_cloud < 45000 Pa
-        45000 Pa <= high_cloud
-        
-    If the vertical coordinate type is 'height_agl' or 'height_msl', the 
-    default cloud levels are defined as:
+    The *low_thresh*, *mid_thresh*, and *high_threshold* paramters specify the 
+    low, mid, and high cloud levels in the same units as *vert*.
     
-        300 m <= low_cloud < 2000 m
-        2000 m <= mid_cloud < 6000 m
-        6000 m <= high_cloud
-        
-    Note that the default low cloud levels are chosen to
-    exclude clouds near the surface (fog). If you want fog included, set 
-    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pres', or 15 m if using 
-    'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid points 
-    are slightly above the ground, and in order to find clouds, the 
-    *low_thresh* needs to be set to values that are slightly greater than 
-    (less than) the lowest height (pressure) values.
-    
-    When using 'pres' or 'height_agl' for *vert_type*, there is a possibility 
+    In mountainous regions, there is a possibility 
     that the lowest WRF level will be higher than the low_cloud or mid_cloud 
-    threshold, particularly for mountainous regions.  When this happens, a 
-    fill value will be used in the output.
+    threshold.  When this happens, a fill value will be used in the output at 
+    that location.
     
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
