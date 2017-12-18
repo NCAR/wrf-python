@@ -14,7 +14,7 @@ from .g_geoht import _get_geoht
 @set_cloudfrac_metadata()
 def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True, 
                  cache=None, meta=True, _key=None,
-                 vert_type="pres", low_thresh=None, mid_thresh=None, 
+                 vert_type="height_agl", low_thresh=None, mid_thresh=None, 
                  high_thresh=None, missing=default_fill(np.float64)):
     """Return the cloud fraction for low, mid, and high level clouds.
     
@@ -24,13 +24,6 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
         - return_val[0,...] will contain LOW level cloud fraction
         - return_val[1,...] will contain MID level cloud fraction
         - return_val[2,...] will contain HIGH level cloud fraction
-    
-    For backwards compatibility, the default vertical coordinate type is 
-    pressure, with default cloud levels defined as: 
-    
-        97000 Pa <= low_cloud < 80000 Pa
-        80000 Pa <= mid_cloud < 45000 Pa
-        45000 Pa <= high_cloud
         
     If the vertical coordinate type is 'height_agl' or 'height_msl', the 
     default cloud levels are defined as:
@@ -38,6 +31,12 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
         300 m <= low_cloud < 2000 m
         2000 m <= mid_cloud < 6000 m
         6000 m <= high_cloud
+    
+    For 'pres', the default cloud levels are defined as: 
+    
+        97000 Pa <= low_cloud < 80000 Pa
+        80000 Pa <= mid_cloud < 45000 Pa
+        45000 Pa <= high_cloud
         
     Note that the default low cloud levels are chosen to
     exclude clouds near the surface (fog). If you want fog included, set 
@@ -95,9 +94,8 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
             purposes only.  Default is None.
             
         vert_type (:obj:`str`, optional):  The type of vertical coordinate used 
-            to determine cloud type thresholds.  Must be 'pres', 'height_msl',
-            or 'height_agl'.  For backwards compatibility, the default 
-            is 'pres'.
+            to determine cloud type thresholds.  Must be 'height_agl', 
+            'height_msl', or 'pres'. The default is 'height_agl'.
             
         low_thresh (:obj:`float`, optional): The lower bound for what is 
             considered a low cloud.  If *vert_type* is 'pres', the default is 

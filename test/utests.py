@@ -138,6 +138,13 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+        elif (varname == "cfrac"):
+            # Change the vert_type to height_agl when NCL gets updated.
+            my_vals = getvar(in_wrfnc, "cfrac", timeidx=timeidx, 
+                             vert_type="pres")
+            tol = 1/100.
+            atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
+            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
         elif (varname == "pw"):
             my_vals = getvar(in_wrfnc, "pw", timeidx=timeidx)
             tol = .5/100.0
@@ -611,6 +618,12 @@ class WRFLatLonTest(ut.TestCase):
         
 
 if __name__ == "__main__":
+    from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
+                     omp_set_dynamic, Constants)
+    omp_set_num_threads(6)
+    omp_set_schedule(Constants.OMP_SCHED_STATIC, 0)
+    omp_set_dynamic(False)
+    
     ignore_vars = []  # Not testable yet
     wrf_vars = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
