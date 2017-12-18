@@ -710,7 +710,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
     !$OMP benaccum, zrel, kmax, dz, elfound, &
     !$OMP kel, klfc, pavg, p2, p1, totthe, totqvp, totprs, &
-    !$OMP i, j, k, kpar, kpar1, kpar2, qvppari, tmkpari,p, pup, pdn, q, th, &
+    !$OMP i, j, k, kpar, kpar1, kpar2, qvppari, tmkpari,p, pup, pdn, th, &
     !$OMP pp1, pp2, ethmax, eth_temp, klev) SCHEDULE(runtime)
     DO j = 1,mjy
         DO i = 1,mix

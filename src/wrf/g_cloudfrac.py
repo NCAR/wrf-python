@@ -8,7 +8,7 @@ from .constants import Constants, default_fill
 from .extension import _tk, _rh, _cloudfrac
 from .metadecorators import set_cloudfrac_metadata
 from .util import extract_vars
-from .geoht import _get_geoht
+from .g_geoht import _get_geoht
 
 
 @set_cloudfrac_metadata()

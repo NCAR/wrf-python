@@ -29,7 +29,7 @@ from .extension import (DiagnosticError, omp_set_num_threads,
                         omp_test_lock, omp_test_nest_lock,
                         omp_get_wtime, omp_get_wtick)
 from .interp import (interplevel, vertcross, interpline, vinterp)
-from .latlon import (xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj)
+from .g_latlon import (xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj)
 from .py3compat import (viewitems, viewkeys, viewvalues, isstr, py2round, 
                         py3range, ucode)
 from .util import (to_np, extract_global_attrs, is_standard_wrf_var,

@@ -3,27 +3,27 @@ from __future__ import (absolute_import, division, print_function,
 
 from .util import (get_iterable, is_standard_wrf_var, extract_vars, viewkeys,
                    get_id)
-from .cape import get_2dcape, get_3dcape
-from .ctt import get_ctt
-from .dbz import get_dbz, get_max_dbz
-from .dewpoint import get_dp, get_dp_2m
-from .geoht import get_geopt, get_height
-from .helicity import get_srh, get_uh
-from .latlon import get_lat, get_lon
-from .omega import get_omega
-from .pressure import get_pressure, get_pressure_hpa
-from .pw import get_pw
-from .rh import get_rh, get_rh_2m
-from .slp import get_slp
-from .temp import get_tc, get_eth, get_temp, get_theta, get_tk, get_tv, get_tw
-from .terrain import get_terrain
-from .uvmet import (get_uvmet, get_uvmet10, get_uvmet10_wspd_wdir, 
+from .g_cape import get_2dcape, get_3dcape
+from .g_ctt import get_ctt
+from .g_dbz import get_dbz, get_max_dbz
+from .g_dewpoint import get_dp, get_dp_2m
+from .g_geoht import get_geopt, get_height
+from .g_helicity import get_srh, get_uh
+from .g_latlon import get_lat, get_lon
+from .g_omega import get_omega
+from .g_pressure import get_pressure, get_pressure_hpa
+from .g_pw import get_pw
+from .g_rh import get_rh, get_rh_2m
+from .g_slp import get_slp
+from .g_temp import get_tc, get_eth, get_temp, get_theta, get_tk, get_tv, get_tw
+from .g_terrain import get_terrain
+from .g_uvmet import (get_uvmet, get_uvmet10, get_uvmet10_wspd_wdir, 
                     get_uvmet_wspd_wdir)
-from .vorticity import get_avo, get_pvo
-from .wind import (get_destag_wspd_wdir, get_destag_wspd_wdir10, 
+from .g_vorticity import get_avo, get_pvo
+from .g_wind import (get_destag_wspd_wdir, get_destag_wspd_wdir10, 
                    get_u_destag, get_v_destag, get_w_destag)
-from .times import get_times
-from .cloudfrac import get_cloudfrac
+from .g_times import get_times
+from .g_cloudfrac import get_cloudfrac
 
 
 # func is the function to call.  kargs are required arguments that should 

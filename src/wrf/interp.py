@@ -12,10 +12,10 @@ from .util import extract_vars, is_staggered, get_id, to_np
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
 from .constants import Constants, default_fill, ConversionFactors
-from .terrain import get_terrain
-from .geoht import get_height
-from .temp import get_theta, get_temp, get_eth
-from .pressure import get_pressure
+from wrf.g_terrain import get_terrain
+from wrf.g_geoht import get_height
+from wrf.g_temp import get_theta, get_temp, get_eth
+from wrf.g_pressure import get_pressure
 
 
 #  Note:  Extension decorator is good enough to handle left dims
