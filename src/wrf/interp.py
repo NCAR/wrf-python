@@ -197,7 +197,16 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         latlon (:obj:`bool`, optional): Set to True to also interpolate the 
             two-dimensional latitude and longitude coordinates along the same 
             horizontal line and include this information in the metadata 
-            (if enabled).  This can be helpful for plotting.  Default is False.
+            (if enabled). This can be helpful for plotting.  Default is False.
+            
+            Note:
+            
+                Currently, *field3d* must be of type :class:`xarray.DataArray` 
+                and contain coordinate information in order to generate the 
+                latitude and longitude coordinates along the line if 
+                *latlon* is set to True. Otherwise, a warning will be issued,
+                and the latitude and longitude information will not be 
+                present.
              
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 
@@ -364,6 +373,15 @@ def interpline(field2d, pivot_point=None,
             two-dimensional latitude and longitude coordinates along the same 
             horizontal line and include this information in the metadata 
             (if enabled).  This can be helpful for plotting.  Default is False.
+            
+            Note:
+            
+                Currently, *field2d* must be of type :class:`xarray.DataArray` 
+                and contain coordinate information in order to generate the 
+                latitude and longitude coordinates along the line if 
+                *latlon* is set to True. Otherwise, a warning will be issued,
+                and the latitude and longitude information will not be 
+                present.
             
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 

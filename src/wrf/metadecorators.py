@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
+import warnings
 import wrapt 
 from collections import OrderedDict
 
@@ -1022,6 +1023,8 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
+                warnings.warn("'latlon' is set to True, but 'field3d' "
+                "             contains no coordinate information")
                 outcoords["xy_loc"] = ("cross_line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
@@ -1034,6 +1037,10 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         outcoords["vertical"] = z_var2d[:]
         
     else:
+        if inc_latlon:
+            warnings.warn("'latlon' is set to True, but 'field3d' is "
+                          "not of type xarray.DataArray and contains no "
+                          "coordinate information")
         outname = "field3d_cross"
         outattrs = OrderedDict()
     
@@ -1229,6 +1236,8 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
+                warnings.warn("'latlon' is set to True, but 'field2d' "
+                              "contains no coordinate information")
                 outcoords["xy_loc"] = ("line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
@@ -1239,6 +1248,10 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                                           for i in py3range(xy.shape[-2]))))
         
     else:
+        if inc_latlon:
+            warnings.warn("'latlon' is set to True, but 'field2d' is "
+                          "not of type xarray.DataArray and contains no "
+                          "coordinate information")
         outname = "field2d_line"
         outattrs = OrderedDict()
     
