@@ -2,7 +2,7 @@ from .config import (xarray_enabled, disable_xarray, enable_xarray,
                      cartopy_enabled, disable_cartopy, enable_cartopy,
                      basemap_enabled, disable_basemap, enable_basemap,
                      pyngl_enabled, enable_pyngl, disable_pyngl,
-                     set_cache_size, get_cache_size)
+                     set_cache_size, get_cache_size, omp_enabled)
 from .constants import (ALL_TIMES, Constants, ConversionFactors, 
                         ProjectionTypes, default_fill)
 from .destag import destagger
@@ -58,7 +58,7 @@ __all__ += ["xarray_enabled", "disable_xarray", "enable_xarray",
             "cartopy_enabled", "disable_cartopy", "enable_cartopy",
             "basemap_enabled", "disable_basemap", "enable_basemap",
             "pyngl_enabled", "enable_pyngl", "disable_pyngl",
-            "set_cache_size", "get_cache_size"]
+            "set_cache_size", "get_cache_size", "omp_enabled"]
 __all__ += ["ALL_TIMES", "Constants", "ConversionFactors", "ProjectionTypes",
             "default_fill"]
 __all__ += ["destagger"]

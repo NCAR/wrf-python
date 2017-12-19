@@ -10,6 +10,19 @@ MODULE omp_constants
 END MODULE omp_constants
 
 
+FUNCTION fomp_enabled()
+
+    IMPLICIT NONE
+
+    !f2py threadsafe
+
+    LOGICAL :: fomp_enabled
+
+    fomp_enabled = .FALSE.
+
+END FUNCTION fomp_enabled
+
+
 SUBROUTINE fomp_set_num_threads(num_threads)
 
     IMPLICIT NONE

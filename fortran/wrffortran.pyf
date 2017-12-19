@@ -42,6 +42,10 @@ python module _wrffortran ! in
             integer, parameter,optional :: fomp_lock_kind=4
             integer(kind=4), parameter,optional :: fomp_sched_auto=4
         end module omp_constants
+        function fomp_enabled() ! in :_wrffortran:omp.f90
+            threadsafe 
+            logical :: fomp_enabled
+        end function fomp_enabled
         subroutine fomp_set_num_threads(num_threads) ! in :_wrffortran:omp.f90
             threadsafe 
             integer intent(in) :: num_threads
@@ -229,7 +233,7 @@ python module _wrffortran ! in
         end subroutine dpfcalc
         subroutine dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,mix,mjy,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
             threadsafe 
-            use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,algerr,ezero,thtecon2
+            use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,ezero,thtecon2
             real(kind=8) dimension(mix,mjy,mkzh),intent(in) :: prs
             real(kind=8) dimension(mix,mjy,mkzh),intent(in),depend(mix,mjy,mkzh) :: tmk
             real(kind=8) dimension(mix,mjy,mkzh),intent(in),depend(mix,mjy,mkzh) :: qvp
@@ -249,7 +253,7 @@ python module _wrffortran ! in
         end subroutine dcapecalc3d
         subroutine dcapecalc2d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,mix,mjy,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
             threadsafe 
-            use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,algerr,ezero,thtecon2
+            use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,ezero,thtecon2
             real(kind=8) dimension(mix,mjy,mkzh),intent(in) :: prs
             real(kind=8) dimension(mix,mjy,mkzh),intent(in),depend(mix,mjy,mkzh) :: tmk
             real(kind=8) dimension(mix,mjy,mkzh),intent(in),depend(mix,mjy,mkzh) :: qvp

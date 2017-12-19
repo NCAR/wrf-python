@@ -4,6 +4,8 @@ from __future__ import (absolute_import, division, print_function,
 from threading import local
 import wrapt
 
+from ._wrffortran import fomp_enabled
+
 _local_config = local()
 
 def _init_local():
@@ -198,5 +200,17 @@ def get_cache_size():
     global _local_config
     return int(_local_config.cache_size)
     
-
+    
+def omp_enabled():
+    """Return True if OpenMP is enabled.
+    
+    OpenMP is only enabled if compiled with OpenMP features.
+    
+    Returns:
+    
+        :obj:`bool`: True if OpenMP is enabled, otherwise False.
+    
+    """
+    
+    return True if fomp_enabled() else False
 

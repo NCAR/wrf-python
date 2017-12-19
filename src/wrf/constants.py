@@ -6,7 +6,7 @@ import struct
 import numpy as np
 
 from .py3compat import viewitems
-from wrf._wrffortran import wrf_constants, omp_constants
+from ._wrffortran import wrf_constants, omp_constants
 
 #: Indicates that all times should be used in a diagnostic routine.
 ALL_TIMES = None
