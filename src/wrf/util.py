@@ -745,8 +745,12 @@ def is_moving_domain(wrfin, varname=None, latvar=either("XLAT", "XLAT_M"),
     # to be a shortcut in the netcdf files.
     if varname is not None:
         try:
-            coord_names = getattr(first_wrfnc.variables[varname], 
-                              "coordinates").split()
+            coord_str = getattr(first_wrfnc.variables[varname], "coordinates")
+            # scipy.io.netcdf stores attributes as bytes rather than str
+            if isinstance(coord_str, str):
+                coord_names = coord_str.split()
+            else:
+                coord_names = coord_str.decode().split()
         except AttributeError:
             # Variable doesn't have a coordinates attribute, use the 
             # arguments
@@ -896,7 +900,17 @@ def extract_dim(wrfin, dim):
     
     d = wrfin.dimensions[dim]
     if not isinstance(d, int):
-        return len(d) #netCDF4
+        try:
+            return len(d) #netCDF4
+        except TypeError: #scipy.io.netcdf
+            # Scipy can't handled unlimited dimensions, so now we have to 
+            # figure it out
+            try:
+                s = wrfin.variables["P"].shape
+                return s[-4]
+            except:
+                raise ValueError("unsupported NetCDF reader")
+            
     return d # PyNIO
         
         
@@ -1160,7 +1174,10 @@ def _get_coord_names(wrfin, varname):
                         lat_coord = "XLAT"
                         lon_coord = "XLONG"
     else:
-        coord_names = coord_attr.split()
+        if isinstance(coord_attr, str):
+            coord_names = coord_attr.split()
+        else:
+            coord_names = coord_attr.decode().split()
         lon_coord = coord_names[0]
         lat_coord = coord_names[1]
         
@@ -1231,7 +1248,24 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
         else:
             data = data[np.newaxis]
     
-    attrs = OrderedDict(var.__dict__)
+    attrs = OrderedDict()
+    for key, val in viewitems(var.__dict__):
+        # scipy.io adds these but don't want them
+        if key in ("data", "_shape", "_size", "_typecode", "_attributes", 
+                   "maskandscale", "dimensions"):
+            continue
+        
+        _key = key if isinstance(key, str) else key.decode()
+        if isstr(val):
+            _val = val
+        else:
+            if isinstance(val, bytes):
+                _val = val.decode() # scipy.io.netcdf
+            else:
+                _val = val
+            
+        attrs[_key] = _val
+    
     dimnames = var.dimensions[-data.ndim:]
     
     lat_coord = lon_coord = time_coord = None
@@ -2999,7 +3033,16 @@ def get_filepath(obj):
         try:
             path = obj.file.path
         except:
-            raise ValueError("file contains no path information")
+            # Let's make up a filename from the first file time
+            found = False
+            times = extract_times(obj, None, meta=False, do_xtime=False)
+            for t in times:
+                path = "wrfout_{}".format(str(t))
+                found = True
+                break
+            
+            if not found: 
+                raise ValueError("file contains no path information")
     
     return path
 
