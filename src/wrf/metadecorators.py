@@ -645,7 +645,7 @@ def set_latlon_metadata(xy=False):
     return func_wrapper
 
 
-def set_height_metadata(geopt=False):
+def set_height_metadata(geopt=False, stag=False):
     """A decorator that sets the metadata for a wrapped height function's 
     output.
     
@@ -659,6 +659,9 @@ def set_height_metadata(geopt=False):
         geopt (:obj:`bool`, optional): Set to True if the wrapped function 
             returns geopotential.  Set to True if the wrapped function 
             returns geopotential height.  Default is False.
+            
+        stag (:obj:`bool`, optional): Set to True to use the vertical 
+            staggered grid, rather than the mass grid. Default is False.
             
     Returns:
     
@@ -695,9 +698,17 @@ def set_height_metadata(geopt=False):
         if cache is None:
             cache = {}
         
+        is_met_em = False
         # For height, either copy the met_em GHT variable or copy and modify
         # pressure (which has the same dims as destaggered height)
-        ht_metadata_varname = either("P", "GHT")(wrfin)
+        if not stag:
+            ht_metadata_varname = either("P", "GHT")(wrfin)
+        else:
+            ht_metadata_varname = either("PH", "GHT")(wrfin)
+        
+        if ht_metadata_varname == "GHT":
+            is_met_em = True
+            
         ht_var = extract_vars(wrfin, timeidx, ht_metadata_varname, 
                               method, squeeze, cache, meta=True,
                               _key=_key)
@@ -723,12 +734,21 @@ def set_height_metadata(geopt=False):
         if geopt:
             outname = "geopt"
             outattrs["units"] = "m2 s-2"
-            outattrs["description"] = "full model geopotential"
+            if not stag or is_met_em:
+                outattrs["description"] = "geopotential (mass grid)"
+            else:
+                outattrs["description"] = ("geopotential (vertically "
+                                           "staggered grid)")
         else:
             outname = "height" if msl else "height_agl" 
             outattrs["units"] = units
             height_type = "MSL" if msl else "AGL"
-            outattrs["description"] = "model height ({})".format(height_type)
+            if not stag or is_met_em:
+                outattrs["description"] = ("model height - [{}] "
+                                           "(mass grid)".format(height_type))
+            else:
+                outattrs["description"] = ("model height - [{}] (vertically "
+                                        "staggered grid)".format(height_type))
         
         
         return DataArray(result, name=outname, 

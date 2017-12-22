@@ -7,7 +7,7 @@ from .g_cape import get_2dcape, get_3dcape
 from .g_ctt import get_ctt
 from .g_dbz import get_dbz, get_max_dbz
 from .g_dewpoint import get_dp, get_dp_2m
-from .g_geoht import get_geopt, get_height
+from .g_geoht import get_geopt, get_height, get_stag_geopt, get_stag_height
 from .g_helicity import get_srh, get_uh
 from .g_latlon import get_lat, get_lon
 from .g_omega import get_omega
@@ -68,7 +68,9 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "uvmet_wspd_wdir" : get_uvmet_wspd_wdir,
              "uvmet10_wspd_wdir" : get_uvmet10_wspd_wdir,
              "ctt" : get_ctt,
-             "cloudfrac" : get_cloudfrac
+             "cloudfrac" : get_cloudfrac,
+             "geopt_stag" : get_stag_geopt,
+             "zstag" : get_stag_height
              }
   
 _VALID_KARGS = {"cape2d" : ["missing"],
@@ -113,6 +115,8 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "ctt" : [],
              "cloudfrac" : ["vert_type", "low_thresh", 
                             "mid_thresh", "high_thresh"],
+             "geopt_stag" : [],
+             "zstag" : ["msl", "units"],
              "default" : []
             }
   
