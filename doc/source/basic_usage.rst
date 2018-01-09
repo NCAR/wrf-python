@@ -1,6 +1,34 @@
 How To Use
 ============
 
+Introduction
+---------------
+
+The API for wrf-python can be summarized as a variable extraction/computation
+routine, several interpolation routines, and some plotting utilities. 
+The API is kept as simple as possible to help minimize the 
+programming burden on new users, students, and scientists. In the future, we 
+plan to extend xarray for programmers desiring a more object oriented API, 
+but this remains a work in progress.
+
+The five most commonly used routines can be summarized as:
+
+- **wrf.getvar**: The routine that extracts WRF NetCDF variables or 
+  computes diagnostic variables. This is the routine you will use most often.
+  
+- **wrf.interplevel**: Interpolates a three-dimensional field to a horizontal
+  plane at a specified level using simple (fast) linear interpolation.
+  
+- **wrf.vertcross**: Interpolates a three-dimensional field to a vertical plane
+  through a user-specified horizontal line (i.e. a cross section).
+  
+- **wrf.interpline**: Interpolates a two-dimensional field to a user-specified 
+  line.
+  
+- **wrf.vinterp**: Interpolates a three-dimensional field to user-specified 
+  'surface' levels (e.g. theta-e levels). This is a smarter, but slower, 
+  version of wrf.interplevel. 
+
 Basic Usage
 ----------------
 
@@ -1614,3 +1642,289 @@ Result:
      <Ngl.Resources instance at 0x11d318a70>
      <Ngl.Resources instance at 0x11d318710>]
     
+
+Using OpenMP
+-------------------------
+
+Beginning in version 1.1, the Fortran computational routines in wrf-python make 
+use of OpenMP directives. OpenMP enables the calculations to use multiple CPU 
+cores, which can improve performance. In order to use OpenMP features, 
+wrf-python has to be compiled with OpenMP enabled (most pre-built binary 
+installations will have this enabled).
+
+The Fortran computational routines have all been built using runtime 
+scheduling, instead of compile time scheduling, so that the user can choose the 
+scheduler type within their Python application. By default, the scheduling 
+type is set to :data:`wrf.OMP_SCHED_STATIC` using only 1 CPU core, so 
+wrf-python will behave similarly to the non-OpenMP built versions. For the most 
+part, the difference between the scheduling types is minimal, with the exception 
+being the :data:`wrf.OMP_SCHED_DYNAMIC` scheduler that is much slower due to 
+the additional overhead associated with it. For new users, using the default 
+scheduler should be sufficient.
+
+
+Verifying that OpenMP is Enabled
+*************************************
+
+To take advantage of the performance improvements offered by OpenMP, wrf-python
+needs to have been compiled with OpenMP features enabled. The example below 
+shows how you can determine if OpenMP is enabled in your build of wrf-python.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_enabled
+
+   print(omp_enabled())
+
+
+Result:
+
+.. code-block:: none
+
+   True
+
+
+Determining the Number of Available Processors
+***************************************************
+
+The example below shows how you can get the maximum number of processors 
+that are available on your system.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_get_num_procs
+
+   print(omp_get_num_procs())
+
+
+Result:
+
+.. code-block:: none
+
+   8
+
+
+Specifying the Number of Threads
+*************************************
+
+To enable multicore support via OpenMP, specifying the maximum number 
+of OpenMP threads (i.e. CPU cores) is the only step that you need to take.  
+
+In the example below, :meth:`wrf.omp_set_num_threads` is used to set the 
+maximum number of threads to use, and :meth:`wrf.omp_get_max_threads` is 
+get to get (and print) the maximum number of threads used.
+
+.. note::
+
+   Although there is an OpenMP library named :meth:`wrf.omp_get_num_threads`, 
+   this method will always returns 1 when called from the sequential part of 
+   the program. Use :meth:`wrf.omp_get_max_threads` to return the value set by 
+   :meth:`wrf.omp_set_num_threads`.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_set_num_threads, omp_get_max_threads
+
+   omp_set_num_threads(4)
+   
+   print (omp_get_max_threads())
+
+
+Result:
+
+.. code-block:: none
+
+   4
+   
+Setting a Different Scheduler Type
+**************************************
+
+When an OpenMP directive is encountered in the Fortran code, a scheduler is 
+used to determine how the work is divided among the threads. All of the 
+Fortran routines are compiled to use a 'runtime' scheduler, which indicates 
+that the scheduler type (from the four listed below) is to be chosen at 
+runtime (i.e. inside a Python script)
+
+By default, the scheduler chosen is the :data:`wrf.OMP_SCHED_STATIC` scheduler,
+which should be sufficient for most users. However, OpenMP and wrf-python 
+include the following options for the scheduler type:
+
+- :data:`wrf.OMP_SCHED_STATIC`
+- :data:`wrf.OMP_SCHED_DYNAMIC`
+- :data:`wrf.OMP_SCHED_GUIDED`
+- :data:`wrf.OMP_SCHED_AUTO`
+
+Refer to the 
+`OpenMP Specification <http://www.openmp.org/wp-content/uploads/openmp-4.5.pdf>`_.
+for more information about these scheduler types. In local testing, 
+:data:`wrf.OMP_SCHED_GUIDED` produced the best results, but 
+differences between :data:`wrf.OMP_SCHED_STATIC`, 
+:data:`wrf.OMP_SCHED_GUIDED`, and 
+:data:`wrf.OMP_SCHED_AUTO` were minor. However, 
+:data:`wrf.OMP_SCHED_DYNAMIC` produced noticeably slower results 
+due to the overhead of using a dynamic scheduler.
+
+When setting a scheduler type, the :meth:`wrf.omp_set_schedule` takes two 
+arguments.  The first is the scheduler type (one from the list above), and the 
+second optional argument is a modifier, which is usually referred as the chunk 
+size. If the modifier/chunk_size is set to 0, then the OpenMP default 
+implementation is used. For :data:`wrf.OMP_SCHED_AUTO`, the 
+modifier is ignored.
+
+If you are new to OpenMP and all this sounds confusing, don't worry about 
+setting a scheduler type.  The default static scheduler will be good enough.
+
+In the example below, the scheduler type is set to 
+:data:`wrf.OMP_SCHED_GUIDED` and uses the default chunk size of 0. The 
+scheduler type is then read back using :meth:`wrf.omp_get_schedule` 
+and printed.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_set_schedule, omp_get_schedule, OMP_SCHED_GUIDED
+
+   omp_set_schedule(OMP_SCHED_GUIDED, 0)
+
+   sched, modifier = omp_get_schedule()
+
+   print(sched, modifier)
+
+
+Result:
+
+.. code-block:: none
+
+   3 1
+   
+Notice that the printed scheduler type (*sched* variable) is set to a 
+value of 3, which is the actual integer constant value for the 
+:data:`wrf.OMP_SCHED_GUIDED` scheduler type. The *modifier* is returned as a 
+value of 1, which is different than the 0 that was supplied to the 
+:meth:`wrf.omp_set_schedule` routine. This is because the 0 tells OpenMP to use 
+its own default value for the scheduler, which is 1 for this type of scheduler.
+
+
+Performance Note
+******************
+
+If you have enabled multicore support with OpenMP, you may have noticed that 
+the routines do not scale linearly with the number of CPU cores added. One main 
+reason is that the computational routines are already fairly efficient and 
+vectorize well, so for many grid sizes, the time it takes to extract the 
+variables is on par with the time required to compute the diagnostic with a 
+single CPU core. Adding more CPU cores will decrease the time needed to do the 
+computation, but total performance will still be limited by the time it takes 
+to extract the variables from the NetCDF file. For local testing, diminishing 
+returns were seen after 4 CPU cores, but this will largely depend on the 
+hardware used and grid size for your WRF run.  
+
+
+Performance Tips
+--------------------
+
+Memory Issues and :data:`wrf.ALL_TIMES` 
+******************************************
+
+The use of :data:`wrf.ALL_TIMES` for the timeidx to :meth:`wrf.getvar` is 
+convenient for computing diagnostic variables across multiple files/times, but
+there is something that users should be aware of. When :data:`wrf.ALL_TIMES` is 
+set as the *timeidx* argument, all arrays used in the computation are extracted 
+for all times before the computation is started. This can cause serious memory 
+issues on smaller hardware systems like laptops.  
+
+In this example, the user wants to use a data set that is 289 x 39 x 300 x 300
+and compute z for the entire data set. The user is using a laptop with 
+16 GB of memory.  
+
+.. code:: python
+
+   from netCDF4 import Dataset
+   from wrf import getvar, ALL_TIMES
+   
+   file_list = [Dataset("/path/to/file1"), Dataset("/path/to/file2"),...]
+   z = getvar(file_list, "z", ALL_TIMES)
+   
+Five hours later, the computation finished. What happened?
+
+In wrf-python, all of the computational routines use 8-byte REAL variables so 
+that both the 4-byte and 8-byte version of WRF output can be used. The 
+calculation for z extracts three variables (P, PHB, and HGT) and returns a 
+fourth array (RESULT). The RESULT will get cut in half to 4-byte REALs 
+after the computation, but need 8-byte REAL when the result is computed. 
+
+Let's look at the approximate amount memory needed:
+
+P: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
+PHB: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
+HGT: 289 x 300 x 300 x 8 = 208,080,000 (~208 MB)
+RESULT: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)
+
+Yikes! So, in order to do this calculation using :data:`wrf.ALL_TIMES` as 
+the timeidx, over 24.2 GB are needed for this one calculation. When the laptop 
+runs out of memory, it begins using the hard drive for swap memory, which runs 
+hundreds of times slower than real memory.
+
+To fix this situation, it is better to allocate the output array yourself and 
+run the calculation for each time step in a loop. The required memory 
+requirements change to:
+
+(Only need to store the result in a 4-byte REAL)
+FINAL_RESULT: 289 x 39 x 300 x 300 x 4 = 4,057560,000 bytes (~4 GB)
+
+(The numbers below are for each loop iteration)
+P: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+PHB: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+HGT: 300 x 300 x 8 = 720,000 bytes (720 KB)
+RESULT: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+
+Since the memory for the computation is deleted after each 
+loop iteration, the total memory usage drops to approximately 4.1 GB.
+
+The moral of the story is that you need to make sure that your system has 
+enough memory to extract everything it needs up front if you want to use 
+:data:`wrf.ALL_TIMES`, otherwise it is better to "loop-and-fill" yourself.
+
+Here is an example of the loop-and-fill technique:
+
+.. code:: python
+    
+   from __future__ import print_function, division
+   
+   import numpy as np
+   from netCDF4 import Dataset
+   from wrf import getvar, ALL_TIMES
+   
+   filename_list = ["/path/to/file1", "/path/to/file2",...]
+   
+   # Result shape (hardcoded for this example)
+   result_shape = (289, 39, 300, 300)
+   
+   # Only need 4-byte floats
+   z_final = np.empty(result_shape, np.float32)
+   
+   # Modify this number if using more than 1 time per file
+   times_per_file = 1
+   
+   for timeidx in xrange(result_shape[0]):
+       # Compute the file index and the time index inside the file
+       fileidx = timeidx // times_per_file
+       file_timeidx = timeidx % times_per_file
+       
+       f = Dataset(filename_list[fileidx])  
+       z = getvar(f, "z", file_timeidx)
+       
+       z_final[timeidx,:] = z[:]
+       f.close()
+       
+       
+
+
+

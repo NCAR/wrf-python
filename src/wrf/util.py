@@ -1249,13 +1249,13 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
             data = data[np.newaxis]
     
     attrs = OrderedDict()
-    for key, val in viewitems(var.__dict__):
+    for dkey, val in viewitems(var.__dict__):
         # scipy.io adds these but don't want them
-        if key in ("data", "_shape", "_size", "_typecode", "_attributes", 
+        if dkey in ("data", "_shape", "_size", "_typecode", "_attributes", 
                    "maskandscale", "dimensions"):
             continue
         
-        _key = key if isinstance(key, str) else key.decode()
+        _dkey = dkey if isinstance(dkey, str) else dkey.decode()
         if isstr(val):
             _val = val
         else:
@@ -1264,7 +1264,7 @@ def _build_data_array(wrfnc, varname, timeidx, is_moving_domain, is_multifile,
             else:
                 _val = val
             
-        attrs[_key] = _val
+        attrs[_dkey] = _val
     
     dimnames = var.dimensions[-data.ndim:]
     

@@ -4,7 +4,9 @@ from .config import (xarray_enabled, disable_xarray, enable_xarray,
                      pyngl_enabled, enable_pyngl, disable_pyngl,
                      set_cache_size, get_cache_size, omp_enabled)
 from .constants import (ALL_TIMES, Constants, ConversionFactors, 
-                        ProjectionTypes, default_fill)
+                        ProjectionTypes, default_fill,
+                        OMP_SCHED_STATIC, OMP_SCHED_DYNAMIC, 
+                        OMP_SCHED_GUIDED, OMP_SCHED_AUTO)
 from .destag import destagger
 from .routines import getvar
 from .computation import (xy, interp1d, interp2dxy, interpz3d, slp, tk, td, rh, 
@@ -60,7 +62,8 @@ __all__ += ["xarray_enabled", "disable_xarray", "enable_xarray",
             "pyngl_enabled", "enable_pyngl", "disable_pyngl",
             "set_cache_size", "get_cache_size", "omp_enabled"]
 __all__ += ["ALL_TIMES", "Constants", "ConversionFactors", "ProjectionTypes",
-            "default_fill"]
+            "default_fill", "OMP_SCHED_STATIC", "OMP_SCHED_DYNAMIC", 
+            "OMP_SCHED_GUIDED", "OMP_SCHED_AUTO"]
 __all__ += ["destagger"]
 __all__ += ["getvar"]
 __all__ += ["xy", "interp1d", "interp2dxy", "interpz3d", "slp", "tk", "td", 

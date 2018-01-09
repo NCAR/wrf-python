@@ -1159,7 +1159,7 @@ def omp_get_nested():
     return fomp_get_nested()
 
 
-def omp_set_schedule(kind, modifier):
+def omp_set_schedule(kind, modifier=0):
     """Set the schedule that is applied when *runtime* is used as 
     schedule kind, by setting the value of the run-sched-var ICV.
     
@@ -1182,7 +1182,8 @@ def omp_set_schedule(kind, modifier):
             
         modifier(:obj:`int`): An implementation specific value, depending on 
             the choice for *kind*. This parameter is alternatively named 
-            chunk_size in some OpenMP documentation.
+            chunk_size in some OpenMP documentation. Default is 0, which 
+            means the OpenMP implementation will use its default value.
     
     Returns:
     

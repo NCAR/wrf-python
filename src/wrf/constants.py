@@ -17,10 +17,10 @@ class Constants(object):
 for key,val in viewitems(wrf_constants.__dict__):
     setattr(Constants, key.upper(), np.asscalar(val))
 
-setattr(Constants, "OMP_SCHED_STATIC", omp_constants.fomp_sched_static)
-setattr(Constants, "OMP_SCHED_DYNAMIC", omp_constants.fomp_sched_dynamic)
-setattr(Constants, "OMP_SCHED_GUIDED", omp_constants.fomp_sched_guided)
-setattr(Constants, "OMP_SCHED_AUTO", omp_constants.fomp_sched_auto)
+OMP_SCHED_STATIC = omp_constants.fomp_sched_static
+OMP_SCHED_DYNAMIC = omp_constants.fomp_sched_dynamic
+OMP_SCHED_GUIDED = omp_constants.fomp_sched_guided
+OMP_SCHED_AUTO = omp_constants.fomp_sched_auto
 
 
 class ConversionFactors(object):

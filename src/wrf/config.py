@@ -4,7 +4,9 @@ from __future__ import (absolute_import, division, print_function,
 from threading import local
 import wrapt
 
-from ._wrffortran import fomp_enabled
+from ._wrffortran import (fomp_enabled, fomp_set_num_threads, 
+                          fomp_set_schedule, fomp_set_dynamic,
+                          omp_constants)
 
 _local_config = local()
 
@@ -214,3 +216,10 @@ def omp_enabled():
     
     return True if fomp_enabled() else False
 
+
+# Set OpenMP to use 1 thread, static scheduler, and no dynamic
+# Note: Using the raw extension functions here to prevent possible 
+# circular import problems in the future.
+fomp_set_num_threads(1)
+fomp_set_schedule(omp_constants.fomp_sched_static, 0)
+fomp_set_dynamic(False)
