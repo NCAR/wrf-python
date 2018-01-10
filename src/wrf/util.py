@@ -2232,9 +2232,6 @@ def extract_vars(wrfin, timeidx, varnames, method="cat", squeeze=True,
             negative integer, or 
             :data:`wrf.ALL_TIMES` (an alias for None) to return 
             all times in the file or sequence. The default is 0.
-        
-        is_moving (:obj:`bool`): A boolean type that indicates if the 
-            sequence is a moving nest.
             
         method (:obj:`str`, optional): The aggregation method to use for 
             sequences.  Must be either 'cat' or 'join'.  

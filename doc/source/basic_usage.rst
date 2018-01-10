@@ -1923,8 +1923,183 @@ Here is an example of the loop-and-fill technique:
        
        z_final[timeidx,:] = z[:]
        f.close()
-       
-       
+
+      
+The *cache* Argument for :meth:`wrf.getvar`
+*********************************************     
+
+If you have read through the documentation, you may have noticed that the 
+:meth:`wrf.getvar` routine contains a *cache* argument. What is this for?
+
+Internally, if metadata is turned on, a variable is extracted from the NetCDF 
+file and its metadata is copied to form the result's metadata. Often this 
+variable is one of the computation's function arguments, so rather than 
+spend time extracting the variable again for the computation, it is placed 
+in a cache (dictionary) and passed on to the computational function.
+
+What isn't widely known is that this cache argument can also be supplied by 
+end users wishing to speed up their application. This can be useful in 
+situations where numerous calculations are being performed on the same 
+data set. For many algorithms, the cost to extract the arrays from the 
+NetCDF file is on par with the time to perform the calculation. If you are 
+computing numerous diagnostics, extracting the variables up front allows you 
+to only pay this extraction penalty once, rather than inside of each call 
+to :meth:`wrf.getvar`.
+
+The cache is nothing more than a dictionary where each key is the variable 
+name (e.g. "P") and the value is the :class:`xarray.DataArray` or 
+:class:`numpy.ndarray` variable. Creating the cache dictionary is easy, 
+since the :meth:`wrf.extract_vars` routine returns a dictionary for a 
+sequence of variables. 
+
+.. note:: 
+
+   The *timeidx* parameter supplied to :meth:`extract_vars` 
+   must be the same *timeidx* parameter that you plan to use for 
+   :meth:`wrf.getvar`. Otherwise, it will crash with dimension mismatch errors.
+
+Some common variables that you can use to create an effective cache are: P, PB, 
+PH, PHB, T, QVAPOR, HGT, PSFC, U, V, W.
+
+Below is an example showing the same computations done with and without the 
+cache. The execution time is printed. The hardware used is a 2.8 GHz Intel Core 
+i7, which contains 4 CPU cores with 2 hyper threads (8 total threads). This 
+will be interpreted as 8 CPUs for OpenMP.
+
+.. code:: python
+
+   from __future__ import print_function
+
+   import time
+   from netCDF4 import Dataset
+   from wrf import getvar, ALL_TIMES, extract_vars
+
+   # The first two files contain four times, the last file contains only one.
+   wrf_filenames = ["/path/to/wrfout_d02_2005-08-28_00:00:00",
+                    "/path/to/wrfout_d02_2005-08-28_12:00:00", 
+                    "/path/to/wrfout_d02_2005-08-29_00:00:00"]
+
+   wrfin = [Dataset(x) for x in wrf_filenames]
+
+   start = time.time()
+   my_cache = extract_vars(wrfin, ALL_TIMES, ("P", "PSFC", "PB", "PH", "PHB", 
+                                              "T", "QVAPOR", "HGT", "U", "V", 
+                                              "W"))
+   end = time.time()
+   print ("Time taken to build cache: ", (end-start), "s")
+    
+   vars = ("avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
+           "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
+           "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
+           "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
+           "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag")
+   
+   # No cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES)
+   end = time.time()
+   no_cache_time = (end-start)
+
+   print ("Time taken without variable cache: ", no_cache_time, "s")
+
+   # With a cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES, cache=my_cache)
+   end = time.time()
+   cache_time = (end-start)
+
+   print ("Time taken with variable cache: ", cache_time, "s")
+
+   improvement = ((no_cache_time-cache_time)/no_cache_time) * 100 
+   print ("The cache decreased computation time by: ", improvement, "%")
 
 
+Result:
 
+.. code:: none
+
+   Time taken to build cache:  0.28154706955 s
+   Time taken without variable cache:  11.0905270576 s
+   Time taken with variable cache:  8.25931215286 s
+   The cache decreased computation time by:  25.5282268378 %
+   
+By removing the repeated extraction of common variables in the getvar routine,
+for the single threaded case, the computation time has been reduced by 
+25.5% in the particular example.
+
+Things get more interesting when OpenMP is turned on, and set to use the 
+maximum number of processors (in this case 8 threads are used).  
+
+.. code:: python
+
+   from __future__ import print_function
+
+   import time
+   from netCDF4 import Dataset
+   from wrf import (getvar, ALL_TIMES, extract_vars, 
+                    omp_set_num_threads, omp_get_num_procs)
+   
+   # The first two files contain four times, the last file contains only one.
+   wrf_filenames = ["/path/to/wrfout_d02_2005-08-28_00:00:00",
+                    "/path/to/wrfout_d02_2005-08-28_12:00:00", 
+                    "/path/to/wrfout_d02_2005-08-29_00:00:00"]
+
+   wrfin = [Dataset(x) for x in wrf_filenames]
+
+   start = time.time()
+   my_cache = extract_vars(wrfin, ALL_TIMES, ("P", "PSFC", "PB", "PH", "PHB", 
+                                              "T", "QVAPOR", "HGT", "U", "V", 
+                                              "W"))
+   end = time.time()
+   print ("Time taken to build cache: ", (end-start), "s")
+
+   omp_set_num_threads(omp_get_num_procs())
+   
+   vars = ("avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
+           "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
+           "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
+           "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
+           "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag")
+   
+   # No cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES)
+   end = time.time()
+   no_cache_time = (end-start)
+
+   print ("Time taken without variable cache: ", no_cache_time, "s")
+
+   # With a cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES, cache=my_cache)
+   end = time.time()
+   cache_time = (end-start)
+
+   print ("Time taken with variable cache: ", cache_time, "s")
+
+   improvement = ((no_cache_time-cache_time)/no_cache_time) * 100 
+   print ("The cache decreased computation time by: ", improvement, "%")
+
+Result:
+
+.. code:: none
+
+   Time taken to build cache:  0.2700548172 s
+   Time taken without variable cache:  6.02652812004 s
+   Time taken with variable cache:  3.27777099609 s
+   The cache decreased computation time by:  45.6109565772 %
+   
+In this example, 4 CPU cores (8 total threads) are used. When the cache is 
+used, the computation time drops by 45%, so almost half the time was spent 
+simply extracting variables from the NetCDF file. When compared to the 
+11.09 s needed to compute the single threaded case with no variable cache, the
+computation time drops by roughly 70% (compared to 45% with 8 threads but 
+no cache). 
+
+In summary, if you are computing a lot of diagnostic variables, consider using
+the *cache* argument to improve performance, particularly if you want to 
+maximize your multithreaded performance with OpenMP.

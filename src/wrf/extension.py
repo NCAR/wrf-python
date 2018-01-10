@@ -617,7 +617,7 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
         cape_routine = dcapecalc3d
     else:
         cape_routine = dcapecalc2d
-        
+    
     # note that p_hpa, tk, qv, and ht have the vertical flipped
     result = cape_routine(p_hpa,
                          tk,
@@ -976,7 +976,7 @@ def omp_get_num_threads():
 
 
 def omp_get_max_threads():
-    """Return the maximum number of threads that can be used in a parallel
+    """Return the maximum number of threads that can be used in a parallel \
     region.
     
     The omp_get_max_threads routine returns an upper bound on the number of 
@@ -997,7 +997,7 @@ def omp_get_max_threads():
 
 
 def omp_get_thread_num():
-    """Return the thread number, within the current team, of the 
+    """Return the thread number, within the current team, of the \
     calling thread.
     
     The omp_get_thread_num routine returns the thread number of the calling 
@@ -1041,7 +1041,7 @@ def omp_get_num_procs():
 
 
 def omp_in_parallel():
-    """Return 1 if the active-levels-var ICV is greater than zero; 
+    """Return 1 if the active-levels-var ICV is greater than zero; \
     otherwise, return 0.
     
     The effect of the omp_in_parallel routine is to return 1 if the current 
@@ -1063,8 +1063,8 @@ def omp_in_parallel():
 
 
 def omp_set_dynamic(dynamic_threads):
-    """Enable or disable dynamic adjustment of the number of threads 
-    available for the execution of subsequent parallel regions by setting the 
+    """Enable or disable dynamic adjustment of the number of threads \
+    available for the execution of subsequent parallel regions by setting the \
     value of the dyn-var ICV.
     
     For implementations that support dynamic adjustment of the number of 
@@ -1092,7 +1092,7 @@ def omp_set_dynamic(dynamic_threads):
 
 
 def omp_get_dynamic():
-    """Return the value of the dyn-var ICV, which determines whether
+    """Return the value of the dyn-var ICV, which determines whether \
     dynamic adjustment of the number of threads is enabled or disabled.
     
     This routine returns 1 if dynamic adjustment of the number of threads 
@@ -1140,7 +1140,7 @@ def omp_set_nested(nested):
 
 
 def omp_get_nested():
-    """Return the value of the nest-var ICV, which determines if nested 
+    """Return the value of the nest-var ICV, which determines if nested \
     parallelism is enabled or disabled
     
     This routine returns 1 if nested parallelism is enabled for the current 
@@ -1160,7 +1160,7 @@ def omp_get_nested():
 
 
 def omp_set_schedule(kind, modifier=0):
-    """Set the schedule that is applied when *runtime* is used as 
+    """Set the schedule that is applied when *runtime* is used as \
     schedule kind, by setting the value of the run-sched-var ICV.
     
     The effect of this routine is to set the value of the run-sched-var ICV 
@@ -1221,8 +1221,8 @@ def omp_get_schedule():
 
 
 def omp_get_thread_limit(): 
-    """Return the maximum number of OpenMP threads available to participate in 
-    the current contention group.
+    """Return the maximum number of OpenMP threads available to participate \
+    in the current contention group.
     
     The omp_get_thread_limit routine returns the value of the thread-limit-var 
     ICV.
@@ -1241,7 +1241,7 @@ def omp_get_thread_limit():
 
 
 def omp_set_max_active_levels(max_levels):
-    """Limit the number of nested active parallel regions on the device, 
+    """Limit the number of nested active parallel regions on the device, \
     by setting the max-active-levels-var ICV.
     
     The effect of this routine is to set the value of the max-active-levels-var 
@@ -1271,7 +1271,7 @@ def omp_set_max_active_levels(max_levels):
 
 
 def omp_get_max_active_levels():
-    """Return the value of the max-active-levels-var ICV, which determines 
+    """Return the value of the max-active-levels-var ICV, which determines \
     the maximum number of nested active parallel regions on the device
     
     The omp_get_max_active_levels routine returns the value of the 
@@ -1311,7 +1311,7 @@ def omp_get_level():
    
                           
 def omp_get_ancestor_thread_num(level):
-    """Return, for a given nested level of the current thread, the thread 
+    """Return, for a given nested level of the current thread, the thread \
     number of the ancestor of the current thread.
     
     The omp_get_ancestor_thread_num routine returns the thread number of the 
@@ -1338,7 +1338,7 @@ def omp_get_ancestor_thread_num(level):
 
 
 def omp_get_team_size(level):
-    """Return, for a given nested level of the current thread, the size 
+    """Return, for a given nested level of the current thread, the size \
     of the thread team to which the ancestor or the current thread belongs
     
     The omp_get_team_size routine returns the size of the thread team to which 
@@ -1385,7 +1385,7 @@ def omp_get_active_level():
 
 
 def omp_in_final():
-    """Return 1 (True) if the routine is executed in a final task region; 
+    """Return 1 (True) if the routine is executed in a final task region; \
     otherwise, it returns 0 (False).
     
     Returns:
