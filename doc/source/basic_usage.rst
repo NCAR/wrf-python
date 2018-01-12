@@ -4,30 +4,32 @@ How To Use
 Introduction
 ---------------
 
-The API for wrf-python can be summarized as a variable extraction/computation
-routine, several interpolation routines, and some plotting utilities. 
+The API for wrf-python can be summarized as a variable computation/extraction
+routine, several interpolation routines, and a few plotting helper utilities. 
 The API is kept as simple as possible to help minimize the 
-programming burden on new users, students, and scientists. In the future, we 
-plan to extend xarray for programmers desiring a more object oriented API, 
+learning curve for new programmers, students, and scientists. In the future, 
+we plan to extend xarray for programmers desiring a more object oriented API, 
 but this remains a work in progress.
 
 The five most commonly used routines can be summarized as:
 
-- **wrf.getvar**: The routine that extracts WRF NetCDF variables or 
-  computes diagnostic variables. This is the routine you will use most often.
+- :meth:`wrf.getvar` - Extracts WRF-ARW NetCDF variables and 
+  computes diagnostic variables that WRF does not compute (e.g. storm 
+  relative helicity). This is the routine that you will use most often.
   
-- **wrf.interplevel**: Interpolates a three-dimensional field to a horizontal
-  plane at a specified level using simple (fast) linear interpolation.
+- :meth:`wrf.interplevel` - Interpolates a three-dimensional field to a 
+  horizontal plane at a specified level using simple (fast) linear 
+  interpolation (e.g. 850 hPa temperature).
   
-- **wrf.vertcross**: Interpolates a three-dimensional field to a vertical plane
-  through a user-specified horizontal line (i.e. a cross section).
+- :meth:`wrf.vertcross` - Interpolates a three-dimensional field to a vertical 
+  plane through a user-specified horizontal line (i.e. a cross section).
   
-- **wrf.interpline**: Interpolates a two-dimensional field to a user-specified 
-  line.
+- :meth:`wrf.interpline` - Interpolates a two-dimensional field to a 
+  user-specified line.
   
-- **wrf.vinterp**: Interpolates a three-dimensional field to user-specified 
-  'surface' levels (e.g. theta-e levels). This is a smarter, but slower, 
-  version of wrf.interplevel. 
+- :meth:`wrf.vinterp` - Interpolates a three-dimensional field to 
+  user-specified  'surface' levels (e.g. theta-e levels). This is a smarter, 
+  albeit slower, version of :meth:`wrf.interplevel`. 
 
 Basic Usage
 ----------------
@@ -38,8 +40,8 @@ Computing Diagnostic Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The primary use for the :meth:`wrf.getvar` function is to return diagnostic 
-variables that require a calculation, since WRF does not produce these variables
-natively. These diagnostics include CAPE, storm relative helicity, 
+variables that require a calculation, since WRF does not produce these 
+variables natively. These diagnostics include CAPE, storm relative helicity, 
 omega, sea level pressure, etc. A table of all available diagnostics can be 
 found here: :ref:`diagnostic-table`.
 
@@ -383,9 +385,9 @@ Result:
                                      pole_lon=0.0)
     
                         
-Note how the 'Time' dimension was replaced with the 'file' dimension, due to the 
-numpy's automatic squeezing of the single 'Time' dimension. To maintain the 
-'Time' dimension, set the *squeeze* parameter to False.
+Note how the 'Time' dimension was replaced with the 'file' dimension, due to  
+numpy's automatic squeezing of the single element 'Time' dimension. To maintain 
+the 'Time' dimension, set the *squeeze* parameter to False.
 
 .. code-block:: python
 
@@ -1642,6 +1644,7 @@ Result:
      <Ngl.Resources instance at 0x11d318a70>
      <Ngl.Resources instance at 0x11d318710>]
     
+.. _using_omp:
 
 Using OpenMP
 -------------------------
@@ -1664,7 +1667,7 @@ scheduler should be sufficient.
 
 
 Verifying that OpenMP is Enabled
-*************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To take advantage of the performance improvements offered by OpenMP, wrf-python
 needs to have been compiled with OpenMP features enabled. The example below 
@@ -1687,7 +1690,7 @@ Result:
 
 
 Determining the Number of Available Processors
-***************************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The example below shows how you can get the maximum number of processors 
 that are available on your system.
@@ -1709,19 +1712,19 @@ Result:
 
 
 Specifying the Number of Threads
-*************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 To enable multicore support via OpenMP, specifying the maximum number 
 of OpenMP threads (i.e. CPU cores) is the only step that you need to take.  
 
 In the example below, :meth:`wrf.omp_set_num_threads` is used to set the 
-maximum number of threads to use, and :meth:`wrf.omp_get_max_threads` is 
-get to get (and print) the maximum number of threads used.
+maximum number of threads to use, and :meth:`wrf.omp_get_max_threads` is used 
+to retrieve (and print) the maximum number of threads used.
 
 .. note::
 
-   Although there is an OpenMP library named :meth:`wrf.omp_get_num_threads`, 
-   this method will always returns 1 when called from the sequential part of 
+   Although there is an OpenMP routine named :meth:`wrf.omp_get_num_threads`, 
+   this routine will always return 1 when called from the sequential part of 
    the program. Use :meth:`wrf.omp_get_max_threads` to return the value set by 
    :meth:`wrf.omp_set_num_threads`.
 
@@ -1743,7 +1746,7 @@ Result:
    4
    
 Setting a Different Scheduler Type
-**************************************
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 When an OpenMP directive is encountered in the Fortran code, a scheduler is 
 used to determine how the work is divided among the threads. All of the 
@@ -1811,40 +1814,27 @@ value of 1, which is different than the 0 that was supplied to the
 :meth:`wrf.omp_set_schedule` routine. This is because the 0 tells OpenMP to use 
 its own default value for the scheduler, which is 1 for this type of scheduler.
 
-
-Performance Note
-******************
-
-If you have enabled multicore support with OpenMP, you may have noticed that 
-the routines do not scale linearly with the number of CPU cores added. One main 
-reason is that the computational routines are already fairly efficient and 
-vectorize well, so for many grid sizes, the time it takes to extract the 
-variables is on par with the time required to compute the diagnostic with a 
-single CPU core. Adding more CPU cores will decrease the time needed to do the 
-computation, but total performance will still be limited by the time it takes 
-to extract the variables from the NetCDF file. For local testing, diminishing 
-returns were seen after 4 CPU cores, but this will largely depend on the 
-hardware used and grid size for your WRF run.  
-
+.. _performance:
 
 Performance Tips
 --------------------
 
-Memory Issues and :data:`wrf.ALL_TIMES` 
-******************************************
+Memory Issues with :data:`wrf.ALL_TIMES` 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The use of :data:`wrf.ALL_TIMES` for the timeidx to :meth:`wrf.getvar` is 
-convenient for computing diagnostic variables across multiple files/times, but
-there is something that users should be aware of. When :data:`wrf.ALL_TIMES` is 
-set as the *timeidx* argument, all arrays used in the computation are extracted 
-for all times before the computation is started. This can cause serious memory 
-issues on smaller hardware systems like laptops.  
+The use of :data:`wrf.ALL_TIMES` for the *timeidx* parameter to 
+:meth:`wrf.getvar` is convenient for computing diagnostic variables across 
+multiple files/times, but there is something that users should be aware of. 
+When :data:`wrf.ALL_TIMES` is set as the *timeidx* argument, all arrays used 
+in the computation are extracted for all times before the computation 
+is started. This can cause serious memory issues on smaller hardware systems 
+like laptops.  
 
 In this example, the user wants to use a data set that is 289 x 39 x 300 x 300
 and compute z for the entire data set. The user is using a laptop with 
-16 GB of memory.  
+8 GB of memory.  
 
-.. code:: python
+.. code-block:: python
 
    from netCDF4 import Dataset
    from wrf import getvar, ALL_TIMES
@@ -1858,32 +1848,40 @@ In wrf-python, all of the computational routines use 8-byte REAL variables so
 that both the 4-byte and 8-byte version of WRF output can be used. The 
 calculation for z extracts three variables (P, PHB, and HGT) and returns a 
 fourth array (RESULT). The RESULT will get cut in half to 4-byte REALs 
-after the computation, but need 8-byte REAL when the result is computed. 
+after the computation, but needs an 8-byte REAL when the result is computed. 
 
 Let's look at the approximate amount memory needed:
 
-P: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
-PHB: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
-HGT: 289 x 300 x 300 x 8 = 208,080,000 (~208 MB)
-RESULT: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)
+**P**: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
+
+**PHB**: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
+
+**HGT**: 289 x 300 x 300 x 8 = 208,080,000 (~208 MB)
+
+**RESULT**: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)
 
 Yikes! So, in order to do this calculation using :data:`wrf.ALL_TIMES` as 
-the timeidx, over 24.2 GB are needed for this one calculation. When the laptop 
-runs out of memory, it begins using the hard drive for swap memory, which runs 
-hundreds of times slower than real memory.
+the *timeidx*, over 24.2 GB are needed for this one calculation. When the 
+laptop runs out of memory, it begins using the hard drive for swap memory, 
+which runs hundreds of times slower than real memory.
 
 To fix this situation, it is better to allocate the output array yourself and 
-run the calculation for each time step in a loop. The required memory 
-requirements change to:
+run the calculation for each time step in a loop 
+("loop-and-fill"). The required memory requirements change to:
 
-(Only need to store the result in a 4-byte REAL)
-FINAL_RESULT: 289 x 39 x 300 x 300 x 4 = 4,057560,000 bytes (~4 GB)
+(Note: only need to store the result in a 4-byte REAL)
 
-(The numbers below are for each loop iteration)
-P: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
-PHB: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
-HGT: 300 x 300 x 8 = 720,000 bytes (720 KB)
-RESULT: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+**FINAL_RESULT**: 289 x 39 x 300 x 300 x 4 = 4,057560,000 bytes (~4 GB)
+
+(Note: the numbers below are for each loop iteration)
+
+**P**: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+
+**PHB**: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+
+**HGT**: 300 x 300 x 8 = 720,000 bytes (720 KB)
+
+**RESULT**: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
 
 Since the memory for the computation is deleted after each 
 loop iteration, the total memory usage drops to approximately 4.1 GB.
@@ -1892,9 +1890,9 @@ The moral of the story is that you need to make sure that your system has
 enough memory to extract everything it needs up front if you want to use 
 :data:`wrf.ALL_TIMES`, otherwise it is better to "loop-and-fill" yourself.
 
-Here is an example of the loop-and-fill technique:
+Here is an example of the "loop-and-fill" technique:
 
-.. code:: python
+.. code-block:: python
     
    from __future__ import print_function, division
    
@@ -1904,7 +1902,7 @@ Here is an example of the loop-and-fill technique:
    
    filename_list = ["/path/to/file1", "/path/to/file2",...]
    
-   # Result shape (hardcoded for this example)
+   # Result shape (hard coded for this example)
    result_shape = (289, 39, 300, 300)
    
    # Only need 4-byte floats
@@ -1913,7 +1911,7 @@ Here is an example of the loop-and-fill technique:
    # Modify this number if using more than 1 time per file
    times_per_file = 1
    
-   for timeidx in xrange(result_shape[0]):
+   for timeidx in range(result_shape[0]):
        # Compute the file index and the time index inside the file
        fileidx = timeidx // times_per_file
        file_timeidx = timeidx % times_per_file
@@ -1926,7 +1924,7 @@ Here is an example of the loop-and-fill technique:
 
       
 The *cache* Argument for :meth:`wrf.getvar`
-*********************************************     
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     
 
 If you have read through the documentation, you may have noticed that the 
 :meth:`wrf.getvar` routine contains a *cache* argument. What is this for?
@@ -1940,10 +1938,10 @@ in a cache (dictionary) and passed on to the computational function.
 What isn't widely known is that this cache argument can also be supplied by 
 end users wishing to speed up their application. This can be useful in 
 situations where numerous calculations are being performed on the same 
-data set. For many algorithms, the cost to extract the arrays from the 
-NetCDF file is on par with the time to perform the calculation. If you are 
-computing numerous diagnostics, extracting the variables up front allows you 
-to only pay this extraction penalty once, rather than inside of each call 
+data set. For many algorithms, the time needed to extract the arrays from the 
+NetCDF file is on par with the time needed to perform the calculation. If you 
+are computing numerous diagnostics, extracting the variables up front allows 
+you to only pay this extraction penalty once, rather than inside of each call 
 to :meth:`wrf.getvar`.
 
 The cache is nothing more than a dictionary where each key is the variable 
@@ -1961,12 +1959,12 @@ sequence of variables.
 Some common variables that you can use to create an effective cache are: P, PB, 
 PH, PHB, T, QVAPOR, HGT, PSFC, U, V, W.
 
-Below is an example showing the same computations done with and without the 
+Below is an example showing the same computation done with and without the 
 cache. The execution time is printed. The hardware used is a 2.8 GHz Intel Core 
 i7, which contains 4 CPU cores with 2 hyper threads (8 total threads). This 
 will be interpreted as 8 CPUs for OpenMP.
 
-.. code:: python
+.. code-block:: python
 
    from __future__ import print_function
 
@@ -2018,21 +2016,21 @@ will be interpreted as 8 CPUs for OpenMP.
 
 Result:
 
-.. code:: none
+.. code-block:: none
 
    Time taken to build cache:  0.28154706955 s
    Time taken without variable cache:  11.0905270576 s
    Time taken with variable cache:  8.25931215286 s
    The cache decreased computation time by:  25.5282268378 %
    
-By removing the repeated extraction of common variables in the getvar routine,
-for the single threaded case, the computation time has been reduced by 
-25.5% in the particular example.
+By removing the repeated extraction of common variables in the 
+:meth:`wrf.getvar` routine, for the single threaded case, the computation 
+time has been reduced by 25.5% in this particular example.
 
-Things get more interesting when OpenMP is turned on, and set to use the 
+Things get more interesting when OpenMP is turned on and set to use the 
 maximum number of processors (in this case 8 threads are used).  
 
-.. code:: python
+.. code-block:: python
 
    from __future__ import print_function
 
@@ -2086,7 +2084,7 @@ maximum number of processors (in this case 8 threads are used).
 
 Result:
 
-.. code:: none
+.. code-block:: none
 
    Time taken to build cache:  0.2700548172 s
    Time taken without variable cache:  6.02652812004 s

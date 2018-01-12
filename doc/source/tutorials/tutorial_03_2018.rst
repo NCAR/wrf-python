@@ -1,5 +1,5 @@
-WRF Tutorial 2018
-=====================
+WRF-Python Tutorial 2018
+=========================
 
 NCAR will be providing a four hour tutorial for wrf-python on Wednesday, March
 7, 2018. The tutorial is free, but seating is limited to only 16 students, so 
@@ -15,9 +15,9 @@ Boulder, Colorado
 Overview
 --------------
 
-This tutorial provides an introduction to wrf-python. The tutorial is friendly 
-for new users of wrf-python, but this is not an introduction to the Python 
-programming language (see Prerequisites below). Due to limited seating, if you 
+This tutorial provides an introduction to wrf-python. The tutorial is beginner 
+friendly for new users of wrf-python, but this is not an introduction to the Python 
+programming language (see :ref:`prereq`). Due to limited seating, if you 
 do not have any previous experience with Python, please do not register 
 for this tutorial.
 
@@ -47,6 +47,7 @@ Registration consists of a brief survey, which will help give the instructors
 a brief overview of your background and will help tailor the tutorial to 
 your expectations.
 
+.. _prereq:
 
 Prerequisites
 ---------------

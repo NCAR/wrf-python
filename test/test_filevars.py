@@ -23,20 +23,45 @@ class WRFFileVarsTest(ut.TestCase):
 
 def make_test(ncfiles, varname):
     def test(self):
+        #import time
+        #very_start = time.time()
+        #start = time.time()
         t1 = getvar(ncfiles, varname, 0)
-        t2 = getvar(ncfiles, varname, 0, meta=False)
-        t3 = getvar(ncfiles, varname, ALL_TIMES)
-        t4 = getvar(ncfiles, varname, ALL_TIMES, meta=False)
-        t5 = getvar(ncfiles, varname, ALL_TIMES, method="join")
-        t6 = getvar(ncfiles, varname, ALL_TIMES, method="join", meta=False)
         
+        #end = time.time()
+        #print ("t1: ", start-end)
+        #start = time.time()
+        t2 = getvar(ncfiles, varname, 0, meta=False)
+        #end = time.time()
+        #print ("t2: ", start-end)
+        #start = time.time()
+        t3 = getvar(ncfiles, varname, ALL_TIMES)
+        #end = time.time()
+        #print ("t3: ", start-end)
+        #start = time.time()
+        t4 = getvar(ncfiles, varname, ALL_TIMES, meta=False)
+        #end = time.time()
+        #print ("t4: ", start-end)
+        #start = time.time()
+        t5 = getvar(ncfiles, varname, ALL_TIMES, method="join")
+        #end = time.time()
+        #print ("t5: ", start-end)
+        #start = time.time()
+        t6 = getvar(ncfiles, varname, ALL_TIMES, method="join", meta=False)
+        #end = time.time()
+        #print ("t6: ", start-end)
+        #start = time.time()
+        
+        #print ("Total Time: ", (end-start))
     return test
         
 
 if __name__ == "__main__":
     from netCDF4 import Dataset
-    
     ncfiles = [Dataset(x) for x in TEST_FILES]
+    
+    #import scipy.io
+    #ncfiles = [scipy.io.netcdf.netcdf_file(x) for x in TEST_FILES]
     
     file_vars = ncfiles[0].variables.keys()
     

@@ -93,45 +93,48 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
         multiproduct = varname in ("uvmet", "uvmet10", "cape_2d", "cape_3d", 
                                    "cfrac")
         
+        # These varnames don't have NCL functions to test against
+        ignore_referent = ("zstag", "geopt_stag")
         
-        if not multi:
-            ref_vals = refnc.variables[varname][:]
-        else:
-            data = refnc.variables[varname][:]
-            if (varname != "uvmet" and varname != "uvmet10" 
-                and varname != "cape_2d" and varname != "cape_3d"):
-                new_dims = [repeat] + [x for x in data.shape]
-            elif (varname == "uvmet" or varname == "uvmet10" 
-                  or varname == "cape_3d"):
-                new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
-            elif (varname == "cape_2d"):
-                new_dims = [4] + [repeat] + [x for x in data.shape[1:]]
-            elif (varname == "cfrac"):
-                new_dims = [3] + [repeat] + [x for x in data.shape[1:]]
-
-                
-            masked=False
-            if (isinstance(data, ma.core.MaskedArray)):
-                masked=True
-            
-            if not masked:
-                ref_vals = np.zeros(new_dims, data.dtype)
+        if varname not in ignore_referent:
+            if not multi:
+                ref_vals = refnc.variables[varname][:]
             else:
-                ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
-            
-            for i in xrange(repeat):
-                if not multiproduct:
-                    ref_vals[i,:] = data[:]
+                data = refnc.variables[varname][:]
+                if (varname != "uvmet" and varname != "uvmet10" 
+                    and varname != "cape_2d" and varname != "cape_3d"):
+                    new_dims = [repeat] + [x for x in data.shape]
+                elif (varname == "uvmet" or varname == "uvmet10" 
+                      or varname == "cape_3d"):
+                    new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
+                elif (varname == "cape_2d"):
+                    new_dims = [4] + [repeat] + [x for x in data.shape[1:]]
+                elif (varname == "cfrac"):
+                    new_dims = [3] + [repeat] + [x for x in data.shape[1:]]
+    
+                    
+                masked=False
+                if (isinstance(data, ma.core.MaskedArray)):
+                    masked=True
                 
-                    if masked:
-                        ref_vals.mask[i,:] = data.mask[:]
-                        
+                if not masked:
+                    ref_vals = np.zeros(new_dims, data.dtype)
                 else:
-                    for prod in xrange(ref_vals.shape[0]):
-                        ref_vals[prod,i,:] = data[prod,:]
-                        
+                    ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
+                
+                for i in xrange(repeat):
+                    if not multiproduct:
+                        ref_vals[i,:] = data[:]
+                    
                         if masked:
-                            ref_vals.mask[prod,i,:] = data.mask[prod,:]
+                            ref_vals.mask[i,:] = data.mask[:]
+                            
+                    else:
+                        for prod in xrange(ref_vals.shape[0]):
+                            ref_vals[prod,i,:] = data[prod,:]
+                            
+                            if masked:
+                                ref_vals.mask[prod,i,:] = data.mask[prod,:]
         
         if (varname == "tc"):
             my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
@@ -176,6 +179,10 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             
             #print np.amax(np.abs(to_np(cape_3d[0,:]) - ref_vals[0,:]))
             nt.assert_allclose(to_np(cape_3d), ref_vals, tol, atol)
+        elif (varname == "zstag" or varname == "geopt_stag"):
+            v = getvar(in_wrfnc, varname, timeidx=timeidx)
+            # For now, only make sure it runs without crashing since no NCL
+            # to compare with yet.
         else:
             my_vals = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 2/100.
@@ -274,6 +281,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
             pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
+            #ht_cross = vertcross(to_np(hts), p, pivot_point=pivot_point, 
+            #                     angle=90., latlon=True)
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
             
             # Note:  Until the bug is fixed in NCL, the wrf-python cross 
@@ -304,6 +313,8 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
             pivot_point = CoordPair(t2.shape[-1] / 2, t2.shape[-2] / 2)
             
+            #t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
+            #                      angle=90.0, latlon=True)
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
             # Note:  After NCL is fixed, remove the slice.
@@ -619,9 +630,9 @@ class WRFLatLonTest(ut.TestCase):
 
 if __name__ == "__main__":
     from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
-                     omp_set_dynamic, Constants)
-    omp_set_num_threads(6)
-    omp_set_schedule(Constants.OMP_SCHED_STATIC, 0)
+                     omp_set_dynamic, OMP_SCHED_STATIC)
+    omp_set_num_threads(8)
+    omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
     
     ignore_vars = []  # Not testable yet
@@ -629,7 +640,7 @@ if __name__ == "__main__":
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "cfrac"]
+                "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     latlon_tests = ["xy", "ll"]
     

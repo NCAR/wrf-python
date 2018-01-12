@@ -45,8 +45,9 @@ Documentation
    ./api
    ./faq
    ./support
+   ./citation
    ./license
-   ./tutorial_03_2018
+   ./tutorial
 
 
 Indices and tables

@@ -5,7 +5,7 @@ import numpy as np
 
 from .constants import Constants, default_fill
 
-from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
+from wrf._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeseaprs, dfilter2d, dcomputerh, dcomputeuvmet,
                           dcomputetd, dcapecalc2d, dcapecalc3d, dcloudfrac2, 
                           wrfcttcalc, calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
@@ -40,7 +40,7 @@ from .specialdec import (uvmet_left_iter, cape_left_iter,
 class DiagnosticError(Exception):
     """Raised when an error occurs in a diagnostic routine."""
     def __init__(self, message=None):
-        """Initialize a :class:`wrf.DiagnosticError` objection.
+        """Initialize a :class:`wrf.DiagnosticError` object.
         
         Args:
         

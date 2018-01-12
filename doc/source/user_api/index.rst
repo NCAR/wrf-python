@@ -257,6 +257,7 @@ in one place.
    wrf.disable_pyngl
    wrf.set_cache_size
    wrf.get_cache_size
+   wrf.omp_enabled
    
 
 Miscellaneous Routines
@@ -322,7 +323,7 @@ use a single point for an (x, y) or (lat, lon) location.
    wrf.CoordPair
    
 CoordPair Methods
-~~~~~~~~~~~~~~~~~~~~~~~
+************************
 
 .. autosummary::
    :nosignatures:
@@ -349,7 +350,7 @@ The classes below are used to hold the projection information in the
 'projection' entry within a :attr:`xarray.DataArray.attrs` attribute.
 
 Projection Base Class
-~~~~~~~~~~~~~~~~~~~~~~~~
+******************************
 
 The base class for all map projection types.
 
@@ -360,7 +361,7 @@ The base class for all map projection types.
    wrf.WrfProj
    
 Projection Base Class Methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+***********************************
 
 The class methods for all projection types.
 
@@ -378,7 +379,7 @@ The class methods for all projection types.
    
    
 Projection Subclasses
-~~~~~~~~~~~~~~~~~~~~~~~~
+*****************************
 
 See :class:`wrf.WrfProj` for methods and attributes.
 

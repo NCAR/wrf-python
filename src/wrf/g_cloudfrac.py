@@ -32,7 +32,7 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
         2000 m <= mid_cloud < 6000 m
         6000 m <= high_cloud
     
-    For 'pres', the default cloud levels are defined as: 
+    For 'pressure', the default cloud levels are defined as: 
     
         97000 Pa <= low_cloud < 80000 Pa
         80000 Pa <= mid_cloud < 45000 Pa
@@ -40,16 +40,16 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
         
     Note that the default low cloud levels are chosen to
     exclude clouds near the surface (fog). If you want fog included, set 
-    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pres', or 15 m if using 
-    'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid points 
-    are slightly above the ground, and in order to find clouds, the 
+    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pressure', or 15 m if 
+    using 'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid 
+    points are slightly above the ground, and in order to find clouds, the 
     *low_thresh* needs to be set to values that are slightly greater than 
     (less than) the lowest height (pressure) values.
     
-    When using 'pres' or 'height_agl' for *vert_type*, there is a possibility 
-    that the lowest WRF level will be higher than the low_cloud or mid_cloud 
-    threshold, particularly for mountainous regions.  When this happens, a 
-    fill value will be used in the output.
+    When using 'pressure' or 'height_agl' for *vert_type*, there is a 
+    possibility that the lowest WRF level will be higher than the low_cloud or 
+    mid_cloud threshold, particularly for mountainous regions.  When this 
+    happens, a fill value will be used in the output.
     
     This functions extracts the necessary variables from the NetCDF file 
     object in order to perform the calculation.
