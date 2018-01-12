@@ -7,7 +7,7 @@ import wrapt
 
 from .util import iter_left_indexes, to_np
 from .config import xarray_enabled
-from .constants import Constants
+from .constants import default_fill
 
 if xarray_enabled():
     from xarray import DataArray
@@ -74,12 +74,12 @@ def uvmet_left_iter(alg_dtype=np.float64):
             
         v_arr = to_np(v)
           
-        umissing = Constants.DEFAULT_FILL  
+        umissing = default_fill(np.float64)  
         if isinstance(u_arr, np.ma.MaskedArray):
             has_missing = True
             umissing = u_arr.fill_value
         
-        vmissing = Constants.DEFAULT_FILL 
+        vmissing = default_fill(np.float64) 
         if isinstance(v_arr, np.ma.MaskedArray):
             has_missing = True
             vmissing = v_arr.fill_value
@@ -383,6 +383,7 @@ def cape_left_iter(alg_dtype=np.float64):
     
     return func_wrapper
 
+
 def cloudfrac_left_iter(alg_dtype=np.float64):
     """A decorator to handle iterating over the leftmost dimensions for the 
     cloud fraction diagnostic.
@@ -409,72 +410,71 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
     """
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        # The cape calculations use an ascending vertical pressure coordinate
         new_args = list(args)
         new_kwargs = dict(kwargs)
         
-        p = args[0]
+        vert = args[0]
         rh = args[1]
             
-        num_left_dims = p.ndim - 3
-        orig_dtype = p.dtype
+        num_left_dims = vert.ndim - 3
+        orig_dtype = vert.dtype
         
-        # No special left side iteration, build the output from the cape,cin
-        # result
+        # No special left side iteration, build the output from the 
+        # low, mid, high results.
         if (num_left_dims == 0):
-            low, med, high = wrapped(*new_args, **new_kwargs)
+            low, mid, high = wrapped(*new_args, **new_kwargs)
             
             output_dims = (3,)
-            output_dims += p.shape[-2:]
+            output_dims += vert.shape[-2:]
             output = np.empty(output_dims, orig_dtype)
             
             output[0,:] = low[:]
-            output[1,:] = med[:]
+            output[1,:] = mid[:]
             output[2,:] = high[:]
             
             return output
                 
 
-        # Initial output is ...,cape_cin,nz,ny,nx to create contiguous views
-        outdims = p.shape[0:num_left_dims]
+        # Initial output is ...,low_mid_high,nz,ny,nx to create contiguous views
+        outdims = vert.shape[0:num_left_dims]
         extra_dims = tuple(outdims) # Copy the left-most dims for iteration
         
         outdims += (3,) # low_mid_high
         
-        outdims += p.shape[-2:]
+        outdims += vert.shape[-2:]
         
         outview_array = np.empty(outdims, alg_dtype)
         
         # Create the output array where the leftmost dim is the cloud type
         output_dims = (3,)
         output_dims += extra_dims
-        output_dims += p.shape[-2:]
+        output_dims += vert.shape[-2:]
         output = np.empty(output_dims, orig_dtype)
         
         has_missing = False
-        missing = Constants.DEFAULT_FILL
+        missing = default_fill(np.float64)
         for left_idxs in iter_left_indexes(extra_dims):
             left_and_slice_idxs = left_idxs + (slice(None),)
             low_idxs = left_idxs + (0, slice(None))
-            med_idxs = left_idxs + (1, slice(None))
+            mid_idxs = left_idxs + (1, slice(None))
             high_idxs = left_idxs + (2, slice(None))
             
             low_output_idxs = (0,) + left_idxs + (slice(None),)
-            med_output_idxs = (1,) + left_idxs + (slice(None),)
+            mid_output_idxs = (1,) + left_idxs + (slice(None),)
             high_output_idxs = (2,) + left_idxs + (slice(None),)
             
-            new_args[0] = p[left_and_slice_idxs]
+            new_args[0] = vert[left_and_slice_idxs]
             new_args[1] = rh[left_and_slice_idxs]
             
             # Skip the possible empty/missing arrays for the join method
-            # Note: Masking handled by cape.py or computation.py, so only 
+            # Note: Masking handled by cloudfrac.py or computation.py, so only 
             # supply the fill values here.
             skip_missing = False
             for arg in (new_args[0:2]):
                 if isinstance(arg, np.ma.MaskedArray):
                     if arg.mask.all():
                         output[low_output_idxs] = missing
-                        output[med_output_idxs] = missing
+                        output[mid_output_idxs] = missing
                         output[high_output_idxs] = missing
                         
                         skip_missing = True
@@ -484,14 +484,14 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
                 continue
             
             lowview = outview_array[low_idxs]
-            medview = outview_array[med_idxs]
+            midview = outview_array[mid_idxs]
             highview = outview_array[high_idxs]
             
             new_kwargs["lowview"] = lowview
-            new_kwargs["medview"] = medview
+            new_kwargs["midview"] = midview
             new_kwargs["highview"] = highview
             
-            low, med, high = wrapped(*new_args, **new_kwargs)
+            low, mid, high = wrapped(*new_args, **new_kwargs)
             
             # Make sure the result is the same data as what got passed in 
             # Can delete this once everything works
@@ -501,8 +501,8 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
             
             output[low_output_idxs] = (
                             outview_array[low_idxs].astype(orig_dtype))
-            output[med_output_idxs] = (
-                            outview_array[med_idxs].astype(orig_dtype))
+            output[mid_output_idxs] = (
+                            outview_array[mid_idxs].astype(orig_dtype))
             output[high_output_idxs] = (
                             outview_array[high_idxs].astype(orig_dtype))
         

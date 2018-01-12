@@ -6,13 +6,13 @@ import numpy.ma as ma
 
 from .extension import _tk, _cape
 from .destag import destagger
-from .constants import Constants, ConversionFactors
+from .constants import default_fill, Constants, ConversionFactors
 from .util import extract_vars
 from .metadecorators import set_cape_metadata
 
 @set_cape_metadata(is2d=True)
 def get_2dcape(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
-               meta=True, _key=None, missing=Constants.DEFAULT_FILL):
+               meta=True, _key=None, missing=default_fill(np.float64)):
     """Return the 2d fields of CAPE, CIN, LCL, and LFC.
     
     The leftmost dimension of the returned array represents four different 
@@ -66,7 +66,7 @@ def get_2dcape(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
             purposes only.  Default is None.
             
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(np.float64)`.
    
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
@@ -130,7 +130,7 @@ def get_2dcape(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
 @set_cape_metadata(is2d=False)
 def get_3dcape(wrfin, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
-               _key=None, missing=Constants.DEFAULT_FILL):
+               _key=None, missing=default_fill(np.float64)):
     """Return the three-dimensional CAPE and CIN.
     
     The leftmost dimension of the returned array represents two different 
@@ -182,7 +182,7 @@ def get_3dcape(wrfin, timeidx=0, method="cat",
             purposes only.  Default is None.
             
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(np.float64)`.
    
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 

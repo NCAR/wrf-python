@@ -50,13 +50,23 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
 !NCLEND
 
     INTEGER :: i, j, k
-    INTEGER :: jtch, jt, ipch, ip
+    INTEGER :: jt, ip
     REAL(KIND=8) :: q, t, p, e, tlcl, eth
     REAL(KIND=8) :: fracip, fracip2, fracjt, fracjt2
     REAL(KIND=8), DIMENSION(150) :: PSADITHTE, PSADIPRS
     REAL(KIND=8), DIMENSION(150,150) :: PSADITMK
     REAL(KIND=8) :: tonpsadiabat
 
+    INTEGER :: l1, h1, mid1, rang1, l2, h2, mid2, rang2
+    INTEGER :: errcnt1, errcnt2, bad_i, bad_j, bad_k
+    REAL(KIND=8) :: bad_p, bad_eth
+    !INTEGER :: ip, ipch, jt, jtch
+
+    errcnt1 = 0
+    errcnt2 = 0
+    bad_i = -1
+    bad_j = -1
+    bad_k = -1
 
     !  Before looping, set lookup table for getting temperature on
     !  a pseudoadiabat.
@@ -67,6 +77,10 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
         RETURN
     END IF
 
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE (i, j, k, jt, ip, q, t, p, e, tlcl, &
+    !$OMP eth, fracip, fracip2, fracjt, fracjt2, l1, h1, mid1, rang1, l2, h2, &
+    !$OMP mid2, rang2, tonpsadiabat) REDUCTION(+:errcnt1, errcnt2) &
+    !$OMP SCHEDULE(runtime)
     DO k=1,nz
         DO j=1,ny
             DO i=1,nx
@@ -92,26 +106,51 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
                     tonpsadiabat = eth*(p/1000.)**GAMMA
                 ELSE
                     ! Otherwise, look for the given thte/prs point in the lookup table.
-                    jt=-1
-                    DO jtch=1,150-1
-                        IF (eth .GE. PSADITHTE(jtch) .AND. eth .LT. PSADITHTE(jtch+1)) THEN
-                            jt = jtch
-                            EXIT
-                        ENDIF
+                    jt = -1
+                    l1 = 1
+                    h1 = 149
+                    rang1 = h1 - l1
+                    mid1 = (h1 + l1) / 2
+                    DO WHILE(rang1 .GT. 1)
+                        IF (eth .GE. psadithte(mid1)) THEN
+                             l1 = mid1
+                        ELSE
+                             h1 = mid1
+                        END IF
+                        rang1 = h1 - l1
+                        mid1 = (h1 + l1) / 2
                     END DO
+                    jt = l1
 
-                    ip=-1
-                    DO ipch=1,150-1
-                        IF (p .LE. PSADIPRS(ipch) .AND. p .GT. PSADIPRS(ipch+1)) THEN
-                            ip = ipch
-                            EXIT
-                        ENDIF
+                    ip = -1
+                    l2 = 1
+                    h2 = 149
+                    rang2 = h2 - l2
+                    mid2 = (h2 + l2) / 2
+                    DO WHILE(rang2 .GT. 1)
+                        IF (p .LE. psadiprs(mid2)) THEN
+                            l2 = mid2
+                        ELSE
+                            h2 = mid2
+                        END IF
+                        rang2 = h2 - l2
+                        mid2 = (h2 + l2) / 2
                     END DO
+                    ip = l2
 
                     IF (jt .EQ. -1 .OR. ip .EQ. -1) THEN
-                        errstat = ALGERR
-                        WRITE(errmsg, *) "Outside of lookup table bounds. prs,thte=", p, eth
-                        RETURN
+                        errcnt1 = errcnt1 + 1
+                        !$OMP CRITICAL
+                        ! Only do this the first time
+                        IF (bad_i .EQ. -1) THEN
+                            bad_i = i
+                            bad_j = j
+                            bad_k = k
+                            bad_p = p
+                            bad_eth = eth
+                        END IF
+                        !$OMP END CRITICAL
+                        CYCLE
                     ENDIF
 
                     fracjt = (eth - PSADITHTE(jt))/(PSADITHTE(jt+1) - PSADITHTE(jt))
@@ -119,12 +158,21 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
                     fracip = (PSADIPRS(ip) - p)/(PSADIPRS(ip) - PSADIPRS(ip+1))
                     fracip2 = 1. - fracip
 
+
                     IF (PSADITMK(ip,jt) .GT. 1e9 .OR. PSADITMK(ip+1,jt) .GT. 1e9 .OR. &
                         PSADITMK(ip,jt+1) .GT. 1e9 .OR. PSADITMK(ip+1,jt+1) .GT. 1e9) THEN
-                        !PRINT*,'Tried to access missing tmperature in lookup table.'
-                        errstat = ALGERR
-                        WRITE(errmsg, *) "Prs and Thte probably unreasonable. prs, thte=", p, eth
-                        RETURN
+                        errcnt2 = errcnt2 + 1
+                        !$OMP CRITICAL
+                        ! Only do this the first time
+                        IF (bad_i .EQ. -1) THEN
+                            bad_i = i
+                            bad_j = j
+                            bad_k = k
+                            bad_p = p
+                            bad_eth = eth
+                        END IF
+                        !$OMP END CRITICAL
+                        CYCLE
                     ENDIF
 
                     tonpsadiabat = fracip2*fracjt2*PSADITMK(ip,jt) + &
@@ -138,6 +186,20 @@ SUBROUTINE WETBULBCALC(prs, tmk, qvp, twb, nx, ny, nz, psafile, errstat, errmsg)
             END DO
         END DO
     END DO
+
+    !$OMP END PARALLEL DO
+
+    IF (errcnt1 > 0) THEN
+        errstat = ALGERR
+        WRITE(errmsg, *) "Outside of lookup table bounds. i=", bad_i, ",j=", bad_j, ",k=", bad_k, ",p=", bad_p, ",eth=", bad_eth
+        RETURN
+    END IF
+
+    IF (errcnt2 > 0) THEN
+        errstat = ALGERR
+        WRITE(errmsg, *) "PRS and THTE unreasonable. i=", bad_i, ",j=", bad_j, ",k=", bad_k, ",p=", bad_p, ",eth=", bad_eth
+        RETURN
+    END IF
 
     RETURN
 
@@ -195,6 +257,7 @@ SUBROUTINE OMGCALC(qvp, tmk, www, prs, omg, mx, my, mz)
     INTEGER :: i, j, k
     !REAL(KIND=8), PARAMETER :: GRAV=9.81, RGAS=287.04, EPS=0.622
 
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO k=1,mz
         DO j=1,my
             DO i=1,mx
@@ -204,6 +267,7 @@ SUBROUTINE OMGCALC(qvp, tmk, www, prs, omg, mx, my, mz)
             END DO
        END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -255,6 +319,7 @@ SUBROUTINE VIRTUAL_TEMP(temp, ratmix, tv, nx, ny, nz)
     INTEGER :: i,j,k
     !REAL(KIND=8),PARAMETER :: EPS = 0.622D0
 
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO k=1,nz
         DO j=1,ny
             DO i=1,nx
@@ -262,6 +327,7 @@ SUBROUTINE VIRTUAL_TEMP(temp, ratmix, tv, nx, ny, nz)
             END DO
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 

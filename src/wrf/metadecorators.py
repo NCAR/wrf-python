@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
+import warnings
 import wrapt 
 from collections import OrderedDict
 
@@ -322,6 +323,7 @@ def set_wind_metadata(copy_varname, name, description,
         
     return func_wrapper
 
+
 def set_cape_metadata(is2d):
     """A decorator that sets the metadata for a wrapped CAPE function's output.
     
@@ -468,14 +470,22 @@ def set_cloudfrac_metadata():
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfin", "timeidx", "method", "squeeze", 
-                                      "cache", "_key"), 
-                          *args, **kwargs)
+                                      "cache", "_key", "vert_type", 
+                                      "low_thresh", "mid_thresh", 
+                                      "high_thresh", "missing"), 
+                            *args, **kwargs)
         wrfin = argvars["wrfin"]
         timeidx = argvars["timeidx"]
         method = argvars["method"]
         squeeze = argvars["squeeze"]
         cache = argvars["cache"]
         _key = argvars["_key"]
+        vert_type = argvars["vert_type"]
+        low_thresh = argvars["low_thresh"]
+        mid_thresh = argvars["mid_thresh"]
+        high_thresh = argvars["high_thresh"]
+        missing = argvars["missing"]
+        
         if cache is None:
             cache = {}
         
@@ -499,6 +509,20 @@ def set_cloudfrac_metadata():
         outattrs.update(copy_var.attrs)
         outdimnames = [None] * result.ndim
         
+        # For printing units
+        unitstr = ("Pa" if vert_type.lower() == "pres" 
+                   or vert_type.lower() == "pressure" else "m")
+        
+        # For setting the threholds in metdata
+        if vert_type.lower() == "pres" or vert_type.lower() == "pressure":
+            _low_thresh = 97000. if low_thresh is None else low_thresh
+            _mid_thresh = 80000. if mid_thresh is None else mid_thresh
+            _high_thresh = 45000. if high_thresh is None else high_thresh
+        elif vert_type.lower() == "height_msl" or "height_agl":
+            _low_thresh = 300. if low_thresh is None else low_thresh
+            _mid_thresh = 2000. if mid_thresh is None else mid_thresh
+            _high_thresh = 6000. if high_thresh is None else high_thresh
+        
         # Right dims
         outdimnames[-2:] = copy_var.dims[-2:]
         # Left dims
@@ -507,6 +531,11 @@ def set_cloudfrac_metadata():
         outattrs["description"] = "low, mid, high clouds"
         outattrs["MemoryOrder"] = "XY"
         outattrs["units"] = "%"
+        outattrs["low_thresh"] = "{} {}".format(_low_thresh, unitstr)
+        outattrs["mid_thresh"] = "{} {}".format(_mid_thresh, unitstr)
+        outattrs["high_thresh"] = "{} {}".format(_high_thresh, unitstr)
+        outattrs["_FillValue"] = missing
+        outattrs["missing_value"] = missing
         outname = "cloudfrac"
 
         # xarray doesn't line up coordinate dimensions based on 
@@ -528,6 +557,7 @@ def set_cloudfrac_metadata():
                        dims=outdimnames, attrs=outattrs)
         
     return func_wrapper
+
 
 def set_latlon_metadata(xy=False):
     """A decorator that sets the metadata for a wrapped latlon function's 
@@ -613,8 +643,9 @@ def set_latlon_metadata(xy=False):
         return da
     
     return func_wrapper
-    
-def set_height_metadata(geopt=False):
+
+
+def set_height_metadata(geopt=False, stag=False):
     """A decorator that sets the metadata for a wrapped height function's 
     output.
     
@@ -628,6 +659,9 @@ def set_height_metadata(geopt=False):
         geopt (:obj:`bool`, optional): Set to True if the wrapped function 
             returns geopotential.  Set to True if the wrapped function 
             returns geopotential height.  Default is False.
+            
+        stag (:obj:`bool`, optional): Set to True to use the vertical 
+            staggered grid, rather than the mass grid. Default is False.
             
     Returns:
     
@@ -664,9 +698,17 @@ def set_height_metadata(geopt=False):
         if cache is None:
             cache = {}
         
+        is_met_em = False
         # For height, either copy the met_em GHT variable or copy and modify
         # pressure (which has the same dims as destaggered height)
-        ht_metadata_varname = either("P", "GHT")(wrfin)
+        if not stag:
+            ht_metadata_varname = either("P", "GHT")(wrfin)
+        else:
+            ht_metadata_varname = either("PH", "GHT")(wrfin)
+        
+        if ht_metadata_varname == "GHT":
+            is_met_em = True
+            
         ht_var = extract_vars(wrfin, timeidx, ht_metadata_varname, 
                               method, squeeze, cache, meta=True,
                               _key=_key)
@@ -692,17 +734,27 @@ def set_height_metadata(geopt=False):
         if geopt:
             outname = "geopt"
             outattrs["units"] = "m2 s-2"
-            outattrs["description"] = "full model geopotential"
+            if not stag or is_met_em:
+                outattrs["description"] = "geopotential (mass grid)"
+            else:
+                outattrs["description"] = ("geopotential (vertically "
+                                           "staggered grid)")
         else:
             outname = "height" if msl else "height_agl" 
             outattrs["units"] = units
             height_type = "MSL" if msl else "AGL"
-            outattrs["description"] = "model height ({})".format(height_type)
+            if not stag or is_met_em:
+                outattrs["description"] = ("model height - [{}] "
+                                           "(mass grid)".format(height_type))
+            else:
+                outattrs["description"] = ("model height - [{}] (vertically "
+                                        "staggered grid)".format(height_type))
         
         
         return DataArray(result, name=outname, 
                          dims=outdimnames, coords=outcoords, attrs=outattrs)
     return func_wrapper
+
 
 def _set_horiz_meta(wrapped, instance, args, kwargs):  
     """A decorator implementation that sets the metadata for a wrapped 
@@ -798,7 +850,8 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)
-    
+
+
 def _set_cross_meta(wrapped, instance, args, kwargs):
     """A decorator implementation that sets the metadata for a wrapped cross \
     section interpolation function.
@@ -990,6 +1043,8 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
+                warnings.warn("'latlon' is set to True, but 'field3d' "
+                "             contains no coordinate information")
                 outcoords["xy_loc"] = ("cross_line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
@@ -1002,6 +1057,10 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         outcoords["vertical"] = z_var2d[:]
         
     else:
+        if inc_latlon:
+            warnings.warn("'latlon' is set to True, but 'field3d' is "
+                          "not of type xarray.DataArray and contains no "
+                          "coordinate information")
         outname = "field3d_cross"
         outattrs = OrderedDict()
     
@@ -1011,7 +1070,6 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)  
-    
     
 
 def _set_line_meta(wrapped, instance, args, kwargs):
@@ -1198,6 +1256,8 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
+                warnings.warn("'latlon' is set to True, but 'field2d' "
+                              "contains no coordinate information")
                 outcoords["xy_loc"] = ("line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
@@ -1208,6 +1268,10 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                                           for i in py3range(xy.shape[-2]))))
         
     else:
+        if inc_latlon:
+            warnings.warn("'latlon' is set to True, but 'field2d' is "
+                          "not of type xarray.DataArray and contains no "
+                          "coordinate information")
         outname = "field2d_line"
         outattrs = OrderedDict()
     
@@ -1770,6 +1834,7 @@ def set_alg_metadata(alg_ndims, refvarname,
     
     return func_wrapper
 
+
 def set_smooth_metdata():
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs): 
@@ -1994,14 +2059,14 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
     return func_wrapper
 
 
-def set_cloudfrac_alg_metadata(copyarg="pres"):
+def set_cloudfrac_alg_metadata(copyarg="vert"):
     """A decorator that sets the metadata for the wrapped raw cloud fraction 
     diagnostic function.
     
     Args:
             
         copyarg (:obj:`str`): The wrapped function argument to use for 
-            copying dimension names.  Default is 'pres'.
+            copying dimension names.  Default is 'vert'.
     
     Returns:
     
@@ -2025,6 +2090,16 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
             
         result = wrapped(*args, **kwargs)
         
+        argvals = from_args(wrapped, (copyarg, "low_thresh", 
+                                 "mid_thresh", "high_thresh", 
+                                 "missing"), 
+                       *args, **kwargs)
+        cp = argvals[copyarg]
+        low_thresh = argvals["low_thresh"]
+        mid_thresh = argvals["mid_thresh"]
+        high_thresh = argvals["high_thresh"]
+        missing = argvals["missing"]
+        
         # Default dimension names
         outdims = ["dim_{}".format(i) for i in py3range(result.ndim)]
         
@@ -2034,15 +2109,17 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
         outattrs["description"] = "low, mid, high clouds"
         outattrs["units"] = "%"
         outattrs["MemoryOrder"] = "XY"
+        outattrs["low_thresh"] = low_thresh
+        outattrs["mid_thresh"] = mid_thresh
+        outattrs["high_thresh"] = high_thresh
+        outattrs["_FillValue"] = missing
+        outattrs["missing_value"] = missing
             
-        
-        p = from_args(wrapped, copyarg, *args, **kwargs)[copyarg]
-            
-        if isinstance(p, DataArray):
+        if isinstance(cp, DataArray):
             # Right dims
-            outdims[-2:] = p.dims[-2:]
+            outdims[-2:] = cp.dims[-2:]
             # Left dims
-            outdims[1:-2] = p.dims[0:-3]
+            outdims[1:-2] = cp.dims[0:-3]
                 
         
         outcoords = {}     

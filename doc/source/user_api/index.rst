@@ -74,7 +74,6 @@ the array object to a compiled extension.
    :toctree: ./generated/
    
    wrf.to_np
-   
     
 Variable Extraction Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -110,7 +109,7 @@ The routines below are used to assist with plotting.
     wrf.get_pyngl
     wrf.cartopy_xlim
     wrf.cartopy_ylim
-    
+
 Raw Diagnostic Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -154,6 +153,82 @@ sure they are removed before calling these routines.
    wrf.omega
    wrf.pw
 
+OpenMP Runtime Library Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The routines below are the OpenMP runtime libraries that have been wrapped 
+for wrf-python. The entire library (OpenMP 3.x) has been wrapped, but many of 
+the routines are only useful inside of an OpenMP thread, so they aren't useful
+from inside the Python interpreter. Also, the Fortran code in wrf-python is 
+fairly simple in terms of threading, so features like nested threads aren't 
+used. The documentation below is split in to the useful OpenMP functions and 
+the less useful functions.
+
+The documentation for each routine was taken directly from the 
+`OpenMP Specification <http://www.openmp.org/wp-content/uploads/openmp-4.5.pdf>`_. 
+Read the specification for more details about these routines.
+ 
+Useful OpenMP Routines
+*****************************
+
+The routines below are useful when called from within a Python program. These 
+routines handle setting the number of threads, setting up the scheduler, 
+and timing.
+
+It is also important to note that the OpenMP directives within the Fortran 
+code all specify a runtime scheduler. This means that the user can control 
+the type of scheduling to use from within their Python application by using the 
+routines below.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.omp_enabled
+   wrf.omp_set_num_threads
+   wrf.omp_get_max_threads
+   wrf.omp_get_num_procs
+   wrf.omp_set_dynamic
+   wrf.omp_get_dynamic
+   wrf.omp_set_schedule
+   wrf.omp_get_schedule
+   wrf.omp_get_thread_limit
+   wrf.omp_get_wtime
+   wrf.omp_get_wtick
+   
+Less Useful OpenMP Routines
+*******************************
+
+The routines below are less useful because wrf-python does not use nested 
+parallelism and some of the routines are only applicable when called from 
+within an OpenMP thread.
+
+.. autosummary::
+   :nosignatures:
+   :toctree: ./generated/
+   
+   wrf.omp_get_num_threads
+   wrf.omp_get_thread_num
+   wrf.omp_in_parallel
+   wrf.omp_set_nested
+   wrf.omp_get_nested
+   wrf.omp_set_max_active_levels
+   wrf.omp_get_max_active_levels
+   wrf.omp_get_level
+   wrf.omp_get_ancestor_thread_num
+   wrf.omp_get_team_size
+   wrf.omp_get_active_level
+   wrf.omp_in_final
+   wrf.omp_init_lock
+   wrf.omp_init_nest_lock
+   wrf.omp_destroy_lock
+   wrf.omp_destroy_nest_lock
+   wrf.omp_set_lock
+   wrf.omp_set_nest_lock
+   wrf.omp_unset_lock
+   wrf.omp_unset_nest_lock
+   wrf.omp_test_lock
+   wrf.omp_test_nest_lock
 
 Configuration Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -182,6 +257,7 @@ in one place.
    wrf.disable_pyngl
    wrf.set_cache_size
    wrf.get_cache_size
+   wrf.omp_enabled
    
 
 Miscellaneous Routines
@@ -247,7 +323,7 @@ use a single point for an (x, y) or (lat, lon) location.
    wrf.CoordPair
    
 CoordPair Methods
-~~~~~~~~~~~~~~~~~~~~~~~
+************************
 
 .. autosummary::
    :nosignatures:
@@ -274,7 +350,7 @@ The classes below are used to hold the projection information in the
 'projection' entry within a :attr:`xarray.DataArray.attrs` attribute.
 
 Projection Base Class
-~~~~~~~~~~~~~~~~~~~~~~~~
+******************************
 
 The base class for all map projection types.
 
@@ -285,7 +361,7 @@ The base class for all map projection types.
    wrf.WrfProj
    
 Projection Base Class Methods
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+***********************************
 
 The class methods for all projection types.
 
@@ -303,7 +379,7 @@ The class methods for all projection types.
    
    
 Projection Subclasses
-~~~~~~~~~~~~~~~~~~~~~~~~
+*****************************
 
 See :class:`wrf.WrfProj` for methods and attributes.
 

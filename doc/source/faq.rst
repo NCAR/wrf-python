@@ -61,6 +61,13 @@ In a future release of wrf-python, direct support for Dataset objects will
 be added and this will no longer be necessary.
 
 
+Why is wrf-python taking hours to run?
+---------------------------------------------
+
+The most likely culprit is insufficient memory for the calculation you are 
+trying to perform. 
+
+See :ref:`performance` for more information.
 
 
 

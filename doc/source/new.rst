@@ -4,6 +4,48 @@ What's New
 Releases
 -------------
 
+v1.1.0
+^^^^^^^^^^^^^^
+
+- Release 1.1.0
+- Computational routines now support multiple cores using OpenMP.  See 
+  :ref:`using_omp` for details on how to use this new feature.
+- The CAPE routines should be noticeably faster, even in the single threaded 
+  case (thank you supreethms1809!).
+- :meth:`wrf.getvar` now works correctly with non-gridded NetCDF variables
+- The cloud fraction diagnostic has changed:
+   - Users can now select their own cloud threshold levels, and can choose 
+     between a vertical coordinate defined as height (AGL), height (MSL), or 
+     pressure. 
+   - The default vertical coordinate type has been changed to be height (AGL). 
+     This ensures that clouds appear over mountainous regions. If you need 
+     the old behavior, set the *vert_type* argument to 'pressure'.
+   - Fixed a bug involving the cloud threshold search algorithm, where if the 
+     surface was higher than the threshold for a cloud level, the algorithm
+     would use whatever was there before (uninitialized variable bug). This 
+     caused some interesting visualization issues when plotted.  Now, whenever 
+     the surface is above a cloud level threshold, a fill value is used to 
+     indicate that data is unavailable for that location.
+- The cartopy object for LambertConformal should now work correctly in the 
+  southern hemisphere.
+- Fixed a bug with the PolarStereographic projection missing a geobounds 
+  argument (thank you hanschen!).
+- Renamed the modules containing the 'get_product' routines used 
+  by :meth:`wrf.getvar` to avoid naming conflicts with the raw computational 
+  routine names. Users should be using :meth:`wrf.getvar` instead of these 
+  routines, but for those that imported the 'get_product' routines 
+  directly, you will need to modify your code.
+- Fixed a uniqueness issue with the internal coordinate cache that was causing
+  crashes when input data is changed to a different file in a jupyter notebook 
+  cell.
+- Added code to better support building wheels on Windows (thank you letmaik!)
+- Improved support for scipy.io.netcdf objects. 
+- Added a new 'zstag' diagnostic that returns the height values for the 
+  vertically staggered grid.
+- A DOI is now available for wrf-python. Please cite wrf-python if you are 
+  using it for your research. (See :ref:`citation`)
+
+
 v1.0.5
 ^^^^^^^^^^^^^^
 

@@ -45,8 +45,9 @@ Documentation
    ./api
    ./faq
    ./support
+   ./citation
    ./license
-   ./workshop
+   ./tutorial
 
 
 Indices and tables

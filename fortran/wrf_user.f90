@@ -16,13 +16,15 @@ SUBROUTINE DCOMPUTEPI(pi, pressure, nx, ny, nz)
 
     !REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, R_D=287.D0, CP=7.D0*R_D/2.D0
 
+    !$OMP PARALLEL DO COLLAPSE(3) SCHEDULE(runtime)
     DO k = 1,nz
-      DO j = 1,ny
-          DO i = 1,nx
-              pi(i,j,k) = (pressure(i,j,k)/P1000MB)**(RD/CP)
-          END DO
-      END DO
+        DO j = 1,ny
+            DO i = 1,nx
+                pi(i,j,k) = (pressure(i,j,k)/P1000MB)**(RD/CP)
+            END DO
+        END DO
     END DO
+    !$OMP END PARALLEL DO
 
 END SUBROUTINE DCOMPUTEPI
 
@@ -37,7 +39,7 @@ SUBROUTINE DCOMPUTETK(tk, pressure, theta, nx)
     !f2py intent(in,out) :: tk
 
     INTEGER, INTENT(IN) :: nx
-    REAL(KIND=8) :: pi
+    !REAL(KIND=8) :: pi
     REAL(KIND=8), DIMENSION(nx), INTENT(IN) :: pressure
     REAL(KIND=8), DIMENSION(nx), INTENT(IN) :: theta
     REAL(KIND=8), DIMENSION(nx), INTENT(OUT) :: tk
@@ -48,10 +50,13 @@ SUBROUTINE DCOMPUTETK(tk, pressure, theta, nx)
 
     !REAL(KIND=8), PARAMETER :: P1000MB=100000.D0, RD=287.D0, CP=7.D0*RD/2.D0
 
+    !$OMP PARALLEL DO SCHEDULE(runtime)
     DO i = 1,nx
-        pi = (pressure(i)/P1000MB)**(RD/CP)
-        tk(i) = pi*theta(i)
+        !pi = (pressure(i)/P1000MB)**(RD/CP)
+        !tk(i) = pi * theta(i)
+        tk(i) = (pressure(i)/P1000MB)**(RD/CP) * theta(i)
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -76,9 +81,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
 
     INTEGER :: i,j,kp,ip,im
     LOGICAL :: dointerp
-    REAL(KIND=8) :: height,w1,w2
-
-    height = desiredloc
+    REAL(KIND=8) :: w1,w2
 
     ! does vertical coordinate increase or decrease with increasing k?
     ! set offset appropriately
@@ -90,6 +93,8 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
         im = 0
     END IF
 
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,kp,dointerp,w1,w2) &
+    !$OMP FIRSTPRIVATE(ip,im) SCHEDULE(runtime)
     DO i = 1,nx
         DO j = 1,ny
             ! Initialize to missing.  Was initially hard-coded to -999999.
@@ -98,17 +103,17 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
             kp = nz
 
             DO WHILE ((.NOT. dointerp) .AND. (kp >= 2))
-                IF (((zdata(i,j,kp-im) < height) .AND. (zdata(i,j,kp-ip) > height))) THEN
-                    w2 = (height - zdata(i,j,kp-im))/(zdata(i,j,kp-ip) - zdata(i,j,kp-im))
+                IF (((zdata(i,j,kp-im) < desiredloc) .AND. (zdata(i,j,kp-ip) > desiredloc))) THEN
+                    w2 = (desiredloc - zdata(i,j,kp-im))/(zdata(i,j,kp-ip) - zdata(i,j,kp-im))
                     w1 = 1.D0 - w2
                     out2d(i,j) = w1*data3d(i,j,kp-im) + w2*data3d(i,j,kp-ip)
                     dointerp = .TRUE.
                 END IF
                 kp = kp - 1
             END DO
-
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -195,20 +200,23 @@ SUBROUTINE DINTERP2DXY(v3d, v2d, xy, nx, ny, nz, nxy)
     INTEGER :: i, j, k, ij
     REAL(KIND=8) :: w11, w12, w21, w22, wx, wy
 
+    !$OMP PARALLEL DO PRIVATE(i,j,k,ij,w11,w12,w21,w22,wx,wy) &
+    !$OMP SCHEDULE(runtime)
     DO ij = 1,nxy
-      i = MAX(1,MIN(nx-1,INT(xy(1,ij)+1)))
-      j = MAX(1,MIN(ny-1,INT(xy(2,ij)+1)))
-      wx = DBLE(i+1) - (xy(1,ij)+1)
-      wy = DBLE(j+1) - (xy(2,ij)+1)
-      w11 = wx*wy
-      w21 = (1.D0-wx)*wy
-      w12 = wx*(1.D0-wy)
-      w22 = (1.D0-wx)* (1.D0-wy)
-      DO k = 1,nz
-          v2d(ij,k) = w11*v3d(i,j,k) + w21*v3d(i+1,j,k) + &
-              w12*v3d(i,j+1,k) + w22*v3d(i+1,j+1,k)
-      END DO
+        i = MAX(1,MIN(nx-1,INT(xy(1,ij)+1)))
+        j = MAX(1,MIN(ny-1,INT(xy(2,ij)+1)))
+        wx = DBLE(i+1) - (xy(1,ij)+1)
+        wy = DBLE(j+1) - (xy(2,ij)+1)
+        w11 = wx*wy
+        w21 = (1.D0-wx)*wy
+        w12 = wx*(1.D0-wy)
+        w22 = (1.D0-wx)* (1.D0-wy)
+        DO k = 1,nz
+            v2d(ij,k) = w11*v3d(i,j,k) + w21*v3d(i+1,j,k) + &
+            w12*v3d(i,j+1,k) + w22*v3d(i+1,j+1,k)
+        END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -241,27 +249,30 @@ SUBROUTINE DINTERP1D(v_in, v_out, z_in, z_out, vmsg, nz_in, nz_out)
     ip = 0
     im = 1
     IF (z_in(1) .GT. z_in(nz_in)) THEN
-      ip = 1
-      im = 0
+        ip = 1
+        im = 0
     END IF
 
+    !$OMP PARALLEL DO PRIVATE(kp, k, interp, height, w1, w2) &
+    !$OMP FIRSTPRIVATE(ip, im) SCHEDULE(runtime)
     DO k = 1,nz_out
-      v_out(k) = vmsg
+        v_out(k) = vmsg
 
-      interp = .FALSE.
-      kp = nz_in
-      height = z_out(k)
+        interp = .FALSE.
+        kp = nz_in
+        height = z_out(k)
 
-      DO WHILE ((.NOT. interp) .AND. (kp .GE. 2))
-          IF (((z_in(kp-im) .LE. height) .AND. (z_in(kp-ip) .GT. height))) THEN
-              w2 = (height - z_in(kp-im))/(z_in(kp-ip) - z_in(kp-im))
-              w1 = 1.D0 - w2
-              v_out(k) = w1*v_in(kp-im) + w2*v_in(kp-ip)
-              interp = .TRUE.
-          END IF
-          kp = kp - 1
-      END DO
+        DO WHILE ((.NOT. interp) .AND. (kp .GE. 2))
+            IF (((z_in(kp-im) .LE. height) .AND. (z_in(kp-ip) .GT. height))) THEN
+                w2 = (height - z_in(kp-im))/(z_in(kp-ip) - z_in(kp-im))
+                w1 = 1.D0 - w2
+                v_out(k) = w1*v_in(kp-im) + w2*v_in(kp-ip)
+                interp = .TRUE.
+            END IF
+            kp = kp - 1
+        END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -316,10 +327,12 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     INTEGER :: i, j, k
     INTEGER :: klo, khi
+    INTEGER :: errcnt, bad_i, bad_j
 
+    REAL(KIND=8) :: bad_sfp
     REAL(KIND=8) :: plo, phi, tlo, thi, zlo, zhi
     REAL(KIND=8) :: p_at_pconst, t_at_pconst, z_at_pconst
-    REAL(KIND=8) :: z_half_lowest
+    !REAL(KIND=8) :: z_half_lowest
 
     LOGICAL :: l1, l2, l3, found
 
@@ -329,7 +342,13 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
     !  heating cycle in the pressure field.
 
     errstat = 0
+    errcnt = 0
+    bad_i = -1
+    bad_j = -1
+    bad_sfp = -1
 
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k,found) REDUCTION(+:errcnt) &
+    !$OMP SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
             level(i,j) = -1
@@ -345,22 +364,30 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
             END DO
 
             IF (level(i,j) == -1) THEN
-                errstat = ALGERR
-                errmsg = "Error in finding 100 hPa up"
-                RETURN
-
-                !PRINT '(A,I4,A)','Troubles finding level ', NINT(PCONST)/100,' above ground.'
-                !PRINT '(A,I4,A,I4,A)','Problems first occur at (',I,',',J,')'
-                !PRINT '(A,F6.1,A)','Surface pressure = ',p(i,j,1)/100,' hPa.'
-                !STOP 'Error in finding 100 hPa up'
-
+                errcnt = errcnt + 1
+                !$OMP CRITICAL
+                ! Only do this the first time
+                IF (bad_i .EQ. -1) THEN
+                    bad_i = i
+                    bad_j = j
+                    bad_sfp = p(i,j,1) / 100.
+                END IF
+                !$OMP END CRITICAL
             END IF
         END DO
     END DO
+    !$OMP END PARALLEL DO
+
+    IF (errcnt > 0) THEN
+        errstat = ALGERR
+        WRITE(errmsg,*) "Error in finding 100 hPa up.  i=", bad_i, "j=", bad_j, "sfc_p=", bad_sfp
+        RETURN
+    END IF
 
     !     Get temperature PCONST Pa above surface.  Use this to extrapolate
     !     the temperature at the surface and down to sea level.
-
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,klo,khi) REDUCTION(+:errcnt) &
+    !$OMP SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
 
@@ -368,39 +395,43 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
             khi = MIN(klo+1, nz-1)
 
             IF (klo == khi) THEN
-                errstat = ALGERR
-                errmsg = "Error trapping levels"
-                RETURN
-
-                !PRINT '(A)','Trapping levels are weird.'
-                !PRINT '(A,I3,A,I3,A)','klo = ',klo,', khi = ',khi,': and they should not be equal.'
-                !STOP 'Error trapping levels'
+                errcnt = errcnt + 1
+                !$OMP CRITICAL
+                IF (bad_i .EQ. -1) THEN
+                    bad_i = i
+                    bad_j = j
+                END IF
+                !$OMP END CRITICAL
             END IF
 
             plo = p(i,j,klo)
             phi = p(i,j,khi)
             tlo = t(i,j,klo)*(1.D0 + 0.608D0*q(i,j,klo))
             thi = t(i,j,khi)*(1.D0 + 0.608D0*q(i,j,khi))
-            ! zlo = zetahalf(klo)/ztop*(ztop-terrain(i,j))+terrain(i,j)
-            ! zhi = zetahalf(khi)/ztop*(ztop-terrain(i,j))+terrain(i,j)
             zlo = z(i,j,klo)
             zhi = z(i,j,khi)
-
             p_at_pconst = p(i,j,1) - PCONST
             t_at_pconst = thi - (thi-tlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
             z_at_pconst = zhi - (zhi-zlo)*LOG(p_at_pconst/phi)*LOG(plo/phi)
-
+            !
             t_surf(i,j) = t_at_pconst * (p(i,j,1)/p_at_pconst)**(USSALR*RD/G)
             t_sea_level(i,j) = t_at_pconst + USSALR*z_at_pconst
-
         END DO
     END DO
+    !$OMP END PARALLEL DO
+
+    IF (errcnt > 0) THEN
+        errstat = ALGERR
+        WRITE(errmsg,*) "Error trapping levels at i=", bad_i, "j=", bad_j
+        RETURN
+    END IF
 
     ! If we follow a traditional computation, there is a correction to the
     ! sea level temperature if both the surface and sea level
     ! temperatures are *too* hot.
 
     IF (ridiculous_mm5_test) THEN
+        !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(l1,l2,l3) SCHEDULE(runtime)
         DO j = 1,ny
             DO i = 1,nx
                 l1 = t_sea_level(i,j) < TC
@@ -413,21 +444,23 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
                 END IF
             END DO
         END DO
+        !$OMP END PARALLEL DO
     END IF
 
     !     The grand finale: ta da!
+    !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
-    !   z_half_lowest=zetahalf(1)/ztop*(ztop-terrain(i,j))+terrain(i,j)
-            z_half_lowest = z(i,j,1)
+            !z_half_lowest = z(i,j,1)
 
     ! Convert to hPa in this step, by multiplying by 0.01. The original
     ! Fortran routine didn't do this, but the NCL script that called it
     ! did, so we moved it here.
-            sea_level_pressure(i,j) = 0.01*(p(i,j,1)*EXP((2.D0*G*z_half_lowest)/&
+            sea_level_pressure(i,j) = 0.01*(p(i,j,1)*EXP((2.D0*G*z(i,j,1))/&
                 (RD*(t_sea_level(i,j) + t_surf(i,j)))))
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     !     PRINT *,'sea pres input at weird location i=20,j=1,k=1'
     !     PRINT *,'t=',t(20,1,1),t(20,2,1),t(20,3,1)
@@ -464,12 +497,15 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
     INTEGER :: i, j, iter
 
     DO iter=1,it
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i = 1,nx
                 b(i,j) = a(i,j)
             END DO
         END DO
+        !$OMP END PARALLEL DO
 
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
             DO i=1,nx
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -480,7 +516,9 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
                 END IF
             END DO
         END DO
+        !$OMP END PARALLEL DO
 
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -491,6 +529,7 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
                 END IF
             END DO
         END DO
+        !$OMP END PARALLEL DO
     !        do j=1,ny
     !        do i=1,nx
     !          b(i,j) = a(i,j)
@@ -533,13 +572,18 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
 
     INTEGER :: i, j, iter
 
+    !$OMP PARALLEL
+
     DO iter=1,it
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i = 1,nx
                 b(i,j) = a(i,j)
             END DO
         END DO
+        !$OMP END DO
 
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
             DO i=1,nx
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -550,7 +594,9 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
                 END IF
             END DO
         END DO
+        !$OMP END DO
 
+        !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=1,ny
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
@@ -561,6 +607,7 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
                 END IF
             END DO
         END DO
+        !$OMP END DO
     !        do j=1,ny
     !        do i=1,nx
     !          b(i,j) = a(i,j)
@@ -577,6 +624,8 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
     !        enddo
     !        enddo
     END DO
+
+    !$OMP END PARALLEL
 
     RETURN
 
@@ -601,6 +650,7 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
     INTEGER :: i
     REAL(KIND=8) :: qvs,es,pressure,temperature
 
+    !$OMP PARALLEL DO PRIVATE(qvs, es, pressure, temperature) SCHEDULE(runtime)
     DO i = 1,nx
         pressure = p(i)
         temperature = t(i)
@@ -612,6 +662,7 @@ SUBROUTINE DCOMPUTERH(qv, p, t, rh, nx)
         ! rh(i) = 100.*qv(i)/qvs
         rh(i) = 100.D0*MAX(MIN(qv(i)/qvs, 1.0D0), 0.0D0)
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -707,11 +758,14 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
 ! NCLEND
 
     INTEGER :: i,j
-    REAL(KIND=8) :: uk, vk
+    !REAL(KIND=8) :: uk, vk
 
     ! msg stands for missing value in this code
     ! WRITE (6,FMT=*) ' in compute_uvmet ',NX,NY,NXP1,NYP1,ISTAG
 
+    !$OMP PARALLEL
+
+    !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
 
@@ -733,34 +787,81 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
 
         END DO
     END DO
+    !$OMP END DO
 
-    !      WRITE (6,FMT=*) " computing velocities "
-    DO j = 1,ny
-        DO i = 1,nx
-            IF (istag.EQ.1) THEN
-                IF (is_msg_val .AND. (u(i,j) .EQ. umsg .OR. v(i,j) .EQ. vmsg &
-                    .OR. u(i+1,j) .EQ. umsg .OR. v(i,j+1) .EQ. vmsg)) THEN
-                    uvmet(i,j,1) = uvmetmsg
-                    uvmet(i,j,2) = uvmetmsg
-                ELSE
-                    uk = 0.5D0*(u(i,j) + u(i+1,j))
-                    vk = 0.5D0*(v(i,j) + v(i,j+1))
-                    uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
-                    uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
-                END IF
-            ELSE
-                IF (is_msg_val .AND. (u(i,j) .EQ. umsg .OR. v(i,j) .EQ. vmsg)) THEN
-                    uvmet(i,j,1) = uvmetmsg
-                    uvmet(i,j,2) = uvmetmsg
-                ELSE
-                    uk = u(i,j)
-                    vk = v(i,j)
-                    uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
-                    uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
-                END IF
-            END IF
-        END DO
-    END DO
+    ! Note:  Intentionally removed as many IF statements as possible from loops
+    ! to improve vectorization.
+
+    IF (istag .EQ. 0) THEN ! Not staggered
+        IF (.NOT. is_msg_val) THEN ! No missing values used
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
+            DO j = 1,ny
+                DO i = 1,nx
+                    uvmet(i,j,1) = v(i,j)*longcb(i,j) + u(i,j)*longca(i,j)
+                    uvmet(i,j,2) = v(i,j)*longca(i,j) - u(i,j)*longcb(i,j)
+                END DO
+            END DO
+            !$OMP END DO
+        ELSE ! Missing values used
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
+            DO j = 1,ny
+                DO i = 1,nx
+                    IF ((u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg)) THEN
+                        uvmet(i,j,1) = v(i,j)*longcb(i,j) + u(i,j)*longca(i,j)
+                        uvmet(i,j,2) = v(i,j)*longca(i,j) - u(i,j)*longcb(i,j)
+                    ELSE
+                        uvmet(i,j,1) = uvmetmsg
+                        uvmet(i,j,2) = uvmetmsg
+                    END IF
+                END DO
+            END DO
+            !$OMP END DO
+        END IF
+    ELSE ! Staggered
+        IF (.NOT. is_msg_val) THEN ! No missing values used
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
+            DO j = 1,ny
+                DO i = 1,nx
+                    ! This is the more readable version.
+                    !uk = 0.5D0*(u(i,j) + u(i+1,j))
+                    !vk = 0.5D0*(v(i,j) + v(i,j+1))
+                    !uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
+                    !uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
+
+                    uvmet(i,j,1) = (0.5D0*(v(i,j) + v(i,j+1)))*longcb(i,j) + &
+                                   (0.5D0*(u(i,j) + u(i+1,j)))*longca(i,j)
+                    uvmet(i,j,2) = (0.5D0*(v(i,j) + v(i,j+1)))*longca(i,j) - &
+                                   (0.5D0*(u(i,j) + u(i+1,j)))*longcb(i,j)
+
+                END DO
+            END DO
+            !$OMP END DO
+        ELSE ! Missing values used
+            !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
+            DO j = 1,ny
+                DO i = 1,nx
+                    IF (u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg .AND. u(i+1,j) .NE. umsg .AND. v(i,j+1) .NE. vmsg) THEN
+                        ! This is the more readable version.
+                        !uk = 0.5D0*(u(i,j) + u(i+1,j))
+                        !vk = 0.5D0*(v(i,j) + v(i,j+1))
+                        !uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
+                        !uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
+
+                        uvmet(i,j,1) = (0.5D0*(v(i,j) + v(i,j+1)))*longcb(i,j) + &
+                                       (0.5D0*(u(i,j) + u(i+1,j)))*longca(i,j)
+                        uvmet(i,j,2) = (0.5D0*(v(i,j) + v(i,j+1)))*longca(i,j) - &
+                                       (0.5D0*(u(i,j) + u(i+1,j)))*longcb(i,j)
+                    ELSE
+                        uvmet(i,j,1) = uvmetmsg
+                        uvmet(i,j,2) = uvmetmsg
+                    END IF
+                END DO
+            END DO
+            !$OMP END DO
+        END IF
+    END IF
+
+    !$OMP END PARALLEL
 
     RETURN
 
@@ -791,15 +892,17 @@ SUBROUTINE DCOMPUTETD(td, pressure, qv_in, nx)
 
     INTEGER :: i
 
+    !$OMP PARALLEL DO PRIVATE(i,qv,tdc) SCHEDULE(runtime)
     DO i = 1,nx
-      qv = MAX(qv_in(i), 0.D0)
-      ! vapor pressure
-      tdc = qv*pressure(i)/(.622D0 + qv)
+        qv = MAX(qv_in(i), 0.D0)
+         ! vapor pressure
+         tdc = qv*pressure(i)/(.622D0 + qv)
 
-      ! avoid problems near zero
-      tdc = MAX(tdc, 0.001D0)
-      td(i) = (243.5D0*LOG(tdc) - 440.8D0)/(19.48D0 - LOG(tdc))
+         ! avoid problems near zero
+         tdc = MAX(tdc, 0.001D0)
+         td(i) = (243.5D0*LOG(tdc) - 440.8D0)/(19.48D0 - LOG(tdc))
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -825,11 +928,7 @@ SUBROUTINE DCOMPUTEICLW(iclw, pressure, qc_in, nx, ny, nz)
     REAL(KIND=8), PARAMETER :: GG = 1000.D0/G
     INTEGER i,j,k
 
-    DO j = 1,ny
-        DO i = 1,nx
-            iclw(i,j) = 0.D0
-        END DO
-    END DO
+    iclw = 0
 
     DO j = 3,ny - 2
         DO i = 3,nx - 2
