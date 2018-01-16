@@ -8,7 +8,8 @@ import subprocess
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  disable_xarray, xarray_enabled, to_np,
                  xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj,
-                 extract_global_attrs, viewitems, CoordPair)
+                 extract_global_attrs, viewitems, CoordPair, 
+                 omp_get_num_procs, omp_set_num_threads)
 from wrf.util import is_multi_file
 
 TEST_FILE = "ci_test_file.nc"
@@ -210,7 +211,7 @@ if __name__ == "__main__":
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "cfrac"]
+                "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     latlon_tests = ["xy", "ll"]
     

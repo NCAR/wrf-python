@@ -22,7 +22,7 @@ WRF_DIAGS = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz",
              "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
              "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
              "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-             "wa", "uvmet10", "uvmet", "z", "cfrac"]
+             "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag"]
 
 INTERP_METHS = ["interplevel", "vertcross", "interpline", "vinterp"]
 
@@ -33,6 +33,7 @@ def copy_and_reduce(opts):
     infilename = opts.filename
     outfilename = os.path.expanduser(
         os.path.join(opts.outdir, "ci_test_file.nc"))
+    
     with Dataset(infilename) as infile, Dataset(outfilename, "w") as outfile:
     
         # Copy the global attributes
@@ -164,12 +165,14 @@ def main(opts):
     
     
 if __name__ == "__main__":
-    
+    DEFAULT_FILE = ("/Users/ladwig/Documents/wrf_files/"
+                    "wrf_vortex_multi/wrfout_d02_2005-08-28_12:00:00")
     parser = argparse.ArgumentParser(description="Generate conda test files "
                                      "for unit testing.")
-    parser.add_argument("-f", "--filename", required=True, 
+    parser.add_argument("-f", "--filename", required=False,
+                        default=DEFAULT_FILE, 
                         help="the WRF test file")
-    parser.add_argument("-o", "--outdir", required=True,
+    parser.add_argument("-o", "--outdir", required=False, default="./",
                         help="the location for the output files")
     opts = parser.parse_args()
     
