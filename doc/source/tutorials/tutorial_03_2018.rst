@@ -2,8 +2,8 @@ WRF-Python Tutorial 2018
 =========================
 
 NCAR will be providing a four hour tutorial for wrf-python on Wednesday, March
-7, 2018. The tutorial is free, but seating is limited to only 16 students, so 
-registration is required. 
+7, 2018 from 8 AM to 12 PM. The tutorial is free, but seating is limited to 
+only 16 students, so registration is required. 
 
 The tutorial will take place at NCAR's corporate training center in Boulder, 
 Colorado.
@@ -21,9 +21,13 @@ programming language (see :ref:`prereq`). Due to limited seating, if you
 do not have any previous experience with Python, please do not register 
 for this tutorial.
 
+Computers will be provided, but feel free to use your own laptop if you prefer. 
+We will be covering how to install wrf-python via conda as part of the 
+tutorial.
+
 Students are encouraged to bring their own data sets, but data will be provided
 if this is not an option. Students will be provided a jupyter notebook workbook
-which can be modified to accommodate their data.   
+which can be modified to accommodate their data. 
 
 Topics include:
 
@@ -39,7 +43,7 @@ Topics include:
 Registration
 ---------------
 
-The registration form is here:
+Please register prior to February 21, 2018. The registration form is here:
 
 `Registration Form <https://goo.gl/forms/is5VExf3w4bFGXUb2>`_
 
@@ -53,7 +57,7 @@ Prerequisites
 ---------------
 
 This tutorial assumes that you have basic knowledge of how to type commands 
-in to a command terminal using your preferred operating system.  You 
+in to a terminal window using your preferred operating system.  You 
 should know some basic directory commands like *cd*, *mkdir*, *cp*, *mv*.
 
 This tutorial assumes that you have prior experience programming in Python.
