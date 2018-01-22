@@ -4,9 +4,10 @@ Installation
 Required Dependencies
 ----------------------
 
-    - Python 2.7, 3.4, or 3.5
-    - numpy (1.9 or later)
+    - Python 2.7, 3.4, or 3.5+
+    - numpy (1.11 or later; 1.14 required to build on Windows)
     - wrapt (1.10 or later)
+    - setuptools (38.0 or later) 
 
 
 Highly Recommended Packages
@@ -81,13 +82,52 @@ The source code is available via github:
 
 https://github.com/NCAR/wrf-python
 
-To install, change to the wrf-python directory and run::
+Or PyPI:
+
+https://pypi.python.org/pypi/wrf-python
+
+To install, if you do not need OpenMP support, change your working directory 
+to the wrf-python source directory and run::
 
     $ pip install .
+    
+Beginning with wrf-python 1.1, OpenMP is supported, but preprocessing the 
+ompgen.F90 file is required, which also requires running f2py to 
+build the .pyf file. To simplify this process, you can use the build scripts in 
+the *build_scripts* directory as a guide, or just call the script directly.
 
-Note that building on Win64 with Python 3.5+ and the mingw-64 compiler
-is very difficult, due to incompatibilities with the runtime libraries and 
-lack of support from numpy's distutils. Improved support for these 
-configurations, along with numpy distutils support, should take place this 
-year.  But for now, visual studio and the intel compiler may be required.  
-Otherwise, Python 2.7 or Python 3.4 is recommended. 
+Below is a sample from a build script for GNU compiler with OpenMP enabled:
+
+.. code-block:: none
+
+   cd ../fortran
+   
+   gfortran -E ompgen.F90 -fopenmp -cpp -o omp.f90
+   
+   f2py *.f90 -m _wrffortran -h wrffortran.pyf --overwrite-signature
+   
+   cd ..
+   
+   python setup.py clean --all
+   
+   python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
+   
+   pip install .
+
+Beginning with numpy 1.14, f2py extensions can now be built using the MSVC 
+compiler and mingw gfortran compiler. Numpy 1.14 is required to build 
+wrf-python for Python 3.5+. 
+
+.. note::
+
+   If you are building on a supercomputer and receiving linker related 
+   errors (e.g. missing symbols, undefined references, etc), you probably 
+   need to unset the LDFLAGS environment variable. System administrators on 
+   supercomputing systems often define LDFLAGS for you so that you don't need 
+   to worry about where libraries like NetCDF are installed. Unfortunately, 
+   this can cause problems with the numpy.distutils build system. To fix, 
+   using the build command from above::
+   
+       $ unset LDFLAGS python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
+       
+
