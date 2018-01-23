@@ -736,8 +736,9 @@ Example Using Lat/Lon Coordinates
     start_point = CoordPair(lat=start_lat, lon=start_lon)
     end_point = CoordPair(lat=end_lat, lon=end_lon)
     
-    # When using lat/lon coordinates, you must supply a netcdf file object, or a 
-    # projection object.
+    # When using lat/lon coordinates, you must supply a WRF netcdf file object, 
+    # or a projection object with the lower left latitude and lower left 
+    # longitude points.
     p_vert = vertcross(p, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True)
     print(p_vert)
     
@@ -983,8 +984,11 @@ Example Using Lat/Lon Coordinates
     start_point = CoordPair(lat=start_lat, lon=start_lon)
     end_point = CoordPair(lat=end_lat, lon=end_lon)
     
-    # Calculate the vertical cross section.  By setting latlon to True, this 
-    # also calculates the latitude and longitude coordinates along the line
+    # Calculate the interpolated line.  To use latitude and longitude points, 
+    # you must supply a WRF NetCDF file object, or a projection object along 
+    # with the lower left latitude and lower left longitude points. 
+    # Also, by setting latlon to True, this routine will 
+    # also calculate the latitude and longitude coordinates along the line
     # and adds them to the metadata to help with plotting labels.
     t2_line = interpline(t2, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True)
     

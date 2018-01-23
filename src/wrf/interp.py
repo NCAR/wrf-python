@@ -91,7 +91,8 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
 
 @set_interp_metadata("cross")
 def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
-              wrfin=None, timeidx=0, stagger=None, projection=None, 
+              wrfin=None, timeidx=0, stagger=None, projection=None,
+              ll_lat=None, ll_lon=None, 
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
               latlon=False, cache=None, meta=True):
@@ -164,6 +165,16 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
             projection object to use when working with latitude, longitude 
             coordinates, and must be specified if *wrfin* is None. Default 
             is None.
+            
+        ll_lat (:obj:`float`, sequence of :obj:`float`, optional): The lower 
+            left latitude(s) for your domain, and must be specified if 
+            *wrfin* is None. If the domain is a moving nest, this should be a 
+            sequence of lower left latitudes. Default is None.
+            
+        ll_lon (:obj:`float`, sequence of :obj:`float`, optional): The lower 
+            left longitude(s) for your domain, and must be specified if 
+            *wrfin* is None. If the domain is a moving nest, this should be 
+            a sequence of lower left longitudes. Default is None. 
             
         pivot_point (:class:`wrf.CoordPair`, optional): A coordinate pair for 
             the pivot point, which indicates the location through which 
@@ -291,6 +302,7 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
 @set_interp_metadata("line")
 def interpline(field2d, pivot_point=None, 
                wrfin=None, timeidx=0, stagger=None, projection=None,
+               ll_lat=None, ll_lon=None,
                angle=None, start_point=None,
                end_point=None, latlon=False, 
                cache=None, meta=True):
@@ -339,6 +351,16 @@ def interpline(field2d, pivot_point=None,
             coordinates, and must be specified if *wrfin* is None. Should 
             not be used when working with x,y coordinates.  Default 
             is None.
+            
+        ll_lat (:obj:`float`, sequence of :obj:`float`, optional): The lower 
+            left latitude(s) for your domain, and must be specified if 
+            *wrfin* is None. If the domain is a moving nest, this should be a 
+            sequence of lower left latitudes. Default is None.
+            
+        ll_lon (:obj:`float`, sequence of :obj:`float`, optional): The lower 
+            left longitude(s) for your domain, and must be specified if 
+            *wrfin* is None. If the domain is a moving nest, this should be 
+            a sequence of lower left longitudes. Default is None. 
             
         pivot_point (:class:`wrf.CoordPair`, optional): A coordinate pair for 
             the pivot point, which indicates the location through which 
@@ -420,7 +442,7 @@ def interpline(field2d, pivot_point=None,
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
                 xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_lat, ll_lon)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 pivot_point_xy = (pivot_point.x, pivot_point.y)
@@ -428,14 +450,14 @@ def interpline(field2d, pivot_point=None,
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
                 xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_lat, ll_lon)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
                 xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_lat, ll_lon)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 end_point_xy = (end_point.x, end_point.y)
