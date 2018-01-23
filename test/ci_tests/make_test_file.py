@@ -9,9 +9,9 @@ from netCDF4 import Dataset
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp, py2round,
                  CoordPair, ll_to_xy, xy_to_ll, to_np)
 
-VARS_TO_KEEP = ("XLAT", "XLONG", "XLAT_U", "XLAT_V", "XLONG_U", "XLONG_V",
-                "U", "V", "W", "PH", "PHB", "T", "P", "PB", "Q2", "T2",
-                "PSFC", "U10", "V10", "XTIME", "QVAPOR", "QCLOUD", 
+VARS_TO_KEEP = ("Times", "XLAT", "XLONG", "XLAT_U", "XLAT_V", "XLONG_U", 
+                "XLONG_V", "U", "V", "W", "PH", "PHB", "T", "P", "PB", "Q2", 
+                "T2", "PSFC", "U10", "V10", "XTIME", "QVAPOR", "QCLOUD", 
                 "QGRAUP", "QRAIN", "QSNOW", "MAPFAC_M", "MAPFAC_U",
                 "MAPFAC_V", "F", "HGT", "RAINC", "RAINSH", "RAINNC")
 

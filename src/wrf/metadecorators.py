@@ -805,7 +805,7 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Get the vertical level units
     vert_units = None
@@ -823,7 +823,6 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         outdimnames.remove(field3d.dims[-3])
@@ -836,7 +835,6 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         
     else:
         outname = "field3d_{0}".format(name_levelstr)
-        outattrs = OrderedDict()
         
     outattrs["level"] = levelstr
     outattrs["missing_value"] = missingval
@@ -959,7 +957,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Use XY to set the cross-section metadata
     st_x = xy[0,0]
@@ -974,7 +972,6 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         for i in py3range(-3,0,1):
@@ -1062,7 +1059,6 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                           "not of type xarray.DataArray and contains no "
                           "coordinate information")
         outname = "field3d_cross"
-        outattrs = OrderedDict()
     
     outattrs["orientation"] = cross_str
     outattrs["missing_value"] = missingval
@@ -1173,7 +1169,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Use XY to set the cross-section metadata
     st_x = xy[0,0]
@@ -1188,7 +1184,6 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     
     if isinstance(field2d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field2d.dims)
         outcoords.update(field2d.coords)
         for i in py3range(-2,0,1):
@@ -1273,7 +1268,6 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                           "not of type xarray.DataArray and contains no "
                           "coordinate information")
         outname = "field2d_line"
-        outattrs = OrderedDict()
     
     outattrs["orientation"] = cross_str
     
@@ -1334,12 +1328,11 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     
     if isinstance(field, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field.dims)
         outcoords.update(field.coords)
         
@@ -1352,13 +1345,14 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
         outdimnames.insert(-2, "interp_level")
         outcoords["interp_level"] = interp_levels
         outattrs.update(field.attrs)
-        outattrs["vert_interp_type"] = vert_coord
+        
         
         outname = field.name
         
     else:
         outname = field_type
     
+    outattrs["vert_interp_type"] = vert_coord
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)  
@@ -1402,8 +1396,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     argvars = from_args(wrapped, ("field3d", "xy"), *args, **kwargs)  
     
     field3d = argvars["field3d"]
-    xy = argvars["xy"]
-    xy = to_np(xy)
+    xy = to_np(argvars["xy"])
     
     result = wrapped(*args, **kwargs)
     
@@ -1419,12 +1412,11 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Dims are (...,xy,z)
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         
@@ -1520,12 +1512,11 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Dims are (...,xy,z)
     if isinstance(field, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field.dims)
         
         outdimnames.pop(-1)
@@ -1540,9 +1531,6 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
         outname = "{0}_z".format(field.name)
         outcoords["z"] = z_out
         
-        outattrs["_FillValue"] = missingval
-        outattrs["missing_value"] = missingval
-        
         desc = field.attrs.get("description", None)
         if desc is not None:
             outattrs["description"] = desc
@@ -1554,6 +1542,8 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
     else:
         outname = "field_z"
     
+    outattrs["_FillValue"] = missingval
+    outattrs["missing_value"] = missingval
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)

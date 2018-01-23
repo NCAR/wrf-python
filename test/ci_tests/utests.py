@@ -100,6 +100,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_ht_850 = _get_refvals(referent, "interplevel", repeat, multi)
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
+
+            # Check that it works with numpy arrays
+            hts_850 = interplevel(to_np(hts), p, 850)
+            #print (hts_850)
             hts_850 = interplevel(hts, p, 850)
             
             nt.assert_allclose(to_np(hts_850), ref_ht_850)
@@ -111,6 +115,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
             pivot_point = CoordPair(hts.shape[-1] // 2, hts.shape[-2] // 2) 
+            # Check that it works with numpy arrays
+            ht_cross = vertcross(to_np(hts), to_np(p), 
+                                 pivot_point=pivot_point, angle=90.)
+            #print (ht_cross)
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
 
             nt.assert_allclose(to_np(ht_cross), ref_ht_cross, rtol=.01)
@@ -123,6 +131,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
             pivot_point = CoordPair(t2.shape[-1] // 2, t2.shape[-2] // 2)
             
+            # Check that it works with numpy arrays
+            t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
+                                  angle=90.0)
+            #print (t2_line1)
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
             nt.assert_allclose(to_np(t2_line1), ref_t2_line)
@@ -135,6 +147,17 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             tk = getvar(in_wrfnc, "temp", timeidx=timeidx, units="k")
             
             interp_levels = [200,300,500,1000]
+            
+            # Check that it works with numpy arrays
+            field = vinterp(in_wrfnc, 
+                            field=to_np(tk), 
+                            vert_coord="theta", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk",
+                            timeidx=timeidx, 
+                            log_p=True)
+            #print (field)
             
             field = vinterp(in_wrfnc, 
                             field=tk, 

@@ -269,6 +269,9 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
+            
+            # Make sure the numpy versions work first
+            hts_500 = interplevel(to_np(hts), to_np(p), 500)
             hts_500 = interplevel(hts, p, 500)
             
             nt.assert_allclose(to_np(hts_500), ref_ht_500)
@@ -283,6 +286,9 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
             #ht_cross = vertcross(to_np(hts), p, pivot_point=pivot_point, 
             #                     angle=90., latlon=True)
+            # Make sure the numpy versions work first
+            ht_cross = vertcross(to_np(hts), to_np(p), 
+                                 pivot_point=pivot_point, angle=90.)
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
             
             # Note:  Until the bug is fixed in NCL, the wrf-python cross 
@@ -315,6 +321,9 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             #t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
             #                      angle=90.0, latlon=True)
+            # Make sure the numpy version works
+            t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
+                                  angle=90.0)
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
             # Note:  After NCL is fixed, remove the slice.
@@ -336,6 +345,16 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             tk = getvar(in_wrfnc, "temp", timeidx=timeidx, units="k")
             
             interp_levels = [200,300,500,1000]
+            
+            # Make sure the numpy version works
+            field = vinterp(in_wrfnc, 
+                            field=to_np(tk), 
+                            vert_coord="theta", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk",
+                            timeidx=timeidx, 
+                            log_p=True)
             
             field = vinterp(in_wrfnc, 
                             field=tk, 
@@ -630,8 +649,8 @@ class WRFLatLonTest(ut.TestCase):
 
 if __name__ == "__main__":
     from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
-                     omp_set_dynamic, OMP_SCHED_STATIC)
-    omp_set_num_threads(8)
+                     omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
+    omp_set_num_threads(omp_get_num_procs()-1)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
     
