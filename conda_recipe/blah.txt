@@ -1,0 +1,1424 @@
+
+WARNING: conda-build appears to be out of date. You have version 2.1.18 but the
+latest version is 3.2.2. Run
+
+conda update -n root conda-build
+
+to get the latest version.
+
+Cloning into '/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/work'...
+done.
+Already on 'develop'
+Your branch is up-to-date with 'origin/develop'.
++ source /Users/ladwig/miniconda2/bin/activate /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol
++ cd build_scripts
++ sh gnu_no_omp.sh
+Reading fortran codes...
+	Reading file 'calc_uh.f90' (format:free)
+	Reading file 'eqthecalc.f90' (format:free)
+	Reading file 'omp.f90' (format:free)
+	Reading file 'rip_cape.f90' (format:free)
+	Reading file 'wrf_cloud_fracf.f90' (format:free)
+	Reading file 'wrf_constants.f90' (format:free)
+	Reading file 'wrf_fctt.f90' (format:free)
+	Reading file 'wrf_pvo.f90' (format:free)
+	Reading file 'wrf_pw.f90' (format:free)
+	Reading file 'wrf_relhl.f90' (format:free)
+	Reading file 'wrf_rip_phys_routines.f90' (format:free)
+	Reading file 'wrf_testfunc.f90' (format:free)
+	Reading file 'wrf_user.f90' (format:free)
+	Reading file 'wrf_user_dbz.f90' (format:free)
+	Reading file 'wrf_user_latlon_routines.f90' (format:free)
+	Reading file 'wrf_vinterp.f90' (format:free)
+	Reading file 'wrf_wind.f90' (format:free)
+Post-processing...
+	Block: _wrffortran
+			Block: dcalcuh
+			Block: deqthecalc
+In: :_wrffortran:eqthecalc.f90:deqthecalc
+get_useparameters: no module wrf_constants info used by deqthecalc
+			Block: omp_constants
+			Block: fomp_enabled
+			Block: fomp_set_num_threads
+			Block: fomp_get_num_threads
+			Block: fomp_get_max_threads
+			Block: fomp_get_thread_num
+			Block: fomp_get_num_procs
+			Block: fomp_in_parallel
+			Block: fomp_set_dynamic
+			Block: fomp_get_dynamic
+			Block: fomp_set_nested
+			Block: fomp_get_nested
+			Block: fomp_set_schedule
+			Block: fomp_get_schedule
+			Block: fomp_get_thread_limit
+			Block: fomp_set_max_active_levels
+			Block: fomp_get_max_active_levels
+			Block: fomp_get_level
+			Block: fomp_get_ancestor_thread_num
+			Block: fomp_get_team_size
+			Block: fomp_get_active_level
+			Block: fomp_in_final
+			Block: fomp_init_lock
+			Block: fomp_init_nest_lock
+			Block: fomp_destroy_lock
+			Block: fomp_destroy_nest_lock
+			Block: fomp_set_lock
+			Block: fomp_set_nest_lock
+			Block: fomp_unset_lock
+			Block: fomp_unset_nest_lock
+			Block: fomp_test_lock
+			Block: fomp_test_nest_lock
+			Block: fomp_get_wtime
+			Block: fomp_get_wtick
+			Block: tvirtual
+In: :_wrffortran:rip_cape.f90:tvirtual
+get_useparameters: no module wrf_constants info used by tvirtual
+			Block: tonpsadiabat
+In: :_wrffortran:rip_cape.f90:tonpsadiabat
+get_useparameters: no module wrf_constants info used by tonpsadiabat
+			Block: dlookup_table
+In: :_wrffortran:rip_cape.f90:dlookup_table
+get_useparameters: no module wrf_constants info used by dlookup_table
+			Block: dpfcalc
+			Block: dcapecalc3d
+In: :_wrffortran:rip_cape.f90:dcapecalc3d
+get_useparameters: no module wrf_constants info used by dcapecalc3d
+			Block: dcapecalc2d
+In: :_wrffortran:rip_cape.f90:dcapecalc2d
+get_useparameters: no module wrf_constants info used by dcapecalc2d
+			Block: dcloudfrac
+			Block: dcloudfrac2
+			Block: wrf_constants
+In: :_wrffortran:wrf_constants.f90:wrf_constants
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_constants.f90:wrf_constants
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wrfcttcalc
+In: :_wrffortran:wrf_fctt.f90:wrfcttcalc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_fctt.f90:wrfcttcalc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputeabsvort
+			Block: dcomputepv
+In: :_wrffortran:wrf_pvo.f90:dcomputepv
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_pvo.f90:dcomputepv
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputepw
+In: :_wrffortran:wrf_pw.f90:dcomputepw
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_pw.f90:dcomputepw
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcalrelhl
+In: :_wrffortran:wrf_relhl.f90:dcalrelhl
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_relhl.f90:dcalrelhl
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wetbulbcalc
+In: :_wrffortran:wrf_rip_phys_routines.f90:wetbulbcalc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_rip_phys_routines.f90:wetbulbcalc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: omgcalc
+In: :_wrffortran:wrf_rip_phys_routines.f90:omgcalc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_rip_phys_routines.f90:omgcalc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: virtual_temp
+In: :_wrffortran:wrf_rip_phys_routines.f90:virtual_temp
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_rip_phys_routines.f90:virtual_temp
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: testfunc
+In: :_wrffortran:wrf_testfunc.f90:testfunc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_testfunc.f90:testfunc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputepi
+In: :_wrffortran:wrf_user.f90:dcomputepi
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user.f90:dcomputepi
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputetk
+In: :_wrffortran:wrf_user.f90:dcomputetk
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user.f90:dcomputetk
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dinterp3dz
+			Block: dzstag
+			Block: dinterp2dxy
+			Block: dinterp1d
+			Block: dcomputeseaprs
+In: :_wrffortran:wrf_user.f90:dcomputeseaprs
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user.f90:dcomputeseaprs
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dfilter2d
+			Block: filter2d
+			Block: dcomputerh
+In: :_wrffortran:wrf_user.f90:dcomputerh
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user.f90:dcomputerh
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dgetijlatlong
+			Block: dcomputeuvmet
+			Block: dcomputetd
+			Block: dcomputeiclw
+In: :_wrffortran:wrf_user.f90:dcomputeiclw
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user.f90:dcomputeiclw
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: calcdbz
+In: :_wrffortran:wrf_user_dbz.f90:calcdbz
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user_dbz.f90:calcdbz
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: rotatecoords
+In: :_wrffortran:wrf_user_latlon_routines.f90:rotatecoords
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user_latlon_routines.f90:rotatecoords
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dlltoij
+In: :_wrffortran:wrf_user_latlon_routines.f90:dlltoij
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user_latlon_routines.f90:dlltoij
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dijtoll
+In: :_wrffortran:wrf_user_latlon_routines.f90:dijtoll
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_user_latlon_routines.f90:dijtoll
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wrf_monotonic
+			Block: wrf_intrp_value
+In: :_wrffortran:wrf_vinterp.f90:wrf_intrp_value
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_vinterp.f90:wrf_intrp_value
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wrf_vintrp
+In: :_wrffortran:wrf_vinterp.f90:wrf_vintrp
+get_useparameters: mapping for {'only': 1, 'map': {'fomp_sched_kind': 'fomp_sched_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_sched_kind': 'fomp_sched_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_lock_kind': 'fomp_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_lock_kind': 'fomp_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_lock_kind': 'fomp_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_lock_kind': 'fomp_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_lock_kind': 'fomp_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'rd': 'rd', 'celkel': 'celkel', 'abscoef': 'abscoef', 'ussalr': 'ussalr', 'abscoefi': 'abscoefi', 'eps': 'eps', 'g': 'g'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'g': 'g'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'rd': 'rd'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'deg_per_rad': 'deg_per_rad', 'rad_per_deg': 'rad_per_deg', 'pi': 'pi'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'thtecon2': 'thtecon2', 'tlclc1': 'tlclc1', 'thtecon1': 'thtecon1', 'tlclc4': 'tlclc4', 'eps': 'eps', 'gamma': 'gamma', 'tlclc2': 'tlclc2', 'algerr': 'algerr', 'gammamd': 'gammamd', 'thtecon3': 'thtecon3', 'tlclc3': 'tlclc3'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'rd': 'rd', 'eps': 'eps', 'g': 'g'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'eps': 'eps'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'algerr': 'algerr'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'rd': 'rd', 'p1000mb': 'p1000mb', 'cp': 'cp'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'rd': 'rd', 'p1000mb': 'p1000mb', 'cp': 'cp'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'rd': 'rd', 'algerr': 'algerr', 'g': 'g', 'ussalr': 'ussalr'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'ezero': 'ezero', 'celkel': 'celkel', 'rv': 'rv', 'eslcon2': 'eslcon2', 'rd': 'rd', 'eps': 'eps', 'eslcon1': 'eslcon1'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'g': 'g'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'alpha': 'alpha', 'rho_g': 'rho_g', 'rhowat': 'rhowat', 'gamma_seven': 'gamma_seven', 'rho_s': 'rho_s', 'rho_r': 'rho_r', 'rd': 'rd', 'pi': 'pi', 'celkel': 'celkel'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'deg_per_rad': 'deg_per_rad', 'rad_per_deg': 'rad_per_deg', 'pi': 'pi'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'deg_per_rad': 'deg_per_rad', 'wrf_earth_radius': 'wrf_earth_radius', 'algerr': 'algerr', 'rad_per_deg': 'rad_per_deg', 'pi': 'pi'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'deg_per_rad': 'deg_per_rad', 'wrf_earth_radius': 'wrf_earth_radius', 'algerr': 'algerr', 'rad_per_deg': 'rad_per_deg', 'pi': 'pi'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'sclht': 'sclht', 'algerr': 'algerr'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'expon': 'expon', 'ussalr': 'ussalr', 'exponi': 'exponi', 'sclht': 'sclht', 'thtecon1': 'thtecon1', 'tlclc2': 'tlclc2', 'tlclc3': 'tlclc3', 'thtecon2': 'thtecon2', 'celkel': 'celkel', 'eps': 'eps', 'tlclc4': 'tlclc4', 'thtecon3': 'thtecon3', 'gamma': 'gamma', 'algerr': 'algerr', 'gammamd': 'gammamd', 'tlclc1': 'tlclc1'}} not impl.get_useparameters: mapping for {'only': 1, 'map': {'deg_per_rad': 'deg_per_rad'}} not impl.get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_vinterp.f90:wrf_vintrp
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputewspd
+			Block: dcomputewdir
+In: :_wrffortran:wrf_wind.f90:dcomputewdir
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: :_wrffortran:wrf_wind.f90:dcomputewdir
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+Post-processing (stage 2)...
+	Block: _wrffortran
+		Block: unknown_interface
+			Block: dcalcuh
+			Block: deqthecalc
+			Block: omp_constants
+			Block: fomp_enabled
+			Block: fomp_set_num_threads
+			Block: fomp_get_num_threads
+			Block: fomp_get_max_threads
+			Block: fomp_get_thread_num
+			Block: fomp_get_num_procs
+			Block: fomp_in_parallel
+			Block: fomp_set_dynamic
+			Block: fomp_get_dynamic
+			Block: fomp_set_nested
+			Block: fomp_get_nested
+			Block: fomp_set_schedule
+			Block: fomp_get_schedule
+			Block: fomp_get_thread_limit
+			Block: fomp_set_max_active_levels
+			Block: fomp_get_max_active_levels
+			Block: fomp_get_level
+			Block: fomp_get_ancestor_thread_num
+			Block: fomp_get_team_size
+			Block: fomp_get_active_level
+			Block: fomp_in_final
+			Block: fomp_init_lock
+			Block: fomp_init_nest_lock
+			Block: fomp_destroy_lock
+			Block: fomp_destroy_nest_lock
+			Block: fomp_set_lock
+			Block: fomp_set_nest_lock
+			Block: fomp_unset_lock
+			Block: fomp_unset_nest_lock
+			Block: fomp_test_lock
+			Block: fomp_test_nest_lock
+			Block: fomp_get_wtime
+			Block: fomp_get_wtick
+			Block: tvirtual
+			Block: tonpsadiabat
+			Block: dlookup_table
+			Block: dpfcalc
+			Block: dcapecalc3d
+			Block: dcapecalc2d
+			Block: dcloudfrac
+			Block: dcloudfrac2
+			Block: wrf_constants
+			Block: wrfcttcalc
+			Block: dcomputeabsvort
+			Block: dcomputepv
+			Block: dcomputepw
+			Block: dcalrelhl
+			Block: wetbulbcalc
+			Block: omgcalc
+			Block: virtual_temp
+			Block: testfunc
+			Block: dcomputepi
+			Block: dcomputetk
+			Block: dinterp3dz
+			Block: dzstag
+			Block: dinterp2dxy
+			Block: dinterp1d
+			Block: dcomputeseaprs
+			Block: dfilter2d
+			Block: filter2d
+			Block: dcomputerh
+			Block: dgetijlatlong
+			Block: dcomputeuvmet
+			Block: dcomputetd
+			Block: dcomputeiclw
+			Block: calcdbz
+			Block: rotatecoords
+			Block: dlltoij
+			Block: dijtoll
+			Block: wrf_monotonic
+			Block: wrf_intrp_value
+			Block: wrf_vintrp
+			Block: dcomputewspd
+			Block: dcomputewdir
+Saving signatures to file "./wrffortran.pyf"
+running clean
+'build/lib.macosx-10.9-x86_64-3.5' does not exist -- can't clean it
+'build/bdist.macosx-10.9-x86_64' does not exist -- can't clean it
+'build/scripts.macosx-10.9-x86_64-3.5' does not exist -- can't clean it
+running config_fc
+unifing config_fc, config, build_clib, build_ext, build commands --fcompiler options
+running build_ext
+running build_src
+build_src
+building extension "wrf._wrffortran" sources
+creating build
+creating build/src.macosx-10.9-x86_64-3.5
+creating build/src.macosx-10.9-x86_64-3.5/fortran
+f2py options: []
+f2py: fortran/wrffortran.pyf
+Reading fortran codes...
+	Reading file 'fortran/wrffortran.pyf' (format:free)
+Post-processing...
+	Block: _wrffortran
+			Block: dcalcuh
+			Block: deqthecalc
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:deqthecalc
+get_useparameters: no module wrf_constants info used by deqthecalc
+			Block: omp_constants
+			Block: fomp_enabled
+			Block: fomp_set_num_threads
+			Block: fomp_get_num_threads
+			Block: fomp_get_max_threads
+			Block: fomp_get_thread_num
+			Block: fomp_get_num_procs
+			Block: fomp_in_parallel
+			Block: fomp_set_dynamic
+			Block: fomp_get_dynamic
+			Block: fomp_set_nested
+			Block: fomp_get_nested
+			Block: fomp_set_schedule
+			Block: fomp_get_schedule
+			Block: fomp_get_thread_limit
+			Block: fomp_set_max_active_levels
+			Block: fomp_get_max_active_levels
+			Block: fomp_get_level
+			Block: fomp_get_ancestor_thread_num
+			Block: fomp_get_team_size
+			Block: fomp_get_active_level
+			Block: fomp_in_final
+			Block: fomp_init_lock
+			Block: fomp_init_nest_lock
+			Block: fomp_destroy_lock
+			Block: fomp_destroy_nest_lock
+			Block: fomp_set_lock
+			Block: fomp_set_nest_lock
+			Block: fomp_unset_lock
+			Block: fomp_unset_nest_lock
+			Block: fomp_test_lock
+			Block: fomp_test_nest_lock
+			Block: fomp_get_wtime
+			Block: fomp_get_wtick
+			Block: tvirtual
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:tvirtual
+get_useparameters: no module wrf_constants info used by tvirtual
+			Block: tonpsadiabat
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:tonpsadiabat
+get_useparameters: no module wrf_constants info used by tonpsadiabat
+			Block: dlookup_table
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dlookup_table
+get_useparameters: no module wrf_constants info used by dlookup_table
+			Block: dpfcalc
+			Block: dcapecalc3d
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcapecalc3d
+get_useparameters: no module wrf_constants info used by dcapecalc3d
+			Block: dcapecalc2d
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcapecalc2d
+get_useparameters: no module wrf_constants info used by dcapecalc2d
+			Block: dcloudfrac
+			Block: dcloudfrac2
+			Block: wrf_constants
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrf_constants
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrf_constants
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wrfcttcalc
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrfcttcalc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrfcttcalc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputeabsvort
+			Block: dcomputepv
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputepv
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputepv
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputepw
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputepw
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputepw
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcalrelhl
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcalrelhl
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcalrelhl
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wetbulbcalc
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wetbulbcalc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wetbulbcalc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: omgcalc
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:omgcalc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:omgcalc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: virtual_temp
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:virtual_temp
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:virtual_temp
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: testfunc
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:testfunc
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:testfunc
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputepi
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputepi
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputepi
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputetk
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputetk
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputetk
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dinterp3dz
+			Block: dzstag
+			Block: dinterp2dxy
+			Block: dinterp1d
+			Block: dcomputeseaprs
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputeseaprs
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputeseaprs
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dfilter2d
+			Block: filter2d
+			Block: dcomputerh
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputerh
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputerh
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dgetijlatlong
+			Block: dcomputeuvmet
+			Block: dcomputetd
+			Block: dcomputeiclw
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputeiclw
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputeiclw
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: calcdbz
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:calcdbz
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:calcdbz
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: rotatecoords
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:rotatecoords
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:rotatecoords
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dlltoij
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dlltoij
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dlltoij
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dijtoll
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dijtoll
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dijtoll
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wrf_monotonic
+			Block: wrf_intrp_value
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrf_intrp_value
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrf_intrp_value
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: wrf_vintrp
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrf_vintrp
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:wrf_vintrp
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+			Block: dcomputewspd
+			Block: dcomputewdir
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputewdir
+get_parameters: got "invalid syntax (<string>, line 1)" on 'int(-9223372036854775806d0, kind=8)'
+In: fortran/wrffortran.pyf:_wrffortran:unknown_interface:dcomputewdir
+get_parameters: got "name 'achar' is not defined" on 'achar(0)'
+Post-processing (stage 2)...
+	Block: _wrffortran
+		Block: unknown_interface
+			Block: dcalcuh
+			Block: deqthecalc
+			Block: omp_constants
+			Block: fomp_enabled
+			Block: fomp_set_num_threads
+			Block: fomp_get_num_threads
+			Block: fomp_get_max_threads
+			Block: fomp_get_thread_num
+			Block: fomp_get_num_procs
+			Block: fomp_in_parallel
+			Block: fomp_set_dynamic
+			Block: fomp_get_dynamic
+			Block: fomp_set_nested
+			Block: fomp_get_nested
+			Block: fomp_set_schedule
+			Block: fomp_get_schedule
+			Block: fomp_get_thread_limit
+			Block: fomp_set_max_active_levels
+			Block: fomp_get_max_active_levels
+			Block: fomp_get_level
+			Block: fomp_get_ancestor_thread_num
+			Block: fomp_get_team_size
+			Block: fomp_get_active_level
+			Block: fomp_in_final
+			Block: fomp_init_lock
+			Block: fomp_init_nest_lock
+			Block: fomp_destroy_lock
+			Block: fomp_destroy_nest_lock
+			Block: fomp_set_lock
+			Block: fomp_set_nest_lock
+			Block: fomp_unset_lock
+			Block: fomp_unset_nest_lock
+			Block: fomp_test_lock
+			Block: fomp_test_nest_lock
+			Block: fomp_get_wtime
+			Block: fomp_get_wtick
+			Block: tvirtual
+			Block: tonpsadiabat
+			Block: dlookup_table
+			Block: dpfcalc
+			Block: dcapecalc3d
+			Block: dcapecalc2d
+			Block: dcloudfrac
+			Block: dcloudfrac2
+			Block: wrf_constants
+			Block: wrfcttcalc
+			Block: dcomputeabsvort
+			Block: dcomputepv
+			Block: dcomputepw
+			Block: dcalrelhl
+			Block: wetbulbcalc
+			Block: omgcalc
+			Block: virtual_temp
+			Block: testfunc
+			Block: dcomputepi
+			Block: dcomputetk
+			Block: dinterp3dz
+			Block: dzstag
+			Block: dinterp2dxy
+			Block: dinterp1d
+			Block: dcomputeseaprs
+			Block: dfilter2d
+			Block: filter2d
+			Block: dcomputerh
+			Block: dgetijlatlong
+			Block: dcomputeuvmet
+			Block: dcomputetd
+			Block: dcomputeiclw
+			Block: calcdbz
+			Block: rotatecoords
+			Block: dlltoij
+			Block: dijtoll
+			Block: wrf_monotonic
+			Block: wrf_intrp_value
+			Block: wrf_vintrp
+			Block: dcomputewspd
+			Block: dcomputewdir
+Building modules...
+	Building module "_wrffortran"...
+		Constructing wrapper function "dcalcuh"...
+		  uh = dcalcuh(zp,mapfct,dx,dy,uhmnhgt,uhmxhgt,us,vs,w,uh,tem1,tem2,[nx,ny,nz,nzp1])
+		Constructing wrapper function "deqthecalc"...
+		  eth = deqthecalc(qvp,tmk,prs,eth,[miy,mjx,mkzh])
+		Creating wrapper for Fortran function "fomp_enabled"("fomp_enabled")...
+		Constructing wrapper function "fomp_enabled"...
+		  fomp_enabled = fomp_enabled()
+		Constructing wrapper function "fomp_set_num_threads"...
+		  fomp_set_num_threads(num_threads)
+		Creating wrapper for Fortran function "fomp_get_num_threads"("fomp_get_num_threads")...
+		Constructing wrapper function "fomp_get_num_threads"...
+		  fomp_get_num_threads = fomp_get_num_threads()
+		Creating wrapper for Fortran function "fomp_get_max_threads"("fomp_get_max_threads")...
+		Constructing wrapper function "fomp_get_max_threads"...
+		  fomp_get_max_threads = fomp_get_max_threads()
+		Creating wrapper for Fortran function "fomp_get_thread_num"("fomp_get_thread_num")...
+		Constructing wrapper function "fomp_get_thread_num"...
+		  fomp_get_thread_num = fomp_get_thread_num()
+		Creating wrapper for Fortran function "fomp_get_num_procs"("fomp_get_num_procs")...
+		Constructing wrapper function "fomp_get_num_procs"...
+		  fomp_get_num_procs = fomp_get_num_procs()
+		Creating wrapper for Fortran function "fomp_in_parallel"("fomp_in_parallel")...
+		Constructing wrapper function "fomp_in_parallel"...
+		  fomp_in_parallel = fomp_in_parallel()
+		Constructing wrapper function "fomp_set_dynamic"...
+		  fomp_set_dynamic(dynamic_threads)
+		Creating wrapper for Fortran function "fomp_get_dynamic"("fomp_get_dynamic")...
+		Constructing wrapper function "fomp_get_dynamic"...
+		  fomp_get_dynamic = fomp_get_dynamic()
+		Constructing wrapper function "fomp_set_nested"...
+		  fomp_set_nested(nested)
+		Creating wrapper for Fortran function "fomp_get_nested"("fomp_get_nested")...
+		Constructing wrapper function "fomp_get_nested"...
+		  fomp_get_nested = fomp_get_nested()
+		Constructing wrapper function "fomp_set_schedule"...
+		  fomp_set_schedule(kind,modifier)
+		Constructing wrapper function "fomp_get_schedule"...
+		  kind,modifier = fomp_get_schedule()
+		Creating wrapper for Fortran function "fomp_get_thread_limit"("fomp_get_thread_limit")...
+		Constructing wrapper function "fomp_get_thread_limit"...
+		  fomp_get_thread_limit = fomp_get_thread_limit()
+		Constructing wrapper function "fomp_set_max_active_levels"...
+		  fomp_set_max_active_levels(max_levels)
+		Creating wrapper for Fortran function "fomp_get_max_active_levels"("fomp_get_max_active_levels")...
+		Constructing wrapper function "fomp_get_max_active_levels"...
+		  fomp_get_max_active_levels = fomp_get_max_active_levels()
+		Creating wrapper for Fortran function "fomp_get_level"("fomp_get_level")...
+		Constructing wrapper function "fomp_get_level"...
+		  fomp_get_level = fomp_get_level()
+		Creating wrapper for Fortran function "fomp_get_ancestor_thread_num"("fomp_get_ancestor_thread_num")...
+		Constructing wrapper function "fomp_get_ancestor_thread_num"...
+		  fomp_get_ancestor_thread_num = fomp_get_ancestor_thread_num(level)
+		Creating wrapper for Fortran function "fomp_get_team_size"("fomp_get_team_size")...
+		Constructing wrapper function "fomp_get_team_size"...
+		  fomp_get_team_size = fomp_get_team_size(level)
+		Creating wrapper for Fortran function "fomp_get_active_level"("fomp_get_active_level")...
+		Constructing wrapper function "fomp_get_active_level"...
+		  fomp_get_active_level = fomp_get_active_level()
+		Creating wrapper for Fortran function "fomp_in_final"("fomp_in_final")...
+		Constructing wrapper function "fomp_in_final"...
+		  fomp_in_final = fomp_in_final()
+		Constructing wrapper function "fomp_init_lock"...
+		  svar = fomp_init_lock()
+		Constructing wrapper function "fomp_init_nest_lock"...
+		  nvar = fomp_init_nest_lock()
+		Constructing wrapper function "fomp_destroy_lock"...
+		  fomp_destroy_lock(svar)
+		Constructing wrapper function "fomp_destroy_nest_lock"...
+		  fomp_destroy_nest_lock(nvar)
+		Constructing wrapper function "fomp_set_lock"...
+		  fomp_set_lock(svar)
+		Constructing wrapper function "fomp_set_nest_lock"...
+		  fomp_set_nest_lock(nvar)
+		Constructing wrapper function "fomp_unset_lock"...
+		  fomp_unset_lock(svar)
+		Constructing wrapper function "fomp_unset_nest_lock"...
+		  fomp_unset_nest_lock(nvar)
+		Creating wrapper for Fortran function "fomp_test_lock"("fomp_test_lock")...
+		Constructing wrapper function "fomp_test_lock"...
+		  fomp_test_lock = fomp_test_lock(svar)
+		Creating wrapper for Fortran function "fomp_test_nest_lock"("fomp_test_nest_lock")...
+		Constructing wrapper function "fomp_test_nest_lock"...
+		  fomp_test_nest_lock = fomp_test_nest_lock(nvar)
+		Creating wrapper for Fortran function "fomp_get_wtime"("fomp_get_wtime")...
+		Constructing wrapper function "fomp_get_wtime"...
+		  fomp_get_wtime = fomp_get_wtime()
+		Creating wrapper for Fortran function "fomp_get_wtick"("fomp_get_wtick")...
+		Constructing wrapper function "fomp_get_wtick"...
+		  fomp_get_wtick = fomp_get_wtick()
+		Creating wrapper for Fortran function "tvirtual"("tvirtual")...
+		Constructing wrapper function "tvirtual"...
+		  tvirtual = tvirtual(temp,ratmix)
+		Creating wrapper for Fortran function "tonpsadiabat"("tonpsadiabat")...
+		Constructing wrapper function "tonpsadiabat"...
+		  tonpsadiabat = tonpsadiabat(thte,prs,psadithte,psadiprs,psaditmk,gamma,errstat,errmsg)
+		Constructing wrapper function "dlookup_table"...
+		  dlookup_table(psadithte,psadiprs,psaditmk,fname,errstat,errmsg)
+		Constructing wrapper function "dpfcalc"...
+		  pf = dpfcalc(prs,sfp,ter_follow,[mix,mjy,mkzh])
+		Constructing wrapper function "dcapecalc3d"...
+		  cape,cin = dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,ter_follow,psafile,errstat,errmsg,[mix,mjy,mkzh])
+		Constructing wrapper function "dcapecalc2d"...
+		  cape,cin = dcapecalc2d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,ter_follow,psafile,errstat,errmsg,[mix,mjy,mkzh])
+		Constructing wrapper function "dcloudfrac"...
+		  lowc,midc,highc = dcloudfrac(pres,rh,lowc,midc,highc,[nz,ns,ew])
+		Constructing wrapper function "dcloudfrac2"...
+		  lowc,midc,highc = dcloudfrac2(vert,rh,vert_inc_w_height,low_thresh,mid_thresh,high_thresh,msg,lowc,midc,highc,[nz,ns,ew])
+		Constructing wrapper function "wrfcttcalc"...
+		  ctt = wrfcttcalc(prs,tk,qci,qcw,qvp,ght,ter,ctt,haveqci,[nz,ns,ew])
+		Constructing wrapper function "dcomputeabsvort"...
+		  av = dcomputeabsvort(av,u,v,msfu,msfv,msft,cor,dx,dy,[nx,ny,nz,nxp1,nyp1])
+		Constructing wrapper function "dcomputepv"...
+		  pv = dcomputepv(pv,u,v,theta,prs,msfu,msfv,msft,cor,dx,dy,[nx,ny,nz,nxp1,nyp1])
+		Constructing wrapper function "dcomputepw"...
+		  pw = dcomputepw(p,tv,qv,ht,pw,[nx,ny,nz,nzh])
+		Constructing wrapper function "dcalrelhl"...
+		  sreh = dcalrelhl(u,v,ght,ter,top,sreh,[miy,mjx,mkzh])
+		Constructing wrapper function "wetbulbcalc"...
+		  twb = wetbulbcalc(prs,tmk,qvp,twb,psafile,errstat,errmsg,[nx,ny,nz])
+		Constructing wrapper function "omgcalc"...
+		  omg = omgcalc(qvp,tmk,www,prs,omg,[mx,my,mz])
+		Constructing wrapper function "virtual_temp"...
+		  tv = virtual_temp(temp,ratmix,tv,[nx,ny,nz])
+		Constructing wrapper function "testfunc"...
+		  b = testfunc(a,b,c,errstat,errmsg,[nx,ny,nz])
+		Constructing wrapper function "dcomputepi"...
+		  pi = dcomputepi(pi,pressure,[nx,ny,nz])
+		Constructing wrapper function "dcomputetk"...
+		  tk = dcomputetk(tk,pressure,theta,[nx])
+		Constructing wrapper function "dinterp3dz"...
+		  out2d = dinterp3dz(data3d,out2d,zdata,desiredloc,missingval,[nx,ny,nz])
+		Constructing wrapper function "dzstag"...
+		  znew = dzstag(znew,z,terrain,[nx,ny,nz,nxz,nyz,nzz])
+		Constructing wrapper function "dinterp2dxy"...
+		  v2d = dinterp2dxy(v3d,v2d,xy,[nx,ny,nz,nxy])
+		Constructing wrapper function "dinterp1d"...
+		  v_out = dinterp1d(v_in,v_out,z_in,z_out,vmsg,[nz_in,nz_out])
+		Constructing wrapper function "dcomputeseaprs"...
+		  sea_level_pressure = dcomputeseaprs(z,t,p,q,sea_level_pressure,t_sea_level,t_surf,level,errstat,errmsg,[nx,ny,nz])
+		Constructing wrapper function "dfilter2d"...
+		  a = dfilter2d(a,b,it,missing,[nx,ny])
+		Constructing wrapper function "filter2d"...
+		  a = filter2d(a,b,it,missing,[nx,ny])
+		Constructing wrapper function "dcomputerh"...
+		  rh = dcomputerh(qv,p,t,rh,[nx])
+		Constructing wrapper function "dgetijlatlong"...
+		  ii,jj = dgetijlatlong(lat_array,long_array,lat,longitude,ii,jj,imsg,[nx,ny])
+		Constructing wrapper function "dcomputeuvmet"...
+		  uvmet = dcomputeuvmet(u,v,uvmet,longca,longcb,flong,flat,cen_long,cone,rpd,istag,is_msg_val,umsg,vmsg,uvmetmsg,[nx,ny,nxp1,nyp1])
+		Constructing wrapper function "dcomputetd"...
+		  td = dcomputetd(td,pressure,qv_in,[nx])
+		Constructing wrapper function "dcomputeiclw"...
+		  iclw = dcomputeiclw(iclw,pressure,qc_in,[nx,ny,nz])
+		Constructing wrapper function "calcdbz"...
+		  dbz = calcdbz(prs,tmk,qvp,qra,qsn,qgr,sn0,ivarint,iliqskin,dbz,[nx,ny,nz])
+		Constructing wrapper function "rotatecoords"...
+		  olat,olon = rotatecoords(ilat,ilon,olat,olon,lat_np,lon_np,lon_0,direction)
+		Constructing wrapper function "dlltoij"...
+		  loc = dlltoij(map_proj,truelat1,truelat2,stdlon,lat1,lon1,pole_lat,pole_lon,knowni,knownj,dx,dy,latinc,loninc,lat,lon,loc,errstat,errmsg)
+		Constructing wrapper function "dijtoll"...
+		  loc = dijtoll(map_proj,truelat1,truelat2,stdlon,lat1,lon1,pole_lat,pole_lon,knowni,knownj,dx,dy,latinc,loninc,ai,aj,loc,errstat,errmsg)
+		Constructing wrapper function "wrf_monotonic"...
+		  out = wrf_monotonic(out,in,lvprs,cor,idir,delta,icorsw,[ew,ns,nz])
+		Creating wrapper for Fortran function "wrf_intrp_value"("wrf_intrp_value")...
+		Constructing wrapper function "wrf_intrp_value"...
+		  wrf_intrp_value = wrf_intrp_value(wvalp0,wvalp1,vlev,vcp0,vcp1,icase,errstat)
+		Constructing wrapper function "wrf_vintrp"...
+		  dataout = wrf_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,sfp,smsfp,vcarray,interp_levels,icase,extrap,vcor,logp,rmsg,errstat,errmsg,[numlevels,ew,ns,nz])
+		Constructing wrapper function "dcomputewspd"...
+		  wspd = dcomputewspd(wspd,u,v,[nx,ny])
+		Constructing wrapper function "dcomputewdir"...
+		  wdir = dcomputewdir(wdir,u,v,[nx,ny])
+		Constructing F90 module support for "omp_constants"...
+		  Variables: fomp_sched_guided fomp_sched_auto fomp_nest_lock_kind fomp_sched_kind fomp_sched_dynamic fomp_sched_static fomp_lock_kind
+		Constructing F90 module support for "wrf_constants"...
+		  Variables: default_fill_float celkel_triple t_base ussalr default_fill_int64 default_fill_double default_fill_char tlclc2 eslcon2 ezero gamma eslcon1 tlclc1 rv default_fill_int32 eps tlclc3 celkel expon tlclc4 g default_fill_int8 rho_g rd thtecon2 thtecon3 gamma_seven default_fill rho_r wrf_earth_radius thtecon1 rgasmd deg_per_rad cpmd default_fill_int16 rho_s sclht gammamd alpha cp pi abscoef errlen exponi abscoefi rhowat algerr p1000mb rad_per_deg
+	Wrote C/API module "_wrffortran" to file "build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortranmodule.c"
+	Fortran 77 wrappers are saved to "build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers.f"
+	Fortran 90 wrappers are saved to "build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers2.f90"
+  adding 'build/src.macosx-10.9-x86_64-3.5/fortranobject.c' to sources.
+  adding 'build/src.macosx-10.9-x86_64-3.5' to include_dirs.
+copying /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/f2py/src/fortranobject.c -> build/src.macosx-10.9-x86_64-3.5
+copying /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/f2py/src/fortranobject.h -> build/src.macosx-10.9-x86_64-3.5
+  adding 'build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers.f' to sources.
+  adding 'build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers2.f90' to sources.
+build_src: building npy-pkg config files
+customize UnixCCompiler
+customize UnixCCompiler using build_ext
+customize Gnu95FCompiler
+Found executable /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran
+customize Gnu95FCompiler
+customize Gnu95FCompiler using build_ext
+building 'wrf._wrffortran' extension
+compiling C sources
+C compiler: gcc -DNDEBUG -g -fwrapv -O3 -Wall -Wstrict-prototypes -arch x86_64
+
+creating build/temp.macosx-10.9-x86_64-3.5
+creating build/temp.macosx-10.9-x86_64-3.5/build
+creating build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5
+creating build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran
+compile options: '-Ibuild/src.macosx-10.9-x86_64-3.5 -I/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include -I/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/include/python3.5m -c'
+gcc: build/src.macosx-10.9-x86_64-3.5/fortranobject.c
+In file included from /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/ndarraytypes.h:1777:0,
+                 from /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/ndarrayobject.h:18,
+                 from /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from build/src.macosx-10.9-x86_64-3.5/fortranobject.h:13,
+                 from build/src.macosx-10.9-x86_64-3.5/fortranobject.c:2:
+/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:15:2: warning: #warning "Using deprecated NumPy API, disable it by " "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it by " \
+  ^
+gcc: build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortranmodule.c
+In file included from /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/ndarraytypes.h:1777:0,
+                 from /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/ndarrayobject.h:18,
+                 from /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/arrayobject.h:4,
+                 from build/src.macosx-10.9-x86_64-3.5/fortranobject.h:13,
+                 from build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortranmodule.c:19:
+/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include/numpy/npy_1_7_deprecated_api.h:15:2: warning: #warning "Using deprecated NumPy API, disable it by " "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION" [-Wcpp]
+ #warning "Using deprecated NumPy API, disable it by " \
+  ^
+build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortranmodule.c:236:12: warning: ‘f2py_size’ defined but not used [-Wunused-function]
+ static int f2py_size(PyArrayObject* var, ...)
+            ^
+compiling Fortran 90 module sources
+creating build/temp.macosx-10.9-x86_64-3.5/wrf
+Fortran f77 compiler: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -Wall -g -ffixed-form -fno-second-underscore -arch x86_64 -fPIC -O3 -funroll-loops
+Fortran f90 compiler: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -mtune=generic -arch x86_64 -fPIC -O3 -funroll-loops
+Fortran fix compiler: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -Wall -g -ffixed-form -fno-second-underscore -mtune=generic -arch x86_64 -fPIC -O3 -funroll-loops
+creating build/temp.macosx-10.9-x86_64-3.5/fortran
+compile options: '-Ibuild/src.macosx-10.9-x86_64-3.5 -I/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include -I/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/include/python3.5m -c'
+extra options: '-Jbuild/temp.macosx-10.9-x86_64-3.5/wrf -Ibuild/temp.macosx-10.9-x86_64-3.5/wrf'
+gfortran:f90: fortran/wrf_constants.f90
+gfortran:f90: fortran/omp.f90
+compiling Fortran sources
+Fortran f77 compiler: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -Wall -g -ffixed-form -fno-second-underscore -arch x86_64 -fPIC -O3 -funroll-loops
+Fortran f90 compiler: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -mtune=generic -arch x86_64 -fPIC -O3 -funroll-loops
+Fortran fix compiler: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -Wall -g -ffixed-form -fno-second-underscore -mtune=generic -arch x86_64 -fPIC -O3 -funroll-loops
+compile options: '-Ibuild/src.macosx-10.9-x86_64-3.5 -I/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib/python3.5/site-packages/numpy/core/include -I/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/include/python3.5m -c'
+extra options: '-Jbuild/temp.macosx-10.9-x86_64-3.5/wrf -Ibuild/temp.macosx-10.9-x86_64-3.5/wrf'
+gfortran:f90: fortran/wrf_testfunc.f90
+gfortran:f90: fortran/wrf_user.f90
+gfortran:f90: fortran/rip_cape.f90
+gfortran:f90: fortran/wrf_cloud_fracf.f90
+gfortran:f90: fortran/wrf_fctt.f90
+gfortran:f90: fortran/wrf_user_dbz.f90
+gfortran:f90: fortran/wrf_relhl.f90
+gfortran:f90: fortran/calc_uh.f90
+gfortran:f90: fortran/wrf_user_latlon_routines.f90
+gfortran:f90: fortran/wrf_pvo.f90
+gfortran:f90: fortran/eqthecalc.f90
+gfortran:f90: fortran/wrf_rip_phys_routines.f90
+gfortran:f90: fortran/wrf_pw.f90
+gfortran:f90: fortran/wrf_vinterp.f90
+gfortran:f90: fortran/wrf_wind.f90
+gfortran:f90: build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers2.f90
+gfortran:f77: build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers.f
+creating build/lib.macosx-10.9-x86_64-3.5
+creating build/lib.macosx-10.9-x86_64-3.5/wrf
+/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -Wall -g -arch x86_64 build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortranmodule.o build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortranobject.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_constants.o build/temp.macosx-10.9-x86_64-3.5/fortran/omp.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_testfunc.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_user.o build/temp.macosx-10.9-x86_64-3.5/fortran/rip_cape.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_cloud_fracf.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_fctt.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_user_dbz.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_relhl.o build/temp.macosx-10.9-x86_64-3.5/fortran/calc_uh.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_user_latlon_routines.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_pvo.o build/temp.macosx-10.9-x86_64-3.5/fortran/eqthecalc.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_rip_phys_routines.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_pw.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_vinterp.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_wind.o build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers.o build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers2.o -L/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/../lib/gcc/x86_64-apple-darwin11.4.2/4.8.5 -L/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib -lgfortran -o build/lib.macosx-10.9-x86_64-3.5/wrf/_wrffortran.cpython-35m-darwin.so
+Undefined symbols for architecture x86_64:
+  "_PyArg_ParseTupleAndKeywords", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyBytes_FromString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyCapsule_GetPointer", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _F2PyCapsule_AsVoidPtr in fortranobject.o
+  "_PyCapsule_New", referenced from:
+      _fortran_getattr in fortranobject.o
+      _F2PyCapsule_FromVoidPtr in fortranobject.o
+  "_PyCapsule_Type", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _F2PyCapsule_Check in fortranobject.o
+  "_PyComplex_Type", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyDict_DelItemString", referenced from:
+      _fortran_setattr in fortranobject.o
+  "_PyDict_GetItemString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_getattr in fortranobject.o
+  "_PyDict_New", referenced from:
+      _PyFortranObject_New in fortranobject.o
+      _PyFortranObject_NewAsAttr in fortranobject.o
+      _fortran_setattr in fortranobject.o
+  "_PyDict_SetItemString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_getattr in fortranobject.o
+      _F2PyDict_SetItemString in fortranobject.o
+      _PyFortranObject_New in fortranobject.o
+      _fortran_setattr in fortranobject.o
+  "_PyErr_Clear", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyErr_Format", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_call in fortranobject.o
+  "_PyErr_NewException", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyErr_NoMemory", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyErr_Occurred", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyErr_Print", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _F2PyDict_SetItemString in fortranobject.o
+  "_PyErr_SetString", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewdir in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewspd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeiclw in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputetd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputerh in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dinterp2dxy in _wrffortranmodule.o
+      ...
+  "_PyEval_RestoreThread", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyEval_SaveThread", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyExc_AttributeError", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_setattr in fortranobject.o
+  "_PyExc_ImportError", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyExc_MemoryError", referenced from:
+      _try_pyarr_from_string in _wrffortranmodule.o
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+  "_PyExc_RuntimeError", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_call in fortranobject.o
+  "_PyExc_TypeError", referenced from:
+      _fortran_call in fortranobject.o
+      _array_from_pyobj in fortranobject.o
+  "_PyExc_ValueError", referenced from:
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+      _array_from_pyobj in fortranobject.o
+  "_PyFloat_FromDouble", referenced from:
+      _try_pyarr_from_double in _wrffortranmodule.o
+  "_PyFloat_Type", referenced from:
+      _double_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tvirtual in _wrffortranmodule.o
+      _f2py_rout__wrffortran_wrf_intrp_value in _wrffortranmodule.o
+      _f2py_rout__wrffortran_rotatecoords in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tonpsadiabat in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcloudfrac2 in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeabsvort in _wrffortranmodule.o
+      ...
+  "_PyImport_ImportModule", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyLong_AsLong", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_schedule in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_ancestor_thread_num in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_max_active_levels in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_num_threads in _wrffortranmodule.o
+      ...
+  "_PyLong_AsLongLong", referenced from:
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+  "_PyLong_FromLong", referenced from:
+      _try_pyarr_from_int in _wrffortranmodule.o
+  "_PyLong_FromLongLong", referenced from:
+      _try_pyarr_from_long_long in _wrffortranmodule.o
+  "_PyMem_Free", referenced from:
+      _fortran_dealloc in fortranobject.o
+      _fortran_getattr in fortranobject.o
+  "_PyMem_Malloc", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyModule_Create2", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyModule_GetDict", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyNumber_Float", referenced from:
+      _double_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tvirtual in _wrffortranmodule.o
+      _f2py_rout__wrffortran_wrf_intrp_value in _wrffortranmodule.o
+      _f2py_rout__wrffortran_rotatecoords in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tonpsadiabat in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcloudfrac2 in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeabsvort in _wrffortranmodule.o
+      ...
+  "_PyNumber_Long", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_schedule in _wrffortranmodule.o
+      ...
+  "_PyOS_snprintf", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyObject_GenericGetAttr", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyObject_GetAttrString", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyObject_IsTrue", referenced from:
+      _f2py_rout__wrffortran_fomp_set_nested in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_dynamic in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeuvmet in _wrffortranmodule.o
+  "_PyObject_Print", referenced from:
+      _try_pyarr_from_string in _wrffortranmodule.o
+  "_PyObject_SetAttrString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyObject_Str", referenced from:
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+  "_PySequence_Check", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PySequence_GetItem", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyType_IsSubtype", referenced from:
+      _try_pyarr_from_int in _wrffortranmodule.o
+      _try_pyarr_from_long_long in _wrffortranmodule.o
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _try_pyarr_from_string in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+      ...
+  "_PyType_Type", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyUnicode_AsASCIIString", referenced from:
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+  "_PyUnicode_Concat", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyUnicode_FromFormat", referenced from:
+      _fortran_repr in fortranobject.o
+  "_PyUnicode_FromString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_repr in fortranobject.o
+      _fortran_getattr in fortranobject.o
+  "_PyUnicode_FromStringAndSize", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_Py_BuildValue", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "__PyObject_New", referenced from:
+      _PyFortranObject_New in fortranobject.o
+      _PyFortranObject_NewAsAttr in fortranobject.o
+  "__Py_NoneStruct", referenced from:
+      _f2py_rout__wrffortran_fomp_set_nested in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_dynamic in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewdir in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewspd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeiclw in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputetd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputerh in _wrffortranmodule.o
+      ...
+  "_main", referenced from:
+      start in crt1.10.6.o
+ld: symbol(s) not found for architecture x86_64
+collect2: error: ld returned 1 exit status
+Undefined symbols for architecture x86_64:
+  "_PyArg_ParseTupleAndKeywords", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyBytes_FromString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyCapsule_GetPointer", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _F2PyCapsule_AsVoidPtr in fortranobject.o
+  "_PyCapsule_New", referenced from:
+      _fortran_getattr in fortranobject.o
+      _F2PyCapsule_FromVoidPtr in fortranobject.o
+  "_PyCapsule_Type", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _F2PyCapsule_Check in fortranobject.o
+  "_PyComplex_Type", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyDict_DelItemString", referenced from:
+      _fortran_setattr in fortranobject.o
+  "_PyDict_GetItemString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_getattr in fortranobject.o
+  "_PyDict_New", referenced from:
+      _PyFortranObject_New in fortranobject.o
+      _PyFortranObject_NewAsAttr in fortranobject.o
+      _fortran_setattr in fortranobject.o
+  "_PyDict_SetItemString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_getattr in fortranobject.o
+      _F2PyDict_SetItemString in fortranobject.o
+      _PyFortranObject_New in fortranobject.o
+      _fortran_setattr in fortranobject.o
+  "_PyErr_Clear", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyErr_Format", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_call in fortranobject.o
+  "_PyErr_NewException", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyErr_NoMemory", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyErr_Occurred", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyErr_Print", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _F2PyDict_SetItemString in fortranobject.o
+  "_PyErr_SetString", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewdir in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewspd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeiclw in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputetd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputerh in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dinterp2dxy in _wrffortranmodule.o
+      ...
+  "_PyEval_RestoreThread", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyEval_SaveThread", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "_PyExc_AttributeError", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_setattr in fortranobject.o
+  "_PyExc_ImportError", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyExc_MemoryError", referenced from:
+      _try_pyarr_from_string in _wrffortranmodule.o
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+  "_PyExc_RuntimeError", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_call in fortranobject.o
+  "_PyExc_TypeError", referenced from:
+      _fortran_call in fortranobject.o
+      _array_from_pyobj in fortranobject.o
+  "_PyExc_ValueError", referenced from:
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+      _array_from_pyobj in fortranobject.o
+  "_PyFloat_FromDouble", referenced from:
+      _try_pyarr_from_double in _wrffortranmodule.o
+  "_PyFloat_Type", referenced from:
+      _double_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tvirtual in _wrffortranmodule.o
+      _f2py_rout__wrffortran_wrf_intrp_value in _wrffortranmodule.o
+      _f2py_rout__wrffortran_rotatecoords in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tonpsadiabat in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcloudfrac2 in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeabsvort in _wrffortranmodule.o
+      ...
+  "_PyImport_ImportModule", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyLong_AsLong", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_schedule in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_ancestor_thread_num in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_max_active_levels in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_num_threads in _wrffortranmodule.o
+      ...
+  "_PyLong_AsLongLong", referenced from:
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+  "_PyLong_FromLong", referenced from:
+      _try_pyarr_from_int in _wrffortranmodule.o
+  "_PyLong_FromLongLong", referenced from:
+      _try_pyarr_from_long_long in _wrffortranmodule.o
+  "_PyMem_Free", referenced from:
+      _fortran_dealloc in fortranobject.o
+      _fortran_getattr in fortranobject.o
+  "_PyMem_Malloc", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyModule_Create2", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyModule_GetDict", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyNumber_Float", referenced from:
+      _double_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tvirtual in _wrffortranmodule.o
+      _f2py_rout__wrffortran_wrf_intrp_value in _wrffortranmodule.o
+      _f2py_rout__wrffortran_rotatecoords in _wrffortranmodule.o
+      _f2py_rout__wrffortran_tonpsadiabat in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcloudfrac2 in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeabsvort in _wrffortranmodule.o
+      ...
+  "_PyNumber_Long", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_schedule in _wrffortranmodule.o
+      ...
+  "_PyOS_snprintf", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyObject_GenericGetAttr", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyObject_GetAttrString", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyObject_IsTrue", referenced from:
+      _f2py_rout__wrffortran_fomp_set_nested in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_dynamic in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeuvmet in _wrffortranmodule.o
+  "_PyObject_Print", referenced from:
+      _try_pyarr_from_string in _wrffortranmodule.o
+  "_PyObject_SetAttrString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyObject_Str", referenced from:
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+  "_PySequence_Check", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PySequence_GetItem", referenced from:
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_destroy_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_unset_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_test_nest_lock in _wrffortranmodule.o
+      ...
+  "_PyType_IsSubtype", referenced from:
+      _try_pyarr_from_int in _wrffortranmodule.o
+      _try_pyarr_from_long_long in _wrffortranmodule.o
+      _int_from_pyobj in _wrffortranmodule.o
+      _double_from_pyobj in _wrffortranmodule.o
+      _try_pyarr_from_string in _wrffortranmodule.o
+      _long_long_from_pyobj in _wrffortranmodule.o
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+      ...
+  "_PyType_Type", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+  "_PyUnicode_AsASCIIString", referenced from:
+      _string_from_pyobj.constprop.4 in _wrffortranmodule.o
+  "_PyUnicode_Concat", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_PyUnicode_FromFormat", referenced from:
+      _fortran_repr in fortranobject.o
+  "_PyUnicode_FromString", referenced from:
+      _PyInit__wrffortran in _wrffortranmodule.o
+      _fortran_repr in fortranobject.o
+      _fortran_getattr in fortranobject.o
+  "_PyUnicode_FromStringAndSize", referenced from:
+      _fortran_getattr in fortranobject.o
+  "_Py_BuildValue", referenced from:
+      _f2py_rout__wrffortran_fomp_get_wtick in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_wtime in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_nest_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_init_lock in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_in_final in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_active_level in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_get_level in _wrffortranmodule.o
+      ...
+  "__PyObject_New", referenced from:
+      _PyFortranObject_New in fortranobject.o
+      _PyFortranObject_NewAsAttr in fortranobject.o
+  "__Py_NoneStruct", referenced from:
+      _f2py_rout__wrffortran_fomp_set_nested in _wrffortranmodule.o
+      _f2py_rout__wrffortran_fomp_set_dynamic in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewdir in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputewspd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputeiclw in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputetd in _wrffortranmodule.o
+      _f2py_rout__wrffortran_dcomputerh in _wrffortranmodule.o
+      ...
+  "_main", referenced from:
+      start in crt1.10.6.o
+ld: symbol(s) not found for architecture x86_64
+collect2: error: ld returned 1 exit statusget_useparameters: mapping for {'map': {'fomp_sched_kind': 'fomp_sched_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_sched_kind': 'fomp_sched_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_lock_kind': 'fomp_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_lock_kind': 'fomp_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_lock_kind': 'fomp_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_lock_kind': 'fomp_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_lock_kind': 'fomp_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'fomp_nest_lock_kind': 'fomp_nest_lock_kind'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'eps': 'eps', 'celkel': 'celkel', 'rd': 'rd', 'abscoefi': 'abscoefi', 'g': 'g', 'abscoef': 'abscoef', 'ussalr': 'ussalr'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'g': 'g'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'rd': 'rd'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'deg_per_rad': 'deg_per_rad', 'pi': 'pi', 'rad_per_deg': 'rad_per_deg'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'eps': 'eps', 'tlclc3': 'tlclc3', 'tlclc2': 'tlclc2', 'thtecon3': 'thtecon3', 'gammamd': 'gammamd', 'gamma': 'gamma', 'tlclc4': 'tlclc4', 'thtecon2': 'thtecon2', 'tlclc1': 'tlclc1', 'algerr': 'algerr', 'thtecon1': 'thtecon1'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'eps': 'eps', 'rd': 'rd', 'g': 'g'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'eps': 'eps'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'algerr': 'algerr'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'p1000mb': 'p1000mb', 'rd': 'rd', 'cp': 'cp'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'p1000mb': 'p1000mb', 'rd': 'rd', 'cp': 'cp'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'g': 'g', 'ussalr': 'ussalr', 'algerr': 'algerr', 'rd': 'rd'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'eslcon1': 'eslcon1', 'eps': 'eps', 'celkel': 'celkel', 'rd': 'rd', 'ezero': 'ezero', 'eslcon2': 'eslcon2', 'rv': 'rv'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'g': 'g'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'rho_s': 'rho_s', 'rho_g': 'rho_g', 'rd': 'rd', 'gamma_seven': 'gamma_seven', 'rho_r': 'rho_r', 'alpha': 'alpha', 'pi': 'pi', 'celkel': 'celkel', 'rhowat': 'rhowat'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'deg_per_rad': 'deg_per_rad', 'pi': 'pi', 'rad_per_deg': 'rad_per_deg'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'pi': 'pi', 'deg_per_rad': 'deg_per_rad', 'wrf_earth_radius': 'wrf_earth_radius', 'algerr': 'algerr', 'rad_per_deg': 'rad_per_deg'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'pi': 'pi', 'deg_per_rad': 'deg_per_rad', 'wrf_earth_radius': 'wrf_earth_radius', 'algerr': 'algerr', 'rad_per_deg': 'rad_per_deg'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'algerr': 'algerr', 'sclht': 'sclht'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'eps': 'eps', 'tlclc3': 'tlclc3', 'celkel': 'celkel', 'thtecon3': 'thtecon3', 'sclht': 'sclht', 'gammamd': 'gammamd', 'expon': 'expon', 'tlclc4': 'tlclc4', 'ussalr': 'ussalr', 'thtecon1': 'thtecon1', 'exponi': 'exponi', 'tlclc2': 'tlclc2', 'gamma': 'gamma', 'thtecon2': 'thtecon2', 'tlclc1': 'tlclc1', 'algerr': 'algerr'}, 'only': 1} not impl.get_useparameters: mapping for {'map': {'deg_per_rad': 'deg_per_rad'}, 'only': 1} not impl.
+error: Command "/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/gfortran -Wall -g -arch x86_64 build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortranmodule.o build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortranobject.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_constants.o build/temp.macosx-10.9-x86_64-3.5/fortran/omp.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_testfunc.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_user.o build/temp.macosx-10.9-x86_64-3.5/fortran/rip_cape.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_cloud_fracf.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_fctt.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_user_dbz.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_relhl.o build/temp.macosx-10.9-x86_64-3.5/fortran/calc_uh.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_user_latlon_routines.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_pvo.o build/temp.macosx-10.9-x86_64-3.5/fortran/eqthecalc.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_rip_phys_routines.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_pw.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_vinterp.o build/temp.macosx-10.9-x86_64-3.5/fortran/wrf_wind.o build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers.o build/temp.macosx-10.9-x86_64-3.5/build/src.macosx-10.9-x86_64-3.5/fortran/_wrffortran-f2pywrappers2.o -L/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/bin/../lib/gcc/x86_64-apple-darwin11.4.2/4.8.5 -L/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/_b_env_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehold_placehol/lib -lgfortran -o build/lib.macosx-10.9-x86_64-3.5/wrf/_wrffortran.cpython-35m-darwin.so" failed with exit status 1
+BUILD START: wrf-python-1.1.0-py35_0
+    (actual version deferred until further download or env creation)
+
+The following NEW packages will be INSTALLED:
+
+    blas:            1.1-openblas                  conda-forge
+    ca-certificates: 2017.11.5-0                   conda-forge
+    certifi:         2017.11.5-py35_0              conda-forge
+    cloog:           0.18.0-0                                 
+    gcc:             4.8.5-8                                  
+    gmp:             6.1.2-0                       conda-forge
+    isl:             0.12.2-1                                 
+    libgfortran:     3.0.0-0                       conda-forge
+    mpc:             1.0.3-4                       conda-forge
+    mpfr:            3.1.5-0                       conda-forge
+    ncurses:         5.9-10                        conda-forge
+    numpy:           1.11.3-py35_blas_openblas_203 conda-forge [blas_openblas]
+    openblas:        0.2.20-7                      conda-forge
+    openssl:         1.0.2n-0                      conda-forge
+    pip:             9.0.1-py35_1                  conda-forge
+    python:          3.5.4-3                       conda-forge
+    readline:        7.0-0                         conda-forge
+    setuptools:      38.4.0-py35_0                 conda-forge
+    sqlite:          3.20.1-2                      conda-forge
+    tk:              8.6.7-0                       conda-forge
+    wheel:           0.30.0-py35_2                 conda-forge
+    wrapt:           1.10.11-py35_0                conda-forge
+    xz:              5.2.3-0                       conda-forge
+    zlib:            1.2.11-0                      conda-forge
+
+checkout: u'develop'
+==> git log -n1 <==
+
+commit 9a5a05dd5903676a0e6f4084c5e37938e3c3cca9
+Author: Bill Ladwig <ladwig@ucar.edu>
+Date:   Tue Jan 16 16:45:41 2018 -0700
+
+    Updated CI tests to reflect changes to diagnostics
+
+==> git describe --tags --dirty <==
+
+1.0.5-54-g9a5a05d
+
+==> git status <==
+
+On branch develop
+Your branch is up-to-date with 'origin/develop'.
+nothing to commit, working tree clean
+
+BUILD START (revised): wrf-python-1.1.0-py35_0
+Package: wrf-python-1.1.0-py35_0
+source tree in: /Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/work
+Traceback (most recent call last):
+  File "/Users/ladwig/miniconda2/bin/conda-build", line 6, in <module>
+    sys.exit(conda_build.cli.main_build.main())
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/cli/main_build.py", line 342, in main
+    execute(sys.argv[1:])
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/cli/main_build.py", line 333, in execute
+    noverify=args.no_verify)
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/api.py", line 97, in build
+    need_source_download=need_source_download, config=config)
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/build.py", line 1524, in build_tree
+    config=config)
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/build.py", line 1147, in build
+    utils.check_call_env(cmd, env=env, cwd=src_dir)
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/utils.py", line 628, in check_call_env
+    return _func_defaulting_env_to_os_environ(subprocess.check_call, *popenargs, **kwargs)
+  File "/Users/ladwig/miniconda2/lib/python2.7/site-packages/conda_build/utils.py", line 624, in _func_defaulting_env_to_os_environ
+    return func(_args, **kwargs)
+  File "/Users/ladwig/miniconda2/lib/python2.7/subprocess.py", line 186, in check_call
+    raise CalledProcessError(retcode, cmd)
+subprocess.CalledProcessError: Command '['/bin/bash', '-x', '-e', '/Users/ladwig/miniconda2/conda-bld/wrf-python_1516665483452/work/conda_build.sh']' returned non-zero exit status 1

@@ -16,12 +16,12 @@ build:
 requirements:
   build:
     - setuptools
+    - python
     - numpy 1.11.* # [unix]
     - numpy 1.14.* # [win]
     - wrapt
     - m2w64-toolchain  # [win]
-    - gcc  # [unix]
-    - python
+    - gcc # [unix] 
   run:
     - setuptools
     - numpy >=1.11 
