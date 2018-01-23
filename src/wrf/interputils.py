@@ -329,7 +329,8 @@ def get_xy(var, pivot_point=None, angle=None,
     
     return xy
 
-def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
+def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None,
+                 ll_lat=None, ll_lon=None):
     """Return the coordinate pairs in grid space.
     
     This function converts latitude,longitude coordinate pairs to 
@@ -371,6 +372,16 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
             projection object to use when working with latitude, longitude 
             coordinates, and must be specified if *wrfin* is None. Default 
             is None.
+            
+        ll_lat (:obj:`float`, sequence of :obj:`float`, optional): The lower 
+            left latitude(s) for your domain, and must be specified if 
+            *wrfin* is None. If the domain is a moving nest, this should be a 
+            sequence of lower left latitudes. Default is None.
+            
+        ll_lon (:obj:`float`, sequence of :obj:`float`, optional): The lower 
+            left longitude(s) for your domain, and must be specified if 
+            *wrfin* is None. If the domain is a moving nest, this should be 
+            a sequence of lower left longitudes. Default is None. 
                     
     Returns:
         
@@ -379,8 +390,11 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
         
     """
     
-    if wrfin is None and projection is None:
-        raise ValueError ("'wrfin' or 'projection' parameter is required")
+    if (wrfin is None and 
+        (projection is None or ll_lat is None or ll_lon is None)):
+        raise ValueError ("'wrfin' parameter or "
+                          "'projection', 'll_lat', and 'll_lon' parameters "
+                          "are required")
     
     if isinstance(pairs, Iterable):
         lat = [pair.lat for pair in pairs]
@@ -415,8 +429,8 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None):
                             truelat1=projection.truelat1, 
                             truelat2=projection.truelat2, 
                             stand_lon=projection.stand_lon, 
-                            ref_lat=projection.ll_lat, 
-                            ref_lon=projection.ll_lon, 
+                            ref_lat=ll_lat, 
+                            ref_lon=ll_lon, 
                             pole_lat=pole_lat, 
                             pole_lon=pole_lon, 
                             known_x=0, 

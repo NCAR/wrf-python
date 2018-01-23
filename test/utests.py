@@ -293,7 +293,23 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             # Note:  Until the bug is fixed in NCL, the wrf-python cross 
             # sections will contain one extra point
-            nt.assert_allclose(to_np(ht_cross)[...,0:-1], ref_ht_cross, rtol=.01)
+            nt.assert_allclose(to_np(ht_cross)[...,0:-1], ref_ht_cross, 
+                               rtol=.01)
+            
+            # Test the manual projection method with lat/lon
+            lats = hts.coords["XLAT"]
+            lons = hts.coords["XLONG"]
+            ll_lat = lats[0,0]
+            ll_lon = lons[0,0]
+            pivot = CoordPair(lat=lats[lats.shape[-2]/2, lats.shape[-1]/2],
+                              lon=lons[lons.shape[-2]/2, lons.shape[-1]/2])
+            v1 = vertcross(hts,p,wrfin=in_wrfnc,pivot_point=pivot_point,
+                           angle=90.0)
+            v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
+                          ll_lat=ll_lat, ll_lon=ll_lon, 
+                          pivot_point=pivot_point, angle=90.)
+            
+            nt.assert_allclose(to_np(v1), to_np(v2), rtol=.01)
             
             # Test opposite
             p_cross1 = vertcross(p,hts,pivot_point=pivot_point, angle=90.0)
@@ -328,6 +344,20 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             # Note:  After NCL is fixed, remove the slice.
             nt.assert_allclose(to_np(t2_line1)[...,0:-1], ref_t2_line)
+            
+            # Test the manual projection method with lat/lon
+            lats = t2.coords["XLAT"]
+            lons = t2.coords["XLONG"]
+            ll_lat = lats[0,0]
+            ll_lon = lons[0,0]
+            pivot = CoordPair(lat=lats[lats.shape[-2]/2, lats.shape[-1]/2],
+                              lon=lons[lons.shape[-2]/2, lons.shape[-1]/2])
+            l1 = interpline(t2,wrfin=in_wrfnc,pivot_point=pivot_point,
+                           angle=90.0)
+            l2 = interpline(t2,projection=t2.attrs["projection"], 
+                          ll_lat=ll_lat, ll_lon=ll_lon, 
+                          pivot_point=pivot_point, angle=90.)
+            nt.assert_allclose(to_np(l1), to_np(l2), rtol=.01)
             
             # Test point to point
             start_point = CoordPair(0, t2.shape[-2]/2)

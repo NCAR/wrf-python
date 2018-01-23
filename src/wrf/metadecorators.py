@@ -887,6 +887,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     argvars = from_args(wrapped, ("field3d", "vert", "levels", 
                                   "latlon", "missing", 
                                   "wrfin", "timeidx", "stagger", "projection",
+                                  "ll_lat", "ll_lon",
                                   "pivot_point", "angle",
                                   "start_point", "end_point",
                                   "cache"), 
@@ -901,6 +902,8 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     timeidx = argvars["timeidx"]
     stagger = argvars["stagger"]
     projection = argvars["projection"]
+    ll_lat = argvars["ll_lat"]
+    ll_lon = argvars["ll_lon"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
     start_point = argvars["start_point"]
@@ -914,7 +917,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
             xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_lat, ll_lon)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
             pivot_point_xy = (pivot_point.x, pivot_point.y)
@@ -922,14 +925,14 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
             xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_lat, ll_lon)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
             xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_lat, ll_lon)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)
@@ -1104,6 +1107,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     """   
     argvars = from_args(wrapped, ("field2d", 
                                   "wrfin", "timeidx", "stagger", "projection",
+                                  "ll_lat", "ll_lon",
                                   "pivot_point", "angle",
                                   "start_point", "end_point", "latlon", 
                                   "cache"), 
@@ -1114,6 +1118,8 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     timeidx = argvars["timeidx"]
     stagger = argvars["stagger"]
     projection = argvars["projection"]
+    ll_lat = argvars["ll_lat"]
+    ll_lon = argvars["ll_lon"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
     start_point = argvars["start_point"]
@@ -1131,7 +1137,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
             xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_lat, ll_lon)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
             pivot_point_xy = (pivot_point.x, pivot_point.y)      
@@ -1140,14 +1146,14 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
             xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_lat, ll_lon)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
             xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_lat, ll_lon)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)

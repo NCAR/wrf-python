@@ -44,6 +44,12 @@ v1.1.0
   vertically staggered grid.
 - A DOI is now available for wrf-python. Please cite wrf-python if you are 
   using it for your research. (See :ref:`citation`)
+- Fixed issue with vertcross and interpline not working correctly when a 
+  projection object is used. Users will now have to supply the lower left 
+  latitude and longitude corner point.
+- Beginning with numpy 1.14, wrf-python can be built using the MSVC 
+  compiler with gfortran. WRF-Python can now be built for Python 3.5+ on 
+  services like AppVeyor.
 
 
 v1.0.5
