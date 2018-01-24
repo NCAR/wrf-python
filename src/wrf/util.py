@@ -34,6 +34,7 @@ from .constants import default_fill, ALL_TIMES
 from .py3compat import (viewitems, viewkeys, isstr, py3range, ucode)
 from .cache import cache_item, get_cached_item
 from .geobnds import GeoBounds, NullGeoBounds
+from .coordpair import CoordPair
 from .projection import getproj
 
 
@@ -3813,7 +3814,68 @@ def cartopy_ylim(var=None, geobounds=None, wrfin=None, varname=None, timeidx=0,
     return wrf_proj.cartopy_ylim(native_geobnds)
 
 
+def ll_points(lat, lon):
+    """Return the lower left latitude and longitude point(s).
+    
+    This functions extracts the lower left corner points and returns the result
+    as either a single :class:`CoordPair` object, or a list of 
+    :class:`CoordPair` objects.
+    
+    This is primarily used for testing or constructing the corner point objects
+    from the XLAT and XLONG variables.
+        
+    Args:
+    
+        lat (:class:`xarray.DataArray` or :class:`numpy.ndarray`): The latitude 
+            array. Must be at least two dimensions.
+            
+        lon (:class:`xarray.DataArray` or :class:`numpy.ndarray`): The 
+            longitude array. Must be at least two dimensions.
+        
+    Returns:
+    
+        :class:`wrf.CoordPair` or :obj:`list`: A single :class:`wrf.CoordPair` 
+        object or a list of :class:`wrf.CoordPair` objects.
+    
+    """
+    latvals = np.ravel(to_np(lat)[...,0,0])
+    lonvals = np.ravel(to_np(lon)[...,0,0])
+    
+    if latvals.shape[0] == 1:
+        return CoordPair(lat=float(latvals), lon=float(lonvals))
+    else:
+        return [CoordPair(lat=latvals[i], lon=lonvals[i]) 
+                for i in py3range(latvals.shape[0])]
 
+
+def pairs_to_latlon(pairs):
+    """Return latitude and longitude arrays from a sequence of \
+    :class:`wrf.CoordPair` objects.
+    
+    This function converts a sequence of :class:`wrf.CoordPair` objects into 
+    lists of latitude and longitude points. If the *pairs* argument is a 
+    single :class:`wrf.CoordPair` object, then a single latitude and 
+    longitude value is returned.
+    
+    Args:
+    
+        pairs (:class:`wrf.CoordPair` or sequence): A single 
+            :class:`wrf.CoordPair` or sequence of :class:`wrf.CoordPair`.
+        
+    Returns:
+    
+        :obj:`tuple`: A tuple of (lat, lon), where lat and lon are single 
+        values or lists of values. 
+    
+    """
+    
+    if isinstance(pairs, CoordPair):
+        return (pairs.lat, pairs.lon)
+    else:
+        lats = [pair.lat for pair in pairs]
+        lons = [pair.lon for pair in pairs]
+        
+        return lats, lons
         
             
 

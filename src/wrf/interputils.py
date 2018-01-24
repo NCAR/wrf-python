@@ -2,7 +2,6 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from math import floor, ceil
-from collections import Iterable
 
 import numpy as np
 
@@ -11,6 +10,7 @@ from .py3compat import py3range
 from .coordpair import CoordPair
 from .constants import Constants, ProjectionTypes
 from .latlonutils import _ll_to_xy
+from .util import pairs_to_latlon
 
 
 def to_positive_idxs(shape, coord):
@@ -330,7 +330,7 @@ def get_xy(var, pivot_point=None, angle=None,
     return xy
 
 def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None,
-                 ll_lat=None, ll_lon=None):
+                 ll_point=None):
     """Return the coordinate pairs in grid space.
     
     This function converts latitude,longitude coordinate pairs to 
@@ -373,15 +373,11 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None,
             coordinates, and must be specified if *wrfin* is None. Default 
             is None.
             
-        ll_lat (:obj:`float`, sequence of :obj:`float`, optional): The lower 
-            left latitude(s) for your domain, and must be specified if 
-            *wrfin* is None. If the domain is a moving nest, this should be a 
-            sequence of lower left latitudes. Default is None.
-            
-        ll_lon (:obj:`float`, sequence of :obj:`float`, optional): The lower 
-            left longitude(s) for your domain, and must be specified if 
-            *wrfin* is None. If the domain is a moving nest, this should be 
-            a sequence of lower left longitudes. Default is None. 
+        ll_point (:class:`wrf.CoordPair`, sequence of :class:`wrf.CoordPair`, \
+        optional): The lower left latitude, longitude point for your domain, 
+            and must be specified 
+            if *wrfin* is None. If the domain is a moving nest, this should be 
+            a sequence of :class:`wrf.CoordPair`. Default is None.
                     
     Returns:
         
@@ -390,19 +386,13 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None,
         
     """
     
-    if (wrfin is None and 
-        (projection is None or ll_lat is None or ll_lon is None)):
+    if (wrfin is None and (projection is None or ll_point is None)):
         raise ValueError ("'wrfin' parameter or "
-                          "'projection', 'll_lat', and 'll_lon' parameters "
+                          "'projection' and 'll_point' parameters "
                           "are required")
     
-    if isinstance(pairs, Iterable):
-        lat = [pair.lat for pair in pairs]
-        lon = [pair.lon for pair in pairs]
-    else:
-        lat = pairs.lat
-        lon = pairs.lon
-        
+    lat, lon = pairs_to_latlon(pairs)
+    
     if wrfin is not None:
         xy_vals = _ll_to_xy(lat, lon, wrfin=wrfin, timeidx=timeidx,  
              squeeze=True, meta=False, stagger=stagger, as_int=True)
@@ -422,7 +412,8 @@ def to_xy_coords(pairs, wrfin=None, timeidx=0, stagger=None, projection=None,
             pole_lon = 0.0
             latinc = 0.0
             loninc = 0.0
-
+        
+        ll_lat, ll_lon = pairs_to_latlon(ll_point)
         xy_vals = _ll_to_xy(lat, lon, meta=False, squeeze=True, 
                             as_int=True,
                             map_proj=projection.map_proj, 

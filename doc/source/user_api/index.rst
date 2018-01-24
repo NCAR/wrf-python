@@ -292,6 +292,8 @@ them helpful for other purposes.
    wrf.getproj
    wrf.cache_item
    wrf.get_cached_item
+   wrf.ll_points
+   wrf.pairs_to_latlon
  
  
 ------------------------
