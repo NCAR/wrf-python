@@ -386,8 +386,9 @@ SUBROUTINE DCOMPUTESEAPRS(nx, ny, nz, z, t, p, q, sea_level_pressure, &
 
     !     Get temperature PCONST Pa above surface.  Use this to extrapolate
     !     the temperature at the surface and down to sea level.
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,klo,khi) REDUCTION(+:errcnt) &
-    !$OMP SCHEDULE(runtime)
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,klo,khi,plo, &
+    !$OMP phi,tlo,thi,zlo,zhi,p_at_pconst,t_at_pconst,z_at_pconst) &
+    !$OMP REDUCTION(+:errcnt) SCHEDULE(runtime)
     DO j = 1,ny
         DO i = 1,nx
 

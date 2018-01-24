@@ -28,7 +28,7 @@ from wrf._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           fomp_set_lock, fomp_set_nest_lock,
                           fomp_unset_lock, fomp_unset_nest_lock,
                           fomp_test_lock, fomp_test_nest_lock,
-                          fomp_get_wtime, fomp_get_wtick)
+                          fomp_get_wtime, fomp_get_wtick, fomp_enabled)
 
 from .decorators import (left_iteration, cast_type, 
                          extract_and_transpose, check_args)
@@ -946,7 +946,7 @@ def omp_set_num_threads(num_threads):
         None.
         
     """
-    if num_threads < 0:
+    if num_threads < 0 and fomp_enabled():
         raise ValueError("'num_threads' must be a positive integer.")
     
     fomp_set_num_threads(num_threads)
