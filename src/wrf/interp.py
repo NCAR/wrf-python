@@ -11,16 +11,16 @@ from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered, get_id, to_np
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
-from .constants import Constants, ConversionFactors
-from .terrain import get_terrain
-from .geoht import get_height
-from .temp import get_theta, get_temp, get_eth
-from .pressure import get_pressure
+from .constants import Constants, default_fill, ConversionFactors
+from wrf.g_terrain import get_terrain
+from wrf.g_geoht import get_height
+from wrf.g_temp import get_theta, get_temp, get_eth
+from wrf.g_pressure import get_pressure
 
 
 #  Note:  Extension decorator is good enough to handle left dims
 @set_interp_metadata("horiz")
-def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL, 
+def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64), 
                 meta=True):
     """Return the three-dimensional field interpolated to a horizontal plane 
     at the specified vertical level.
@@ -40,7 +40,7 @@ def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
             Must be in the same units as the *vert* parameter.
         
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(numpy.float64)`.
         
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -90,8 +90,9 @@ def interplevel(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
 
 
 @set_interp_metadata("cross")
-def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
-              wrfin=None, timeidx=0, stagger=None, projection=None, 
+def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
+              wrfin=None, timeidx=0, stagger=None, projection=None,
+              ll_point=None,
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
               latlon=False, cache=None, meta=True):
@@ -133,7 +134,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             Default is None.
             
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(numpy.float64)`.
             
         wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
             iterable, optional): WRF-ARW NetCDF 
@@ -164,6 +165,12 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
             projection object to use when working with latitude, longitude 
             coordinates, and must be specified if *wrfin* is None. Default 
             is None.
+            
+        ll_point (:class:`wrf.CoordPair`, sequence of :class:`wrf.CoordPair`, \
+        optional): The lower left latitude, longitude point for your domain, 
+            and must be specified 
+            if *wrfin* is None. If the domain is a moving nest, this should be 
+            a sequence of :class:`wrf.CoordPair`. Default is None.
             
         pivot_point (:class:`wrf.CoordPair`, optional): A coordinate pair for 
             the pivot point, which indicates the location through which 
@@ -197,7 +204,16 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
         latlon (:obj:`bool`, optional): Set to True to also interpolate the 
             two-dimensional latitude and longitude coordinates along the same 
             horizontal line and include this information in the metadata 
-            (if enabled).  This can be helpful for plotting.  Default is False.
+            (if enabled). This can be helpful for plotting.  Default is False.
+            
+            Note:
+            
+                Currently, *field3d* must be of type :class:`xarray.DataArray` 
+                and contain coordinate information in order to generate the 
+                latitude and longitude coordinates along the line if 
+                *latlon* is set to True. Otherwise, a warning will be issued,
+                and the latitude and longitude information will not be 
+                present.
              
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 
@@ -242,7 +258,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
                 xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_point)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 pivot_point_xy = (pivot_point.x, pivot_point.y)
@@ -250,14 +266,14 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
                 xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_point)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
                 xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_point)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 end_point_xy = (end_point.x, end_point.y)
@@ -282,6 +298,7 @@ def vertcross(field3d, vert, levels=None, missing=Constants.DEFAULT_FILL,
 @set_interp_metadata("line")
 def interpline(field2d, pivot_point=None, 
                wrfin=None, timeidx=0, stagger=None, projection=None,
+               ll_point=None,
                angle=None, start_point=None,
                end_point=None, latlon=False, 
                cache=None, meta=True):
@@ -331,6 +348,12 @@ def interpline(field2d, pivot_point=None,
             not be used when working with x,y coordinates.  Default 
             is None.
             
+        ll_point (:class:`wrf.CoordPair`, sequence of :class:`wrf.CoordPair`, \
+        optional): The lower left latitude, longitude point for your domain, 
+            and must be specified 
+            if *wrfin* is None. If the domain is a moving nest, this should be 
+            a sequence of :class:`wrf.CoordPair`. Default is None.
+            
         pivot_point (:class:`wrf.CoordPair`, optional): A coordinate pair for 
             the pivot point, which indicates the location through which 
             the plane will pass. Must also specify *angle*.  The coordinate 
@@ -364,6 +387,15 @@ def interpline(field2d, pivot_point=None,
             two-dimensional latitude and longitude coordinates along the same 
             horizontal line and include this information in the metadata 
             (if enabled).  This can be helpful for plotting.  Default is False.
+            
+            Note:
+            
+                Currently, *field2d* must be of type :class:`xarray.DataArray` 
+                and contain coordinate information in order to generate the 
+                latitude and longitude coordinates along the line if 
+                *latlon* is set to True. Otherwise, a warning will be issued,
+                and the latitude and longitude information will not be 
+                present.
             
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 
@@ -402,7 +434,7 @@ def interpline(field2d, pivot_point=None,
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
                 xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_point)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 pivot_point_xy = (pivot_point.x, pivot_point.y)
@@ -410,14 +442,14 @@ def interpline(field2d, pivot_point=None,
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
                 xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_point)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
                 xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                         stagger, projection)
+                                         stagger, projection, ll_point)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 end_point_xy = (end_point.x, end_point.y)
@@ -584,9 +616,6 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     terht = get_terrain(wrfin, timeidx, units="m", 
                         method=method, squeeze=squeeze, cache=cache,
                         meta=False, _key=_key)
-    t = get_theta(wrfin, timeidx,  units="k", 
-                  method=method, squeeze=squeeze, cache=cache, 
-                  meta=False, _key=_key)
     tk = get_temp(wrfin, timeidx, units="k",  
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
@@ -596,9 +625,6 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     ght = get_height(wrfin, timeidx, msl=True, units="m", 
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
-    ht_agl = get_height(wrfin, timeidx, msl=False, units="m",
-                        method=method, squeeze=squeeze, cache=cache,
-                        meta=False, _key=_key)
     
     smsfp = _smooth2d(sfp, 3)        
 
@@ -613,10 +639,18 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         vcord_array = np.exp(-ght/sclht)
         
     elif vert_coord == "ght_agl":
+        ht_agl = get_height(wrfin, timeidx, msl=False, units="m",
+                        method=method, squeeze=squeeze, cache=cache,
+                        meta=False, _key=_key)
+        
         vcor = 3
         vcord_array = np.exp(-ht_agl/sclht)
     
     elif vert_coord in ("theta", "th"):
+        t = get_theta(wrfin, timeidx,  units="k", 
+                  method=method, squeeze=squeeze, cache=cache, 
+                  meta=False, _key=_key)
+        
         vcor = 4
         idir = 1
         icorsw = 0
@@ -651,7 +685,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     if isinstance(field, ma.MaskedArray):
         missing = field.fill_value
     else:
-        missing = Constants.DEFAULT_FILL
+        missing = default_fill(np.float64)
     
     if (field.shape != p.shape):
         raise ValueError("'field' shape does not match other variable shapes. "

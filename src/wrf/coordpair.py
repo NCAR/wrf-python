@@ -3,7 +3,7 @@ from __future__ import (absolute_import, division, print_function,
 
 from .py3compat import py2round
         
-
+        
 def _binary_operator(operator):
     """Function wrapper for binary operators.
     
@@ -262,5 +262,5 @@ for operator in ("__neg__", "__pos__", "__abs__", "__invert__"):
 for operator in ("__lt__", "__le__", "__eq__", "__ne__", "__gt__", "__ge__"):
     setattr(CoordPair, operator, _cmp_operator(operator))
     
-
+    
     

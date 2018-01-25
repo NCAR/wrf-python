@@ -32,6 +32,8 @@ SUBROUTINE DEQTHECALC(qvp, tmk, prs, eth, miy, mjx, mkzh)
     REAL(KIND=8) :: tlcl
     INTEGER :: i, j, k
 
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, q, t, p, e, tlcl) &
+    !$OMP SCHEDULE(runtime)
     DO k = 1,mkzh
         DO j = 1,mjx
             DO i = 1,miy
@@ -40,11 +42,12 @@ SUBROUTINE DEQTHECALC(qvp, tmk, prs, eth, miy, mjx, mkzh)
                 p = prs(i,j,k)/100.
                 e = q*p/(EPS + q)
                 tlcl = TLCLC1/(LOG(t**TLCLC2/e) - TLCLC3) + TLCLC4
-                eth(i,j,k) = t*(1000.D0/p)**(GAMMA*(1.D0 + GAMMAMD*q))* &
+                eth(i,j,k) = tmk(i,j,k)*(1000.D0/p)**(GAMMA*(1.D0 + GAMMAMD*q))* &
                         EXP((THTECON1/tlcl - THTECON2)*q*(1.D0 + THTECON3*q))
             END DO
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 

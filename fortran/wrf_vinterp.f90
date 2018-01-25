@@ -14,17 +14,19 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
     REAL(KIND=8), INTENT(IN) :: delta
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(INOUT) :: in
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(OUT) :: out
-    REAL(KIND=8), DIMENSION(ew,ns,nz) :: lvprs
-    REAL(KIND=8), DIMENSION(ew,ns) :: cor
+    REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: lvprs
+    REAL(KIND=8), DIMENSION(ew,ns), INTENT(IN) :: cor
+
 
 !NCLEND
 
-    INTEGER :: i, j, k, ripk, k300
+    INTEGER :: i, j, k, k300
 
-    k300 = 1 ! removes the warning
-
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, k300) SCHEDULE(runtime)
     DO j=1,ns
         DO i=1,ew
+            k300 = -1
+
             IF (icorsw .EQ. 1 .AND. cor(i,j) .LT. 0.) THEN
                 DO k=1,nz
                     in(i,j,k) = -in(i,j,k)
@@ -33,13 +35,18 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
 
             ! First find k index that is at or below (height-wise)
             ! the 300 hPa level.
-            DO k = 1,nz
-                ripk = nz-k+1
+            DO k = 1,nz-1
                 IF (lvprs(i,j,k) .LE. 300.D0) THEN
                     k300 = k
                     EXIT
                 END IF
             END DO
+
+            ! If the search fails for some reason, use the second to last
+            ! k index
+            IF (k300 .EQ. -1) THEN
+                k300 = nz-1
+            END IF
 
             DO k = k300,1,-1
                 IF (idir .EQ. 1) THEN
@@ -58,6 +65,7 @@ SUBROUTINE wrf_monotonic(out, in, lvprs, cor, idir, delta, ew, ns, nz, icorsw)
             END DO
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -65,7 +73,7 @@ END SUBROUTINE wrf_monotonic
 
 
 !NCLFORTSTART
-FUNCTION wrf_intrp_value(wvalp0, wvalp1, vlev, vcp0, vcp1, icase, errstat, errmsg)
+FUNCTION wrf_intrp_value(wvalp0, wvalp1, vlev, vcp0, vcp1, icase, errstat)
     USE wrf_constants, ONLY : ALGERR, SCLHT
 
     IMPLICIT NONE
@@ -75,17 +83,12 @@ FUNCTION wrf_intrp_value(wvalp0, wvalp1, vlev, vcp0, vcp1, icase, errstat, errms
     INTEGER, INTENT(IN) :: icase
     REAL(KIND=8), INTENT(IN) :: wvalp0, wvalp1, vlev, vcp0, vcp1
     INTEGER, INTENT(INOUT) :: errstat
-    CHARACTER(LEN=*), INTENT(INOUT) :: errmsg
     REAL(KIND=8) :: wrf_intrp_value
 
 !NCLEND
 
     REAL(KIND=8) :: valp0, valp1, rvalue
     REAL(KIND=8) :: chkdiff
-
-    !REAL(KIND=8), PARAMETER :: RGAS=287.04d0
-    !REAL(KIND=8), PARAMETER :: USSALR=0.0065d0
-    !REAL(KIND=8), PARAMETER :: SCLHT=RGAS*256.d0/9.81d0
 
     errstat = 0
 
@@ -99,7 +102,7 @@ FUNCTION wrf_intrp_value(wvalp0, wvalp1, vlev, vcp0, vcp1, icase, errstat, errms
     chkdiff = vcp1 - vcp0
     IF(chkdiff .EQ. 0) THEN
         errstat = ALGERR
-        errmsg = "bad difference in vcp's"
+        !errmsg = "bad difference in vcp's"
         wrf_intrp_value = 0
         RETURN
         !PRINT *,"bad difference in vcp's"
@@ -152,6 +155,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     INTEGER :: nreqlvs, ripk !njx,niy
     INTEGER :: i, j, k, kupper !itriv
     INTEGER :: ifound, isign !miy,mjx
+    INTEGER :: log_errcnt, interp_errcnt, interp_errstat
     REAL(KIND=8), DIMENSION(ew,ns) :: tempout
     REAL(KIND=8) :: rlevel, vlev, diff
     REAL(KIND=8) :: tmpvlev
@@ -166,33 +170,15 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     REAL(KIND=8) :: tlcl, gammam
     CHARACTER(LEN=1) :: cvcord
 
-    !REAL(KIND=8), PARAMETER :: RGAS    = 287.04d0     !J/K/kg
-    !REAL(KIND=8), PARAMETER :: RGASMD  = .608d0
-    !REAL(KIND=8), PARAMETER :: USSALR  = .0065d0      ! deg C per m
-    !REAL(KIND=8), PARAMETER :: SCLHT   = RGAS*256.d0/9.81d0
-    !REAL(KIND=8), PARAMETER :: EPS     = 0.622d0
-    !REAL(KIND=8), PARAMETER :: RCONST  = -9.81d0/(RGAS * USSALR)
-    !REAL(KIND=8), PARAMETER :: EXPON   =  RGAS*USSALR/9.81d0
-    !REAL(KIND=8), PARAMETER :: EXPONI  =  1./EXPON
-    !REAL(KIND=8), PARAMETER :: TLCLC1   = 2840.d0
-    !REAL(KIND=8), PARAMETER :: TLCLC2   = 3.5d0
-    !REAL(KIND=8), PARAMETER :: TLCLC3   = 4.805d0
-    !REAL(KIND=8), PARAMETER :: TLCLC4   = 55.d0
-    !REAL(KIND=8), PARAMETER :: THTECON1 = 3376.d0 ! K
-    !REAL(KIND=8), PARAMETER :: THTECON2 = 2.54d0
-    !REAL(KIND=8), PARAMETER :: THTECON3 = 0.81d0
-    !REAL(KIND=8), PARAMETER :: CP       = 1004.d0
-    !REAL(KIND=8), PARAMETER :: CPMD     = 0.887d0
-    !REAL(KIND=8), PARAMETER :: GAMMA    = RGAS/CP
-    !REAL(KIND=8), PARAMETER :: GAMMAMD  = RGASMD-CPMD
-    !REAL(KIND=8), PARAMETER :: CELKEL   = 273.16d0
-
     ! Removes the warnings for uninitialized variables
     cvcord = ''
     plev = 0
     zlev = 0
     vlev = 0
     errstat = 0
+    interp_errcnt = 0
+    interp_errstat = 0
+    log_errcnt = 0
 
     IF (vcor .EQ. 1) THEN
         cvcord = 'p'
@@ -201,17 +187,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     ELSE IF ((vcor .EQ. 4) .OR. (vcor .EQ. 5)) THEN
         cvcord = 't'
     END IF
-
-    !miy = ns
-    !mjx = ew
-    !njx = ew
-    !niy = ns
-
-    DO j = 1,ns
-        DO i = 1,ew
-            tempout(i,j) = rmsg
-        END DO
-    END DO
 
     DO nreqlvs = 1,numlevels
         IF (cvcord .EQ. 'z') THEN
@@ -224,8 +199,16 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
             vlev = interp_levels(nreqlvs)
         END IF
 
+        !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i, j, k, ifound, &
+        !$OMP ripk, vcp1, vcp0, valp0, valp1, tmpvlev, interp_errstat, &
+        !$OMP vclhsl, vctophsl, diff, isign, plhsl, zlhsl, ezlhsl, tlhsl, &
+        !$OMP zsurf, qvapor, psurf, psurfsm, ezsurf, plev, ezlev, zlev, &
+        !$OMP ptarget, dpmin, kupper, pbot, zbot, pratio, tbotextrap, &
+        !$OMP vt, tlev, gammam, e, tlcl) REDUCTION (+:log_errcnt, interp_errcnt) &
+        !$OMP SCHEDULE(runtime)
         DO j=1,ns
             DO i=1,ew
+                tempout(i,j) = rmsg
                 ! Get the interpolated value that is within the model domain
                 ifound = 0
                 DO k = 1,nz-1
@@ -245,35 +228,34 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             IF (logp .EQ. 1) THEN
                                 vcp1 = LOG(vcp1)
                                 vcp0 = LOG(vcp0)
-                                IF (vlev .EQ. 0.0D0) THEN
-                                    errstat = ALGERR
-                                    WRITE(errmsg, *) "Pres=0.  Unable to take log of 0."
-                                    RETURN
-                                    !PRINT *,"Pressure value = 0"
-                                    !PRINT *,"Unable to take log of 0"
-                                    !STOP
+                                IF (vlev .NE. 0.0D0) THEN
+                                    tmpvlev = LOG(vlev)
+                                ELSE
+                                    log_errcnt = log_errcnt + 1
+                                    tmpvlev = rmsg
                                 END IF
-                                tmpvlev = LOG(vlev)
                             ELSE
                                 tmpvlev = vlev
                             END IF
-                            tempout(i,j) = wrf_intrp_value(valp0, valp1, tmpvlev, vcp0, &
-                                                           vcp1, icase, errstat, errmsg)
-                            IF (errstat .NE. 0) THEN
-                                RETURN
-                            END IF
 
-                            ! print *,"one ",i,j,tempout(i,j)
-                            ifound = 1
+                            IF (tmpvlev .NE. rmsg) THEN
+                                tempout(i,j) = wrf_intrp_value(valp0, valp1, tmpvlev, vcp0, &
+                                                               vcp1, icase, interp_errstat)
+
+                                IF (interp_errstat .NE. 0) THEN
+                                    tempout(i,j) = rmsg
+                                    interp_errcnt = interp_errcnt + 1
+                                END IF
+
+                                ifound = 1
+                            END IF
                         END IF
-                        !GOTO 115 ! EXIT
+
                         EXIT
                     END IF
                 END DO !end for the k loop
- !115  CONTINUE
 
                 IF (ifound .EQ. 1) THEN !Grid point is in the model domain
-                    !GOTO 333 ! CYCLE
                     CYCLE
                 END IF
 
@@ -281,7 +263,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                 !all values above or below the model level to rmsg.
                 IF (extrap .EQ. 0) THEN
                     tempout(i,j) = rmsg
-                    !GOTO 333 ! CYCLE
                     CYCLE
                 END IF
 
@@ -296,8 +277,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                 IF (isign*vlev .GE. isign*vctophsl) THEN
                     ! Assign the highest model level to the out array
                     tempout(i,j) = datain(i,j,nz)
-                    ! print *,"at warn",i,j,tempout(i,j)
-                    !GOTO 333 ! CYCLE
                     CYCLE
                 END IF
 
@@ -307,7 +286,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
 
                 IF (datain(i,j,1) .EQ. rmsg) THEN
                     tempout(i,j) = rmsg
-                    !GOTO 333 ! CYCLE
                     CYCLE
                 END IF
 
@@ -351,7 +329,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             zlev = -SCLHT*LOG(ezlev)
                             IF (icase .EQ. 2) THEN
                                 tempout(i,j) = zlev
-                                !GOTO 333 ! CYCLE
                                 CYCLE
                             END IF
 
@@ -362,7 +339,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                                    psurf + (ezsurf - ezlev)*plhsl)/(ezsurf - ezlhsl)
                             IF (icase .EQ. 1) THEN
                                 tempout(i,j) = plev
-                                !GOTO 333 ! CYCLE
                                 CYCLE
                             END IF
                         END IF
@@ -374,12 +350,11 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             ripk = nz-k+1
                             dp = ABS((pres(i,j,ripk) * 0.01D0) - ptarget)
                             IF (dp .GT. dpmin) THEN
-                                !GOTO 334 ! EXIT
                                 EXIT
                             END IF
                             dpmin = MIN(dpmin, dp)
                         END DO
-         !334
+
                         kupper = k-1
 
                         ripk = nz - kupper + 1
@@ -394,7 +369,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             zlev = zbot + vt/USSALR*(1. - (vlev/pbot)**EXPON)
                             IF (icase .EQ. 2) THEN
                                 tempout(i,j) = zlev
-                                !GOTO 333 ! CYCLE
                                 CYCLE
                             END IF
                         ELSE IF (cvcord .EQ. 'z') THEN
@@ -402,7 +376,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             plev = pbot*(1. + USSALR/vt*(zbot - zlev))**EXPONI
                             IF (icase .EQ. 1) THEN
                                 tempout(i,j) = plev
-                                !GOTO 333 ! CYCLE
                                 CYCLE
                             END IF
                         END IF
@@ -434,13 +407,27 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
 
             END DO
         END DO
+        !$OMP END PARALLEL DO
 
-        ! print *,"----done----",interp_levels(nreqlvs)
+        IF (log_errcnt > 0) THEN
+            errstat = ALGERR
+            WRITE(errmsg, *) "Pres=0.  Unable to take log of 0."
+            RETURN
+        END IF
+
+        IF (interp_errcnt > 0) THEN
+            errstat = ALGERR
+            WRITE(errmsg, *) "bad difference in vcp's"
+            RETURN
+        END IF
+
+        !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j = 1,ns
             DO i = 1,ew
                 dataout(i,j,nreqlvs) = tempout(i,j)
             END DO
         END DO
+        !$OMP END PARALLEL DO
 
     END DO !end for the nreqlvs
 

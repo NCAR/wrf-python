@@ -4,6 +4,8 @@ include requirements.txt
 
 include fortran/*.f90
 include fortran/*.pyf
+include build_scripts/*.sh
+include build_scripts/*.bat
 include setup.py
 
 recursive-include doc/source *

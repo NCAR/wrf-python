@@ -47,7 +47,7 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
 
     ! Misc local variables
     INTEGER :: i, j, k, kbot, ktop
-    REAL(KIND=8) :: twodx, twody, wgtlw, sum, wmean, wsum, wavg
+    REAL(KIND=8) :: twodx, twody, wgtlw, sum, wmean, wsum !,wavg
     REAL(KIND=8) :: helbot, heltop, wbot, wtop
     REAL(KIND=8) :: zbot, ztop
 
@@ -61,21 +61,29 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
 
     twodx = 2.0*dx
     twody = 2.0*dy
+
+    !$OMP PARALLEL
+
+    !$OMP DO COLLAPSE(3) SCHEDULE(runtime)
     DO k=2,nz-2
         DO j=2,ny-1
             DO i=2,nx-1
-                wavg = 0.5*(w(i,j,k)+w(i,j,k+1))
-                tem1(i,j,k) = wavg*((vs(i+1,j,k) - vs(i-1,j,k))/(twodx*mapfct(i,j)) - &
-                                    (us(i,j+1,k) - us(i,j-1,k))/(twody*mapfct(i,j)))
+                !wavg = 0.5*(w(i,j,k)+w(i,j,k+1))
+                tem1(i,j,k) = (0.5*(w(i,j,k)+w(i,j,k+1)))*((vs(i+1,j,k) - &
+                              vs(i-1,j,k))/(twodx*mapfct(i,j)) - &
+                              (us(i,j+1,k) - us(i,j-1,k))/(twody*mapfct(i,j)))
                 tem2(i,j,k) = 0.5*(zp(i,j,k) + zp(i,j,k+1))
             END DO
         END DO
     END DO
+    !$OMP END DO
 
     ! Integrate over depth uhminhgt to uhmxhgt AGL
     !
     !  WRITE(6,'(a,f12.1,a,f12.1,a)') &
     !        'Calculating UH from ',uhmnhgt,' to ',uhmxhgt,' m AGL'
+    !$OMP DO COLLAPSE(2) PRIVATE(i, j, k, zbot, ztop, kbot, ktop, &
+    !$OMP wgtlw, wbot, wtop, wsum, wmean, sum, helbot, heltop) SCHEDULE(runtime)
     DO j=2,ny-2
         DO i=2,nx-2
             zbot = zp(i,j,2) + uhmnhgt
@@ -142,6 +150,9 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
             END IF
         END DO
     END DO
+    !$OMP END DO
+
+    !$OMP END PARALLEL
 
     uh = uh*1000.   ! Scale according to Kain et al. (2008)
 

@@ -1,38 +1,40 @@
-{% set version = "1.0.4" %}
+{% set version = "1.1.0" %}
 
 package:
   name: wrf-python
   version: {{ version }}
 
 source:
-  fn: wrf-python-{{ version }}.tar.gz
-  url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
-  sha256: 303da6607ac66f49b6d011c32c0bf3af9b5ea5cb6563448daafafb8ec9a078d1
+  git_url: https://github.com/NCAR/wrf-python
+  git_branch: develop
+  
 
 build:
   number: 0
   detect_binary_files_with_prefix: true
-  skip: True  # [(win and py>=35)]
 
 requirements:
   build:
     - setuptools
-    - numpy x.x
-    - wrapt
-    - mingwpy  # [win]
-    - gcc  # [unix]
     - python
+    - numpy 1.11.* # [unix]
+    - numpy 1.14.* # [win]
+    - wrapt
+    - m2w64-toolchain  # [win]
+    - gcc # [unix] 
   run:
-    - numpy x.x
+    - setuptools
+    - numpy >=1.11 
     - python
     - wrapt 
-    - mingwpy  # [win]
+    - m2w64-gcc-libs  # [win]
     - libgfortran  # [unix]
     - libgcc  # [unix]
     - xarray
 
 test:
   requires:
+    - setuptools
     - netcdf4
     - xarray
   source_files:

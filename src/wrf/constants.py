@@ -1,10 +1,12 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
+from sys import version_info
+import struct
 import numpy as np
 
 from .py3compat import viewitems
-from wrf._wrffortran import wrf_constants
+from ._wrffortran import wrf_constants, omp_constants
 
 #: Indicates that all times should be used in a diagnostic routine.
 ALL_TIMES = None
@@ -14,6 +16,12 @@ class Constants(object):
     
 for key,val in viewitems(wrf_constants.__dict__):
     setattr(Constants, key.upper(), np.asscalar(val))
+
+OMP_SCHED_STATIC = omp_constants.fomp_sched_static
+OMP_SCHED_DYNAMIC = omp_constants.fomp_sched_dynamic
+OMP_SCHED_GUIDED = omp_constants.fomp_sched_guided
+OMP_SCHED_AUTO = omp_constants.fomp_sched_auto
+
 
 class ConversionFactors(object):
     PA_TO_HPA = .01
@@ -29,11 +37,49 @@ class ConversionFactors(object):
     M_TO_FT = 3.28084
     M_TO_MILES = .000621371
     
+
 class ProjectionTypes(object):
     ZERO = 0
     LAMBERT_CONFORMAL = 1
     POLAR_STEREOGRAPHIC = 2
     MERCATOR = 3
     LAT_LON = 6
+
+# Create the default fill mapping based on type.  
+_DEFAULT_FILL_MAP = {None: Constants.DEFAULT_FILL,
+                     np.dtype(np.bool_) : False,
+                     np.dtype(np.intc) : Constants.DEFAULT_FILL_INT32, # Usually true
+                     np.dtype(np.int8) : Constants.DEFAULT_FILL_INT8,
+                     np.dtype(np.uint8) : 255,
+                     np.dtype(np.int16) : Constants.DEFAULT_FILL_INT16,
+                     np.dtype(np.uint16) : 65535,
+                     np.dtype(np.int32) : Constants.DEFAULT_FILL_INT32,
+                     np.dtype(np.uint32) : 4294967295,
+                     np.dtype(np.int64) : Constants.DEFAULT_FILL_INT64,
+                     np.dtype(np.uint64) : 18446744073709551614,
+                     np.dtype(np.float_) : Constants.DEFAULT_FILL_DOUBLE,
+                     np.dtype(np.float32) : Constants.DEFAULT_FILL_FLOAT,
+                     np.dtype(np.float64) : Constants.DEFAULT_FILL_DOUBLE
+                     }
+
+if version_info >= (3, ):
+    _DEFAULT_FILL_MAP[np.int_] = Constants.DEFAULT_FILL_INT64
+else:
+    _DEFAULT_FILL_MAP[np.int_] = Constants.DEFAULT_FILL_INT32
+
+if (struct.calcsize("P") == 8):
+    _DEFAULT_FILL_MAP[np.intp] = Constants.DEFAULT_FILL_INT64
+else:
+    _DEFAULT_FILL_MAP[np.intp] = Constants.DEFAULT_FILL_INT32
+
+
+# Add the integers based on python 2.x or 3.x
+def default_fill(dtype=None):
+    dt = np.dtype(dtype) if dtype is not None else None
+    return _DEFAULT_FILL_MAP.get(dt, 0)
+    
+    
+    
+    
     
     

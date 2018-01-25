@@ -1,5 +1,6 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
+import warnings
 import wrapt 
 from collections import OrderedDict
 
@@ -322,6 +323,7 @@ def set_wind_metadata(copy_varname, name, description,
         
     return func_wrapper
 
+
 def set_cape_metadata(is2d):
     """A decorator that sets the metadata for a wrapped CAPE function's output.
     
@@ -468,14 +470,22 @@ def set_cloudfrac_metadata():
             return wrapped(*args, **kwargs)
         
         argvars = from_args(wrapped, ("wrfin", "timeidx", "method", "squeeze", 
-                                      "cache", "_key"), 
-                          *args, **kwargs)
+                                      "cache", "_key", "vert_type", 
+                                      "low_thresh", "mid_thresh", 
+                                      "high_thresh", "missing"), 
+                            *args, **kwargs)
         wrfin = argvars["wrfin"]
         timeidx = argvars["timeidx"]
         method = argvars["method"]
         squeeze = argvars["squeeze"]
         cache = argvars["cache"]
         _key = argvars["_key"]
+        vert_type = argvars["vert_type"]
+        low_thresh = argvars["low_thresh"]
+        mid_thresh = argvars["mid_thresh"]
+        high_thresh = argvars["high_thresh"]
+        missing = argvars["missing"]
+        
         if cache is None:
             cache = {}
         
@@ -499,6 +509,20 @@ def set_cloudfrac_metadata():
         outattrs.update(copy_var.attrs)
         outdimnames = [None] * result.ndim
         
+        # For printing units
+        unitstr = ("Pa" if vert_type.lower() == "pres" 
+                   or vert_type.lower() == "pressure" else "m")
+        
+        # For setting the threholds in metdata
+        if vert_type.lower() == "pres" or vert_type.lower() == "pressure":
+            _low_thresh = 97000. if low_thresh is None else low_thresh
+            _mid_thresh = 80000. if mid_thresh is None else mid_thresh
+            _high_thresh = 45000. if high_thresh is None else high_thresh
+        elif vert_type.lower() == "height_msl" or "height_agl":
+            _low_thresh = 300. if low_thresh is None else low_thresh
+            _mid_thresh = 2000. if mid_thresh is None else mid_thresh
+            _high_thresh = 6000. if high_thresh is None else high_thresh
+        
         # Right dims
         outdimnames[-2:] = copy_var.dims[-2:]
         # Left dims
@@ -507,6 +531,11 @@ def set_cloudfrac_metadata():
         outattrs["description"] = "low, mid, high clouds"
         outattrs["MemoryOrder"] = "XY"
         outattrs["units"] = "%"
+        outattrs["low_thresh"] = "{} {}".format(_low_thresh, unitstr)
+        outattrs["mid_thresh"] = "{} {}".format(_mid_thresh, unitstr)
+        outattrs["high_thresh"] = "{} {}".format(_high_thresh, unitstr)
+        outattrs["_FillValue"] = missing
+        outattrs["missing_value"] = missing
         outname = "cloudfrac"
 
         # xarray doesn't line up coordinate dimensions based on 
@@ -528,6 +557,7 @@ def set_cloudfrac_metadata():
                        dims=outdimnames, attrs=outattrs)
         
     return func_wrapper
+
 
 def set_latlon_metadata(xy=False):
     """A decorator that sets the metadata for a wrapped latlon function's 
@@ -613,8 +643,9 @@ def set_latlon_metadata(xy=False):
         return da
     
     return func_wrapper
-    
-def set_height_metadata(geopt=False):
+
+
+def set_height_metadata(geopt=False, stag=False):
     """A decorator that sets the metadata for a wrapped height function's 
     output.
     
@@ -628,6 +659,9 @@ def set_height_metadata(geopt=False):
         geopt (:obj:`bool`, optional): Set to True if the wrapped function 
             returns geopotential.  Set to True if the wrapped function 
             returns geopotential height.  Default is False.
+            
+        stag (:obj:`bool`, optional): Set to True to use the vertical 
+            staggered grid, rather than the mass grid. Default is False.
             
     Returns:
     
@@ -664,9 +698,17 @@ def set_height_metadata(geopt=False):
         if cache is None:
             cache = {}
         
+        is_met_em = False
         # For height, either copy the met_em GHT variable or copy and modify
         # pressure (which has the same dims as destaggered height)
-        ht_metadata_varname = either("P", "GHT")(wrfin)
+        if not stag:
+            ht_metadata_varname = either("P", "GHT")(wrfin)
+        else:
+            ht_metadata_varname = either("PH", "GHT")(wrfin)
+        
+        if ht_metadata_varname == "GHT":
+            is_met_em = True
+            
         ht_var = extract_vars(wrfin, timeidx, ht_metadata_varname, 
                               method, squeeze, cache, meta=True,
                               _key=_key)
@@ -692,17 +734,27 @@ def set_height_metadata(geopt=False):
         if geopt:
             outname = "geopt"
             outattrs["units"] = "m2 s-2"
-            outattrs["description"] = "full model geopotential"
+            if not stag or is_met_em:
+                outattrs["description"] = "geopotential (mass grid)"
+            else:
+                outattrs["description"] = ("geopotential (vertically "
+                                           "staggered grid)")
         else:
             outname = "height" if msl else "height_agl" 
             outattrs["units"] = units
             height_type = "MSL" if msl else "AGL"
-            outattrs["description"] = "model height ({})".format(height_type)
+            if not stag or is_met_em:
+                outattrs["description"] = ("model height - [{}] "
+                                           "(mass grid)".format(height_type))
+            else:
+                outattrs["description"] = ("model height - [{}] (vertically "
+                                        "staggered grid)".format(height_type))
         
         
         return DataArray(result, name=outname, 
                          dims=outdimnames, coords=outcoords, attrs=outattrs)
     return func_wrapper
+
 
 def _set_horiz_meta(wrapped, instance, args, kwargs):  
     """A decorator implementation that sets the metadata for a wrapped 
@@ -753,7 +805,7 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Get the vertical level units
     vert_units = None
@@ -771,7 +823,6 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         outdimnames.remove(field3d.dims[-3])
@@ -784,7 +835,6 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         
     else:
         outname = "field3d_{0}".format(name_levelstr)
-        outattrs = OrderedDict()
         
     outattrs["level"] = levelstr
     outattrs["missing_value"] = missingval
@@ -798,7 +848,8 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)
-    
+
+
 def _set_cross_meta(wrapped, instance, args, kwargs):
     """A decorator implementation that sets the metadata for a wrapped cross \
     section interpolation function.
@@ -836,7 +887,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     argvars = from_args(wrapped, ("field3d", "vert", "levels", 
                                   "latlon", "missing", 
                                   "wrfin", "timeidx", "stagger", "projection",
-                                  "pivot_point", "angle",
+                                  "ll_point", "pivot_point", "angle",
                                   "start_point", "end_point",
                                   "cache"), 
                           *args, **kwargs)  
@@ -850,6 +901,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     timeidx = argvars["timeidx"]
     stagger = argvars["stagger"]
     projection = argvars["projection"]
+    ll_point = argvars["ll_point"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
     start_point = argvars["start_point"]
@@ -863,7 +915,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
             xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_point)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
             pivot_point_xy = (pivot_point.x, pivot_point.y)
@@ -871,14 +923,14 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
             xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_point)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
             xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_point)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)
@@ -906,7 +958,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Use XY to set the cross-section metadata
     st_x = xy[0,0]
@@ -921,7 +973,6 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         for i in py3range(-3,0,1):
@@ -990,6 +1041,8 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
+                warnings.warn("'latlon' is set to True, but 'field3d' "
+                "             contains no coordinate information")
                 outcoords["xy_loc"] = ("cross_line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
@@ -1002,8 +1055,11 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
         outcoords["vertical"] = z_var2d[:]
         
     else:
+        if inc_latlon:
+            warnings.warn("'latlon' is set to True, but 'field3d' is "
+                          "not of type xarray.DataArray and contains no "
+                          "coordinate information")
         outname = "field3d_cross"
-        outattrs = OrderedDict()
     
     outattrs["orientation"] = cross_str
     outattrs["missing_value"] = missingval
@@ -1011,7 +1067,6 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)  
-    
     
 
 def _set_line_meta(wrapped, instance, args, kwargs):
@@ -1050,7 +1105,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     """   
     argvars = from_args(wrapped, ("field2d", 
                                   "wrfin", "timeidx", "stagger", "projection",
-                                  "pivot_point", "angle",
+                                  "ll_point", "pivot_point", "angle",
                                   "start_point", "end_point", "latlon", 
                                   "cache"), 
                           *args, **kwargs)  
@@ -1060,6 +1115,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     timeidx = argvars["timeidx"]
     stagger = argvars["stagger"]
     projection = argvars["projection"]
+    ll_point = argvars["ll_point"]
     pivot_point = argvars["pivot_point"]
     angle = argvars["angle"]
     start_point = argvars["start_point"]
@@ -1077,7 +1133,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
             xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_point)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
             pivot_point_xy = (pivot_point.x, pivot_point.y)      
@@ -1086,14 +1142,14 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
             xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_point)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
             xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
-                                     stagger, projection)
+                                     stagger, projection, ll_point)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)
@@ -1115,7 +1171,7 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Use XY to set the cross-section metadata
     st_x = xy[0,0]
@@ -1130,7 +1186,6 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     
     if isinstance(field2d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field2d.dims)
         outcoords.update(field2d.coords)
         for i in py3range(-2,0,1):
@@ -1198,6 +1253,8 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                     outcoords["xy_loc"] = (loc_dimnames, latlon_loc)
                     
             else:
+                warnings.warn("'latlon' is set to True, but 'field2d' "
+                              "contains no coordinate information")
                 outcoords["xy_loc"] = ("line_idx", np.asarray(tuple(
                                                 CoordPair(xy[i,0], xy[i,1]) 
                                           for i in py3range(xy.shape[-2]))))
@@ -1208,8 +1265,11 @@ def _set_line_meta(wrapped, instance, args, kwargs):
                                           for i in py3range(xy.shape[-2]))))
         
     else:
+        if inc_latlon:
+            warnings.warn("'latlon' is set to True, but 'field2d' is "
+                          "not of type xarray.DataArray and contains no "
+                          "coordinate information")
         outname = "field2d_line"
-        outattrs = OrderedDict()
     
     outattrs["orientation"] = cross_str
     
@@ -1270,12 +1330,11 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     
     if isinstance(field, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field.dims)
         outcoords.update(field.coords)
         
@@ -1288,13 +1347,14 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
         outdimnames.insert(-2, "interp_level")
         outcoords["interp_level"] = interp_levels
         outattrs.update(field.attrs)
-        outattrs["vert_interp_type"] = vert_coord
+        
         
         outname = field.name
         
     else:
         outname = field_type
     
+    outattrs["vert_interp_type"] = vert_coord
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)  
@@ -1338,8 +1398,7 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     argvars = from_args(wrapped, ("field3d", "xy"), *args, **kwargs)  
     
     field3d = argvars["field3d"]
-    xy = argvars["xy"]
-    xy = to_np(xy)
+    xy = to_np(argvars["xy"])
     
     result = wrapped(*args, **kwargs)
     
@@ -1355,12 +1414,11 @@ def _set_2dxy_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Dims are (...,xy,z)
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
         
@@ -1456,12 +1514,11 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
     outname = None
     outdimnames = None
     outcoords = None
-    outattrs = None
+    outattrs = OrderedDict()
     
     # Dims are (...,xy,z)
     if isinstance(field, DataArray):
         outcoords = OrderedDict()
-        outattrs = OrderedDict()
         outdimnames = list(field.dims)
         
         outdimnames.pop(-1)
@@ -1476,9 +1533,6 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
         outname = "{0}_z".format(field.name)
         outcoords["z"] = z_out
         
-        outattrs["_FillValue"] = missingval
-        outattrs["missing_value"] = missingval
-        
         desc = field.attrs.get("description", None)
         if desc is not None:
             outattrs["description"] = desc
@@ -1490,6 +1544,8 @@ def _set_1d_meta(wrapped, instance, args, kwargs):
     else:
         outname = "field_z"
     
+    outattrs["_FillValue"] = missingval
+    outattrs["missing_value"] = missingval
     
     return DataArray(result, name=outname, dims=outdimnames, 
                      coords=outcoords, attrs=outattrs)
@@ -1770,6 +1826,7 @@ def set_alg_metadata(alg_ndims, refvarname,
     
     return func_wrapper
 
+
 def set_smooth_metdata():
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs): 
@@ -1994,14 +2051,14 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
     return func_wrapper
 
 
-def set_cloudfrac_alg_metadata(copyarg="pres"):
+def set_cloudfrac_alg_metadata(copyarg="vert"):
     """A decorator that sets the metadata for the wrapped raw cloud fraction 
     diagnostic function.
     
     Args:
             
         copyarg (:obj:`str`): The wrapped function argument to use for 
-            copying dimension names.  Default is 'pres'.
+            copying dimension names.  Default is 'vert'.
     
     Returns:
     
@@ -2025,6 +2082,16 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
             
         result = wrapped(*args, **kwargs)
         
+        argvals = from_args(wrapped, (copyarg, "low_thresh", 
+                                 "mid_thresh", "high_thresh", 
+                                 "missing"), 
+                       *args, **kwargs)
+        cp = argvals[copyarg]
+        low_thresh = argvals["low_thresh"]
+        mid_thresh = argvals["mid_thresh"]
+        high_thresh = argvals["high_thresh"]
+        missing = argvals["missing"]
+        
         # Default dimension names
         outdims = ["dim_{}".format(i) for i in py3range(result.ndim)]
         
@@ -2034,15 +2101,17 @@ def set_cloudfrac_alg_metadata(copyarg="pres"):
         outattrs["description"] = "low, mid, high clouds"
         outattrs["units"] = "%"
         outattrs["MemoryOrder"] = "XY"
+        outattrs["low_thresh"] = low_thresh
+        outattrs["mid_thresh"] = mid_thresh
+        outattrs["high_thresh"] = high_thresh
+        outattrs["_FillValue"] = missing
+        outattrs["missing_value"] = missing
             
-        
-        p = from_args(wrapped, copyarg, *args, **kwargs)[copyarg]
-            
-        if isinstance(p, DataArray):
+        if isinstance(cp, DataArray):
             # Right dims
-            outdims[-2:] = p.dims[-2:]
+            outdims[-2:] = cp.dims[-2:]
             # Left dims
-            outdims[1:-2] = p.dims[0:-3]
+            outdims[1:-2] = cp.dims[0:-3]
                 
         
         outcoords = {}     

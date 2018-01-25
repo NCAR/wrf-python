@@ -1,0 +1,58 @@
+{% set version = "1.1.0" %}
+
+package:
+  name: wrf-python
+  version: {{ version }}
+
+source:
+  fn: wrf-python-{{ version }}.tar.gz
+  url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
+  sha256: ea2202e1d8237c65b9d77a91f00da0f2e7a37ed6214ddd976872b619b9647b33
+
+build:
+  number: 0
+  detect_binary_files_with_prefix: true
+
+requirements:
+  build:
+    - setuptools
+    - numpy 1.11.* # [unix]
+    - numpy 1.14.* # [win]
+    - wrapt
+    - m2w64-toolchain  # [win]
+    - gcc  # [unix]
+    - python
+  run:
+    - setuptools
+    - numpy >=1.11 
+    - python
+    - wrapt 
+    - m2w64-gcc-libs  # [win]
+    - libgfortran  # [unix]
+    - libgcc  # [unix]
+    - xarray
+
+test:
+  requires:
+    - setuptools
+    - netcdf4
+    - xarray
+  source_files:
+    - test/ci_tests
+  imports:
+    - wrf
+  commands:
+    - cd test/ci_tests && python utests.py 
+
+about:
+  home: https://github.com/NCAR/wrf-python
+  license: "UCAR"
+  license_file: '{{ environ["RECIPE_DIR"] }}/LICENSE' 
+  summary: "Diagnostic and interpolation routines for WRF-ARW data."
+
+extra:
+  recipe-maintainers:
+    - bladwig1
+    - marylhaley
+    - david-ian-brown
+    - khallock

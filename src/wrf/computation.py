@@ -4,7 +4,7 @@ from __future__ import (absolute_import, division, print_function,
 import numpy as np
 import numpy.ma as ma
 
-from .constants import Constants
+from .constants import default_fill
 from .extension import (_interpz3d, _interp2dxy, _interp1d, _slp, _tk, _td, 
                         _rh, _uvmet, _smooth2d, _cape, _cloudfrac, _ctt, _dbz,
                         _srhel, _udhel, _avo, _pvo, _eth, _wetbulb, _tv, 
@@ -104,7 +104,7 @@ def xy(field, pivot_point=None, angle=None, start_point=None, end_point=None,
     
 
 @set_interp_metadata("1d")
-def interp1d(field, z_in, z_out, missing=Constants.DEFAULT_FILL, 
+def interp1d(field, z_in, z_out, missing=default_fill(np.float64), 
              meta=True):
     """Return the linear interpolation of a one-dimensional variable.
     
@@ -128,7 +128,7 @@ def interp1d(field, z_in, z_out, missing=Constants.DEFAULT_FILL,
             to.  Must be the same type as *z_in*. 
             
         missing (:obj:`float`, optional): The fill value to use for the 
-            output.  Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            output.  Default is :data:`wrf.default_fill(np.float64)`.
         
         meta (:obj:`bool`, optional): Set to False to disable metadata and 
             return :class:`numpy.ndarray` instead of 
@@ -251,7 +251,7 @@ def interp2dxy(field3d, xy, meta=True):
 
 
 @set_interp_metadata("horiz")
-def interpz3d(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
+def interpz3d(field3d, vert, desiredlev, missing=default_fill(np.float64),
               meta=True):
     """Return the field interpolated to a specified pressure or height level.
     
@@ -280,7 +280,7 @@ def interpz3d(field3d, vert, desiredlev, missing=Constants.DEFAULT_FILL,
             Must be in the same units as the *vert* parameter.
         
         missing (:obj:`float`): The fill value to use for the output.  
-            Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            Default is :data:`wrf.default_fill(numpy.float64)`.
         
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -713,7 +713,7 @@ def smooth2d(field, passes, meta=True):
 
 @set_cape_alg_metadata(is2d=True, copyarg="pres_hpa")
 def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
-            missing=Constants.DEFAULT_FILL, meta=True):
+            missing=default_fill(np.float64), meta=True):
     """Return the two-dimensional CAPE, CIN, LCL, and LFC.
     
     This function calculates the maximum convective available potential 
@@ -790,7 +790,7 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             False for pressure level data.
             
         missing (:obj:`float`, optional): The fill value to use for the 
-            output.  Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            output.  Default is :data:`wrf.default_fill(numpy.float64)`.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -843,7 +843,7 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
 
 @set_cape_alg_metadata(is2d=False, copyarg="pres_hpa")
 def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
-            missing=Constants.DEFAULT_FILL, meta=True):
+            missing=default_fill(np.float64), meta=True):
     """Return the three-dimensional CAPE and CIN.
     
     This function calculates the maximum convective available potential 
@@ -926,7 +926,7 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             False for pressure level data.
             
         missing (:obj:`float`, optional): The fill value to use for the 
-            output.  Default is :data:`wrf.Constants.DEFAULT_FILL`.
+            output.  Default is :data:`wrf.default_fill(numpy.float64)`.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -962,8 +962,9 @@ def cape_3d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     return ma.masked_values(cape_cin, missing)
 
 
-@set_cloudfrac_alg_metadata(copyarg="pres")
-def cloudfrac(pres, relh, meta=True):
+@set_cloudfrac_alg_metadata(copyarg="vert")
+def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
+              high_thresh, missing=default_fill(np.float64), meta=True):
     """Return the cloud fraction.
     
     The leftmost dimension of the returned array represents three different 
@@ -973,14 +974,22 @@ def cloudfrac(pres, relh, meta=True):
         - return_val[1,...] will contain MID level cloud fraction
         - return_val[2,...] will contain HIGH level cloud fraction
     
+    The *low_thresh*, *mid_thresh*, and *high_threshold* paramters specify the 
+    low, mid, and high cloud levels in the same units as *vert*.
+    
+    In mountainous regions, there is a possibility 
+    that the lowest WRF level will be higher than the low_cloud or mid_cloud 
+    threshold.  When this happens, a fill value will be used in the output at 
+    that location.
+    
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
     diagnostic variables.
     
     Args:  
             
-        pres (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Full 
-            pressure (perturbation + base state pressure) in [Pa], with the 
+        vert (:class:`xarray.DataArray` or :class:`numpy.ndarray`): The  
+            vertical coordinate variable (usually pressure or height) with the 
             rightmost dimensions as bottom_top x south_north x west_east
             
             Note:
@@ -990,8 +999,21 @@ def cloudfrac(pres, relh, meta=True):
                 dimension names to the output.  Otherwise, default names will
                 be used.
             
-        relh (:class:`xarray.DataArray` or :class:`numpy.ndarray`) Relative 
-            humidity with the same dimensionality as *pres*
+        relh (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Relative 
+            humidity with the same dimensionality as *vert*
+            
+        vert_inc_w_height (:obj:`int`): Set to 1 if the vertical coordinate 
+            values increase with height (height values). Set to 0 if the 
+            vertical coordinate values decrease with height (pressure values).
+            
+        low_thresh (:obj:`float`): The bottom vertical threshold for what is 
+            considered a low cloud.
+            
+        mid_thresh (:obj:`float`): The bottom vertical threshold for what is 
+            considered a mid level cloud.
+            
+        high_thresh (:obj:`float`): The bottom vertical threshold for what is 
+            considered a high cloud.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -1016,7 +1038,10 @@ def cloudfrac(pres, relh, meta=True):
         :meth:`wrf.getvar`, :meth:`wrf.rh`
     
     """
-    return _cloudfrac(pres, relh)
+    cfrac = _cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh, 
+                      high_thresh, missing)
+    
+    return ma.masked_values(cfrac, missing)
 
 
 @set_alg_metadata(2, "pres_hpa", refvarndims=3, 

@@ -23,29 +23,29 @@ SUBROUTINE DCOMPUTEABSVORT(av, u, v, msfu, msfv, msft, cor, dx, dy, nx, ny, nz,&
     REAL(KIND=8) :: dsy, dsx, dudy, dvdx, avort
     REAL(KIND=8) :: mm
 
-    !          PRINT*,'nx,ny,nz,nxp1,nyp1'
-    !          PRINT*,nx,ny,nz,nxp1,nyp1
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, jp1, jm1, ip1, im1, &
+    !$OMP dsx, dsy, mm, dudy, dvdx, avort) SCHEDULE(runtime)
     DO k = 1,nz
         DO j = 1,ny
-            jp1 = MIN(j+1, ny)
-            jm1 = MAX(j-1, 1)
             DO i = 1,nx
+                jp1 = MIN(j+1, ny)
+                jm1 = MAX(j-1, 1)
                 ip1 = MIN(i+1, nx)
                 im1 = MAX(i-1, 1)
-    !           PRINT *,jp1,jm1,ip1,im1
                 dsx = (ip1 - im1) * dx
                 dsy = (jp1 - jm1) * dy
                 mm = msft(i,j)*msft(i,j)
-    !           PRINT *,j,i,u(i,jp1,k),msfu(i,jp1),u(i,jp1,k)/msfu(i,jp1)
                 dudy = 0.5D0*(u(i,jp1,k)/msfu(i,jp1) + u(i+1,jp1,k)/msfu(i+1,jp1) - &
                      u(i,jm1,k)/msfu(i,jm1) - u(i+1,jm1,k)/msfu(i+1,jm1))/dsy*mm
                 dvdx = 0.5D0*(v(ip1,j,k)/msfv(ip1,j) + v(ip1,j+1,k)/msfv(ip1,j+1) - &
                      v(im1,j,k)/msfv(im1,j) - v(im1,j+1,k)/msfv(im1,j+1))/dsx*mm
                 avort = dvdx - dudy + cor(i,j)
                 av(i,j,k) = avort*1.D5
+
             END DO
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 
@@ -80,22 +80,23 @@ SUBROUTINE DCOMPUTEPV(pv, u, v, theta, prs, msfu, msfv, msft, cor, dx, dy, nx, &
     REAL(KIND=8) :: dsy, dsx, dp, dudy, dvdx, dudp, dvdp, dthdp, avort
     REAL(KIND=8) :: dthdx, dthdy, mm
 
-    !          PRINT*,'nx,ny,nz,nxp1,nyp1'
-    !          PRINT*,nx,ny,nz,nxp1,nyp1
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i, j, k, kp1, km1, jp1, jm1, ip1, &
+    !$OMP im1, dsx, dsy, mm, dudy, dvdx, avort, &
+    !$OMP dp, dudp, dvdp, dthdp, dthdx, dthdy) SCHEDULE(runtime)
     DO k = 1,nz
-        kp1 = MIN(k+1, nz)
-        km1 = MAX(k-1, 1)
         DO J = 1,ny
-            jp1 = MIN(j+1, ny)
-            jm1 = MAX(j-1, 1)
             DO i = 1,nx
+                kp1 = MIN(k+1, nz)
+                km1 = MAX(k-1, 1)
+                jp1 = MIN(j+1, ny)
+                jm1 = MAX(j-1, 1)
                 ip1 = MIN(i+1, nx)
                 im1 = MAX(i-1, 1)
-    !           PRINT *,jp1,jm1,ip1,im1
+
                 dsx = (ip1 - im1)*dx
                 dsy = (jp1 - jm1)*dy
                 mm = msft(i,j)*msft(i,j)
-    !           PRINT *,j,i,u(i,jp1,k),msfu(i,jp1),u(i,jp1,k)/msfu(i,jp1)
+
                 dudy = 0.5D0*(u(i,jp1,k)/msfu(i,jp1) + u(i+1,jp1,k)/msfu(i+1,jp1) - &
                        u(i,jm1,k)/msfu(i,jm1) - u(i+1,jm1,k)/msfu(i+1,jm1))/dsy*mm
                 dvdx = 0.5D0*(v(ip1,j,k)/msfv(ip1,j) + v(ip1,j+1,k)/msfv(ip1,j+1) - &
@@ -108,14 +109,11 @@ SUBROUTINE DCOMPUTEPV(pv, u, v, theta, prs, msfu, msfv, msft, cor, dx, dy, nx, &
                 dthdx = (theta(ip1,j,k) - theta(im1,j,k))/dsx*msft(i,j)
                 dthdy = (theta(i,jp1,k) - theta(i,jm1,k))/dsy*msft(i,j)
                 pv(i,j,k) = -G*(dthdp*avort - dvdp*dthdx + dudp*dthdy)*10000.D0
-    !               if(i.eq.300 .and. j.eq.300) then
-    !                 PRINT*,'avort,dudp,dvdp,dthdp,dthdx,dthdy,pv'
-    !                 PRINT*,avort,dudp,dvdp,dthdp,dthdx,dthdy,pv(i,j,k)
-    !               endif
                 pv(i,j,k) = pv(i,j,k)*1.D2
             END DO
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 

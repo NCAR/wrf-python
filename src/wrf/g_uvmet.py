@@ -9,7 +9,7 @@ import numpy as np
 from .extension import _uvmet
 from .destag import destagger
 from .constants import Constants
-from .wind import _calc_wspd_wdir
+from .g_wind import _calc_wspd_wdir
 from .decorators import convert_units
 from .metadecorators import set_wind_metadata
 from .util import extract_vars, extract_global_attrs, either

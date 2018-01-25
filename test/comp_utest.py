@@ -498,13 +498,17 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         return (u, v, lat, lon, cen_lon, cone)
     
     if varname == "cloudfrac":
+        from wrf.g_geoht import get_height
         vars = extract_vars(wrfnc, timeidx, ("P", "PB", "QVAPOR", "T"), 
                           method, squeeze, cache=None, meta=True)
-    
+        
         p = vars["P"]
         pb = vars["PB"]
         qv = vars["QVAPOR"]
         t = vars["T"]
+        
+        geoht_agl = get_height(wrfnc, timeidx, method, squeeze, 
+                               cache=None, meta=True, msl=False)
         
         full_p = p + pb
         full_t = t + Constants.T_BASE
@@ -512,7 +516,7 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
         tkel = tk(full_p, full_t)
         relh = rh(qv, full_p, tkel)
         
-        return (full_p, relh)
+        return (geoht_agl, relh, 1, 300., 2000., 6000.)
         
         
 class WRFVarsTest(ut.TestCase):
@@ -538,7 +542,7 @@ def make_func(varname, wrfnc, timeidx, method, squeeze, meta):
         
         if meta:
             self.assertEqual(result.dims, ref.dims)
-    
+        
     return func
 
 
@@ -606,6 +610,10 @@ if __name__ == "__main__":
     varnames=["avo", "pvo", "eth", "dbz", "helicity", "updraft_helicity",
               "omg", "pw", "rh", "slp", "td", "tk", "tv", "twb", "uvmet",
               "cloudfrac"]
+    
+    omp_set_num_threads(omp_get_num_procs()-1)
+    omp_set_schedule(OMP_SCHED_STATIC, 0)
+    omp_set_dynamic(False)
     
     # Turn this one off when not needed, since it's slow
     #varnames += ["cape_2d", "cape_3d"]

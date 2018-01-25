@@ -8,7 +8,7 @@ import subprocess
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  disable_xarray, xarray_enabled, to_np,
                  xy_to_ll, ll_to_xy, xy_to_ll_proj, ll_to_xy_proj,
-                 extract_global_attrs, viewitems, CoordPair)
+                 extract_global_attrs, viewitems, CoordPair, ll_points)
 from wrf.util import is_multi_file
 
 NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
@@ -93,48 +93,58 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
         multiproduct = varname in ("uvmet", "uvmet10", "cape_2d", "cape_3d", 
                                    "cfrac")
         
+        # These varnames don't have NCL functions to test against
+        ignore_referent = ("zstag", "geopt_stag")
         
-        if not multi:
-            ref_vals = refnc.variables[varname][:]
-        else:
-            data = refnc.variables[varname][:]
-            if (varname != "uvmet" and varname != "uvmet10" 
-                and varname != "cape_2d" and varname != "cape_3d"):
-                new_dims = [repeat] + [x for x in data.shape]
-            elif (varname == "uvmet" or varname == "uvmet10" 
-                  or varname == "cape_3d"):
-                new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
-            elif (varname == "cape_2d"):
-                new_dims = [4] + [repeat] + [x for x in data.shape[1:]]
-            elif (varname == "cfrac"):
-                new_dims = [3] + [repeat] + [x for x in data.shape[1:]]
-
-                
-            masked=False
-            if (isinstance(data, ma.core.MaskedArray)):
-                masked=True
-            
-            if not masked:
-                ref_vals = np.zeros(new_dims, data.dtype)
+        if varname not in ignore_referent:
+            if not multi:
+                ref_vals = refnc.variables[varname][:]
             else:
-                ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
-            
-            for i in xrange(repeat):
-                if not multiproduct:
-                    ref_vals[i,:] = data[:]
+                data = refnc.variables[varname][:]
+                if (varname != "uvmet" and varname != "uvmet10" 
+                    and varname != "cape_2d" and varname != "cape_3d"):
+                    new_dims = [repeat] + [x for x in data.shape]
+                elif (varname == "uvmet" or varname == "uvmet10" 
+                      or varname == "cape_3d"):
+                    new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
+                elif (varname == "cape_2d"):
+                    new_dims = [4] + [repeat] + [x for x in data.shape[1:]]
+                elif (varname == "cfrac"):
+                    new_dims = [3] + [repeat] + [x for x in data.shape[1:]]
+    
+                    
+                masked=False
+                if (isinstance(data, ma.core.MaskedArray)):
+                    masked=True
                 
-                    if masked:
-                        ref_vals.mask[i,:] = data.mask[:]
-                        
+                if not masked:
+                    ref_vals = np.zeros(new_dims, data.dtype)
                 else:
-                    for prod in xrange(ref_vals.shape[0]):
-                        ref_vals[prod,i,:] = data[prod,:]
-                        
+                    ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
+                
+                for i in xrange(repeat):
+                    if not multiproduct:
+                        ref_vals[i,:] = data[:]
+                    
                         if masked:
-                            ref_vals.mask[prod,i,:] = data.mask[prod,:]
+                            ref_vals.mask[i,:] = data.mask[:]
+                            
+                    else:
+                        for prod in xrange(ref_vals.shape[0]):
+                            ref_vals[prod,i,:] = data[prod,:]
+                            
+                            if masked:
+                                ref_vals.mask[prod,i,:] = data.mask[prod,:]
         
         if (varname == "tc"):
             my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
+            tol = 1/100.
+            atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
+            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+        elif (varname == "cfrac"):
+            # Change the vert_type to height_agl when NCL gets updated.
+            my_vals = getvar(in_wrfnc, "cfrac", timeidx=timeidx, 
+                             vert_type="pres")
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
@@ -143,7 +153,11 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             tol = .5/100.0
             atol = 0 # NCL uses different constants and doesn't use same
                      # handrolled virtual temp in method
-            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            try:
+                nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            except AssertionError:
+                print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
+                raise
         elif (varname == "cape_2d"):
             cape_2d = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 0/100.
@@ -165,12 +179,20 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             
             #print np.amax(np.abs(to_np(cape_3d[0,:]) - ref_vals[0,:]))
             nt.assert_allclose(to_np(cape_3d), ref_vals, tol, atol)
+        elif (varname == "zstag" or varname == "geopt_stag"):
+            v = getvar(in_wrfnc, varname, timeidx=timeidx)
+            # For now, only make sure it runs without crashing since no NCL
+            # to compare with yet.
         else:
             my_vals = getvar(in_wrfnc, varname, timeidx=timeidx)
             tol = 2/100.
             atol = 0.1
             #print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
-            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            try:
+                nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+            except:
+                print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
+                raise
     
     
     return test
@@ -247,6 +269,9 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
+            
+            # Make sure the numpy versions work first
+            hts_500 = interplevel(to_np(hts), to_np(p), 500)
             hts_500 = interplevel(hts, p, 500)
             
             nt.assert_allclose(to_np(hts_500), ref_ht_500)
@@ -259,23 +284,48 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
             pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
+            #ht_cross = vertcross(to_np(hts), p, pivot_point=pivot_point, 
+            #                     angle=90., latlon=True)
+            # Make sure the numpy versions work first
+            ht_cross = vertcross(to_np(hts), to_np(p), 
+                                 pivot_point=pivot_point, angle=90.)
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
-
-            nt.assert_allclose(to_np(ht_cross), ref_ht_cross, rtol=.01)
+            
+            # Note:  Until the bug is fixed in NCL, the wrf-python cross 
+            # sections will contain one extra point
+            nt.assert_allclose(to_np(ht_cross)[...,0:-1], ref_ht_cross, 
+                               rtol=.01)
+            
+            # Test the manual projection method with lat/lon
+            lats = hts.coords["XLAT"]
+            lons = hts.coords["XLONG"]
+            ll_point = ll_points(lats, lons)
+            pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
+                                       int(lats.shape[-1]/2)],
+                              lon=lons[int(lons.shape[-2]/2), 
+                                       int(lons.shape[-1]/2)])
+            v1 = vertcross(hts,p,wrfin=in_wrfnc,pivot_point=pivot_point,
+                           angle=90.0)
+            v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
+                          ll_point=ll_point,
+                          pivot_point=pivot_point, angle=90.)
+            
+            nt.assert_allclose(to_np(v1), to_np(v2), rtol=.01)
             
             # Test opposite
             p_cross1 = vertcross(p,hts,pivot_point=pivot_point, angle=90.0)
- 
-            nt.assert_allclose(to_np(p_cross1), 
+            
+            nt.assert_allclose(to_np(p_cross1)[...,0:-1], 
                                ref_p_cross, 
                                rtol=.01)
             # Test point to point
             start_point = CoordPair(0, hts.shape[-2]/2)
             end_point = CoordPair(-1,hts.shape[-2]/2)
-            
+          
+             
             p_cross2 = vertcross(p,hts,start_point=start_point, 
                                 end_point=end_point)
-             
+            
             nt.assert_allclose(to_np(p_cross1), 
                                to_np(p_cross2))
               
@@ -286,9 +336,30 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
             pivot_point = CoordPair(t2.shape[-1] / 2, t2.shape[-2] / 2)
             
+            #t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
+            #                      angle=90.0, latlon=True)
+            # Make sure the numpy version works
+            t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
+                                  angle=90.0)
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
-            nt.assert_allclose(to_np(t2_line1), ref_t2_line)
+            # Note:  After NCL is fixed, remove the slice.
+            nt.assert_allclose(to_np(t2_line1)[...,0:-1], ref_t2_line)
+            
+            # Test the manual projection method with lat/lon
+            lats = t2.coords["XLAT"]
+            lons = t2.coords["XLONG"]
+            ll_point = ll_points(lats, lons)
+            pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
+                                       int(lats.shape[-1]/2)],
+                              lon=lons[int(lons.shape[-2]/2), 
+                                       int(lons.shape[-1]/2)])
+            l1 = interpline(t2,wrfin=in_wrfnc,pivot_point=pivot_point,
+                           angle=90.0)
+            l2 = interpline(t2,projection=t2.attrs["projection"], 
+                          ll_point=ll_point, 
+                          pivot_point=pivot_point, angle=90.)
+            nt.assert_allclose(to_np(l1), to_np(l2), rtol=.01)
             
             # Test point to point
             start_point = CoordPair(0, t2.shape[-2]/2)
@@ -306,6 +377,16 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             tk = getvar(in_wrfnc, "temp", timeidx=timeidx, units="k")
             
             interp_levels = [200,300,500,1000]
+            
+            # Make sure the numpy version works
+            field = vinterp(in_wrfnc, 
+                            field=to_np(tk), 
+                            vert_coord="theta", 
+                            interp_levels=interp_levels, 
+                            extrapolate=True, 
+                            field_type="tk",
+                            timeidx=timeidx, 
+                            log_p=True)
             
             field = vinterp(in_wrfnc, 
                             field=tk, 
@@ -599,12 +680,18 @@ class WRFLatLonTest(ut.TestCase):
         
 
 if __name__ == "__main__":
+    from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
+                     omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
+    omp_set_num_threads(omp_get_num_procs()-1)
+    omp_set_schedule(OMP_SCHED_STATIC, 0)
+    omp_set_dynamic(False)
+    
     ignore_vars = []  # Not testable yet
     wrf_vars = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "cfrac"]
+                "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     latlon_tests = ["xy", "ll"]
     

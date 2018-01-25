@@ -56,10 +56,10 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
     INTEGER :: i, j, k, k10, k3, ktop
     !REAL(KIND=8), PARAMETER :: DTR=PI/180.d0, DPR=180.d0/PI
 
-    !DO j = 1, mjx-1
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,k,k10,k3,ktop, cu, cv, x, &
+    !$OMP sum, dh, sdh, su, sv, ua, va, asp, adr, bsp, bdr) SCHEDULE(runtime)
     DO j=1, mjx
         DO i=1, miy
-        !DO i=1, miy-1
             sdh = 0.D0
             su = 0.D0
             sv = 0.D0
@@ -82,12 +82,14 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
             IF (k10 .EQ. 0) THEN
                 k10 = 2
             ENDIF
+
             DO k = k3, k10, -1
                 dh = ght(i,j,k-1) - ght(i,j,k)
                 sdh = sdh + dh
                 su = su + 0.5D0*dh*(u(i,j,k-1) + u(i,j,k))
                 sv = sv + 0.5D0*dh*(v(i,j,k-1) + v(i,j,k))
             END DO
+
             ua = su/sdh
             va = sv/sdh
             asp = SQRT(ua*ua + va*va)
@@ -96,11 +98,13 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
             ELSE
                 adr = DEG_PER_RAD * (PI + ATAN2(ua,va))
             ENDIF
+
             bsp = 0.75D0*asp
             bdr = adr + 30.D0
             IF (bdr .GT. 360.D0) THEN
                 bdr = bdr - 360.D0
             ENDIF
+
             cu = -bsp*SIN(bdr * RAD_PER_DEG)
             cv = -bsp*COS(bdr * RAD_PER_DEG)
             sum = 0.D0
@@ -112,6 +116,7 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
             sreh(i,j) = -sum
         END DO
     END DO
+    !$OMP END PARALLEL DO
 
     RETURN
 

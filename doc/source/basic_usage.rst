@@ -1,6 +1,36 @@
 How To Use
 ============
 
+Introduction
+---------------
+
+The API for wrf-python can be summarized as a variable computation/extraction
+routine, several interpolation routines, and a few plotting helper utilities. 
+The API is kept as simple as possible to help minimize the 
+learning curve for new programmers, students, and scientists. In the future, 
+we plan to extend xarray for programmers desiring a more object oriented API, 
+but this remains a work in progress.
+
+The five most commonly used routines can be summarized as:
+
+- :meth:`wrf.getvar` - Extracts WRF-ARW NetCDF variables and 
+  computes diagnostic variables that WRF does not compute (e.g. storm 
+  relative helicity). This is the routine that you will use most often.
+  
+- :meth:`wrf.interplevel` - Interpolates a three-dimensional field to a 
+  horizontal plane at a specified level using simple (fast) linear 
+  interpolation (e.g. 850 hPa temperature).
+  
+- :meth:`wrf.vertcross` - Interpolates a three-dimensional field to a vertical 
+  plane through a user-specified horizontal line (i.e. a cross section).
+  
+- :meth:`wrf.interpline` - Interpolates a two-dimensional field to a 
+  user-specified line.
+  
+- :meth:`wrf.vinterp` - Interpolates a three-dimensional field to 
+  user-specified  'surface' levels (e.g. theta-e levels). This is a smarter, 
+  albeit slower, version of :meth:`wrf.interplevel`. 
+
 Basic Usage
 ----------------
 
@@ -10,8 +40,8 @@ Computing Diagnostic Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The primary use for the :meth:`wrf.getvar` function is to return diagnostic 
-variables that require a calculation, since WRF does not produce these variables
-natively. These diagnostics include CAPE, storm relative helicity, 
+variables that require a calculation, since WRF does not produce these 
+variables natively. These diagnostics include CAPE, storm relative helicity, 
 omega, sea level pressure, etc. A table of all available diagnostics can be 
 found here: :ref:`diagnostic-table`.
 
@@ -355,9 +385,9 @@ Result:
                                      pole_lon=0.0)
     
                         
-Note how the 'Time' dimension was replaced with the 'file' dimension, due to the 
-numpy's automatic squeezing of the single 'Time' dimension. To maintain the 
-'Time' dimension, set the *squeeze* parameter to False.
+Note how the 'Time' dimension was replaced with the 'file' dimension, due to  
+numpy's automatic squeezing of the single element 'Time' dimension. To maintain 
+the 'Time' dimension, set the *squeeze* parameter to False.
 
 .. code-block:: python
 
@@ -706,8 +736,9 @@ Example Using Lat/Lon Coordinates
     start_point = CoordPair(lat=start_lat, lon=start_lon)
     end_point = CoordPair(lat=end_lat, lon=end_lon)
     
-    # When using lat/lon coordinates, you must supply a netcdf file object, or a 
-    # projection object.
+    # When using lat/lon coordinates, you must supply a WRF netcdf file object, 
+    # or a projection object with the lower left latitude and lower left 
+    # longitude points.
     p_vert = vertcross(p, z, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True)
     print(p_vert)
     
@@ -953,8 +984,11 @@ Example Using Lat/Lon Coordinates
     start_point = CoordPair(lat=start_lat, lon=start_lon)
     end_point = CoordPair(lat=end_lat, lon=end_lon)
     
-    # Calculate the vertical cross section.  By setting latlon to True, this 
-    # also calculates the latitude and longitude coordinates along the line
+    # Calculate the interpolated line.  To use latitude and longitude points, 
+    # you must supply a WRF NetCDF file object, or a projection object along 
+    # with the lower left latitude and lower left longitude points. 
+    # Also, by setting latlon to True, this routine will 
+    # also calculate the latitude and longitude coordinates along the line
     # and adds them to the metadata to help with plotting labels.
     t2_line = interpline(t2, wrfin=ncfile, start_point=start_point, end_point=end_point, latlon=True)
     
@@ -1614,3 +1648,460 @@ Result:
      <Ngl.Resources instance at 0x11d318a70>
      <Ngl.Resources instance at 0x11d318710>]
     
+.. _using_omp:
+
+Using OpenMP
+-------------------------
+
+Beginning in version 1.1, the Fortran computational routines in wrf-python make 
+use of OpenMP directives. OpenMP enables the calculations to use multiple CPU 
+cores, which can improve performance. In order to use OpenMP features, 
+wrf-python has to be compiled with OpenMP enabled (most pre-built binary 
+installations will have this enabled).
+
+The Fortran computational routines have all been built using runtime 
+scheduling, instead of compile time scheduling, so that the user can choose the 
+scheduler type within their Python application. By default, the scheduling 
+type is set to :data:`wrf.OMP_SCHED_STATIC` using only 1 CPU core, so 
+wrf-python will behave similarly to the non-OpenMP built versions. For the most 
+part, the difference between the scheduling types is minimal, with the exception 
+being the :data:`wrf.OMP_SCHED_DYNAMIC` scheduler that is much slower due to 
+the additional overhead associated with it. For new users, using the default 
+scheduler should be sufficient.
+
+
+Verifying that OpenMP is Enabled
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To take advantage of the performance improvements offered by OpenMP, wrf-python
+needs to have been compiled with OpenMP features enabled. The example below 
+shows how you can determine if OpenMP is enabled in your build of wrf-python.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_enabled
+
+   print(omp_enabled())
+
+
+Result:
+
+.. code-block:: none
+
+   True
+
+
+Determining the Number of Available Processors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The example below shows how you can get the maximum number of processors 
+that are available on your system.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_get_num_procs
+
+   print(omp_get_num_procs())
+
+
+Result:
+
+.. code-block:: none
+
+   8
+
+
+Specifying the Number of Threads
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To enable multicore support via OpenMP, specifying the maximum number 
+of OpenMP threads (i.e. CPU cores) is the only step that you need to take.  
+
+In the example below, :meth:`wrf.omp_set_num_threads` is used to set the 
+maximum number of threads to use, and :meth:`wrf.omp_get_max_threads` is used 
+to retrieve (and print) the maximum number of threads used.
+
+.. note::
+
+   Although there is an OpenMP routine named :meth:`wrf.omp_get_num_threads`, 
+   this routine will always return 1 when called from the sequential part of 
+   the program. Use :meth:`wrf.omp_get_max_threads` to return the value set by 
+   :meth:`wrf.omp_set_num_threads`.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_set_num_threads, omp_get_max_threads
+
+   omp_set_num_threads(4)
+   
+   print (omp_get_max_threads())
+
+
+Result:
+
+.. code-block:: none
+
+   4
+   
+Setting a Different Scheduler Type
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When an OpenMP directive is encountered in the Fortran code, a scheduler is 
+used to determine how the work is divided among the threads. All of the 
+Fortran routines are compiled to use a 'runtime' scheduler, which indicates 
+that the scheduler type (from the four listed below) is to be chosen at 
+runtime (i.e. inside a Python script)
+
+By default, the scheduler chosen is the :data:`wrf.OMP_SCHED_STATIC` scheduler,
+which should be sufficient for most users. However, OpenMP and wrf-python 
+include the following options for the scheduler type:
+
+- :data:`wrf.OMP_SCHED_STATIC`
+- :data:`wrf.OMP_SCHED_DYNAMIC`
+- :data:`wrf.OMP_SCHED_GUIDED`
+- :data:`wrf.OMP_SCHED_AUTO`
+
+Refer to the 
+`OpenMP Specification <http://www.openmp.org/wp-content/uploads/openmp-4.5.pdf>`_.
+for more information about these scheduler types. In local testing, 
+:data:`wrf.OMP_SCHED_GUIDED` produced the best results, but 
+differences between :data:`wrf.OMP_SCHED_STATIC`, 
+:data:`wrf.OMP_SCHED_GUIDED`, and 
+:data:`wrf.OMP_SCHED_AUTO` were minor. However, 
+:data:`wrf.OMP_SCHED_DYNAMIC` produced noticeably slower results 
+due to the overhead of using a dynamic scheduler.
+
+When setting a scheduler type, the :meth:`wrf.omp_set_schedule` takes two 
+arguments.  The first is the scheduler type (one from the list above), and the 
+second optional argument is a modifier, which is usually referred as the chunk 
+size. If the modifier/chunk_size is set to 0, then the OpenMP default 
+implementation is used. For :data:`wrf.OMP_SCHED_AUTO`, the 
+modifier is ignored.
+
+If you are new to OpenMP and all this sounds confusing, don't worry about 
+setting a scheduler type.  The default static scheduler will be good enough.
+
+In the example below, the scheduler type is set to 
+:data:`wrf.OMP_SCHED_GUIDED` and uses the default chunk size of 0. The 
+scheduler type is then read back using :meth:`wrf.omp_get_schedule` 
+and printed.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   from wrf import omp_set_schedule, omp_get_schedule, OMP_SCHED_GUIDED
+
+   omp_set_schedule(OMP_SCHED_GUIDED, 0)
+
+   sched, modifier = omp_get_schedule()
+
+   print(sched, modifier)
+
+
+Result:
+
+.. code-block:: none
+
+   3 1
+   
+Notice that the printed scheduler type (*sched* variable) is set to a 
+value of 3, which is the actual integer constant value for the 
+:data:`wrf.OMP_SCHED_GUIDED` scheduler type. The *modifier* is returned as a 
+value of 1, which is different than the 0 that was supplied to the 
+:meth:`wrf.omp_set_schedule` routine. This is because the 0 tells OpenMP to use 
+its own default value for the scheduler, which is 1 for this type of scheduler.
+
+.. _performance:
+
+Performance Tips
+--------------------
+
+Memory Issues with :data:`wrf.ALL_TIMES` 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The use of :data:`wrf.ALL_TIMES` for the *timeidx* parameter to 
+:meth:`wrf.getvar` is convenient for computing diagnostic variables across 
+multiple files/times, but there is something that users should be aware of. 
+When :data:`wrf.ALL_TIMES` is set as the *timeidx* argument, all arrays used 
+in the computation are extracted for all times before the computation 
+is started. This can cause serious memory issues on smaller hardware systems 
+like laptops.  
+
+In this example, the user wants to use a data set that is 289 x 39 x 300 x 300
+and compute z for the entire data set. The user is using a laptop with 
+8 GB of memory.  
+
+.. code-block:: python
+
+   from netCDF4 import Dataset
+   from wrf import getvar, ALL_TIMES
+   
+   file_list = [Dataset("/path/to/file1"), Dataset("/path/to/file2"),...]
+   z = getvar(file_list, "z", ALL_TIMES)
+   
+Five hours later, the computation finished. What happened?
+
+In wrf-python, all of the computational routines use 8-byte REAL variables so 
+that both the 4-byte and 8-byte version of WRF output can be used. The 
+calculation for z extracts three variables (P, PHB, and HGT) and returns a 
+fourth array (RESULT). The RESULT will get cut in half to 4-byte REALs 
+after the computation, but needs an 8-byte REAL when the result is computed. 
+
+Let's look at the approximate amount memory needed:
+
+**P**: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
+
+**PHB**: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)    
+
+**HGT**: 289 x 300 x 300 x 8 = 208,080,000 (~208 MB)
+
+**RESULT**: 289 x 39 x 300 x 300 x 8 = 8,115,120,000 bytes (~8 GB!)
+
+Yikes! So, in order to do this calculation using :data:`wrf.ALL_TIMES` as 
+the *timeidx*, over 24.2 GB are needed for this one calculation. When the 
+laptop runs out of memory, it begins using the hard drive for swap memory, 
+which runs hundreds of times slower than real memory.
+
+To fix this situation, it is better to allocate the output array yourself and 
+run the calculation for each time step in a loop 
+("loop-and-fill"). The required memory requirements change to:
+
+(Note: only need to store the result in a 4-byte REAL)
+
+**FINAL_RESULT**: 289 x 39 x 300 x 300 x 4 = 4,057560,000 bytes (~4 GB)
+
+(Note: the numbers below are for each loop iteration)
+
+**P**: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+
+**PHB**: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+
+**HGT**: 300 x 300 x 8 = 720,000 bytes (720 KB)
+
+**RESULT**: 39 x 300 x 300 x 8 = 28,080,000 bytes (~28 MB)
+
+Since the memory for the computation is deleted after each 
+loop iteration, the total memory usage drops to approximately 4.1 GB.
+
+The moral of the story is that you need to make sure that your system has 
+enough memory to extract everything it needs up front if you want to use 
+:data:`wrf.ALL_TIMES`, otherwise it is better to "loop-and-fill" yourself.
+
+Here is an example of the "loop-and-fill" technique:
+
+.. code-block:: python
+    
+   from __future__ import print_function, division
+   
+   import numpy as np
+   from netCDF4 import Dataset
+   from wrf import getvar, ALL_TIMES
+   
+   filename_list = ["/path/to/file1", "/path/to/file2",...]
+   
+   # Result shape (hard coded for this example)
+   result_shape = (289, 39, 300, 300)
+   
+   # Only need 4-byte floats
+   z_final = np.empty(result_shape, np.float32)
+   
+   # Modify this number if using more than 1 time per file
+   times_per_file = 1
+   
+   for timeidx in range(result_shape[0]):
+       # Compute the file index and the time index inside the file
+       fileidx = timeidx // times_per_file
+       file_timeidx = timeidx % times_per_file
+       
+       f = Dataset(filename_list[fileidx])  
+       z = getvar(f, "z", file_timeidx)
+       
+       z_final[timeidx,:] = z[:]
+       f.close()
+
+      
+The *cache* Argument for :meth:`wrf.getvar`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^     
+
+If you have read through the documentation, you may have noticed that the 
+:meth:`wrf.getvar` routine contains a *cache* argument. What is this for?
+
+Internally, if metadata is turned on, a variable is extracted from the NetCDF 
+file and its metadata is copied to form the result's metadata. Often this 
+variable is one of the computation's function arguments, so rather than 
+spend time extracting the variable again for the computation, it is placed 
+in a cache (dictionary) and passed on to the computational function.
+
+What isn't widely known is that this cache argument can also be supplied by 
+end users wishing to speed up their application. This can be useful in 
+situations where numerous calculations are being performed on the same 
+data set. For many algorithms, the time needed to extract the arrays from the 
+NetCDF file is on par with the time needed to perform the calculation. If you 
+are computing numerous diagnostics, extracting the variables up front allows 
+you to only pay this extraction penalty once, rather than inside of each call 
+to :meth:`wrf.getvar`.
+
+The cache is nothing more than a dictionary where each key is the variable 
+name (e.g. "P") and the value is the :class:`xarray.DataArray` or 
+:class:`numpy.ndarray` variable. Creating the cache dictionary is easy, 
+since the :meth:`wrf.extract_vars` routine returns a dictionary for a 
+sequence of variables. 
+
+.. note:: 
+
+   The *timeidx* parameter supplied to :meth:`extract_vars` 
+   must be the same *timeidx* parameter that you plan to use for 
+   :meth:`wrf.getvar`. Otherwise, it will crash with dimension mismatch errors.
+
+Some common variables that you can use to create an effective cache are: P, PB, 
+PH, PHB, T, QVAPOR, HGT, PSFC, U, V, W.
+
+Below is an example showing the same computation done with and without the 
+cache. The execution time is printed. The hardware used is a 2.8 GHz Intel Core 
+i7, which contains 4 CPU cores with 2 hyper threads (8 total threads). This 
+will be interpreted as 8 CPUs for OpenMP.
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   import time
+   from netCDF4 import Dataset
+   from wrf import getvar, ALL_TIMES, extract_vars
+
+   # The first two files contain four times, the last file contains only one.
+   wrf_filenames = ["/path/to/wrfout_d02_2005-08-28_00:00:00",
+                    "/path/to/wrfout_d02_2005-08-28_12:00:00", 
+                    "/path/to/wrfout_d02_2005-08-29_00:00:00"]
+
+   wrfin = [Dataset(x) for x in wrf_filenames]
+
+   start = time.time()
+   my_cache = extract_vars(wrfin, ALL_TIMES, ("P", "PSFC", "PB", "PH", "PHB", 
+                                              "T", "QVAPOR", "HGT", "U", "V", 
+                                              "W"))
+   end = time.time()
+   print ("Time taken to build cache: ", (end-start), "s")
+    
+   vars = ("avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
+           "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
+           "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
+           "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
+           "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag")
+   
+   # No cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES)
+   end = time.time()
+   no_cache_time = (end-start)
+
+   print ("Time taken without variable cache: ", no_cache_time, "s")
+
+   # With a cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES, cache=my_cache)
+   end = time.time()
+   cache_time = (end-start)
+
+   print ("Time taken with variable cache: ", cache_time, "s")
+
+   improvement = ((no_cache_time-cache_time)/no_cache_time) * 100 
+   print ("The cache decreased computation time by: ", improvement, "%")
+
+
+Result:
+
+.. code-block:: none
+
+   Time taken to build cache:  0.28154706955 s
+   Time taken without variable cache:  11.0905270576 s
+   Time taken with variable cache:  8.25931215286 s
+   The cache decreased computation time by:  25.5282268378 %
+   
+By removing the repeated extraction of common variables in the 
+:meth:`wrf.getvar` routine, for the single threaded case, the computation 
+time has been reduced by 25.5% in this particular example.
+
+Things get more interesting when OpenMP is turned on and set to use the 
+maximum number of processors (in this case 8 threads are used).  
+
+.. code-block:: python
+
+   from __future__ import print_function
+
+   import time
+   from netCDF4 import Dataset
+   from wrf import (getvar, ALL_TIMES, extract_vars, 
+                    omp_set_num_threads, omp_get_num_procs)
+   
+   # The first two files contain four times, the last file contains only one.
+   wrf_filenames = ["/path/to/wrfout_d02_2005-08-28_00:00:00",
+                    "/path/to/wrfout_d02_2005-08-28_12:00:00", 
+                    "/path/to/wrfout_d02_2005-08-29_00:00:00"]
+
+   wrfin = [Dataset(x) for x in wrf_filenames]
+
+   start = time.time()
+   my_cache = extract_vars(wrfin, ALL_TIMES, ("P", "PSFC", "PB", "PH", "PHB", 
+                                              "T", "QVAPOR", "HGT", "U", "V", 
+                                              "W"))
+   end = time.time()
+   print ("Time taken to build cache: ", (end-start), "s")
+
+   omp_set_num_threads(omp_get_num_procs())
+   
+   vars = ("avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
+           "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
+           "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
+           "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
+           "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag")
+   
+   # No cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES)
+   end = time.time()
+   no_cache_time = (end-start)
+
+   print ("Time taken without variable cache: ", no_cache_time, "s")
+
+   # With a cache
+   start = time.time()
+   for var in vars:
+       v = getvar(wrfin, var, ALL_TIMES, cache=my_cache)
+   end = time.time()
+   cache_time = (end-start)
+
+   print ("Time taken with variable cache: ", cache_time, "s")
+
+   improvement = ((no_cache_time-cache_time)/no_cache_time) * 100 
+   print ("The cache decreased computation time by: ", improvement, "%")
+
+Result:
+
+.. code-block:: none
+
+   Time taken to build cache:  0.2700548172 s
+   Time taken without variable cache:  6.02652812004 s
+   Time taken with variable cache:  3.27777099609 s
+   The cache decreased computation time by:  45.6109565772 %
+   
+In this example, 4 CPU cores (8 total threads) are used. When the cache is 
+used, the computation time drops by 45%, so almost half the time was spent 
+simply extracting variables from the NetCDF file. When compared to the 
+11.09 s needed to compute the single threaded case with no variable cache, the
+computation time drops by roughly 70% (compared to 45% with 8 threads but 
+no cache). 
+
+In summary, if you are computing a lot of diagnostic variables, consider using
+the *cache* argument to improve performance, particularly if you want to 
+maximize your multithreaded performance with OpenMP.

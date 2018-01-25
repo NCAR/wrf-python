@@ -46,4 +46,10 @@ doc/build
 doc/source/internal_api/generated
 doc/source/user_api/generated
 test/ipynb/.ipynb_checkpoints
+fortran/omp.f90
+fortran/wrffortran.pyf
+fortran/*.mod
+build
+.settings
+src/wrf_python.egg-info
 

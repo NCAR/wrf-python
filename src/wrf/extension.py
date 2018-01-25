@@ -3,16 +3,32 @@ from __future__ import (absolute_import, division, print_function,
 
 import numpy as np
 
-from .constants import Constants
+from .constants import Constants, default_fill
 
-from ._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
+from wrf._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeseaprs, dfilter2d, dcomputerh, dcomputeuvmet,
-                          dcomputetd, dcapecalc3d, dcloudfrac, wrfcttcalc, 
-                          calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
+                          dcomputetd, dcapecalc2d, dcapecalc3d, dcloudfrac2, 
+                          wrfcttcalc, calcdbz, dcalrelhl, dcalcuh, dcomputepv, 
                           dcomputeabsvort, dlltoij, dijtoll, deqthecalc,
                           omgcalc, virtual_temp, wetbulbcalc, dcomputepw,
                           wrf_monotonic, wrf_vintrp, dcomputewspd, 
-                          dcomputewdir)
+                          dcomputewdir,
+                          fomp_set_num_threads, fomp_get_num_threads, 
+                          fomp_get_max_threads, fomp_get_thread_num,
+                          fomp_get_num_procs, fomp_in_parallel, 
+                          fomp_set_dynamic, fomp_get_dynamic, fomp_set_nested,
+                          fomp_get_nested, fomp_set_schedule, 
+                          fomp_get_schedule, fomp_get_thread_limit, 
+                          fomp_set_max_active_levels, 
+                          fomp_get_max_active_levels, fomp_get_level,
+                          fomp_get_ancestor_thread_num, fomp_get_team_size,
+                          fomp_get_active_level, fomp_in_final,
+                          fomp_init_lock, fomp_init_nest_lock,
+                          fomp_destroy_lock, fomp_destroy_nest_lock,
+                          fomp_set_lock, fomp_set_nest_lock,
+                          fomp_unset_lock, fomp_unset_nest_lock,
+                          fomp_test_lock, fomp_test_nest_lock,
+                          fomp_get_wtime, fomp_get_wtick, fomp_enabled)
 
 from .decorators import (left_iteration, cast_type, 
                          extract_and_transpose, check_args)
@@ -24,7 +40,7 @@ from .specialdec import (uvmet_left_iter, cape_left_iter,
 class DiagnosticError(Exception):
     """Raised when an error occurs in a diagnostic routine."""
     def __init__(self, message=None):
-        """Initialize a :class:`wrf.DiagnosticError` objection.
+        """Initialize a :class:`wrf.DiagnosticError` object.
         
         Args:
         
@@ -365,8 +381,8 @@ def _eth(qv, tk, p, outview=None):
 @cast_type(arg_idxs=(0,1,2,3))
 @extract_and_transpose()
 def _uvmet(u, v, lat, lon, cen_long, cone, isstag=0, has_missing=False, 
-           umissing=Constants.DEFAULT_FILL, vmissing=Constants.DEFAULT_FILL, 
-           uvmetmissing=Constants.DEFAULT_FILL, outview=None):
+           umissing=default_fill(np.float64), vmissing=default_fill(np.float64), 
+           uvmetmissing=default_fill(np.float64), outview=None):
     """Wrapper for dcomputeuvmet.
     
     Located in wrf_user.f90.
@@ -597,8 +613,13 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
     errstat = np.array(0)
     errmsg = np.zeros(Constants.ERRLEN, "c")
     
+    if i3dflag:
+        cape_routine = dcapecalc3d
+    else:
+        cape_routine = dcapecalc2d
+    
     # note that p_hpa, tk, qv, and ht have the vertical flipped
-    result = dcapecalc3d(p_hpa,
+    result = cape_routine(p_hpa,
                          tk,
                          qv,
                          ht,
@@ -607,7 +628,6 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
                          capeview,
                          cinview,
                          missing,
-                         i3dflag,
                          ter_follow,
                          psafile,
                          errstat,
@@ -620,28 +640,34 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
 
 @check_args(0, 3, (3,3))
 @cloudfrac_left_iter()
-@cast_type(arg_idxs=(0, 1), outviews=("lowview", "medview", "highview"))
-@extract_and_transpose(outviews=("lowview", "medview", "hightview"))
-def _cloudfrac(p, rh, lowview=None, medview=None, highview=None):
-    """Wrapper for dcloudfrace.
+@cast_type(arg_idxs=(0, 1), outviews=("lowview", "midview", "highview"))
+@extract_and_transpose(outviews=("lowview", "midview", "highview"))
+def _cloudfrac(vert, rh, vert_inc_w_height, low_thresh, mid_thresh,
+               high_thresh, missing, lowview=None, midview=None, highview=None):
+    """Wrapper for dcloudfrac2.
     
     Located in wrf_cloud_fracf.f90.
     
     """
     if lowview is None:
-        lowview = np.zeros(p.shape[0:2], p.dtype, order="F")
+        lowview = np.zeros(vert.shape[0:2], vert.dtype, order="F")
         
-    if medview is None:
-        medview = np.zeros(p.shape[0:2], p.dtype, order="F")
+    if midview is None:
+        midview = np.zeros(vert.shape[0:2], vert.dtype, order="F")
         
     if highview is None:
-        highview = np.zeros(p.shape[0:2], p.dtype, order="F")
+        highview = np.zeros(vert.shape[0:2], vert.dtype, order="F")
     
-    result = dcloudfrac(p, 
-                        rh, 
-                        lowview, 
-                        medview, 
-                        highview)
+    result = dcloudfrac2(vert, 
+                         rh,
+                         vert_inc_w_height,
+                         low_thresh,
+                         mid_thresh,
+                         high_thresh,
+                         missing,
+                         lowview, 
+                         midview, 
+                         highview)
     
     return result
 
@@ -769,7 +795,7 @@ def _smooth2d(field, passes, outview=None):
     if isinstance(field, np.ma.MaskedArray):
         missing = field.fill_value
     else:
-        missing = Constants.DEFAULT_FILL
+        missing = default_fill(np.float64)
     
     if outview is None:
         outview = field.copy(order="A")
@@ -898,5 +924,686 @@ def _wdir(u, v, outview=None):
                           v)
     
     return result
+
+
+# OpenMP runtime wrappers
+
+def omp_set_num_threads(num_threads):
+    """Specify the number of threads to use.
+    
+    The omp_set_num_threads routine affects the number of threads to be used 
+    for subsequent parallel regions that do not specify a num_threads 
+    clause, by setting the value of the first element of the nthreads-var 
+    ICV of the current task.
+    
+    Args:
+    
+        num_threads (a positive :obj:`int`): The number of threads.  Must be 
+            positive.
+    
+    Returns:
+    
+        None.
+        
+    """
+    if num_threads < 0 and fomp_enabled():
+        raise ValueError("'num_threads' must be a positive integer.")
+    
+    fomp_set_num_threads(num_threads)
+
+
+def omp_get_num_threads():
+    """Return the number of threads in the current team.
+    
+    The omp_get_num_threads routine returns the number of threads in the 
+    team executing the parallel region to which the routine region binds. 
+    If called from the sequential part of a program, this routine returns 1.
+    
+    Note:
+    
+        This function always returns 1 when called from within Python.
+    
+    Returns:
+    
+        :obj:`int`: The number of threads in the current team.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_max_threads`, :meth:`wrf.omp_set_num_threads`
+        
+    """
+    return fomp_get_num_threads()
+
+
+def omp_get_max_threads():
+    """Return the maximum number of threads that can be used in a parallel \
+    region.
+    
+    The omp_get_max_threads routine returns an upper bound on the number of 
+    threads that could be used to form a new team if a parallel construct 
+    without a num_threads clause were encountered after execution returns from 
+    this routine.
+    
+    Returns:
+    
+        :obj:`int`: The number of threads in the current team.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_num_threads`
+        
+    """
+    return fomp_get_max_threads()
+
+
+def omp_get_thread_num():
+    """Return the thread number, within the current team, of the \
+    calling thread.
+    
+    The omp_get_thread_num routine returns the thread number of the calling 
+    thread, within the team executing the parallel region to which the routine 
+    region binds. The thread number is an integer between 0 and one less than 
+    the value returned by omp_get_num_threads, inclusive. The thread number of 
+    the master thread of the team is 0. The routine returns 0 if it is called 
+    from the sequential part of a program.
+    
+    Note:
+    
+        This function always returns 0 when called from within Python.
+    
+    Returns:
+    
+        :obj:`int`: The thread number.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_num_procs`
+        
+    """
+    return fomp_get_thread_num()
+                          
+                          
+def omp_get_num_procs():
+    """Return the number of processors on the device.
+    
+    The omp_get_num_procs routine returns the number of processors that are 
+    available to the device at the time the routine is called. This value may 
+    change between the time that it is determined by the omp_get_num_procs 
+    routine and the time that it is read in the calling context due to system 
+    actions outside the control of the OpenMP implementation.
+    
+    Returns:
+    
+        :obj:`int`: The number of processors.
+        
+    """
+    return fomp_get_num_procs()
+
+
+def omp_in_parallel():
+    """Return 1 if the active-levels-var ICV is greater than zero; \
+    otherwise, return 0.
+    
+    The effect of the omp_in_parallel routine is to return 1 if the current 
+    task is enclosed by an active parallel region, and the parallel region is 
+    enclosed by the outermost initial task region on the device; otherwise it 
+    returns 0.
+    
+    Note:
+    
+        This function always returns 0 when called from within Python.
+    
+    Returns:
+    
+        :obj:`int`: Returns 1 if the active-levels-var ICV is greater than 
+        zero.  Otherwise, it returns 0.
+        
+    """
+    return fomp_in_parallel()
+
+
+def omp_set_dynamic(dynamic_threads):
+    """Enable or disable dynamic adjustment of the number of threads \
+    available for the execution of subsequent parallel regions by setting the \
+    value of the dyn-var ICV.
+    
+    For implementations that support dynamic adjustment of the number of 
+    threads, if the argument to omp_set_dynamic evaluates to True, dynamic 
+    adjustment is enabled for the current task; otherwise, dynamic adjustment 
+    is disabled for the current task. For implementations that do not support 
+    dynamic adjustment of the number of threads this routine has no effect: 
+    the value of dyn-var remains false.
+    
+    Args:
+    
+        dynamic_threads (:obj:`bool`): Set to True to support the dynamic 
+            adjustment of the number of threads.  Otherwise, set to False.
+    
+    Returns:
+    
+        None.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_dynamic`
+        
+    """
+    fomp_set_dynamic(dynamic_threads)
+
+
+def omp_get_dynamic():
+    """Return the value of the dyn-var ICV, which determines whether \
+    dynamic adjustment of the number of threads is enabled or disabled.
+    
+    This routine returns 1 if dynamic adjustment of the number of threads 
+    is enabled for the current task; it returns 0, otherwise. If an 
+    implementation does not support dynamic adjustment of the 
+    number of threads, then this routine always returns 0.
+    
+    Returns:
+    
+        :obj:`int`: Returns 1 if dynamic thread adjustment is enabled, 0 
+        if disabled.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_dynamic`
+        
+    """
+    return fomp_get_dynamic()
+
+
+def omp_set_nested(nested):
+    """Enable or disable nested parallelism, by setting the nest-var ICV
+    
+    For implementations that support nested parallelism, if the argument to 
+    omp_set_nested evaluates to True, nested parallelism is enabled for the 
+    current task; otherwise, nested parallelism is disabled for the current 
+    task. For implementations that do not support nested parallelism, this 
+    routine has no effect: the value of nest-var remains False.
+    
+    Args:
+    
+        dynamic_threads (:obj:`bool`): Set to True to support nested 
+            parallelism, otherwise False.
+    
+    Returns:
+    
+        None
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_nested`
+    
+    """
+    fomp_set_nested(nested)
+
+
+def omp_get_nested():
+    """Return the value of the nest-var ICV, which determines if nested \
+    parallelism is enabled or disabled
+    
+    This routine returns 1 if nested parallelism is enabled for the current 
+    task; it returns 0, otherwise. If an implementation does not support 
+    nested parallelism, this routine always returns 0.
+    
+    Returns:
+    
+        :obj:`int`: Returns 1 if nested parallelism is enabled, otherwise 0.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_nested`
+    
+    """
+    return fomp_get_nested()
+
+
+def omp_set_schedule(kind, modifier=0):
+    """Set the schedule that is applied when *runtime* is used as \
+    schedule kind, by setting the value of the run-sched-var ICV.
+    
+    The effect of this routine is to set the value of the run-sched-var ICV 
+    of the current task to the values specified in the two arguments. The 
+    schedule is set to the schedule type specified by the first argument kind. 
+    It can be any of the standard schedule types or any other implementation 
+    specific one. For the schedule types static, dynamic, and guided the 
+    chunk_size is set to the value of the second argument, or to the default 
+    chunk_size if the value of the second argument is less than 1; for the 
+    schedule type auto the second argument has no meaning; for implementation 
+    specific schedule types, the values and associated meanings of the second 
+    argument are implementation defined.
+    
+    Args:
+    
+        kind (:obj:`int`):  Must be :data:`wrf.OMP_SCHED_STATIC`,
+            :data:`wrf.OMP_SCHED_DYNAMIC`, :data:`wrf.OMP_SCHED_GUIDED`, 
+            or :data:`wrf.OMP_SCHED_AUTO`.
+            
+        modifier(:obj:`int`): An implementation specific value, depending on 
+            the choice for *kind*. This parameter is alternatively named 
+            chunk_size in some OpenMP documentation. Default is 0, which 
+            means the OpenMP implementation will use its default value.
+    
+    Returns:
+    
+        None
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_schedule`
+    
+    """
+    fomp_set_schedule(kind, modifier) 
+
+
+def omp_get_schedule():
+    """Return the schedule that is applied when the runtime schedule is used.
+    
+    This routine returns the run-sched-var ICV in the task to which the routine 
+    binds. The first item is the schedule kind, which will be one of 
+    :data:`wrf.OMP_SCHED_STATIC`, :data:`wrf.OMP_SCHED_DYNAMIC`, 
+    :data:`wrf.OMP_SCHED_GUIDED`, or :data:`wrf.OMP_SCHED_AUTO`.  The second 
+    item returned is the modifier, which is often named chunk_size in 
+    OpenMP documentation.
+    
+    Returns:
+    
+        :obj:`tuple`: The first item is an :obj:`int` for the schedule *kind*.
+        The second items is :obj:`int` for the *modifier* (chunk_size).
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_schedule`
+    
+    """
+    return fomp_get_schedule()
+
+
+def omp_get_thread_limit(): 
+    """Return the maximum number of OpenMP threads available to participate \
+    in the current contention group.
+    
+    The omp_get_thread_limit routine returns the value of the thread-limit-var 
+    ICV.
+    
+    Returns:
+    
+        :obj:`int`: The number of OpenMP threads available to participate in 
+        the current contention group.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_max_threads`
+    
+    """
+    return fomp_get_thread_limit()
+
+
+def omp_set_max_active_levels(max_levels):
+    """Limit the number of nested active parallel regions on the device, \
+    by setting the max-active-levels-var ICV.
+    
+    The effect of this routine is to set the value of the max-active-levels-var 
+    ICV to the value specified in the argument. If the number of parallel 
+    levels requested exceeds the number of levels of parallelism supported by 
+    the implementation, the value of the max-active-levels-var ICV will be set 
+    to the number of parallel levels supported by the implementation. This 
+    routine has the described effect only when called from a sequential part 
+    of the program. When called from within an explicit parallel region, the 
+    effect of this routine is implementation defined.
+    
+    Args:
+    
+        max_levels (:obj:`int`):  The maximum number of nested active parallel
+            regions.
+            
+    Returns:
+    
+        None.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_max_active_levels`
+    
+    """
+    fomp_set_max_active_levels(max_levels) 
+
+
+def omp_get_max_active_levels():
+    """Return the value of the max-active-levels-var ICV, which determines \
+    the maximum number of nested active parallel regions on the device
+    
+    The omp_get_max_active_levels routine returns the value of the 
+    max-active-levels-var ICV, which determines the maximum number of nested 
+    active parallel regions on the device.
+            
+    Returns:
+    
+        :obj:`int`: The maximum number of nested active parallel regions.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_max_active_levels`
+    
+    """
+    return fomp_get_max_active_levels()
+
+
+def omp_get_level():
+    """Return the value of the levels-var ICV.
+    
+    The effect of the omp_get_level routine is to return the number of nested 
+    parallel regions (whether active or inactive) enclosing the current task 
+    such that all of the parallel regions are enclosed by the outermost initial 
+    task region on the current device.
+    
+    Returns:
+    
+        :obj:`int`: The number of nested parallel regions.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_active_level`
+    
+    """
+    return fomp_get_level()
+   
+                          
+def omp_get_ancestor_thread_num(level):
+    """Return, for a given nested level of the current thread, the thread \
+    number of the ancestor of the current thread.
+    
+    The omp_get_ancestor_thread_num routine returns the thread number of the 
+    ancestor at a given nest level of the current thread or the thread number 
+    of the current thread. If the requested nest level is outside the range of 
+    0 and the nest level of the current thread, as returned by the 
+    omp_get_level routine, the routine returns -1.
+    
+    Args:
+    
+        level (:obj:`int`):  The nested level of the current thread.
+    
+    Returns:
+    
+        :obj:`int`: The thread number of the ancestor at a given nest level 
+            of the current thread.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_max_active_levels`, :meth:`wrf.omp_get_level`
+    
+    """
+    return fomp_get_ancestor_thread_num(level)
+
+
+def omp_get_team_size(level):
+    """Return, for a given nested level of the current thread, the size \
+    of the thread team to which the ancestor or the current thread belongs
+    
+    The omp_get_team_size routine returns the size of the thread team to which 
+    the ancestor or the current thread belongs. If the requested nested level 
+    is outside the range of 0 and the nested level of the current thread, as 
+    returned by the omp_get_level routine, the routine returns -1. Inactive 
+    parallel regions are regarded like active parallel regions executed with 
+    one thread.
+    
+    Args:
+    
+        level (:obj:`int`):  The nested level of the current thread.
+    
+    Returns:
+    
+        :obj:`int`: The size of the thread team.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_ancestor_thread_num`
+    
+    """
+    return fomp_get_team_size(level)
+
+
+def omp_get_active_level():
+    """Return the value of the active-level-vars ICV.
+    
+    The effect of the omp_get_active_level routine is to return the number of 
+    nested, active parallel regions enclosing the current task such that all 
+    of the parallel regions are enclosed by the outermost initial task region 
+    on the current device.
+    
+    Returns:
+    
+        :obj:`int`: The number of nested activate parallel regions.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_team_size`
+    
+    """
+    return fomp_get_active_level() 
+
+
+def omp_in_final():
+    """Return 1 (True) if the routine is executed in a final task region; \
+    otherwise, it returns 0 (False).
+    
+    Returns:
+    
+        :obj:`int`: Return 1 if the routine is executed in a final task 
+        region, 0 otherwise.
+    
+    """
+    return fomp_in_final()
+
+
+def omp_init_lock():
+    """Initialize a simple OpenMP lock.
+    
+    Returns:
+    
+        :obj:`int`:  An integer representing the lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_init_nest_lock`, :meth:`wrf.omp_destroy_lock`
+    
+    """
+    return fomp_init_lock()
+
+
+def omp_init_nest_lock():
+    """Initialize a nestable OpenMP lock.
+    
+    Returns:
+    
+        :obj:`int`:  An integer representing the nestable lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_init_lock`
+    
+    """
+    return fomp_init_nest_lock()
+
+
+def omp_destroy_lock(svar):
+    """Destroy a simple OpenMP lock.
+    
+    This sets the lock to an uninitialized state.
+    
+    Args:
+    
+        svar (:obj:`int`):  An integer representing the lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_destroy_nest_lock`, :meth:`wrf.omp_init_lock`
+    
+    """
+    fomp_destroy_lock(svar)
+
+
+def omp_destroy_nest_lock(nvar):
+    """Destroy a nestable OpenMP lock.
+    
+    This sets the lock to an uninitialized state.
+    
+    Args:
+    
+        nvar (:obj:`int`):  An integer representing the nestable lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_destroy_lock`, :meth:`wrf.omp_init_nest_lock`
+    
+    """
+    fomp_destroy_nest_lock(nvar)
+
+
+def omp_set_lock(svar):
+    """Set a simple OpenMP lock.
+    
+    Args:
+    
+        svar (:obj:`int`):  An integer representing the lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_unset_lock`, :meth:`wrf.omp_set_nest_lock`
+    
+    """
+    fomp_set_lock(svar)
+
+
+def omp_set_nest_lock(nvar):
+    """Set a nestable OpenMP lock.
+    
+    Args:
+    
+        nvar (:obj:`int`):  An integer representing the nestable lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_unset_nest_lock`, :meth:`wrf.omp_set_lock`
+    
+    """
+    fomp_set_nest_lock(nvar)
+
+
+def omp_unset_lock(svar):
+    """Unset a simple OpenMP lock.
+    
+    Args:
+    
+        svar (:obj:`int`):  An integer representing the simple lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_unset_nest_lock`, :meth:`wrf.omp_set_lock`
+    
+    """
+    fomp_unset_lock(svar)
+
+
+def omp_unset_nest_lock(nvar):
+    """Unset a nestable OpenMP lock.
+    
+    Args:
+    
+        nvar (:obj:`int`):  An integer representing the nestable lock.
+        
+    See Also:
+    
+        :meth:`wrf.omp_set_nest_lock`, :meth:`wrf.omp_unset_lock`
+    
+    """
+    fomp_unset_nest_lock(nvar)
+    
+
+def omp_test_lock(svar):
+    """Test a simple OpenMP lock.
+    
+    This method attempts to set the lock, but does not suspend execution.
+    
+    Args:
+    
+        svar (:obj:`int`):  An integer representing the simple lock.
+        
+    Returns:
+    
+        :obj:`int`:  Returns 1 (True) if the lock is successfully set, 
+        otherwise 0 (False).
+        
+    See Also:
+    
+        :meth:`wrf.test_nest_lock`, :meth:`wrf.omp_set_lock`
+    
+    """
+    return fomp_test_lock(svar)
+
+
+def omp_test_nest_lock(nvar):
+    """Test a nestable OpenMP lock.
+    
+    This method attempts to set the lock, but does not suspend execution.
+    
+    Args:
+    
+        nvar (:obj:`int`):  An integer representing the simple lock.
+        
+    Returns:
+    
+        :obj:`int`:  Returns the nesting count if successful, 
+        otherwise 0 (False).
+        
+    See Also:
+    
+        :meth:`wrf.test_lock`, :meth:`wrf.omp_set_nest_lock`
+    
+    """
+    return fomp_test_nest_lock(nvar)
+
+
+def omp_get_wtime():
+    """Return elapsed wall clock time in seconds.
+    
+    The omp_get_wtime routine returns a value equal to the elapsed wall clock 
+    time in seconds since some “time in the past”. The actual 
+    “time in the past” is arbitrary, but it is guaranteed not to change during 
+    the execution of the application program. The time returned is a 
+    “per-thread time”, so it is not required to be globally consistent across 
+    all threads participating in an application.
+    
+    Returns:
+    
+        :obj:`float`:  Returns the wall clock time in seconds.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_wtick`
+    
+    """
+    return fomp_get_wtime()
+
+
+def omp_get_wtick():
+    """Return the precision of the timer used by :meth:`wrf.omp_get_wtime`.
+    
+    The omp_get_wtick routine returns a value equal to the number of 
+    seconds between successive clock ticks of the timer used by 
+    :meth:`wrf.omp_get_wtime`.
+    
+    Returns:
+    
+        :obj:`float`:  Returns the precision of the timer.
+        
+    See Also:
+    
+        :meth:`wrf.omp_get_wtime`
+    
+    """
+    return fomp_get_wtick()
+
     
 

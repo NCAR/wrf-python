@@ -242,9 +242,9 @@ def _kwarg_proj_params(**projparams):
         if var is None:
             raise ValueError("'{}' argument required".format(name))
     
-    # ref_lat and ref_lon are expectd to be lists
-    ref_lat = np.asarray([ref_lat])
-    ref_lon = np.asarray([ref_lon])
+    # ref_lat and ref_lon are expected to be lists
+    ref_lat = np.ravel(np.asarray([ref_lat]))
+    ref_lon = np.ravel(np.asarray([ref_lon]))
     
     # Fortran wants 1-based indexing
     known_x = known_x + 1
