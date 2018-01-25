@@ -12,11 +12,20 @@ MODULE omp_constants
     ! are for GNU on 64bit. This may not be entirely correct for non-GNU
     ! compilers. In particular, it will be the locks that segfault/crash if
     ! this is wrong.
+    ! linux on conda-forge uses 4, 4, 8 for some reason
 #if defined(__GFORTRAN__)
 #if (__SIZEOF_POINTER__ == 8)
+#if defined(__linux__)
+    ! Will make this better in the future, for now on conda-forge, this
+    ! is what they're using
+    INTEGER, PARAMETER :: fomp_sched_kind = 4
+    INTEGER, PARAMETER :: fomp_lock_kind = 4
+    INTEGER, PARAMETER :: fomp_nest_lock_kind = 8
+#else
     INTEGER, PARAMETER :: fomp_sched_kind = 4
     INTEGER, PARAMETER :: fomp_lock_kind = 8
     INTEGER, PARAMETER :: fomp_nest_lock_kind = 8
+#endif
 #else
     INTEGER, PARAMETER :: fomp_sched_kind = 4
     INTEGER, PARAMETER :: fomp_lock_kind = 4

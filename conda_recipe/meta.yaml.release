@@ -7,7 +7,7 @@ package:
 source:
   fn: wrf-python-{{ version }}.tar.gz
   url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
-  sha256: ea2202e1d8237c65b9d77a91f00da0f2e7a37ed6214ddd976872b619b9647b33
+  sha256: 9ca11366ed9a0d5e83e576ac80ce36be4748ba8a06752dac077277acec5e46d9
 
 build:
   number: 0
@@ -16,15 +16,16 @@ build:
 requirements:
   build:
     - setuptools
-    - numpy 1.11.* # [unix]
-    - numpy 1.14.* # [win]
+    - python
+    - numpy 1.11.*  # [unix]
+    - numpy 1.14.*  # [win]
     - wrapt
     - m2w64-toolchain  # [win]
-    - gcc  # [unix]
-    - python
+    - gcc # [unix] 
   run:
     - setuptools
-    - numpy >=1.11 
+    - numpy >=1.11  # [unix]
+    - numpy >=1.14  # [win] 
     - python
     - wrapt 
     - m2w64-gcc-libs  # [win]
@@ -56,3 +57,4 @@ extra:
     - marylhaley
     - david-ian-brown
     - khallock
+    

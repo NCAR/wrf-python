@@ -8,7 +8,6 @@ source:
   git_url: https://github.com/NCAR/wrf-python
   git_branch: develop
   
-
 build:
   number: 0
   detect_binary_files_with_prefix: true
@@ -16,15 +15,16 @@ build:
 requirements:
   build:
     - setuptools
-    - numpy 1.11.* # [unix]
-    - numpy 1.14.* # [win]
+    - python
+    - numpy 1.11.*  # [unix]
+    - numpy 1.14.*  # [win]
     - wrapt
     - m2w64-toolchain  # [win]
-    - gcc  # [unix]
-    - python
+    - gcc # [unix] 
   run:
     - setuptools
-    - numpy >=1.11 
+    - numpy >=1.11  # [unix]
+    - numpy >=1.14  # [win] 
     - python
     - wrapt 
     - m2w64-gcc-libs  # [win]
