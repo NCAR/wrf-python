@@ -300,8 +300,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             lats = hts.coords["XLAT"]
             lons = hts.coords["XLONG"]
             ll_point = ll_points(lats, lons)
-            pivot = CoordPair(lat=lats[lats.shape[-2]/2, lats.shape[-1]/2],
-                              lon=lons[lons.shape[-2]/2, lons.shape[-1]/2])
+            pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
+                                       int(lats.shape[-1]/2)],
+                              lon=lons[int(lons.shape[-2]/2), 
+                                       int(lons.shape[-1]/2)])
             v1 = vertcross(hts,p,wrfin=in_wrfnc,pivot_point=pivot_point,
                            angle=90.0)
             v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
@@ -348,8 +350,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             lats = t2.coords["XLAT"]
             lons = t2.coords["XLONG"]
             ll_point = ll_points(lats, lons)
-            pivot = CoordPair(lat=lats[lats.shape[-2]/2, lats.shape[-1]/2],
-                              lon=lons[lons.shape[-2]/2, lons.shape[-1]/2])
+            pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
+                                       int(lats.shape[-1]/2)],
+                              lon=lons[int(lons.shape[-2]/2), 
+                                       int(lons.shape[-1]/2)])
             l1 = interpline(t2,wrfin=in_wrfnc,pivot_point=pivot_point,
                            angle=90.0)
             l2 = interpline(t2,projection=t2.attrs["projection"], 
