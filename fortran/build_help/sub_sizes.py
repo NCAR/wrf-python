@@ -5,7 +5,10 @@ from string import Template
 def main():
     
     print ("Running sub_sizes")
-    result = subprocess.check_output(["./sizes"])
+    try:
+        result = subprocess.check_output(["./sizes"])
+    except WindowsError:
+        result = subprocess.check_output(["sizes.exe"])
     
     split_result = result.split()
     

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd ../fortran/build_help
+cd fortran/build_help
 gfortran -o sizes -fopenmp omp_sizes.f90
 python sub_sizes.py
 

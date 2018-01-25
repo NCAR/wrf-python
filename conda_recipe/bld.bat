@@ -1,4 +1,4 @@
-cd ..\fortran\build_help
+cd fortran\build_help
 CALL gfortran -o sizes -fopenmp omp_sizes.f90
 CALL python sub_sizes.py
 
