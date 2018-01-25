@@ -19,8 +19,9 @@ from wrf import (omp_set_num_threads, omp_get_num_threads,
                  omp_set_lock, omp_set_nest_lock,
                  omp_unset_lock, omp_unset_nest_lock,
                  omp_test_lock, omp_test_nest_lock,
-                 omp_get_wtime, omp_get_wtick)
-from wrf import Constants
+                 omp_get_wtime, omp_get_wtick,
+                 OMP_SCHED_STATIC, OMP_SCHED_DYNAMIC, 
+                OMP_SCHED_GUIDED, OMP_SCHED_AUTO)
             
 
 class OmpTest(ut.TestCase):
@@ -77,24 +78,24 @@ class OmpTest(ut.TestCase):
         
              
     def test_schedule(self):
-        omp_set_schedule(Constants.OMP_SCHED_STATIC, 100000)
+        omp_set_schedule(OMP_SCHED_STATIC, 100000)
         kind, modifier = omp_get_schedule()
-        self.assertEqual(kind, Constants.OMP_SCHED_STATIC)
+        self.assertEqual(kind, OMP_SCHED_STATIC)
         self.assertEqual(modifier, 100000)
         
-        omp_set_schedule(Constants.OMP_SCHED_DYNAMIC, 10000)
+        omp_set_schedule(OMP_SCHED_DYNAMIC, 10000)
         kind, modifier = omp_get_schedule()
-        self.assertEqual(kind, Constants.OMP_SCHED_DYNAMIC)
+        self.assertEqual(kind, OMP_SCHED_DYNAMIC)
         self.assertEqual(modifier, 10000)
         
-        omp_set_schedule(Constants.OMP_SCHED_GUIDED, 100) 
+        omp_set_schedule(OMP_SCHED_GUIDED, 100) 
         kind, modifier = omp_get_schedule()
-        self.assertEqual(kind, Constants.OMP_SCHED_GUIDED)
+        self.assertEqual(kind, OMP_SCHED_GUIDED)
         self.assertEqual(modifier, 100)
         
-        omp_set_schedule(Constants.OMP_SCHED_AUTO, 10) 
+        omp_set_schedule(OMP_SCHED_AUTO, 10) 
         kind, modifier = omp_get_schedule()
-        self.assertEqual(kind, Constants.OMP_SCHED_AUTO)
+        self.assertEqual(kind, OMP_SCHED_AUTO)
         self.assertNotEqual(modifier, 10) # The modifier argument is ignored,
                                           # so it will be set to the previous
                                           # value of 100.
