@@ -12,7 +12,8 @@ def main():
     
     split_result = result.split()
     
-    if split_result[0].strip() != "SIZES":
+    if (split_result[0].strip() != "SIZES" 
+        and split_result[0].strip() != b"SIZES"):
         raise ValueError("First line is not SIZES")
     
     subs = {"FOMP_SCHED_KIND" : split_result[1].strip(),
