@@ -5,9 +5,8 @@ package:
   version: {{ version }}
 
 source:
-  fn: wrf-python-{{ version }}.tar.gz
-  url: https://github.com/NCAR/wrf-python/archive/{{ version }}.tar.gz
-  sha256: 9ca11366ed9a0d5e83e576ac80ce36be4748ba8a06752dac077277acec5e46d9
+  git_url: https://github.com/NCAR/wrf-python
+  git_branch: develop
 
 package:
   name: wrf-python

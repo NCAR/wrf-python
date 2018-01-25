@@ -2,13 +2,13 @@ MODULE omp_constants
 #ifdef _OPENMP
     USE omp_lib
 
-    INTEGER, PARAMETER :: fomp_sched_kind = 4
-    INTEGER, PARAMETER :: fomp_lock_kind = 8
-    INTEGER, PARAMETER :: fomp_nest_lock_kind = 8
-    INTEGER(KIND=4), PARAMETER :: fomp_sched_static = 1
-    INTEGER(KIND=4), PARAMETER :: fomp_sched_dynamic = 2
-    INTEGER(KIND=4), PARAMETER :: fomp_sched_guided = 3
-    INTEGER(KIND=4), PARAMETER :: fomp_sched_auto = 4
+    INTEGER, PARAMETER :: fomp_sched_kind = $FOMP_SCHED_KIND
+    INTEGER, PARAMETER :: fomp_lock_kind = $FOMP_LOCK_KIND
+    INTEGER, PARAMETER :: fomp_nest_lock_kind = $FOMP_NEST_LOCK_KIND
+    INTEGER(KIND=$FOMP_SCHED_KIND), PARAMETER :: fomp_sched_static = $FOMP_SCHED_STATIC
+    INTEGER(KIND=$FOMP_SCHED_KIND), PARAMETER :: fomp_sched_dynamic = $FOMP_SCHED_DYNAMIC
+    INTEGER(KIND=$FOMP_SCHED_KIND), PARAMETER :: fomp_sched_guided = $FOMP_SCHED_GUIDED
+    INTEGER(KIND=$FOMP_SCHED_KIND), PARAMETER :: fomp_sched_auto = $FOMP_SCHED_AUTO
 
 #else
     INTEGER, PARAMETER :: fomp_sched_kind = 4
