@@ -6,7 +6,7 @@ NCAR will be providing a four hour tutorial for wrf-python on Wednesday, March
 only 16 students, so registration is required. 
 
 The tutorial will take place at NCAR's corporate training center in Boulder, 
-Colorado.
+Colorado. 
 
 `Corporate Technical Training Center <https://www2.fin.ucar.edu/it/about-cttc>`_
 3085 Center Green Drive, Building CG-2, Room #3024
@@ -15,11 +15,28 @@ Boulder, Colorado
 Overview
 --------------
 
+WRF-Python is a collection of diagnostic and interpolation routines for use 
+with output from the Weather Research and Forecasting (WRF-ARW) Model. The 
+package provides over 30 diagnostic calculations, 
+several interpolation routines, and utilities to help with plotting 
+via cartopy, basemap, or PyNGL. The functionality is similar to what is 
+provided by the NCL WRF package. 
+
+.. note:: 
+
+   WRF-Python is NOT a tool for running the WRF-ARW model using Python.
+
 This tutorial provides an introduction to wrf-python. The tutorial is beginner 
-friendly for new users of wrf-python, but this is not an introduction to the Python 
-programming language (see :ref:`prereq`). Due to limited seating, if you 
+friendly for new users of wrf-python, but this is NOT an introduction to the 
+Python programming language (see :ref:`prereq`). Due to limited seating, if you 
 do not have any previous experience with Python, please do not register 
 for this tutorial.
+
+.. note::
+
+   For online training that provides an introduction to the Python 
+   programming language itself, please see the 
+   `Unidata Python Training Page <https://unidata.github.io/online-python-training/>`_.
 
 Computers will be provided, but feel free to use your own laptop if you prefer. 
 We will be covering how to install wrf-python via conda as part of the 
@@ -47,7 +64,7 @@ Please register prior to February 21, 2018. The registration form is here:
 
 `Registration Form <https://goo.gl/forms/is5VExf3w4bFGXUb2>`_
 
-Registration consists of a brief survey, which will help give the instructors
+Registration consists of a brief survey, which will help give the instructor
 a brief overview of your background and will help tailor the tutorial to 
 your expectations.
 
