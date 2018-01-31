@@ -5,12 +5,13 @@ ifort -o sizes -qopenmp omp_sizes.f90
 python sub_sizes.py
 
 cd ..
-ifort ompgen.F90 -qopenmp -fpp -save-temps 2>/dev/null
+ifort ompgen.F90 -qopenmp -fpp -save-temps
 mv ompgen.i90 omp.f90
 f2py *.f90 -m _wrffortran -h wrffortran.pyf --overwrite-signature
 cd ..
 
 python setup.py clean --all
-python setup.py config_fc --f90flags="-O3 -xHost -mkl -qopenmp" build --compiler=intelem --fcompiler=intelem
-pip install .
+python setup.py config_fc --f90flags="-O3 -xHost -mkl -openmp" build_ext --rpath="/glade/u/apps/opt/intel/2017u1/compilers_and_libraries/linux/lib/intel64_lin:/glade/u/apps/opt/intel/2017u1/compilers_and_libraries/linux/mkl/lib/intel64_lin" --library-dirs="/glade/u/apps/opt/intel/2017u1/compilers_and_libraries/linux/lib/intel64_lin:/glade/u/apps/opt/intel/2017u1/compilers_and_libraries/linux/mkl/lib/intel64_lin" --libraries="mkl_intel_ilp64 mkl_intel_thread mkl_core iomp5 pthread m dl" build --compiler=intelem --fcompiler=intelem
+
+#pip install .
 
