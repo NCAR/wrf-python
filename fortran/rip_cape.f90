@@ -708,7 +708,7 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(tlcl, ethpari, &
     !$OMP zlcl, kk, ilcl, klcl, tmklift, tvenv, tvlift, ghtlift, &
     !$OMP facden, tmkenv, qvpenv, eslift, qvplift, buoy, benamin, &
-    !$OMP benaccum, zrel, kmax, dz, elfound, &
+    !$OMP benaccum, zrel, kmax, dz, elfound, gammam, cpm, e, &
     !$OMP kel, klfc, pavg, p2, p1, totthe, totqvp, totprs, &
     !$OMP i, j, k, kpar, kpar1, kpar2, qvppari, tmkpari, p, pup, pdn, th, &
     !$OMP pp1, pp2, ethmax, eth_temp, klev) SCHEDULE(runtime)
