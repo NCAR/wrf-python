@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd ../fortran/build_help
-ifort -o sizes -qopenmp omp_sizes.f90
+ifort -o sizes -qopenmp omp_sizes.f90 &>/dev/null
 python sub_sizes.py
 
 cd ..
