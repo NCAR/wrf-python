@@ -1570,9 +1570,9 @@ def omp_get_wtime():
     
     The omp_get_wtime routine returns a value equal to the elapsed wall clock 
     time in seconds since some "time in the past". The actual 
-    “time in the past” is arbitrary, but it is guaranteed not to change during 
+    "time in the past" is arbitrary, but it is guaranteed not to change during 
     the execution of the application program. The time returned is a 
-    “per-thread time”, so it is not required to be globally consistent across 
+    "per-thread time", so it is not required to be globally consistent across 
     all threads participating in an application.
     
     Returns:
