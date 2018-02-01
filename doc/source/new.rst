@@ -9,11 +9,12 @@ v1.1.1
 
 - Release 1.1.1
 - Added script for building on Cheyenne with maxed out Intel settings, which 
-  also included a patch for numpy.distutils.
+  also required a patch for numpy.distutils.
 - Fixed a few unicode characters hiding in a docstring that were causing 
-  problems on Cheyenne, and also building the docs with Sphinx with Python 2.x.
+  problems on Cheyenne, and also building the docs with Sphinx on Python 2.x.
 - Fix issue with np.amax not working with xarray on Cheyenne, causing an error
   with the mdbz product.
+- Fix cape_2d private variable bug when running with multiple CPUs.
 
 
 v1.1.0
