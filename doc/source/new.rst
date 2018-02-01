@@ -4,6 +4,16 @@ What's New
 Releases
 -------------
 
+v1.1.1
+^^^^^^^^^^^^^^
+
+- Release 1.1.1
+- Added script for building on Cheyenne with maxed out Intel settings, which 
+  also included a patch for numpy.distutils.
+- Fixed a few unicode characters hiding in a docstring that were causing 
+  problems on Cheyenne, and also building the docs with Sphinx with Python 2.x.
+
+
 v1.1.0
 ^^^^^^^^^^^^^^
 

@@ -57,8 +57,8 @@ class IntelFCompiler(BaseIntelFCompiler):
 
     def get_flags_opt(self):  # Scipy test failures with -O2
         v = self.get_version()
-        mpopt = 'qopenmp'
-        return ['-fp-model strict -O3 -{}'.format(mpopt)]
+        mpopt = ''
+        return ['-fp-model strict -O2 -{}'.format(mpopt)]
 
     def get_flags_arch(self):
         return []
@@ -123,8 +123,8 @@ class IntelEM64TFCompiler(IntelFCompiler):
 
     def get_flags_opt(self):  # Scipy test failures with -O2
         v = self.get_version()
-        mpopt = 'qopenmp'
-        return ['-fp-model strict -O3 -{}'.format(mpopt)]
+        mpopt = ''
+        return ['-fp-model strict -O2 -{}'.format(mpopt)]
 
     def get_flags_arch(self):
         return ['']
