@@ -76,7 +76,7 @@ else:
 # Add the integers based on python 2.x or 3.x
 def default_fill(dtype=None):
     dt = np.dtype(dtype) if dtype is not None else None
-    return _DEFAULT_FILL_MAP.get(dt, 0)
+    return _DEFAULT_FILL_MAP.get(dt, Constants.DEFAULT_FILL)
     
     
     

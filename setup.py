@@ -1,8 +1,26 @@
 import os
 import sys
 import setuptools
-import numpy.distutils.core
- 
+import socket
+
+if not socket.gethostname().startswith("cheyenne"):
+    import numpy.distutils.core
+else:
+    import chey_intel
+    import numpy.distutils.core
+    import numpy.distutils.fcompiler.intel
+    
+    numpy.distutils.fcompiler.intel.IntelFCompiler = chey_intel.IntelFCompiler
+    numpy.distutils.fcompiler.intel.IntelVisualFCompiler = (
+        chey_intel.IntelVisualFCompiler)
+    numpy.distutils.fcompiler.intel.IntelItaniumFCompiler = (
+        chey_intel.IntelItaniumFCompiler)
+    numpy.distutils.fcompiler.intel.IntelItaniumVisualFCompiler = (
+        chey_intel.IntelItaniumVisualFCompiler)
+    numpy.distutils.fcompiler.intel.IntelEM64VisualFCompiler = (
+        chey_intel.IntelEM64VisualFCompiler)
+    numpy.distutils.fcompiler.intel.IntelEM64TFCompiler = (
+        chey_intel.IntelEM64TFCompiler)
 
 ext1 = numpy.distutils.core.Extension(
     name = "wrf._wrffortran",

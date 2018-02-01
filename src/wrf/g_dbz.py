@@ -6,7 +6,7 @@ import numpy as np
 #from .extension import computedbz,computetk
 from .extension import _dbz, _tk
 from .constants import Constants
-from .util import extract_vars
+from .util import extract_vars, to_np
 from .metadecorators import copy_and_set_metadata
 
 
@@ -194,7 +194,7 @@ def get_max_dbz(wrfin, timeidx=0, method="cat",
         be a :class:`numpy.ndarray` object with no metadata.
     
     """
-    return np.amax(get_dbz(wrfin, timeidx, method, squeeze, cache, meta,
-                           _key, use_varint, use_liqskin), 
+    return np.amax(to_np(get_dbz(wrfin, timeidx, method, squeeze, cache, meta,
+                           _key, use_varint, use_liqskin)), 
                   axis=-3)
 
