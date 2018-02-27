@@ -26,7 +26,8 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
     !$OMP PARALLEL
 
     ! Calculate the surface pressure
-    !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
+    !$OMP DO COLLAPSE(2) PRIVATE(i, j, ratmix, arg1, arg2, vt, agl_hgt) &
+    !$OMP SCHEDULE(runtime)
     DO j=1,ns
         DO i=1,ew
            ratmix = .001D0*qvp(i,j,1)
@@ -40,7 +41,7 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
     END DO
     !$OMP END DO
 
-    !$OMP DO COLLAPSE(3) SCHEDULE(runtime)
+    !$OMP DO COLLAPSE(3) PRIVATE(i, j, k, ripk) SCHEDULE(runtime)
     DO k=1,nz-1
         DO j=1,ns
             DO i=1,ew

@@ -4,6 +4,13 @@ What's New
 Releases
 -------------
 
+v1.1.2
+^^^^^^^^^^^^^^
+
+- Release 1.1.2
+- Fix OpenMP directive issue with cloud top temperature.
+
+
 v1.1.1
 ^^^^^^^^^^^^^^
 
