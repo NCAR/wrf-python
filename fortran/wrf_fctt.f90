@@ -1,5 +1,5 @@
 !NCLFORTSTART
-SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew)
+SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci, nz, ns, ew)
     USE wrf_constants, ONLY : EPS, USSALR, RD, G, ABSCOEFI, ABSCOEF, CELKEL
 
     IMPLICIT NONE
@@ -12,6 +12,8 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
     REAL(KIND=8), DIMENSION(ew,ns), INTENT(IN) :: ter
     REAL(KIND=8), DIMENSION(ew,ns), INTENT(OUT) :: ctt
 
+    REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(INOUT) :: pf
+
 !NCLEND
 
     !     REAL(KIND=8) ::     znfac(nz)
@@ -20,7 +22,7 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, haveqci, nz, ns, ew
     INTEGER i,j,k,ripk
     REAL(KIND=8) :: opdepthu, opdepthd, dp, arg1, fac, prsctt, ratmix
     REAL(KIND=8) :: arg2, agl_hgt, vt
-    REAL(KIND=8), DIMENSION(ew,ns,nz) :: pf
+
     REAL(KIND=8) :: p1, p2
 
     !$OMP PARALLEL

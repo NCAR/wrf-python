@@ -127,7 +127,7 @@ END FUNCTION wrf_intrp_value
 !NCLFORTSTART
 SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                       sfp, smsfp, vcarray, interp_levels, numlevels,&
-                      icase, ew, ns, nz, extrap, vcor, logp, rmsg,&
+                      icase, ew, ns, nz, extrap, vcor, logp, tempout, rmsg,&
                       errstat, errmsg)
     USE wrf_constants, ONLY : ALGERR, SCLHT, EXPON, EXPONI, GAMMA, GAMMAMD, TLCLC1, &
                           TLCLC2, TLCLC3, TLCLC4, THTECON1, THTECON2, THTECON3, &
@@ -146,6 +146,9 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     REAL(KIND=8), DIMENSION(ew,ns,numlevels), INTENT(OUT) :: dataout
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: vcarray
     REAL(KIND=8), DIMENSION(numlevels), INTENT(IN) :: interp_levels
+
+    REAL(KIND=8), DIMENSION(ew,ns), INTENT(INOUT) :: tempout
+
     REAL(KIND=8), INTENT(IN) :: rmsg
     INTEGER, INTENT(INOUT) :: errstat
     CHARACTER(LEN=*), INTENT(INOUT) :: errmsg
@@ -156,7 +159,6 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
     INTEGER :: i, j, k, kupper !itriv
     INTEGER :: ifound, isign !miy,mjx
     INTEGER :: log_errcnt, interp_errcnt, interp_errstat
-    REAL(KIND=8), DIMENSION(ew,ns) :: tempout
     REAL(KIND=8) :: rlevel, vlev, diff
     REAL(KIND=8) :: tmpvlev
     REAL(KIND=8) :: vcp1, vcp0, valp0, valp1
