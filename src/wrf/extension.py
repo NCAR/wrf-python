@@ -767,10 +767,11 @@ def _xytoll(map_proj, truelat1, truelat2, stdlon, lat1, lon1,
 
 
 @check_args(0, 3, (3,3,3,3,3,3,2))                         
-@left_iteration(3, 2, ref_var_idx=0, ignore_args=(7,))
+@left_iteration(3, 2, ref_var_idx=0, ignore_args=(7,8,9,10))
 @cast_type(arg_idxs=(0,1,2,3,4,5,6))
 @extract_and_transpose()
-def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
+def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, fill_nocloud, 
+         missing, opt_thresh, outview=None):
     """Wrapper for wrfcttcalc.
     
     Located in wrf_fctt.f90.
@@ -790,7 +791,10 @@ def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
                         ter,
                         outview,
                         pf,
-                        haveqci)
+                        haveqci, 
+                        fill_nocloud, 
+                        missing,
+                        opt_thresh)
     
     return result
 

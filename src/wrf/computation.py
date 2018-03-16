@@ -1014,6 +1014,11 @@ def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
             
         high_thresh (:obj:`float`): The bottom vertical threshold for what is 
             considered a high cloud.
+            
+        missing (:obj:`float:`, optional): The fill value to use for areas 
+            where the surface is higher than the cloud threshold level 
+            (e.g. mountains). Default is 
+            :data:`wrf.default_fill(numpy.float64)`.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -1047,8 +1052,9 @@ def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
 @set_alg_metadata(2, "pres_hpa", refvarndims=3, 
                   description="cloud top temperature")
 @convert_units("temp", "c")
-def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
-        units="degC"):
+def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, 
+        fill_nocloud=False, missing=default_fill(np.float64), 
+        opt_thresh=1.0, meta=True, units="degC"):
     """Return the cloud top temperature.
     
     This is the raw computational algorithm and does not extract any variables 
@@ -1094,6 +1100,23 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
         qice (:class:`xarray.DataArray` or :class:`numpy.ndarray`, optional): 
             Ice mixing ratio in [kg/kg] with the same dimensionality as 
             *pres_hpa*.
+            
+        fill_nocloud (:obj:`bool`, optional): Set to True to use fill values in 
+            regions where clouds are not detected (optical depth less than 1). 
+            Otherwise, the output will contain the surface temperature for 
+            areas without clouds. Default is False.
+            
+        missing (:obj:`float`, optional): The fill value to use for areas 
+            where no clouds are detected. Only used if *fill_nocloud* is 
+            True. Default is 
+            :data:`wrf.default_fill(numpy.float64)`. 
+            
+        opt_thresh (:obj:`float`, optional): The required amount of optical 
+            depth (looking from top down) required to trigger a cloud top 
+            temperature calculation. Values less than this threshold will be 
+            treated as no cloud areas. For thin cirrus, a value of .1 might be 
+            appropriate. For large CB clouds, 1000.0 might be appropriate. 
+            Default is 1.0.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -1128,8 +1151,13 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
         haveqci = 0
     else:
         haveqci = 1 if qice.any() else 0
+        
+    _fill_nocloud = 1 if fill_nocloud else 0
     
-    return _ctt(pres_hpa, tkel, qice, qcld, qv, height, terrain, haveqci)
+    ctt = _ctt(pres_hpa, tkel, qice, qcld, qv, height, terrain, haveqci,
+                _fill_nocloud, missing, opt_thresh)
+    
+    return ma.masked_values(ctt, missing)
     
 
 

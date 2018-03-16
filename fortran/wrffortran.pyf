@@ -359,7 +359,7 @@ python module _wrffortran ! in
             real(kind=8), parameter,optional,depend(cp,rd) :: gamma=0.285714285714
             real(kind=8), parameter,optional,depend(expon,rd,ussalr,g) :: exponi=5.25864379523
         end module wrf_constants
-        subroutine wrfcttcalc(prs,tk,qci,qcw,qvp,ght,ter,ctt,pf,haveqci,nz,ns,ew) ! in :_wrffortran:wrf_fctt.f90
+        subroutine wrfcttcalc(prs,tk,qci,qcw,qvp,ght,ter,ctt,pf,haveqci,fill_nocloud,missing,opt_thresh,nz,ns,ew) ! in :_wrffortran:wrf_fctt.f90
             threadsafe 
             use wrf_constants, only: g,eps,rd,ussalr,abscoefi,abscoef,celkel
             real(kind=8) dimension(ew,ns,nz),intent(in) :: prs
@@ -372,6 +372,9 @@ python module _wrffortran ! in
             real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: ctt
             real(kind=8) dimension(ew,ns,nz),intent(inout),depend(ew,ns,nz) :: pf
             integer intent(in) :: haveqci
+            integer intent(in) :: fill_nocloud
+            real(kind=8) intent(in) :: missing
+            real(kind=8) intent(in) :: opt_thresh
             integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
             integer, optional,intent(in),check(shape(prs,1)==ns),depend(prs) :: ns=shape(prs,1)
             integer, optional,intent(in),check(shape(prs,0)==ew),depend(prs) :: ew=shape(prs,0)

@@ -1,5 +1,6 @@
 !NCLFORTSTART
-SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci, nz, ns, ew)
+SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci,&
+             fill_nocloud, missing, opt_thresh, nz, ns, ew)
     USE wrf_constants, ONLY : EPS, USSALR, RD, G, ABSCOEFI, ABSCOEF, CELKEL
 
     IMPLICIT NONE
@@ -7,12 +8,14 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci, nz, ns
     !f2py threadsafe
     !f2py intent(in,out) :: ctt
 
-    INTEGER, INTENT(IN) :: nz, ns, ew, haveqci
+    INTEGER, INTENT(IN) :: nz, ns, ew, haveqci, fill_nocloud
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(IN) :: ght, prs, tk, qci, qcw, qvp
     REAL(KIND=8), DIMENSION(ew,ns), INTENT(IN) :: ter
     REAL(KIND=8), DIMENSION(ew,ns), INTENT(OUT) :: ctt
-
+    REAL(KIND=8), INTENT(IN) :: missing
+    REAL(KIND=8), INTENT(IN) :: opt_thresh
     REAL(KIND=8), DIMENSION(ew,ns,nz), INTENT(INOUT) :: pf
+
 
 !NCLEND
 
@@ -60,12 +63,12 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci, nz, ns
         DO i=1,ew
             opdepthd = 0.D0
             k = 0
-            prsctt = 0
+            prsctt = -1
 
             ! Integrate downward from model top, calculating path at full
             ! model vertical levels.
 
-            DO k=1, nz
+            DO k=2,nz
                 opdepthu = opdepthd
                 ripk = nz - k + 1
 
@@ -76,21 +79,23 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci, nz, ns
                 END IF
 
                 IF (haveqci .EQ. 0) then
-                    IF (tk(i,j,k) .LT. CELKEL) then
+                    IF (tk(i,j,ripk) .LT. CELKEL) then
                         ! Note: abscoefi is m**2/g, qcw is g/kg, so no convrsion needed
-                        opdepthd = opdepthu + ABSCOEFI*qcw(i,j,k) * dp/G
+                        opdepthd = opdepthu + ABSCOEFI*qcw(i,j,ripk) * dp/G
                     ELSE
-                        opdepthd = opdepthu + ABSCOEF*qcw(i,j,k) * dp/G
+                        opdepthd = opdepthu + ABSCOEF*qcw(i,j,ripk) * dp/G
                     END IF
                 ELSE
                     opdepthd = opdepthd + (ABSCOEF*qcw(i,j,ripk) + ABSCOEFI*qci(i,j,ripk))*dp/G
                 END IF
 
-                IF (opdepthd .LT. 1. .AND. k .LT. nz) THEN
+                IF (opdepthd .LT. opt_thresh .AND. k .LT. nz) THEN
                     CYCLE
 
-                ELSE IF (opdepthd .LT. 1. .AND. k .EQ. nz) THEN
-                    prsctt = prs(i,j,1)
+                ELSE IF (opdepthd .LT. opt_thresh .AND. k .EQ. nz) THEN
+                    IF (fill_nocloud .EQ. 0) THEN
+                        prsctt = prs(i,j,1)
+                    ENDIF
                     EXIT
                 ELSE
                     fac = (1. - opdepthu)/(opdepthd - opdepthu)
@@ -100,17 +105,22 @@ SUBROUTINE wrfcttcalc(prs, tk, qci, qcw, qvp, ght, ter, ctt, pf, haveqci, nz, ns
                 END IF
             END DO
 
-            DO k=2,nz
-                ripk = nz - k + 1
-                p1 = prs(i,j,ripk+1)
-                p2 = prs(i,j,ripk)
-                IF (prsctt .GE. p1 .AND. prsctt .LE. p2) THEN
-                    fac = (prsctt - p1)/(p2 - p1)
-                    arg1 = fac*(tk(i,j,ripk) - tk(i,j,ripk+1)) - CELKEL
-                    ctt(i,j) = tk(i,j,ripk+1) + arg1
-                    EXIT
-                END IF
-            END DO
+            ! prsctt should only be 0 if fill values are used
+            IF (prsctt .GT. -1) THEN
+                DO k=2,nz
+                    ripk = nz - k + 1
+                    p1 = prs(i,j,ripk+1)
+                    p2 = prs(i,j,ripk)
+                    IF (prsctt .GE. p1 .AND. prsctt .LE. p2) THEN
+                        fac = (prsctt - p1)/(p2 - p1)
+                        arg1 = fac*(tk(i,j,ripk) - tk(i,j,ripk+1)) - CELKEL
+                        ctt(i,j) = tk(i,j,ripk+1) + arg1
+                        EXIT
+                    END IF
+                END DO
+            ELSE
+                ctt(i,j) = missing
+            END IF
         END DO
     END DO
     !$OMP END DO

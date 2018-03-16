@@ -12,7 +12,7 @@ from wrf import (getvar, interplevel, interpline, vertcross, vinterp, py2round,
 VARS_TO_KEEP = ("Times", "XLAT", "XLONG", "XLAT_U", "XLAT_V", "XLONG_U", 
                 "XLONG_V", "U", "V", "W", "PH", "PHB", "T", "P", "PB", "Q2", 
                 "T2", "PSFC", "U10", "V10", "XTIME", "QVAPOR", "QCLOUD", 
-                "QGRAUP", "QRAIN", "QSNOW", "MAPFAC_M", "MAPFAC_U",
+                "QGRAUP", "QRAIN", "QSNOW", "QICE", "MAPFAC_M", "MAPFAC_U",
                 "MAPFAC_V", "F", "HGT", "RAINC", "RAINSH", "RAINNC")
 
 DIMS_TO_TRIM = ("west_east", "south_north", "bottom_top", "bottom_top_stag",
