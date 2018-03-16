@@ -2034,8 +2034,8 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
         outcoords = {}     
         # Left-most is always cape_cin or cape_cin_lcl_lfc
         if is2d:
-            outdims[0] = "cape_cin_lcl_lfc"
-            outcoords["cape_cin_lcl_lfc"] = ["cape", "cin", "lcl", "lfc"]
+            outdims[0] = "mcape_mcin_lcl_lfc"
+            outcoords["mcape_mcin_lcl_lfc"] = ["mcape", "mcin", "lcl", "lfc"]
         else:
             outdims[0] = "cape_cin"
             outcoords["cape_cin"] = ["cape", "cin"]

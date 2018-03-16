@@ -272,6 +272,7 @@ END SUBROUTINE DPFCALC
 
 ! NCLFORTSTART
 SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
+            prsf, prs_new, tmk_new, qvp_new, ght_new,&
             cmsg,mix,mjy,mkzh,ter_follow,&
             psafile, errstat, errmsg)
     USE wrf_constants, ONLY : CELKEL, G, EZERO, ESLCON1, ESLCON2, &
@@ -293,6 +294,14 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) ::sfp
     REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cape
     REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cin
+
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT) :: prsf
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT)  :: prs_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT)  :: tmk_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT)  :: qvp_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT)  :: ght_new
+
+
     REAL(KIND=8), INTENT(IN) :: cmsg
     CHARACTER(LEN=*), INTENT(IN) :: psafile
     INTEGER, INTENT(INOUT) :: errstat
@@ -308,15 +317,10 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz
     REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prsf
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
 
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prs_new
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: tmk_new
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: qvp_new
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: ght_new
 
     ! To remove compiler warnings
     tmkpari = 0
@@ -597,6 +601,7 @@ END SUBROUTINE DCAPECALC3D
 
 ! NCLFORTSTART
 SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
+            prsf, prs_new, tmk_new, qvp_new, ght_new,&
             cmsg,mix,mjy,mkzh,ter_follow,&
             psafile, errstat, errmsg)
     USE wrf_constants, ONLY : CELKEL, G, EZERO, ESLCON1, ESLCON2, &
@@ -618,6 +623,13 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8), DIMENSION(mix,mjy), INTENT(IN) ::sfp
     REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cape
     REAL(KIND=8), DIMENSION(mix,mjy,mkzh), INTENT(OUT) :: cin
+
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT) :: prsf
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT) :: prs_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT) :: tmk_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT) :: qvp_new
+    REAL(KIND=8), DIMENSION(mkzh,mix,mjy), INTENT(INOUT) :: ght_new
+
     REAL(KIND=8), INTENT(IN) :: cmsg
     CHARACTER(LEN=*), INTENT(IN) :: psafile
     INTEGER, INTENT(INOUT) :: errstat
@@ -635,15 +647,11 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz, pup, pdn
     REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prsf
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
     REAL(KIND=8), DIMENSION(mkzh) :: eth_temp
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: prs_new
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: tmk_new
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: qvp_new
-    REAL(KIND=8), DIMENSION(mkzh,mix,mjy) :: ght_new
+
 
     ! To remove compiler warnings
     errstat = 0

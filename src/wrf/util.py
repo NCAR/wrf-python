@@ -973,10 +973,12 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
     
     is_moving = is_moving_domain(wrfdict, varname, _key=_key)
     
+    _cache_key = _key[first_key] if _key is not None else None
+    
     first_array = _extract_var(wrfdict[first_key], varname, 
                               timeidx, is_moving=is_moving, method=method, 
                               squeeze=False, cache=None, meta=meta,
-                              _key=_key[first_key])
+                              _key=_cache_key)
     
     # Create the output data numpy array based on the first array
     outdims = [numkeys]
@@ -992,10 +994,11 @@ def _combine_dict(wrfdict, varname, timeidx, method, meta, _key):
             break
         else:
             keynames.append(key)
+            _cache_key = _key[key] if _key is not None else None
             vardata = _extract_var(wrfdict[key], varname, timeidx, 
                                    is_moving=is_moving, method=method, 
                                    squeeze=False, cache=None, meta=meta,
-                                   _key=_key[key])
+                                   _key=_cache_key)
             
             if outdata.shape[1:] != vardata.shape:
                 raise ValueError("data sequences must have the "

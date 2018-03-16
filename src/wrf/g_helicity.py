@@ -176,7 +176,7 @@ def get_uh(wrfin, timeidx=0, method="cat", squeeze=True,
     """
     
     ncvars = extract_vars(wrfin, timeidx, ("W", "PH", "PHB", "MAPFAC_M"),
-                          method, squeeze, cache, meta=False, _key=None)
+                          method, squeeze, cache, meta=False, _key=_key)
     
     wstag = ncvars["W"]
     ph = ncvars["PH"]

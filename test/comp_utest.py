@@ -609,14 +609,14 @@ if __name__ == "__main__":
     #varnames = ["helicity"]
     varnames=["avo", "pvo", "eth", "dbz", "helicity", "updraft_helicity",
               "omg", "pw", "rh", "slp", "td", "tk", "tv", "twb", "uvmet",
-              "cloudfrac"]
+              "cloudfrac", "ctt"]
     
     omp_set_num_threads(omp_get_num_procs()-1)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
     
     # Turn this one off when not needed, since it's slow
-    #varnames += ["cape_2d", "cape_3d"]
+    varnames += ["cape_2d", "cape_3d"]
     
     for varname in varnames:
         for i,wrfnc in enumerate((NCFILE, NCGROUP)):

@@ -112,7 +112,7 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "wspd_wdir10" : ["units"],
              "uvmet_wspd_wdir" : ["units"],
              "uvmet10_wspd_wdir" : ["units"],  
-             "ctt" : [],
+             "ctt" : ["fill_nocloud", "missing", "opt_thresh", "units"],
              "cloudfrac" : ["vert_type", "low_thresh", 
                             "mid_thresh", "high_thresh"],
              "geopt_stag" : [],
@@ -138,7 +138,8 @@ _ALIASES = {"cape_2d" : "cape2d",
             "td2" : "dp2m",
             "cfrac" : "cloudfrac",
             "wspd_wdir_uvmet" : "uvmet_wspd_wdir",
-            "wspd_wdir_uvmet10" : "uvmet10_wspd_wdir"
+            "wspd_wdir_uvmet10" : "uvmet10_wspd_wdir",
+            "th" : "theta"
             }
   
 class ArgumentError(Exception):

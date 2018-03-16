@@ -4,6 +4,26 @@ What's New
 Releases
 -------------
 
+v1.1.3
+^^^^^^^^^^^^^^
+
+- Release 1.1.3
+- Fixed/Enhanced the cloud top temperature diagnostic.
+  - Optical depth was not being calculated correctly when 
+    cloud ice mixing ratio was not available.
+  - Fixed an indexing bug that caused crashes on Windows, but should have been 
+    crashing on all platforms.
+  - Users can now specify if they want cloud free regions to use fill values,
+    rather than the default behavior of using the surface temperature.
+  - Users can now specify the optical depth required to trigger the cloud
+    top temperature calculation. However, the default value of 1.0 should be 
+    sufficient for most users.
+- Added 'th' alias for the theta product.
+- Fixed a crash issue related to updraft helicity when a dictionary is 
+  used as the input.
+- The cape_2d diagnostic can now work with a single column of data, just like 
+  cape_3d.
+
 v1.1.2
 ^^^^^^^^^^^^^^
 
