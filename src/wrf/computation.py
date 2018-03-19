@@ -1111,12 +1111,16 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None,
             True. Default is 
             :data:`wrf.default_fill(numpy.float64)`. 
             
-        opt_thresh (:obj:`float`, optional): The required amount of optical 
-            depth (looking from top down) required to trigger a cloud top 
-            temperature calculation. Values less than this threshold will be 
-            treated as no cloud areas. For thin cirrus, a value of .1 might be 
-            appropriate. For large CB clouds, 1000.0 might be appropriate. 
-            Default is 1.0.
+        opt_thresh (:obj:`float`, optional): The amount of optical 
+            depth (integrated from top down) required to trigger a cloud top 
+            temperature calculation. The cloud top temperature is calculated at 
+            the vertical level where this threshold is met. Vertical columns 
+            with less than this threshold will be treated as cloud free areas. 
+            In general, the larger the value is for this 
+            threshold, the lower the altitude will be for the cloud top 
+            temperature calculation, and therefore higher cloud top 
+            temperature values. Default is 1.0, which should be sufficient for 
+            most users.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
