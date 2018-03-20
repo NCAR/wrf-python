@@ -714,10 +714,10 @@ def smooth2d(field, passes, meta=True):
 @set_cape_alg_metadata(is2d=True, copyarg="pres_hpa")
 def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
             missing=default_fill(np.float64), meta=True):
-    """Return the two-dimensional CAPE, CIN, LCL, and LFC.
+    """Return the two-dimensional MCAPE, MCIN, LCL, and LFC.
     
     This function calculates the maximum convective available potential 
-    energy (CAPE), maximum convective inhibition (CIN), 
+    energy (MCAPE), maximum convective inhibition (MCIN), 
     lifted condensation level (LCL), and level of free convection (LFC). This 
     function uses the RIP [Read/Interpolate/plot] code to calculate 
     potential energy (CAPE) and convective inhibition 
@@ -725,18 +725,28 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     in the column (i.e. something akin to Colman's MCAPE). CAPE is defined as 
     the accumulated buoyant energy from the level of free convection (LFC) to 
     the equilibrium level (EL). CIN is defined as the accumulated negative 
-    buoyant energy from the parcel starting point to the LFC. The word 'parcel' 
-    here refers to a 500 meter deep parcel, with actual temperature and 
-    moisture averaged over that depth. 
+    buoyant energy from the parcel starting point to the LFC. 
+    
+    The cape_2d algorithm works by first finding the maximum theta-e height 
+    level in the lowest 3000 m. A parcel with a depth of 500 m is then 
+    calculated and centered over this maximum theta-e height level. The 
+    parcel's moisture and temperature characteristics are calculated by 
+    averaging over the depth of this 500 m parcel. This 'maximum' parcel 
+    is then used to compute MCAPE, MCIN, LCL and LFC.
     
     The leftmost dimension of the returned array represents four different 
     quantities:
         
-        - return_val[0,...] will contain CAPE [J kg-1]
-        - return_val[1,...] will contain CIN [J kg-1]
+        - return_val[0,...] will contain MCAPE [J kg-1]
+        - return_val[1,...] will contain MCIN [J kg-1]
         - return_val[2,...] will contain LCL [m]
         - return_val[3,...] will contain LFC [m]
     
+    This function also supports computing MCAPE along a single vertical 
+    column.  In this mode, the *pres_hpa*, *tkel*, *qv* and *height* arguments
+    must be one-dimensional vertical columns, and the *terrain* and 
+    *psfc_hpa* arguments must be scalar values 
+    (:obj:`float`, :class:`numpy.float32` or :class:`numpy.float64`).
     
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
@@ -749,6 +759,9 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             least three dimensions. The rightmost dimensions can be 
             top_bottom x south_north x west_east or bottom_top x south_north x
             west_east.
+            When operating on only a single column of values, the vertical 
+            column can be bottom_top or top_bottom.  In this case, *terrain* 
+            and *psfc_hpa* must be scalars.
             
             Note:
             
@@ -774,12 +787,16 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
         terrain (:class:`xarray.DataArray` or :class:`numpy.ndarray`): 
             Terrain height in [m].  This is at least a two-dimensional array 
             with the same dimensionality as *pres_hpa*, excluding the vertical 
-            (bottom_top/top_bottom) dimension.
+            (bottom_top/top_bottom) dimension. When operating on a single 
+            vertical column, this argument must be a scalar (:obj:`float`, 
+            :class:`numpy.float32`, or :class:`numpy.float64`).
             
         psfc_hpa (:class:`xarray.DataArray` or :class:`numpy.ndarray`): 
             The surface pressure in [hPa].  This is at least a two-dimensional 
             array with the same dimensionality as *pres_hpa*, excluding the 
-            vertical (bottom_top/top_bottom) dimension.
+            vertical (bottom_top/top_bottom) dimension. When operating on a 
+            singlevertical column, this argument must be a scalar 
+            (:obj:`float`, :class:`numpy.float32`, or :class:`numpy.float64`).
             
             Note:
             

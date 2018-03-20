@@ -229,7 +229,14 @@ def cape_left_iter(alg_dtype=np.float64):
         ter_follow = args[8]
         
         is2d = i3dflag == 0
-        is1d = np.isscalar(sfp)
+        # Note: This should still work with DataArrays
+        is1d = np.isscalar(sfp) or np.size(sfp) == 1
+        
+        # Make sure sfp and terrain are regular floats for 1D case
+        # This should also work with DataArrays
+        if is1d:
+            ter = float(ter)
+            sfp = float(sfp) 
         
         orig_dtype = p_hpa.dtype
         
@@ -542,39 +549,27 @@ def check_cape_args():
         ter_follow = args[8]
         
         is2d = False if i3dflag != 0 else True
+        is1d = ((np.isscalar(sfp) or np.size(sfp) == 1) or 
+                (np.isscalar(ter) or np.size(ter) == 1))
         
         if not (p_hpa.shape == tk.shape == qv.shape == ht.shape):
             raise ValueError("arguments 0, 1, 2, 3 must be the same shape")
 
         # 2D CAPE does not allow for scalars
-        if is2d:
-            if np.isscalar(ter) or np.isscalar(sfp):
-                raise ValueError("arguments 4 and 5 cannot be scalars with "
-                                 "cape_2d routine")
-                
+        if not is1d:
             if ter.ndim != p_hpa.ndim-1 or sfp.ndim != p_hpa.ndim-1:
                 raise ValueError("arguments 4 and 5 must have "
                                  "{} dimensions".format(p_hpa.ndim-1))
-                
-        # 3D cape is allowed to be just a vertical column with scalars
-        # for terrain and psfc_hpa.
         else:
-            if np.isscalar(ter) and np.isscalar(sfp):
-                if p_hpa.ndim != 1:
-                    raise ValueError("arguments 0-3 "
-                                     "must be 1-dimensional when "
-                                     "arguments 4 and 5 are scalars")
-                if is2d:
-                    raise ValueError("argument 7 must be 0 when using 1D data")
-            else:
-                if ((np.isscalar(ter) and not np.isscalar(sfp)) or 
-                    (not np.isscalar(ter) and np.isscalar(sfp))):
-                    raise ValueError("arguments 4 and 5 must both be scalars")
-                else:
-                    if ter.ndim != p_hpa.ndim-1 or sfp.ndim != p_hpa.ndim-1:
-                        raise ValueError("arguments 4 and 5 "
-                                         "must have {} dimensions".format(
-                                             p_hpa.ndim-1))
+            if np.size(ter) != np.size(sfp):
+                raise ValueError("arguments 4 and 5 must both be scalars or "
+                                 "both be arrays")
+            
+            # Only need to test p_hpa since we assured args 0-3 have same ndim
+            if p_hpa.ndim != 1:
+                raise ValueError("arguments 0-3 "
+                                 "must be 1-dimensional when "
+                                 "arguments 4 and 5 are scalars")
       
         return wrapped(*args, **kwargs)
     
