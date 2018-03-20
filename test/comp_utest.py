@@ -597,9 +597,71 @@ def test_cape3d_1d(wrfnc):
         nt.assert_allclose(to_np(result), to_np(ref))
     
     return func
+
+
+def test_cape2d_1d(wrfnc):
+    
+    def func(self):
+        varnames = ("T", "P", "PB", "QVAPOR", "PH", "PHB", "HGT", "PSFC")
+        ncvars = extract_vars(wrfnc, 0, varnames, method="cat", squeeze=True, 
+                              cache=None, meta=True)
         
+        t = ncvars["T"]
+        p = ncvars["P"]
+        pb = ncvars["PB"]
+        qv = ncvars["QVAPOR"]
+        ph = ncvars["PH"]
+        phb = ncvars["PHB"]
+        ter = ncvars["HGT"]
+        psfc = ncvars["PSFC"]
+        
+        col_idxs = (slice(None), t.shape[-2]//2, t.shape[-1]//2)
+        
+        t = t[col_idxs]
+        p = p[col_idxs]
+        pb = pb[col_idxs]
+        qv = qv[col_idxs]
+        ph = ph[col_idxs]
+        phb = phb[col_idxs]
+        ter = float(ter[col_idxs[1:]])
+        psfc = float(psfc[col_idxs[1:]])
+        
+        full_t = t + Constants.T_BASE
+        full_p = p + pb
+        tkel = tk(full_p, full_t, meta=False)
+        
+        geopt = ph + phb
+        geopt_unstag = destagger(geopt, -1)
+        z = geopt_unstag/Constants.G
+        
+        # Convert pressure to hPa
+        p_hpa = ConversionFactors.PA_TO_HPA * full_p
+        psfc_hpa = ConversionFactors.PA_TO_HPA * psfc 
+        
+        i3dflag = 0
+        ter_follow = 1
+        
+        result = cape_2d(p_hpa, tkel, qv, z, ter, psfc_hpa, ter_follow)
+        
+        print ("RESULT", result)
+    
+        ref = getvar(wrfnc, "cape_2d")
+
+        ref = ref[(slice(None),) + col_idxs[1:]]
+        
+        print ("REF", ref)
+        
+        nt.assert_allclose(to_np(result), to_np(ref))
+    
+    return func
         
 if __name__ == "__main__":
+    from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
+                     omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
+    omp_set_num_threads(omp_get_num_procs()-1)
+    omp_set_schedule(OMP_SCHED_STATIC, 0)
+    omp_set_dynamic(False)
+    
     varnames = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
             "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
             "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
@@ -638,6 +700,9 @@ if __name__ == "__main__":
     
     func = test_cape3d_1d(wrfnc)
     setattr(WRFVarsTest, "test_cape3d_1d", func)
+    
+    func = test_cape2d_1d(wrfnc)
+    setattr(WRFVarsTest, "test_cape2d_1d", func)
     
     
     ut.main()

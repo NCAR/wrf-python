@@ -13,13 +13,13 @@ from .metadecorators import set_cape_metadata
 @set_cape_metadata(is2d=True)
 def get_2dcape(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
                meta=True, _key=None, missing=default_fill(np.float64)):
-    """Return the 2d fields of CAPE, CIN, LCL, and LFC.
+    """Return the 2d fields of MCAPE, MCIN, LCL, and LFC.
     
     The leftmost dimension of the returned array represents four different 
     quantities:
         
-        - return_val[0,...] will contain CAPE [J kg-1]
-        - return_val[1,...] will contain CIN [J kg-1]
+        - return_val[0,...] will contain MCAPE [J kg-1]
+        - return_val[1,...] will contain MCIN [J kg-1]
         - return_val[2,...] will contain LCL [m]
         - return_val[3,...] will contain LFC [m]
     

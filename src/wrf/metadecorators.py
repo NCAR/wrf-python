@@ -1985,7 +1985,7 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
         p = argvals[copyarg]
         missing = argvals["missing"]
         
-        # Note: cape_3d supports using only a single column of data
+        # Note: 2D/3D cape supports using only a single column of data
         is1d = p.ndim == 1
         
         # Need to squeeze the right dimensions for 1D cape
@@ -1997,31 +1997,34 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
         
         outattrs = OrderedDict()
         
+        
         if is2d:
-            outname = "cape_2d"
+            if is1d:
+                outname = "cape_2d"
+            else:
+                outname = "cape_2d_column"
             outattrs["description"] = "mcape ; mcin ; lcl ; lfc"
             outattrs["units"] = "J kg-1 ; J kg-1 ; m ; m"
             outattrs["MemoryOrder"] = "XY"
+            outattrs["MemoryOrder"] = ""
         else:
             if not is1d:
                 outname = "cape_3d"
-                outattrs["description"] = "cape; cin"
-                outattrs["units"] = "J kg-1 ; J kg-1"
                 outattrs["MemoryOrder"] = "XYZ"
             else:
-                outname = "cape_column"
-                outattrs["description"] = "cape; cin"
-                outattrs["units"] = "J kg-1 ; J kg-1"
+                outname = "cape_3d_column"
                 outattrs["MemoryOrder"] = "Z"
+            outattrs["description"] = "cape; cin"
+            outattrs["units"] = "J kg-1 ; J kg-1"
                 
         
         if isinstance(p, DataArray):
             if is2d:
-                # Right dims
-                outdims[-2:] = p.dims[-2:]
-                # Left dims
-                outdims[1:-2] = p.dims[0:-3]
-                
+                if not is1d:
+                    # Right dims
+                    outdims[-2:] = p.dims[-2:]
+                    # Left dims
+                    outdims[1:-2] = p.dims[0:-3]
             else:
                 if not is1d:
                     # Right dims
@@ -2030,6 +2033,7 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
                     outdims[1:-3] = p.dims[0:-3]
                 else:
                     outdims[1] = p.dims[0]
+                    
         
         outcoords = {}     
         # Left-most is always cape_cin or cape_cin_lcl_lfc
