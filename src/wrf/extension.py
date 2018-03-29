@@ -618,20 +618,33 @@ def _cape(p_hpa, tk, qv, ht, ter, sfp, missing, i3dflag, ter_follow,
     else:
         cape_routine = dcapecalc2d
     
+    # Work arrays
+    k_left_shape = (p_hpa.shape[2], p_hpa.shape[0], p_hpa.shape[1])
+    prsf = np.empty(k_left_shape, np.float64, order="F")
+    prs_new = np.empty(k_left_shape, np.float64, order="F")
+    tmk_new = np.empty(k_left_shape, np.float64, order="F")
+    qvp_new = np.empty(k_left_shape, np.float64, order="F")
+    ght_new = np.empty(k_left_shape, np.float64, order="F")
+    
     # note that p_hpa, tk, qv, and ht have the vertical flipped
     result = cape_routine(p_hpa,
-                         tk,
-                         qv,
-                         ht,
-                         ter,
-                         sfp,
-                         capeview,
-                         cinview,
-                         missing,
-                         ter_follow,
-                         psafile,
-                         errstat,
-                         errmsg)
+                          tk,
+                          qv,
+                          ht,
+                          ter,
+                          sfp,
+                          capeview,
+                          cinview,
+                          prsf, 
+                          prs_new, 
+                          tmk_new, 
+                          qvp_new, 
+                          ght_new,
+                          missing,
+                          ter_follow,
+                          psafile,
+                          errstat,
+                          errmsg)
     
     if int(errstat) != 0:
         raise DiagnosticError("".join(npbytes_to_str(errmsg)).strip())
@@ -754,10 +767,11 @@ def _xytoll(map_proj, truelat1, truelat2, stdlon, lat1, lon1,
 
 
 @check_args(0, 3, (3,3,3,3,3,3,2))                         
-@left_iteration(3, 2, ref_var_idx=0, ignore_args=(7,))
+@left_iteration(3, 2, ref_var_idx=0, ignore_args=(7,8,9,10))
 @cast_type(arg_idxs=(0,1,2,3,4,5,6))
 @extract_and_transpose()
-def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
+def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, fill_nocloud, 
+         missing, opt_thresh, outview=None):
     """Wrapper for wrfcttcalc.
     
     Located in wrf_fctt.f90.
@@ -765,6 +779,8 @@ def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
     """
     if outview is None:
         outview = np.empty_like(ter)
+        
+    pf = np.empty(p_hpa.shape[0:3], np.float64, order="F")
         
     result = wrfcttcalc(p_hpa,
                         tk,
@@ -774,7 +790,11 @@ def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, outview=None):
                         ght,
                         ter,
                         outview,
-                        haveqci)
+                        pf,
+                        haveqci, 
+                        fill_nocloud, 
+                        missing,
+                        opt_thresh)
     
     return result
 
@@ -858,7 +878,9 @@ def _vintrp(field, pres, tk, qvp, ght, terrain, sfp, smsfp,
     if outview is None:
         outdims = field.shape[0:2] + interp_levels.shape
         outview = np.empty(outdims, field.dtype, order="F")
-        
+    
+    tempout = np.zeros(field.shape[0:2], np.float64, order="F")
+    
     errstat = np.array(0)
     errmsg = np.zeros(Constants.ERRLEN, "c")
     
@@ -877,6 +899,7 @@ def _vintrp(field, pres, tk, qvp, ght, terrain, sfp, smsfp,
                         extrap,
                         vcor,
                         logp,
+                        tempout,
                         missing,
                         errstat,
                         errmsg)

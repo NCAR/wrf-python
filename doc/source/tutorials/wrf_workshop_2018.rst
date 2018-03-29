@@ -1,7 +1,7 @@
-WRF Users' Workshop 2017
-==========================
+WRF Users' Workshop 2018
+=========================
 
-Welcome wrf-python tutorial attendees!
+Welcome WRF-Python tutorial attendees!
 
 The instructions below should be completed prior to arriving at the tutorial.  
 There will not be enough time to do this during the tutorial.
@@ -76,9 +76,7 @@ Step 2: Download Miniconda
 ----------------------------
 
 For this tutorial, you will need to download and install Miniconda.  We are 
-going to use Python 2.7, but it should also work with Python 3.5+.  However, 
-due to limitations with open source compilers on conda-forge, only Python 2.7 
-is available for Windows.
+going to use Python 2.7, but it will also work with Python 3.5+. 
 
 Please use the appropriate link below to download Miniconda for your operating 
 system. 
@@ -193,9 +191,9 @@ incompatibilities. This is similar to the *virtualenv* package that some
 Python users may be familiar with.  However, conda is not compatible with 
 virtualenv, so only use conda environments when working with conda.
 
-The name of our conda environment for this tutorial is: **tutorial_2017**.
+The name of our conda environment for this tutorial is: **tutorial_2018**.
 
-Follow the instructions below to create the tutorial_2017 environment.
+Follow the instructions below to create the tutorial_2018 environment.
 
    1. Open a command terminal if you haven't done so.
    
@@ -225,11 +223,11 @@ Follow the instructions below to create the tutorial_2017 environment.
    
       Type or copy this command in to your command terminal::
       
-          conda create -n tutorial_2017 python=2.7 matplotlib=1.5.3 cartopy netcdf4 jupyter git ffmpeg wrf-python
+          conda create -n tutorial_2018 python=2.7 matplotlib cartopy netcdf4 jupyter git ffmpeg wrf-python
           
       Type "y" when prompted.  It will take several minutes to install everything.
           
-      This command creates an isolated Python environment named *tutorial_2017*, and installs 
+      This command creates an isolated Python environment named *tutorial_2018*, and installs 
       the python interpreter, matplotlib, cartopy, netcdf4, jupyter, git, ffmpeg, and wrf-python 
       packages.  
          
@@ -248,27 +246,21 @@ Follow the instructions below to create the tutorial_2017 environment.
          This is indicating that the dbus package can be set up to automatically load on login.  You 
          can either ignore this message or type in the commands as indicated on your command terminal.  
          The tutorial should work fine in either case.
-         
-     .. note:: 
-         
-         In this tutorial, we need to use matplotlib v1.5.3 due to some issues with cartopy, which 
-         should be fixed in a later version of cartopy.  Be sure to supply the version number as 
-         indicated in the command above.
       
    5. Activate the conda environment.
    
-      To activate the tutorial_2017 Python environment, type the following 
+      To activate the tutorial_2018 Python environment, type the following 
       in to the command terminal:
       
       For Linux and Mac (using bash)::
           
-          source activate tutorial_2017
+          source activate tutorial_2018
           
       For Windows::
       
-          activate tutorial_2017
+          activate tutorial_2018
           
-      You should see (tutorial_2017) on your command prompt.
+      You should see (tutorial_2018) on your command prompt.
       
       To deactivate your conda environment, type the following in to the 
       command terminal:
@@ -279,13 +271,13 @@ Follow the instructions below to create the tutorial_2017 environment.
           
       For Windows::
       
-          deactivate tutorial_2017
+          deactivate tutorial_2018
       
 
 Step 5: Download the Student Workbook
 ---------------------------------------
 
-The student workbook for the tutorial is available on GitHub.  The tutorial_2017 
+The student workbook for the tutorial is available on GitHub.  The tutorial_2018 
 conda environment includes the git application needed to download the repository.
 
 These instructions download the tutorial in to your home directory.  If you want 
@@ -294,9 +286,9 @@ how to do this yourself.
 
 To download the student workbook, follow these instructions:
 
-    1. Activate the tutorial_2017 conda environment following the instructions 
-       in the previous step (*source activate tutorial_2017* or 
-       *activate tutorial_2017*).
+    1. Activate the tutorial_2018 conda environment following the instructions 
+       in the previous step (*source activate tutorial_2018* or 
+       *activate tutorial_2018*).
     
     2. Change your working directory to the home directory by typing the 
        following command in to the command terminal:
@@ -320,17 +312,17 @@ To download the student workbook, follow these instructions:
        
        For Linux and Mac::
        
-           source activate tutorial_2017
+           source activate tutorial_2018
            
-           cd ~/wrf_python_tutorial
+           cd ~/wrf_python_tutorial/wrf_workshop_2018
            
            git pull
            
        For Windows::
        
-           activate tutorial_2017
+           activate tutorial_2018
            
-           cd %HOMEPATH%\wrf_python_tutorial
+           cd %HOMEPATH%\wrf_python_tutorial\wrf_workshop_2018
            
            git pull
        
@@ -343,7 +335,7 @@ To download the student workbook, follow these instructions:
            
            .. code-block:: none
            
-               git checkout -- wrf_workshop_2017.ipynb
+               git checkout -- .
                git pull
                
 
@@ -354,7 +346,7 @@ Verifying that your environment is correct involves importing a few
 packages and checking for errors (you may see some warnings for matplotlib 
 or xarray, but you can safely ignore these). 
 
-    1. Activate the tutorial_2017 conda environment if it isn't already active 
+    1. Activate the tutorial_2018 conda environment if it isn't already active 
        (see instructions above).
        
     2. Open a python terminal by typing the following in to the command 

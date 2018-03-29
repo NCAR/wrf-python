@@ -83,7 +83,9 @@ def get_slp(wrfin, timeidx=0, method="cat", squeeze=True,
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
-    qvapor = ncvars["QVAPOR"]
+    # Copy needed for the mmap nonsense of scipy.io.netcdf, which seems to 
+    # break with every release
+    qvapor = ncvars["QVAPOR"].copy()
     ph = ncvars["PH"]
     phb = ncvars["PHB"]
     

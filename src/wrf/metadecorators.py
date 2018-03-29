@@ -10,7 +10,7 @@ import numpy.ma as ma
 from .extension import _interpline
 from .util import (extract_vars, either, from_args, arg_location,
                    is_coordvar, latlon_coordvars, to_np, 
-                   from_var, iter_left_indexes)
+                   from_var, iter_left_indexes, is_mapping)
 from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range, ucode
 from .interputils import get_xy_z_params, get_xy, to_xy_coords
@@ -586,8 +586,10 @@ def set_latlon_metadata(xy=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
         
-        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
-        
+        argvars = from_args(wrapped, ("wrfin", "meta"), *args, **kwargs)
+        # If it's a mapping, then this is handled as a special case in g_latlon
+        do_meta = (not is_mapping(argvars["wrfin"]) and argvars["meta"])
+
         if do_meta is None:
             do_meta = True
                 
@@ -1985,7 +1987,7 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
         p = argvals[copyarg]
         missing = argvals["missing"]
         
-        # Note: cape_3d supports using only a single column of data
+        # Note: 2D/3D cape supports using only a single column of data
         is1d = p.ndim == 1
         
         # Need to squeeze the right dimensions for 1D cape
@@ -1997,31 +1999,34 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
         
         outattrs = OrderedDict()
         
+        
         if is2d:
-            outname = "cape_2d"
+            if is1d:
+                outname = "cape_2d"
+            else:
+                outname = "cape_2d_column"
             outattrs["description"] = "mcape ; mcin ; lcl ; lfc"
             outattrs["units"] = "J kg-1 ; J kg-1 ; m ; m"
             outattrs["MemoryOrder"] = "XY"
+            outattrs["MemoryOrder"] = ""
         else:
             if not is1d:
                 outname = "cape_3d"
-                outattrs["description"] = "cape; cin"
-                outattrs["units"] = "J kg-1 ; J kg-1"
                 outattrs["MemoryOrder"] = "XYZ"
             else:
-                outname = "cape_column"
-                outattrs["description"] = "cape; cin"
-                outattrs["units"] = "J kg-1 ; J kg-1"
+                outname = "cape_3d_column"
                 outattrs["MemoryOrder"] = "Z"
+            outattrs["description"] = "cape; cin"
+            outattrs["units"] = "J kg-1 ; J kg-1"
                 
         
         if isinstance(p, DataArray):
             if is2d:
-                # Right dims
-                outdims[-2:] = p.dims[-2:]
-                # Left dims
-                outdims[1:-2] = p.dims[0:-3]
-                
+                if not is1d:
+                    # Right dims
+                    outdims[-2:] = p.dims[-2:]
+                    # Left dims
+                    outdims[1:-2] = p.dims[0:-3]
             else:
                 if not is1d:
                     # Right dims
@@ -2030,12 +2035,13 @@ def set_cape_alg_metadata(is2d, copyarg="pres_hpa"):
                     outdims[1:-3] = p.dims[0:-3]
                 else:
                     outdims[1] = p.dims[0]
+                    
         
         outcoords = {}     
         # Left-most is always cape_cin or cape_cin_lcl_lfc
         if is2d:
-            outdims[0] = "cape_cin_lcl_lfc"
-            outcoords["cape_cin_lcl_lfc"] = ["cape", "cin", "lcl", "lfc"]
+            outdims[0] = "mcape_mcin_lcl_lfc"
+            outcoords["mcape_mcin_lcl_lfc"] = ["mcape", "mcin", "lcl", "lfc"]
         else:
             outdims[0] = "cape_cin"
             outcoords["cape_cin"] = ["cape", "cin"]

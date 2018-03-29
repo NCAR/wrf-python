@@ -231,7 +231,7 @@ python module _wrffortran ! in
             integer, optional,intent(in),check(shape(prs,0)==mkzh),depend(prs) :: mkzh=shape(prs,0)
             integer intent(in) :: ter_follow
         end subroutine dpfcalc
-        subroutine dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,mix,mjy,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+        subroutine dcapecalc3d(prs,tmk,qvp,ght,ter,sfp,cape,cin,prsf,prs_new,tmk_new,qvp_new,ght_new,cmsg,mix,mjy,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
             threadsafe 
             use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,ezero,thtecon2
             real(kind=8) dimension(mix,mjy,mkzh),intent(in) :: prs
@@ -242,6 +242,11 @@ python module _wrffortran ! in
             real(kind=8) dimension(mix,mjy),intent(in),depend(mix,mjy) :: sfp
             real(kind=8) dimension(mix,mjy,mkzh),intent(out,in),depend(mix,mjy,mkzh) :: cape
             real(kind=8) dimension(mix,mjy,mkzh),intent(out,in),depend(mix,mjy,mkzh) :: cin
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: prsf
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: prs_new
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: tmk_new
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: qvp_new
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: ght_new
             real(kind=8) intent(in) :: cmsg
             integer, optional,intent(in),check(shape(prs,0)==mix),depend(prs) :: mix=shape(prs,0)
             integer, optional,intent(in),check(shape(prs,1)==mjy),depend(prs) :: mjy=shape(prs,1)
@@ -251,7 +256,7 @@ python module _wrffortran ! in
             integer intent(inout) :: errstat
             character*(*) intent(inout) :: errmsg
         end subroutine dcapecalc3d
-        subroutine dcapecalc2d(prs,tmk,qvp,ght,ter,sfp,cape,cin,cmsg,mix,mjy,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
+        subroutine dcapecalc2d(prs,tmk,qvp,ght,ter,sfp,cape,cin,prsf,prs_new,tmk_new,qvp_new,ght_new,cmsg,mix,mjy,mkzh,ter_follow,psafile,errstat,errmsg) ! in :_wrffortran:rip_cape.f90
             threadsafe 
             use wrf_constants, only: tlclc2,gamma,tlclc1,rgasmd,tlclc4,g,tlclc3,thtecon3,eps,rd,cpmd,celkel,gammamd,eslcon2,eslcon1,cp,thtecon1,ezero,thtecon2
             real(kind=8) dimension(mix,mjy,mkzh),intent(in) :: prs
@@ -262,6 +267,11 @@ python module _wrffortran ! in
             real(kind=8) dimension(mix,mjy),intent(in),depend(mix,mjy) :: sfp
             real(kind=8) dimension(mix,mjy,mkzh),intent(out,in),depend(mix,mjy,mkzh) :: cape
             real(kind=8) dimension(mix,mjy,mkzh),intent(out,in),depend(mix,mjy,mkzh) :: cin
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: prsf
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: prs_new
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: tmk_new
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: qvp_new
+            real(kind=8) dimension(mkzh,mix,mjy),intent(inout),depend(mkzh,mix,mjy) :: ght_new
             real(kind=8) intent(in) :: cmsg
             integer, optional,intent(in),check(shape(prs,0)==mix),depend(prs) :: mix=shape(prs,0)
             integer, optional,intent(in),check(shape(prs,1)==mjy),depend(prs) :: mjy=shape(prs,1)
@@ -349,7 +359,7 @@ python module _wrffortran ! in
             real(kind=8), parameter,optional,depend(cp,rd) :: gamma=0.285714285714
             real(kind=8), parameter,optional,depend(expon,rd,ussalr,g) :: exponi=5.25864379523
         end module wrf_constants
-        subroutine wrfcttcalc(prs,tk,qci,qcw,qvp,ght,ter,ctt,haveqci,nz,ns,ew) ! in :_wrffortran:wrf_fctt.f90
+        subroutine wrfcttcalc(prs,tk,qci,qcw,qvp,ght,ter,ctt,pf,haveqci,fill_nocloud,missing,opt_thresh,nz,ns,ew) ! in :_wrffortran:wrf_fctt.f90
             threadsafe 
             use wrf_constants, only: g,eps,rd,ussalr,abscoefi,abscoef,celkel
             real(kind=8) dimension(ew,ns,nz),intent(in) :: prs
@@ -360,7 +370,11 @@ python module _wrffortran ! in
             real(kind=8) dimension(ew,ns,nz),intent(in),depend(ew,ns,nz) :: ght
             real(kind=8) dimension(ew,ns),intent(in),depend(ew,ns) :: ter
             real(kind=8) dimension(ew,ns),intent(out,in),depend(ew,ns) :: ctt
+            real(kind=8) dimension(ew,ns,nz),intent(inout),depend(ew,ns,nz) :: pf
             integer intent(in) :: haveqci
+            integer intent(in) :: fill_nocloud
+            real(kind=8) intent(in) :: missing
+            real(kind=8) intent(in) :: opt_thresh
             integer, optional,intent(in),check(shape(prs,2)==nz),depend(prs) :: nz=shape(prs,2)
             integer, optional,intent(in),check(shape(prs,1)==ns),depend(prs) :: ns=shape(prs,1)
             integer, optional,intent(in),check(shape(prs,0)==ew),depend(prs) :: ew=shape(prs,0)
@@ -730,7 +744,7 @@ python module _wrffortran ! in
             integer intent(inout) :: errstat
             real(kind=8) :: wrf_intrp_value
         end function wrf_intrp_value
-        subroutine wrf_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,sfp,smsfp,vcarray,interp_levels,numlevels,icase,ew,ns,nz,extrap,vcor,logp,rmsg,errstat,errmsg) ! in :_wrffortran:wrf_vinterp.f90
+        subroutine wrf_vintrp(datain,dataout,pres,tk,qvp,ght,terrain,sfp,smsfp,vcarray,interp_levels,numlevels,icase,ew,ns,nz,extrap,vcor,logp,tempout,rmsg,errstat,errmsg) ! in :_wrffortran:wrf_vinterp.f90
             threadsafe 
             use wrf_constants, only: tlclc2,tlclc3,sclht,tlclc4,thtecon3,eps,tlclc1,celkel,exponi,gammamd,ussalr,expon,thtecon1,algerr,gamma,thtecon2
             real(kind=8) dimension(ew,ns,nz),intent(in) :: datain
@@ -752,6 +766,7 @@ python module _wrffortran ! in
             integer intent(in) :: extrap
             integer intent(in) :: vcor
             integer intent(in) :: logp
+            real(kind=8) dimension(ew,ns),intent(inout),depend(ew,ns) :: tempout
             real(kind=8) intent(in) :: rmsg
             integer intent(inout) :: errstat
             character*(*) intent(inout) :: errmsg

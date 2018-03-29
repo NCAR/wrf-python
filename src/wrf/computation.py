@@ -714,10 +714,10 @@ def smooth2d(field, passes, meta=True):
 @set_cape_alg_metadata(is2d=True, copyarg="pres_hpa")
 def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow, 
             missing=default_fill(np.float64), meta=True):
-    """Return the two-dimensional CAPE, CIN, LCL, and LFC.
+    """Return the two-dimensional MCAPE, MCIN, LCL, and LFC.
     
     This function calculates the maximum convective available potential 
-    energy (CAPE), maximum convective inhibition (CIN), 
+    energy (MCAPE), maximum convective inhibition (MCIN), 
     lifted condensation level (LCL), and level of free convection (LFC). This 
     function uses the RIP [Read/Interpolate/plot] code to calculate 
     potential energy (CAPE) and convective inhibition 
@@ -725,18 +725,28 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
     in the column (i.e. something akin to Colman's MCAPE). CAPE is defined as 
     the accumulated buoyant energy from the level of free convection (LFC) to 
     the equilibrium level (EL). CIN is defined as the accumulated negative 
-    buoyant energy from the parcel starting point to the LFC. The word 'parcel' 
-    here refers to a 500 meter deep parcel, with actual temperature and 
-    moisture averaged over that depth. 
+    buoyant energy from the parcel starting point to the LFC. 
+    
+    The cape_2d algorithm works by first finding the maximum theta-e height 
+    level in the lowest 3000 m. A parcel with a depth of 500 m is then 
+    calculated and centered over this maximum theta-e height level. The 
+    parcel's moisture and temperature characteristics are calculated by 
+    averaging over the depth of this 500 m parcel. This 'maximum' parcel 
+    is then used to compute MCAPE, MCIN, LCL and LFC.
     
     The leftmost dimension of the returned array represents four different 
     quantities:
         
-        - return_val[0,...] will contain CAPE [J kg-1]
-        - return_val[1,...] will contain CIN [J kg-1]
+        - return_val[0,...] will contain MCAPE [J kg-1]
+        - return_val[1,...] will contain MCIN [J kg-1]
         - return_val[2,...] will contain LCL [m]
         - return_val[3,...] will contain LFC [m]
     
+    This function also supports computing MCAPE along a single vertical 
+    column.  In this mode, the *pres_hpa*, *tkel*, *qv* and *height* arguments
+    must be one-dimensional vertical columns, and the *terrain* and 
+    *psfc_hpa* arguments must be scalar values 
+    (:obj:`float`, :class:`numpy.float32` or :class:`numpy.float64`).
     
     This is the raw computational algorithm and does not extract any variables 
     from WRF output files.  Use :meth:`wrf.getvar` to both extract and compute
@@ -749,6 +759,9 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
             least three dimensions. The rightmost dimensions can be 
             top_bottom x south_north x west_east or bottom_top x south_north x
             west_east.
+            When operating on only a single column of values, the vertical 
+            column can be bottom_top or top_bottom.  In this case, *terrain* 
+            and *psfc_hpa* must be scalars.
             
             Note:
             
@@ -774,12 +787,16 @@ def cape_2d(pres_hpa, tkel, qv, height, terrain, psfc_hpa, ter_follow,
         terrain (:class:`xarray.DataArray` or :class:`numpy.ndarray`): 
             Terrain height in [m].  This is at least a two-dimensional array 
             with the same dimensionality as *pres_hpa*, excluding the vertical 
-            (bottom_top/top_bottom) dimension.
+            (bottom_top/top_bottom) dimension. When operating on a single 
+            vertical column, this argument must be a scalar (:obj:`float`, 
+            :class:`numpy.float32`, or :class:`numpy.float64`).
             
         psfc_hpa (:class:`xarray.DataArray` or :class:`numpy.ndarray`): 
             The surface pressure in [hPa].  This is at least a two-dimensional 
             array with the same dimensionality as *pres_hpa*, excluding the 
-            vertical (bottom_top/top_bottom) dimension.
+            vertical (bottom_top/top_bottom) dimension. When operating on a 
+            singlevertical column, this argument must be a scalar 
+            (:obj:`float`, :class:`numpy.float32`, or :class:`numpy.float64`).
             
             Note:
             
@@ -1014,6 +1031,11 @@ def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
             
         high_thresh (:obj:`float`): The bottom vertical threshold for what is 
             considered a high cloud.
+            
+        missing (:obj:`float:`, optional): The fill value to use for areas 
+            where the surface is higher than the cloud threshold level 
+            (e.g. mountains). Default is 
+            :data:`wrf.default_fill(numpy.float64)`.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -1047,8 +1069,9 @@ def cloudfrac(vert, relh, vert_inc_w_height, low_thresh, mid_thresh,
 @set_alg_metadata(2, "pres_hpa", refvarndims=3, 
                   description="cloud top temperature")
 @convert_units("temp", "c")
-def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
-        units="degC"):
+def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, 
+        fill_nocloud=False, missing=default_fill(np.float64), 
+        opt_thresh=1.0, meta=True, units="degC"):
     """Return the cloud top temperature.
     
     This is the raw computational algorithm and does not extract any variables 
@@ -1094,6 +1117,27 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
         qice (:class:`xarray.DataArray` or :class:`numpy.ndarray`, optional): 
             Ice mixing ratio in [kg/kg] with the same dimensionality as 
             *pres_hpa*.
+            
+        fill_nocloud (:obj:`bool`, optional): Set to True to use fill values in 
+            regions where clouds are not detected (optical depth less than 1). 
+            Otherwise, the output will contain the surface temperature for 
+            areas without clouds. Default is False.
+            
+        missing (:obj:`float`, optional): The fill value to use for areas 
+            where no clouds are detected. Only used if *fill_nocloud* is 
+            True. Default is 
+            :data:`wrf.default_fill(numpy.float64)`. 
+            
+        opt_thresh (:obj:`float`, optional): The amount of optical 
+            depth (integrated from top down) required to trigger a cloud top 
+            temperature calculation. The cloud top temperature is calculated at 
+            the vertical level where this threshold is met. Vertical columns 
+            with less than this threshold will be treated as cloud free areas. 
+            In general, the larger the value is for this 
+            threshold, the lower the altitude will be for the cloud top 
+            temperature calculation, and therefore higher cloud top 
+            temperature values. Default is 1.0, which should be sufficient for 
+            most users.
 
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -1128,8 +1172,13 @@ def ctt(pres_hpa, tkel, qv, qcld, height, terrain, qice=None, meta=True,
         haveqci = 0
     else:
         haveqci = 1 if qice.any() else 0
+        
+    _fill_nocloud = 1 if fill_nocloud else 0
     
-    return _ctt(pres_hpa, tkel, qice, qcld, qv, height, terrain, haveqci)
+    ctt = _ctt(pres_hpa, tkel, qice, qcld, qv, height, terrain, haveqci,
+                _fill_nocloud, missing, opt_thresh)
+    
+    return ma.masked_values(ctt, missing)
     
 
 
