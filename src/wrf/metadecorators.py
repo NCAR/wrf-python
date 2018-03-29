@@ -10,7 +10,7 @@ import numpy.ma as ma
 from .extension import _interpline
 from .util import (extract_vars, either, from_args, arg_location,
                    is_coordvar, latlon_coordvars, to_np, 
-                   from_var, iter_left_indexes)
+                   from_var, iter_left_indexes, is_mapping)
 from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range, ucode
 from .interputils import get_xy_z_params, get_xy, to_xy_coords
@@ -586,8 +586,10 @@ def set_latlon_metadata(xy=False):
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
         
-        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
-        
+        argvars = from_args(wrapped, ("wrfin", "meta"), *args, **kwargs)
+        # If it's a mapping, then this is handled as a special case in g_latlon
+        do_meta = (not is_mapping(argvars["wrfin"]) and argvars["meta"])
+
         if do_meta is None:
             do_meta = True
                 

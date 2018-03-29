@@ -3073,7 +3073,8 @@ def get_id(obj, prefix=''):
     # For sequences, the hashing string will be the list ID and the 
     # path for the first file in the sequence
     if not is_mapping(obj):
-        _next = next(iter(obj))
+        _obj = get_iterable(obj)
+        _next = next(iter(_obj))
         return get_id(_next, prefix + str(id(obj)))
     
     # For each key in the mapping, recursively call get_id until

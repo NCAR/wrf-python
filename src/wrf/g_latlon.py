@@ -1,9 +1,16 @@
 from __future__ import (absolute_import, division, print_function, 
                         unicode_literals)
 
-from .util import extract_vars, get_id
-from .latlonutils import (_lat_varname, _lon_varname, _ll_to_xy, _xy_to_ll)
+from collections import OrderedDict
+
+import numpy as np
+from xarray import DataArray
+
+from .util import extract_vars, get_id, get_iterable, is_mapping, to_np
+from .py3compat import viewkeys
+from .latlonutils import _lat_varname, _lon_varname, _ll_to_xy, _xy_to_ll
 from .metadecorators import set_latlon_metadata
+from .config import xarray_enabled
 
 
 def get_lat(wrfin, timeidx=0, method="cat", squeeze=True, 
@@ -151,7 +158,101 @@ def get_lon(wrfin, timeidx=0, method="cat", squeeze=True,
     
     return lon_var[varname]
 
-# TODO:  Do we need the user to know about method, squeeze, cache for this?
+
+def _llxy_mapping(wrfin, x_or_lat, y_or_lon, func, timeidx, stagger, 
+                  squeeze, meta, as_int=None):
+    
+    keynames = []
+    # This might not work once mapping iterators are implemented
+    numkeys = len(wrfin)  
+    
+    key_iter = iter(viewkeys(wrfin))
+    first_key = next(key_iter)
+    keynames.append(first_key)
+    
+    first_args = [wrfin[first_key], x_or_lat, y_or_lon, timeidx, squeeze,
+                  meta, stagger]
+    if as_int is not None:
+        first_args.append(as_int)
+        
+    first_array = func(*first_args)
+    
+    # Create the output data numpy array based on the first array
+    outdims = [numkeys]
+    outdims += first_array.shape
+    outdata = np.empty(outdims, first_array.dtype)
+    outdata[0,:] = first_array[:]
+    
+    idx = 1
+    while True:
+        try:
+            key = next(key_iter)
+        except StopIteration:
+            break
+        else:
+            keynames.append(key)
+            
+            args = [wrfin[first_key], x_or_lat, y_or_lon, timeidx, squeeze,
+                    meta, stagger]
+            if as_int is not None:
+                args.append(as_int)
+        
+            result_array = func(*args)
+            
+            if outdata.shape[1:] != result_array.shape:
+                raise ValueError("data sequences must have the "
+                                 "same size for all dictionary keys")
+            outdata[idx,:] = to_np(result_array)[:]
+            idx += 1
+      
+    if xarray_enabled() and meta:
+        outname = str(first_array.name)
+        # Note: assumes that all entries in dict have same coords
+        outcoords = OrderedDict(first_array.coords)
+        
+        # First find and store all the existing key coord names/values
+        # This is applicable only if there are nested dictionaries.
+        key_coordnames = []
+        coord_vals = []
+        existing_cnt = 0
+        while True:
+            key_coord_name = "key_{}".format(existing_cnt)
+            
+            if key_coord_name not in first_array.dims:
+                break
+            
+            key_coordnames.append(key_coord_name)
+            coord_vals.append(to_np(first_array.coords[key_coord_name]))
+            
+            existing_cnt += 1
+        
+        # Now add the key coord name and values for THIS dictionary.
+        # Put the new key_n name at the bottom, but the new values will 
+        # be at the top to be associated with key_0 (left most).  This
+        # effectively shifts the existing 'key_n' coordinate values to the 
+        # right one dimension so *this* dicionary's key coordinate values 
+        # are at 'key_0'.
+        key_coordnames.append(key_coord_name)
+        coord_vals.insert(0, keynames)
+        
+        # make it so that key_0 is leftmost
+        outdims = key_coordnames + list(first_array.dims[existing_cnt:])
+        
+        
+        # Create the new 'key_n', value pairs
+        for coordname, coordval in zip(key_coordnames, coord_vals):
+            outcoords[coordname] = coordval
+        
+        
+        outattrs = OrderedDict(first_array.attrs)
+        
+        outarr = DataArray(outdata, name=outname, coords=outcoords, 
+                           dims=outdims, attrs=outattrs)
+    else:
+        outarr = outdata
+        
+    return outarr
+
 
 @set_latlon_metadata(xy=True) 
 def ll_to_xy(wrfin, latitude, longitude, timeidx=0,  
@@ -215,9 +316,15 @@ def ll_to_xy(wrfin, latitude, longitude, timeidx=0,
         be a :class:`numpy.ndarray` object with no metadata.
     
     """
+    if is_mapping(wrfin):
+        return _llxy_mapping(wrfin, latitude, longitude, ll_to_xy, 
+                             timeidx, stagger, squeeze, meta, as_int)
     _key = get_id(wrfin)
-    return _ll_to_xy(latitude, longitude, wrfin, timeidx, stagger, "cat", 
+    _wrfin = get_iterable(wrfin)
+
+    return _ll_to_xy(latitude, longitude, _wrfin, timeidx, stagger, "cat", 
                      squeeze, None, _key, as_int, **{})
+    
 
 
 @set_latlon_metadata(xy=True) 
@@ -319,10 +426,10 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
 
     return _ll_to_xy(latitude, longitude, None, 0, True, "cat", squeeze, None,
                      None, as_int, **projparams)
-    
-    
+
+
 @set_latlon_metadata(xy=False) 
-def xy_to_ll(wrfin, x, y, timeidx=0, stagger=None, squeeze=True, meta=True):
+def xy_to_ll(wrfin, x, y, timeidx=0, squeeze=True, meta=True, stagger=None):
     """Return the latitude and longitude for specified x,y coordinates.
     
     The *x* and *y* arguments can be a single value or a sequence of values.
@@ -370,9 +477,6 @@ def xy_to_ll(wrfin, x, y, timeidx=0, stagger=None, squeeze=True, meta=True):
                 - 'v': Use the same staggered grid as the v wind component, 
                   which has a staggered south_north (y) dimension.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
-        
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
         latitude and longitude values whose leftmost dimension is 2 
@@ -382,8 +486,13 @@ def xy_to_ll(wrfin, x, y, timeidx=0, stagger=None, squeeze=True, meta=True):
         be a :class:`numpy.ndarray` object with no metadata.
     
     """
+    if is_mapping(wrfin):
+        return _llxy_mapping(wrfin, x, y, xy_to_ll, 
+                             timeidx, stagger, squeeze, meta)
+        
     _key = get_id(wrfin)
-    return _xy_to_ll(x, y, wrfin, timeidx, stagger, "cat", True, None, 
+    _wrfin = get_iterable(wrfin)
+    return _xy_to_ll(x, y, _wrfin, timeidx, stagger, "cat", True, None, 
                      _key, **{})
  
     

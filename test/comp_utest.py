@@ -642,14 +642,10 @@ def test_cape2d_1d(wrfnc):
         ter_follow = 1
         
         result = cape_2d(p_hpa, tkel, qv, z, ter, psfc_hpa, ter_follow)
-        
-        print ("RESULT", result)
     
         ref = getvar(wrfnc, "cape_2d")
 
         ref = ref[(slice(None),) + col_idxs[1:]]
-        
-        print ("REF", ref)
         
         nt.assert_allclose(to_np(result), to_np(ref))
     
@@ -658,7 +654,7 @@ def test_cape2d_1d(wrfnc):
 if __name__ == "__main__":
     from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
                      omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
-    omp_set_num_threads(omp_get_num_procs()-1)
+    omp_set_num_threads(omp_get_num_procs()//2)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
     
