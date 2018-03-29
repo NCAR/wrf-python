@@ -682,7 +682,7 @@ class WRFLatLonTest(ut.TestCase):
 if __name__ == "__main__":
     from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
                      omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
-    omp_set_num_threads(omp_get_num_procs()-1)
+    omp_set_num_threads(omp_get_num_procs()//2)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
     

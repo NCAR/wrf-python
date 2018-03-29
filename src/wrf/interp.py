@@ -8,7 +8,7 @@ from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d,
                         _monotonic, _vintrp)
 
 from .metadecorators import set_interp_metadata
-from .util import extract_vars, is_staggered, get_id, to_np
+from .util import extract_vars, is_staggered, get_id, to_np, get_iterable
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
 from .constants import Constants, default_fill, ConversionFactors
@@ -548,6 +548,8 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     """
     _key = get_id(wrfin)
     
+    _wrfin = get_iterable(wrfin)
+    
     # Remove case sensitivity
     field_type = field_type.lower() if field_type is not None else "none"
     vert_coord = vert_coord.lower() if vert_coord is not None else "none"
@@ -583,7 +585,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         interp_levels = np.asarray(interp_levels, np.float64)
         
     # TODO: Check if field is staggered
-    if is_staggered(wrfin, field):
+    if is_staggered(_wrfin, field):
         raise RuntimeError("Please unstagger field in the vertical")
     
     # Check for valid coord
@@ -606,23 +608,23 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     
     # Extract vriables
     #timeidx = -1 # Should this be an argument?
-    ncvars = extract_vars(wrfin, timeidx, ("PSFC", "QVAPOR", "F"), 
+    ncvars = extract_vars(_wrfin, timeidx, ("PSFC", "QVAPOR", "F"), 
                           method, squeeze, cache, meta=False, _key=_key)
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]
     coriolis = ncvars["F"]
     
-    terht = get_terrain(wrfin, timeidx, units="m", 
+    terht = get_terrain(_wrfin, timeidx, units="m", 
                         method=method, squeeze=squeeze, cache=cache,
                         meta=False, _key=_key)
-    tk = get_temp(wrfin, timeidx, units="k",  
+    tk = get_temp(_wrfin, timeidx, units="k",  
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
-    p = get_pressure(wrfin, timeidx, units="pa",  
+    p = get_pressure(_wrfin, timeidx, units="pa",  
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
-    ght = get_height(wrfin, timeidx, msl=True, units="m", 
+    ght = get_height(_wrfin, timeidx, msl=True, units="m", 
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
     
@@ -639,7 +641,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         vcord_array = np.exp(-ght/sclht)
         
     elif vert_coord == "ght_agl":
-        ht_agl = get_height(wrfin, timeidx, msl=False, units="m",
+        ht_agl = get_height(_wrfin, timeidx, msl=False, units="m",
                         method=method, squeeze=squeeze, cache=cache,
                         meta=False, _key=_key)
         
@@ -647,7 +649,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         vcord_array = np.exp(-ht_agl/sclht)
     
     elif vert_coord in ("theta", "th"):
-        t = get_theta(wrfin, timeidx,  units="k", 
+        t = get_theta(_wrfin, timeidx,  units="k", 
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
         
@@ -671,7 +673,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         idir = 1
         delta = 0.01
         
-        eth = get_eth(wrfin, timeidx, method=method, squeeze=squeeze, 
+        eth = get_eth(_wrfin, timeidx, method=method, squeeze=squeeze, 
             cache=cache, meta=False, _key=_key)
         
         p_hpa = p * ConversionFactors.PA_TO_HPA

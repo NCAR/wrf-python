@@ -131,8 +131,9 @@ def _get_proj_params(wrfin, timeidx, stagger, method, squeeze, cache, _key):
     
         
     """
-    if timeidx < 0:
-        raise ValueError("'timeidx' must be greater than 0")
+    if timeidx is not None:
+        if timeidx < 0:
+            raise ValueError("'timeidx' must be greater than 0")
     
     attrs = extract_global_attrs(wrfin, attrs=("MAP_PROJ", "TRUELAT1",
                                                "TRUELAT2", "STAND_LON",
@@ -383,12 +384,10 @@ def _ll_to_xy(latitude, longitude, wrfin=None, timeidx=0,
         
         if ref_lat.size == 1:
             outdim = [2, lats.size]
-            #outdim = [lats.size, 2]
             extra_dims = [outdim[1]]
         else:
             # Moving domain will have moving ref_lats/ref_lons
             outdim = [2, ref_lat.size, lats.size]
-            #outdim = [lats.size, ref_lat.size, 2]
             extra_dims = outdim[1:]
             
         result = np.empty(outdim, np.float64)
@@ -402,11 +401,11 @@ def _ll_to_xy(latitude, longitude, wrfin=None, timeidx=0,
                 ref_lat_val = ref_lat[0]
                 ref_lon_val = ref_lon[0]
             else:
-                ref_lat_val = ref_lat[left_idxs[-1]]
-                ref_lon_val = ref_lon[left_idxs[-1]]
+                ref_lat_val = ref_lat[left_idxs[-2]]
+                ref_lon_val = ref_lon[left_idxs[-2]]
             
-            lat = lats[left_idxs[0]]
-            lon = lons[left_idxs[0]]
+            lat = lats[left_idxs[-1]]
+            lon = lons[left_idxs[-1]]
             
             xy = _lltoxy(map_proj, truelat1, truelat2, stdlon,
                ref_lat_val, ref_lon_val, pole_lat, pole_lon,
@@ -548,14 +547,10 @@ def _xy_to_ll(x, y, wrfin=None, timeidx=0, stagger=None,
             raise ValueError("'x' and 'y' must be the same length")
             
         if ref_lat.size == 1:
-            #outdim = [x_arr.size, 2]
-            #extra_dims = [outdim[0]]
             outdim = [2, x_arr.size]
             extra_dims = [outdim[1]]
         else:
             # Moving domain will have moving ref_lats/ref_lons
-            #outdim = [x_arr.size, ref_lat.size, 2]
-            #extra_dims = outdim[0:2]
             outdim = [2, ref_lat.size, x_arr.size]
             extra_dims = outdim[1:]
             
@@ -570,11 +565,11 @@ def _xy_to_ll(x, y, wrfin=None, timeidx=0, stagger=None,
                 ref_lat_val = ref_lat[0]
                 ref_lon_val = ref_lon[0]
             else:
-                ref_lat_val = ref_lat[left_idxs[-1]]
-                ref_lon_val = ref_lon[left_idxs[-1]]
+                ref_lat_val = ref_lat[left_idxs[-2]]
+                ref_lon_val = ref_lon[left_idxs[-2]]
             
-            x_val = x_arr[left_idxs[0]]
-            y_val = y_arr[left_idxs[0]]
+            x_val = x_arr[left_idxs[-1]]
+            y_val = y_arr[left_idxs[-1]]
             
             ll = _xytoll(map_proj, truelat1, truelat2, stdlon, ref_lat_val, 
                          ref_lon_val, pole_lat, pole_lon, known_x, known_y,

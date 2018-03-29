@@ -21,8 +21,10 @@ v1.1.3
 - Added 'th' alias for the theta product.
 - Fixed a crash issue related to updraft helicity when a dictionary is 
   used as the input.
+- Dictionary inputs now work correctly with xy_to_ll and ll_to_xy.
 - The cape_2d diagnostic can now work with a single column of data, just like 
   cape_3d.
+  
 
 v1.1.2
 ^^^^^^^^^^^^^^

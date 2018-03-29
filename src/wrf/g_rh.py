@@ -71,7 +71,9 @@ def get_rh(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
     t = ncvars["T"]
     p = ncvars["P"]
     pb = ncvars["PB"]
-    qvapor = ncvars["QVAPOR"]
+    # Copy needed for the mmap nonsense of scipy.io.netcdf, which seems to 
+    # break with every release
+    qvapor = ncvars["QVAPOR"].copy()
     
     full_t = t + Constants.T_BASE
     full_p = p + pb
@@ -144,7 +146,9 @@ def get_rh_2m(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
                           meta=False, _key=_key)
     t2 = ncvars["T2"]
     psfc = ncvars["PSFC"]
-    q2 = ncvars["Q2"]
+    # Copy needed for the mmap nonsense of scipy.io.netcdf, which seems to 
+    # break with every release
+    q2 = ncvars["Q2"].copy()
     
     q2[q2 < 0] = 0
     rh = _rh(q2, psfc, t2)
