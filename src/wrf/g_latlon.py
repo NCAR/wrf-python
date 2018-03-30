@@ -162,6 +162,67 @@ def get_lon(wrfin, timeidx=0, method="cat", squeeze=True,
 def _llxy_mapping(wrfin, x_or_lat, y_or_lon, func, timeidx, stagger, 
                   squeeze, meta, as_int=None):
     
+    """Return the x,y/lat,lon coordinates for a dictionary input.
+    
+    The leftmost dimension(s) for the result is:
+    
+        - return_val[key,...,0,...] will contain the x/lat values.
+        - return_val[key,...,1,...] will contain the y/lon values.
+        
+    Nested dictionaries are allowed.
+    
+    Args:
+    
+        wrfin (:obj:`dict`): A mapping of key name to a WRF NetCDF file object 
+            or sequence of WRF NetCDF file objects.
+            
+        x_or_lat (:obj:`float` or sequence): A single latitude/x value or a 
+            sequence of latitude/x values to be converted.
+            
+        y_or_lon (:obj:`float` or sequence): A single longitude/y value or a 
+            sequence of longitude/y values to be converted.
+        
+        func (function): Either the xy_to_ll or ll_to_xy function.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+            
+        stagger (:obj:`str`): By default, the values are returned on the mass
+            grid, but a staggered grid can be chosen with the following 
+            options:
+            
+                - 'm': Use the mass grid (default).
+                - 'u': Use the same staggered grid as the u wind component, 
+                  which has a staggered west_east (x) dimension.
+                - 'v': Use the same staggered grid as the v wind component, 
+                  which has a staggered south_north (y) dimension.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+
+        as_int (:obj:`bool`, optional): Set to True to return the x,y values as 
+            :obj:`int`, otherwise they will be returned as :obj:`float`. This
+            is only used when *func* is ll_to_xy.
+        
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        lat,lon/x,y coordinate value(s) whose leftmost dimensions are the 
+        dictionary keys, followed by a dimension of size 
+        2 (0=X, 1=Y)/(0=lat, 1=lon).
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
+    
     keynames = []
     # This might not work once mapping iterators are implemented
     numkeys = len(wrfin)  
