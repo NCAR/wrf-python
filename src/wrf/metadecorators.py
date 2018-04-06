@@ -1346,8 +1346,9 @@ def _set_vinterp_meta(wrapped, instance, args, kwargs):
         except KeyError:
             pass # xarray 0.9
         
-        outdimnames.insert(-2, "interp_level")
-        outcoords["interp_level"] = interp_levels
+        newdimname = kwargs.get("vdim_name", "interp_level")
+        outdimnames.insert(-2, newdimname)
+        outcoords[newdimname] = interp_levels
         outattrs.update(field.attrs)
         
         
