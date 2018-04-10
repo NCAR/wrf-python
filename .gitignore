@@ -49,6 +49,9 @@ test/ipynb/.ipynb_checkpoints
 fortran/omp.f90
 fortran/wrffortran.pyf
 fortran/*.mod
+fortran/_wrffortranmodule.c
+fortran/_wrffortran-f2pywrappers.f
+fortran/_wrffortran-f2pywrappers2.f90
 build
 .settings
 src/wrf_python.egg-info
