@@ -463,7 +463,7 @@ def interpline(field2d, pivot_point=None,
 @set_interp_metadata("vinterp")
 def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False, 
             field_type=None, log_p=False, timeidx=0, method="cat", 
-            squeeze=True, cache=None, meta=True):
+            squeeze=True, cache=None, meta=True, **kwargs):
     """Return the field vertically interpolated to the given the type of 
     surface and a set of new levels.
     
