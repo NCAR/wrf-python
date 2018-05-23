@@ -449,8 +449,8 @@ def td(pres, qv, meta=True, units="degC"):
     Args: 
             
         pres (:class:`xarray.DataArray` or :class:`numpy.ndarray`): Full 
-            pressure (perturbation + base state pressure) in [Pa] with at least
-            three dimensions.  The rightmost dimensions are bottom_top x 
+            pressure (perturbation + base state pressure) in [hPa] with at 
+            least three dimensions.  The rightmost dimensions are bottom_top x 
             south_north x west_east.  
             
             Note:
