@@ -1,5 +1,4 @@
-from __future__ import (absolute_import, division, print_function, 
-                        unicode_literals)
+from __future__ import (absolute_import, division, print_function)
 
 import os
 from sys import version_info
@@ -31,7 +30,7 @@ import numpy.ma as ma
 
 from .config import xarray_enabled
 from .constants import default_fill, ALL_TIMES
-from .py3compat import (viewitems, viewkeys, isstr, py3range, ucode)
+from .py3compat import (viewitems, viewkeys, isstr, py3range)
 from .cache import cache_item, get_cached_item
 from .geobnds import GeoBounds, NullGeoBounds
 from .coordpair import CoordPair
@@ -1722,7 +1721,7 @@ def _cat_files(wrfseq, varname, timeidx, is_moving, squeeze, meta, _key):
         if not timecached and outxtimes is not None:
             cache_item(_key, timekey, outxtimes)
             
-        outname = ucode(first_var.name)
+        outname = first_var.name
         outattrs = OrderedDict(first_var.attrs)
         outcoords = OrderedDict(first_var.coords)
         outdimnames = list(first_var.dims)
@@ -1986,7 +1985,7 @@ def _join_files(wrfseq, varname, timeidx, is_moving, meta, _key):
         if not timecached and outxtimes is not None:
             cache_item(_key, timekey, outxtimes)
         
-        outname = ucode(first_var.name)
+        outname = first_var.name
         outcoords = OrderedDict(first_var.coords)
         outattrs = OrderedDict(first_var.attrs)
         # New dimensions

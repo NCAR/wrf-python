@@ -322,7 +322,7 @@ python module _wrffortran ! in
             real(kind=8), parameter,optional :: p1000mb=100000.d0
             real(kind=8), parameter,optional :: rv=461.6d0
             real(kind=8), parameter,optional,depend(pi) :: rad_per_deg=pi/180.d0
-            real(kind=8), parameter,optional :: default_fill_double=9.96920996839e+36
+            real(kind=8), parameter,optional :: default_fill_double=9.9692099683868690d36
             real(kind=8), parameter,optional :: rd=287.d0
             real(kind=8), parameter,optional :: abscoef=.145d0
             real(kind=8), parameter,optional :: celkel=273.15d0
@@ -341,7 +341,7 @@ python module _wrffortran ! in
             real(kind=8), parameter,optional :: cpmd=.887d0
             real(kind=8), parameter,optional,depend(rd,g) :: sclht=rd*256.d0/g
             real(kind=8), parameter,optional :: ussalr=0.0065d0
-            real(kind=8), parameter,optional :: default_fill=9.96920996839e+36
+            real(kind=8), parameter,optional :: default_fill=9.9692099683868690d36
             real(kind=8), parameter,optional :: rho_s=100.d0
             real(kind=8), parameter,optional,depend(rhowat) :: rho_r=1000.0
             real(kind=8), parameter,optional :: alpha=0.224d0
