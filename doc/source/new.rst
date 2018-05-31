@@ -4,6 +4,19 @@ What's New
 Releases
 -------------
 
+v1.2.0
+^^^^^^^^^^^^^^
+
+- Release 1.2.0
+- Previous versions of wrf-python promoted the strings used in xarray (e.g. 
+  name, attributes) to Unicode strings. This caused problems when porting 
+  examples for PyNGL to use wrf-python in Python 3.x. All strings are now the 
+  native string for the Python version being used. While this should be 
+  transparent to most users, any users that worked with the xarray name or 
+  attribute values on Python 2.7 may run in to string related errors, so we've 
+  decided to bump the major version number. 
+
+
 v1.1.3
 ^^^^^^^^^^^^^^
 

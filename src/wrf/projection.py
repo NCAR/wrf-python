@@ -1,5 +1,4 @@
-from __future__ import (absolute_import, division, print_function, 
-                        unicode_literals)
+from __future__ import (absolute_import, division, print_function)
 import numpy as np
 import math
 from decimal import Decimal, Context, ROUND_HALF_UP
@@ -532,13 +531,13 @@ class LambertConformal(WrfProj):
                 else self.truelat2)
                                                 
         _pyngl = Resources()
-        _pyngl.mpProjection = bytes("LambertConformal")
-        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpProjection = "LambertConformal"
+        _pyngl.mpDataBaseVersion = "MediumRes"
         _pyngl.mpLambertMeridianF = self.stand_lon
         _pyngl.mpLambertParallel1F = self.truelat1
         _pyngl.mpLambertParallel2F = truelat2
         
-        _pyngl.mpLimitMode = bytes("Corners")
+        _pyngl.mpLimitMode = "Corners"
         _pyngl.mpLeftCornerLonF = geobounds.bottom_left.lon
         _pyngl.mpLeftCornerLatF = geobounds.bottom_left.lat
         _pyngl.mpRightCornerLonF = geobounds.top_right.lon
@@ -652,12 +651,12 @@ class Mercator(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = bytes("Mercator")
-        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpProjection = "Mercator"
+        _pyngl.mpDataBaseVersion = "MediumRes"
         _pyngl.mpCenterLatF = 0.0
         _pyngl.mpCenterLonF = self.stand_lon
         
-        _pyngl.mpLimitMode = bytes("Corners")
+        _pyngl.mpLimitMode = "Corners"
         _pyngl.mpLeftCornerLonF = geobounds.bottom_left.lon
         _pyngl.mpLeftCornerLatF = geobounds.bottom_left.lat
         _pyngl.mpRightCornerLonF = geobounds.top_right.lon
@@ -770,8 +769,8 @@ class PolarStereographic(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = bytes("Stereographic")
-        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpProjection = "Stereographic"
+        _pyngl.mpDataBaseVersion = "MediumRes"
         
         _pyngl.mpCenterLonF = self.stand_lon
         if self._hemi > 0:
@@ -779,7 +778,7 @@ class PolarStereographic(WrfProj):
         else:
             _pyngl.mpCenterLatF = -90.0
             
-        _pyngl.mpLimitMode = bytes("Corners")
+        _pyngl.mpLimitMode = "Corners"
         _pyngl.mpLeftCornerLonF = geobounds.bottom_left.lon
         _pyngl.mpLeftCornerLatF = geobounds.bottom_left.lat
         _pyngl.mpRightCornerLonF = geobounds.top_right.lon
@@ -877,12 +876,12 @@ class LatLon(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = bytes("CylindricalEquidistant")
-        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpProjection = "CylindricalEquidistant"
+        _pyngl.mpDataBaseVersion = "MediumRes"
         _pyngl.mpCenterLonF = self.stand_lon
         _pyngl.mpCenterLatF = self.moad_cen_lat
         
-        _pyngl.mpLimitMode = bytes("Corners")
+        _pyngl.mpLimitMode = "Corners"
         _pyngl.mpLeftCornerLonF = geobounds.bottom_left.lon
         _pyngl.mpLeftCornerLatF = geobounds.bottom_left.lat
         _pyngl.mpRightCornerLonF = geobounds.top_right.lon
@@ -1055,12 +1054,12 @@ class RotatedLatLon(WrfProj):
             return None
         
         _pyngl = Resources()
-        _pyngl.mpProjection = bytes("CylindricalEquidistant")
-        _pyngl.mpDataBaseVersion = bytes("MediumRes")
+        _pyngl.mpProjection = "CylindricalEquidistant"
+        _pyngl.mpDataBaseVersion = "MediumRes"
         _pyngl.mpCenterLatF = self._pyngl_cen_lat
         _pyngl.mpCenterLonF = self._pyngl_cen_lon
         
-        _pyngl.mpLimitMode = bytes("Corners")
+        _pyngl.mpLimitMode = "Corners"
         _pyngl.mpLeftCornerLonF = geobounds.bottom_left.lon
         _pyngl.mpLeftCornerLatF = geobounds.bottom_left.lat
         _pyngl.mpRightCornerLonF = geobounds.top_right.lon

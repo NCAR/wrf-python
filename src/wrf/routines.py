@@ -1,5 +1,4 @@
-from __future__ import (absolute_import, division, print_function, 
-                        unicode_literals)
+from __future__ import (absolute_import, division, print_function)
 
 from .util import (get_iterable, is_standard_wrf_var, extract_vars, viewkeys,
                    get_id)
@@ -22,7 +21,7 @@ from .g_uvmet import (get_uvmet, get_uvmet10, get_uvmet10_wspd_wdir,
 from .g_vorticity import get_avo, get_pvo
 from .g_wind import (get_destag_wspd_wdir, get_destag_wspd_wdir10, 
                    get_u_destag, get_v_destag, get_w_destag)
-from .g_times import get_times
+from .g_times import get_times, get_xtimes
 from .g_cloudfrac import get_cloudfrac
 
 
@@ -51,7 +50,8 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "tv" : get_tv, 
              "twb" : get_tw, 
              "terrain" : get_terrain,
-             "times" : get_times, 
+             "times" : get_times,
+             "xtimes" : get_xtimes,
              "uvmet" : get_uvmet, 
              "uvmet10" : get_uvmet10,
              "avo" : get_avo,
@@ -96,7 +96,8 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "tv" : ["units"], 
              "twb" : ["units"], 
              "terrain" : ["units"],
-             "times" : [], 
+             "times" : [],
+             "xtimes" : [],
              "uvmet" : ["units"], 
              "uvmet10" : ["units"],
              "avo" : [],

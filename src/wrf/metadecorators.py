@@ -1,5 +1,4 @@
-from __future__ import (absolute_import, division, print_function, 
-                        unicode_literals)
+from __future__ import (absolute_import, division, print_function)
 import warnings
 import wrapt 
 from collections import OrderedDict
@@ -12,7 +11,7 @@ from .util import (extract_vars, either, from_args, arg_location,
                    is_coordvar, latlon_coordvars, to_np, 
                    from_var, iter_left_indexes, is_mapping)
 from .coordpair import CoordPair
-from .py3compat import viewkeys, viewitems, py3range, ucode
+from .py3compat import viewkeys, viewitems, py3range
 from .interputils import get_xy_z_params, get_xy, to_xy_coords
 from .config import xarray_enabled
 
@@ -135,7 +134,7 @@ def copy_and_set_metadata(copy_varname=None, delete_attrs=None, name=None,
         outattrs = OrderedDict()
         
         if copy_varname is not None:
-            outname = ucode(var_to_copy.name)
+            outname = var_to_copy.name
             
             if dimnames is not None:
                 outdimnames = dimnames
@@ -1854,7 +1853,7 @@ def set_smooth_metdata():
         outattrs = OrderedDict()
         
         if isinstance(field, DataArray):
-            outname = "smooth_" + ucode(field.name)
+            outname = "smooth_" + field.name
             outdimnames = list(field.dims)
             outcoords.update(field.coords)
             outattrs.update(field.attrs)
