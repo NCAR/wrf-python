@@ -1,10 +1,16 @@
 WRF Users' Workshop 2018
 =========================
 
-Welcome WRF-Python tutorial attendees!
+Welcome WRF-Python Tutorial attendees!
 
-The instructions below should be completed prior to arriving at the tutorial.  
-There will not be enough time to do this during the tutorial.
+If you wish to actively participate in the tutorial, please bring your own 
+laptop. **Due to limited time constraints, the instructions below should be 
+completed prior to arriving at the tutorial**.
+
+I will be executing the same cells as the student workbook, so if you prefer 
+to sit and watch, that's OK too. Following the tutorial, I will upload 
+the instructor slides in to the same GitHub location as the student workbook if 
+you want to try it out later.
 
 Prerequisites
 ---------------
@@ -76,7 +82,7 @@ Step 2: Download Miniconda
 ----------------------------
 
 For this tutorial, you will need to download and install Miniconda.  We are 
-going to use Python 2.7, but it will also work with Python 3.5+. 
+going to use Python 3.6, but it will also work with Python 2.7. 
 
 Please use the appropriate link below to download Miniconda for your operating 
 system. 
@@ -85,11 +91,11 @@ system.
 
    64-bit OS recommended  
 
-`Win64 <https://repo.continuum.io/miniconda/Miniconda2-latest-Windows-x86_64.exe>`_
+`Win64 <https://repo.continuum.io/miniconda/Miniconda3-latest-Windows-x86_64.exe>`_
 
-`Mac <https://repo.continuum.io/miniconda/Miniconda2-latest-MacOSX-x86_64.sh>`_
+`Mac <https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh>`_
 
-`Linux <https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh>`_
+`Linux <https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh>`_
 
 For more information, see: https://conda.io/miniconda.html
 
@@ -97,8 +103,8 @@ For more information, see: https://conda.io/miniconda.html
 
     **What is Miniconda?**
 
-    If you have used the Anaconda distribution for Python before, then you will be 
-    familiar with Miniconda.  The Anaconda Python distribution includes numerous 
+    If you have used the Anaconda distribution for Python before, then you will 
+    be familiar with Miniconda.  The Anaconda Python distribution includes numerous 
     scientific packages out of the box, which can be difficult for users to build and 
     install. More importantly, Anaconda includes the conda package manager. 
     
@@ -109,7 +115,7 @@ For more information, see: https://conda.io/miniconda.html
     (more on that later).
     
     Miniconda is a bare bones implementation of Anaconda and only includes the 
-    conda package manager.  Since we are going to use the conda-forge channel to 
+    conda package manager. Since we are going to use the conda-forge channel to 
     install our scientific packages, Miniconda avoids any complications between 
     packages provided by Anaconda and conda-forge. 
 
@@ -119,9 +125,9 @@ Step 3: Install Miniconda
 
 Windows:
 
-    1. Browse to the directory where you downloaded Miniconda2-latest-Windows-x86_64.exe.
+    1. Browse to the directory where you downloaded Miniconda3-latest-Windows-x86_64.exe.
     
-    2. Double click on Miniconda2-latest-Windows-x86_64.exe. 
+    2. Double click on Miniconda3-latest-Windows-x86_64.exe. 
      
     3. Follow the instructions.
     
@@ -134,25 +140,25 @@ Mac and Linux:
     1. Using a terminal, you need to execute the bash shell script that you downloaded by
        doing::
     
-            bash /path/to/Miniconda2-latest-MacOSX-x86_64.sh [Mac]
+            bash /path/to/Miniconda3-latest-MacOSX-x86_64.sh [Mac]
             
-            bash /path/to/Miniconda2-latest-Linux-x86_64.sh [Linux]
+            bash /path/to/Miniconda3-latest-Linux-x86_64.sh [Linux]
     
     2. Follow the instructions.  
     
     3. At the end of the installation, it will ask if you want to add the 
-       miniconda2 path to your bash environment.  If you are unsure what to do,
+       miniconda3 path to your bash environment.  If you are unsure what to do,
        you should say "yes".  If you say "no", we're going to assume you know
        what you are doing.
        
-       If you said "yes", then once you restart your shell, the miniconda2 Python 
+       If you said "yes", then once you restart your shell, the miniconda3 Python 
        will be found instead of the system Python when you type the "python" 
        command.  If you want to undo this later, then you can edit 
        either ~/.bash_profile or ~/.bashrc (depending on OS used) and 
        comment out the line that looks similar to::
     
-            # added by Miniconda2 4.1.11 installer
-            export PATH="/path/to/miniconda2/bin:$PATH"
+            # added by Miniconda3 x.x.x installer
+            export PATH="/path/to/miniconda3/bin:$PATH"
             
     4. Restart your command terminal.
     
@@ -223,7 +229,7 @@ Follow the instructions below to create the tutorial_2018 environment.
    
       Type or copy this command in to your command terminal::
       
-          conda create -n tutorial_2018 python=2.7 matplotlib cartopy netcdf4 jupyter git ffmpeg wrf-python
+          conda create -n tutorial_2018 python=3.6 matplotlib cartopy netcdf4 jupyter git ffmpeg wrf-python
           
       Type "y" when prompted.  It will take several minutes to install everything.
           
@@ -240,7 +246,7 @@ Follow the instructions below to create the tutorial_2018 environment.
              If this is your first install of dbus, automatically load on login with:
              
              mkdir -p ~/Library/LaunchAgents
-             cp /path/to/miniconda2/envs/tutorial_test/org.freedesktop.dbus-session.plist ~/Library/LaunchAgents/
+             cp /path/to/miniconda3/envs/tutorial_test/org.freedesktop.dbus-session.plist ~/Library/LaunchAgents/
              launchctl load -w ~/Library/LaunchAgents/org.freedesktop.dbus-session.plist
              
          This is indicating that the dbus package can be set up to automatically load on login.  You 
@@ -367,19 +373,15 @@ or xarray, but you can safely ignore these).
 Step 7: Obtain WRF Output Files
 ----------------------------------
 
-For this tutorial, we strongly recommend that you use your own WRF output files.  
-The tutorial includes an easy way to point to your own data files.  The WRF 
-output files should all be from the same WRF run and use the same domain.  
-If your files are located on another system (e.g. yellowstone), then copy 2 or 
-3 of these files to your local computer prior to the tutorial.
+A link will be provided in an email prior to the tutorial for the WRF-ARW 
+data files used for the examples. If you did not receive this email, the link 
+will also be provided at the tutorial itself.  
 
-If you do not have any of your own WRF output files, then you can download the 
-instructor data files from a link that should have been provided to you in an 
-email prior to the tutorial.
-
-If you are using the link provided in the email for your data, you can follow 
-the instructions below to place your data in the default location for your 
-workbook.
+You also have the option of using your own data files for the tutorial by 
+modifying the first Jupyter Notebook cell to point to your data set. 
+However, there is no guarantee that every cell in your workbook will work 
+without some modifications (e.g. cross section lines will be drawn outside of 
+your domain).
 
     1. The link in the email should take you to a location on an Amazon cloud 
        drive.
