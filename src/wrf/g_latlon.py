@@ -589,9 +589,6 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
             return :class:`numpy.ndarray` instead of 
             :class:`xarray.DataArray`.  Default is True.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
-            
         map_proj (:obj:`int`): Model projection [1=Lambert Conformal, 
             2=Polar Stereographic, 3=Mercator, 6=Lat-Lon].  Required.
         
