@@ -365,8 +365,8 @@ def ll_to_xy(wrfin, latitude, longitude, timeidx=0,
                 - 'v': Use the same staggered grid as the v wind component, 
                   which has a staggered south_north (y) dimension.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
+        as_int (:obj:`bool`): Set to False to return the x,y values as 
+            :obj:`float`, otherwise they will be returned as :obj:`int`.
         
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
@@ -421,8 +421,8 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
             return :class:`numpy.ndarray` instead of 
             :class:`xarray.DataArray`.  Default is True.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
+        as_int (:obj:`bool`): Set to False to return the x,y values as 
+            :obj:`float`, otherwise they will be returned as :obj:`int`.
             
         map_proj (:obj:`int`): Model projection [1=Lambert Conformal, 
             2=Polar Stereographic, 3=Mercator, 6=Lat-Lon].  Required.
