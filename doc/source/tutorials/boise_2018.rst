@@ -128,26 +128,6 @@ system.
 
 For more information, see: https://conda.io/miniconda.html
 
-.. note::
-
-    **What is Miniconda?**
-
-    If you have used the Anaconda distribution for Python before, then you will 
-    be familiar with Miniconda.  The Anaconda Python distribution includes numerous 
-    scientific packages out of the box, which can be difficult for users to build and 
-    install. More importantly, Anaconda includes the conda package manager. 
-    
-    The conda package manager is a utility (similar to yum or apt-get) that installs 
-    packages from a repository of pre-compiled Python packages.  These repositories 
-    are called channels.  Conda makes it easy for Python users to install and 
-    uninstall packages, and also can be used to create isolated Python environments 
-    (more on that later).
-    
-    Miniconda is a bare bones implementation of Anaconda and only includes the 
-    conda package manager. Since we are going to use the conda-forge channel to 
-    install our scientific packages, Miniconda avoids any complications between 
-    packages provided by Anaconda and conda-forge. 
-
 
 Step 2: Install Miniconda
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -220,7 +200,7 @@ Mac and Linux:
            
    
 Step 3: Set Up the Conda Environment
---------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 If you are new to the conda package manager, one of the nice features of conda 
 is that you can create isolated Python environments that prevent package 
@@ -315,7 +295,7 @@ Follow the instructions below to create the tutorial_backup environment.
       
 
 Step 4: Download the Student Workbook
----------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The student workbook for the tutorial is available on GitHub.  The tutorial_backup
 conda environment includes the git application needed to download the repository.
@@ -380,7 +360,7 @@ To download the student workbook, follow these instructions:
                
 
 Step 5:  Verify Your Environment
-----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Verifying that your environment is correct involves importing a few 
 packages and checking for errors (you may see some warnings for matplotlib 
@@ -404,18 +384,12 @@ or xarray, but you can safely ignore these).
    4. You can exit the Python interpreter using **CTRL + D**
     
 
-Step 6: Obtain WRF Output Files
-----------------------------------
+Step 6: Install WRF Output Files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 A link will be provided in an email prior to the tutorial for the WRF-ARW 
-data files used for the examples. If you did not receive this email, the link 
-will also be provided at the tutorial itself.  
+data files used for the examples. 
 
-You also have the option of using your own data files for the tutorial by 
-modifying the first Jupyter Notebook cell to point to your data set. 
-However, there is no guarantee that every cell in your workbook will work 
-without some modifications (e.g. cross section lines will be drawn outside of 
-your domain).
 
     1. The link in the email should take you to a location on an Amazon cloud 
        drive.
