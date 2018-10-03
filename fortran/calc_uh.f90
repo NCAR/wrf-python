@@ -154,8 +154,6 @@ SUBROUTINE DCALCUH(nx, ny, nz, nzp1, zp, mapfct, dx, dy, uhmnhgt, uhmxhgt, us, &
 
     !$OMP END PARALLEL
 
-    uh = uh*1000.   ! Scale according to Kain et al. (2008)
-
     RETURN
 
 END SUBROUTINE DCALCUH

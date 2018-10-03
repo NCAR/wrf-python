@@ -197,7 +197,7 @@ def get_uh(wrfin, timeidx=0, method="cat", squeeze=True,
                           meta=False, _key=_key)
     v = destagger(v_vars[varname], -2) 
     
-    zp = ph + phb
+    zp = (ph + phb) / Constants.G
     
     uh = _udhel(zp, mapfct, u, v, wstag, dx, dy, bottom, top)
     
