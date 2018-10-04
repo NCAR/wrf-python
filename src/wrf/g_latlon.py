@@ -3,13 +3,15 @@ from __future__ import (absolute_import, division, print_function)
 from collections import OrderedDict
 
 import numpy as np
-from xarray import DataArray
 
 from .util import extract_vars, get_id, get_iterable, is_mapping, to_np
 from .py3compat import viewkeys
 from .latlonutils import _lat_varname, _lon_varname, _ll_to_xy, _xy_to_ll
 from .metadecorators import set_latlon_metadata
 from .config import xarray_enabled
+
+if xarray_enabled():
+    from xarray import DataArray
 
 
 def get_lat(wrfin, timeidx=0, method="cat", squeeze=True, 
