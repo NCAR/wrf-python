@@ -488,18 +488,24 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                 [K]
                 
         interp_levels (sequence): A 1D sequence of vertical levels to 
-            interpolate to.
+            interpolate to. Values must be in the same units as specified 
+            above for the *vert_coord* parameter.
             
         extrapolate (:obj:`bool`, optional): Set to True to extrapolate 
-            values below ground.  Default is False.
+            values below ground.  This is only performed when the 
+            vertical coordinate type is pressure or height. For temperature 
+            vertical coordinate types, setting this to True will set 
+            values below ground to the lowest model level. Default is False.
             
         field_type (:obj:`str`, optional): 
             The type of field.  Default is None.
             
             Valid strings are:
                 * 'none': None
-                * 'pressure', 'pres', 'p': pressure
-                * 'z', 'ght': geopotential height
+                * 'pressure', 'pres', 'p': pressure [Pa]
+                * 'pressure_hpa', 'pres_hpa', 'p_hpa': pressure [hPa]
+                * 'z', 'ght': geopotential height [m]
+                * 'z_km', 'ght_km': geopotential height [km]
                 * 'tc': temperature [degC]
                 * 'tk': temperature [K]
                 * 'theta', 'th': potential temperature [K]
@@ -556,16 +562,22 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     valid_coords = ("pressure", "pres", "p", "ght_msl", 
                     "ght_agl", "theta", "th", "theta-e", "thetae", "eth")
     
-    valid_field_types = ("none", "pressure", "pres", "p", "z",
+    valid_field_types = ("none", "pressure", "pres", "p", 
+                         'pressure_hpa', 'pres_hpa', 'p_hpa', "z",
                          "tc", "tk", "theta", "th", "theta-e", "thetae", 
-                         "eth", "ght")
+                         "eth", "ght", 'z_km', 'ght_km')
     
     icase_lookup = {"none" : 0,
                     "p" : 1,
                     "pres" : 1,
                     "pressure" : 1,
+                    "p_hpa" : 1,
+                    "pres_hpa" : 1,
+                    "pressure_hpa" : 1,
                     "z" : 2,
                     "ght" : 2,
+                    "z_km" : 2,
+                    "ght_km" : 2,
                     "tc" : 3, 
                     "tk" : 4,
                     "theta" : 5,
@@ -573,6 +585,22 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                     "theta-e" : 6,
                     "thetae" : 6,
                     "eth" : 6}
+    
+    in_unitmap = {"p_hpa" : 1.0/ConversionFactors.PA_TO_HPA,
+                  "pres_hpa" : 1.0/ConversionFactors.PA_TO_HPA,
+                  "pressure_hpa" : 1.0/ConversionFactors.PA_TO_HPA,
+                  "z_km" : 1.0/ConversionFactors.M_TO_KM,
+                  "ght_km" : 1.0/ConversionFactors.M_TO_KM,
+        
+        }
+    
+    out_unitmap = {"p_hpa" : ConversionFactors.PA_TO_HPA,
+                   "pres_hpa" : ConversionFactors.PA_TO_HPA,
+                   "pressure_hpa" : ConversionFactors.PA_TO_HPA,
+                   "z_km" : ConversionFactors.M_TO_KM,
+                   "ght_km" : ConversionFactors.M_TO_KM,
+        
+        }
     
     # These constants match what's in the fortran code.  
     rgas = Constants.RD
@@ -583,18 +611,21 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     if not isinstance(interp_levels, np.ndarray):
         interp_levels = np.asarray(interp_levels, np.float64)
         
-    # TODO: Check if field is staggered
+    if len(interp_levels) == 0:
+        raise ValueError("'interp_levels' contains no values")
+        
+    # Check if field is staggered
     if is_staggered(_wrfin, field):
-        raise RuntimeError("Please unstagger field in the vertical")
+        raise ValueError("Please unstagger field in the vertical")
     
     # Check for valid coord
     if vert_coord not in valid_coords:
-        raise RuntimeError("'%s' is not a valid vertical "
+        raise ValueError("'%s' is not a valid vertical "
                            "coordinate type" %  vert_coord)
     
     # Check for valid field type
     if field_type not in valid_field_types:
-        raise RuntimeError("'%s' is not a valid field type" % field_type)
+        raise ValueError("'%s' is not a valid field type" % field_type)
     
     log_p_int = 1 if log_p else 0
     
@@ -605,14 +636,12 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         extrap = 1
         icase = icase_lookup[field_type]
     
-    # Extract vriables
-    #timeidx = -1 # Should this be an argument?
-    ncvars = extract_vars(_wrfin, timeidx, ("PSFC", "QVAPOR", "F"), 
+    # Extract variables
+    ncvars = extract_vars(_wrfin, timeidx, ("PSFC", "QVAPOR"), 
                           method, squeeze, cache, meta=False, _key=_key)
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]
-    coriolis = ncvars["F"]
     
     terht = get_terrain(_wrfin, timeidx, units="m", 
                         method=method, squeeze=squeeze, cache=cache,
@@ -652,6 +681,10 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
         
+        coriolis = extract_vars(_wrfin, timeidx, "F", 
+                                method, squeeze, cache, meta=False, 
+                                _key=_key)["F"]
+        
         vcor = 4
         idir = 1
         icorsw = 0
@@ -675,6 +708,10 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         eth = get_eth(_wrfin, timeidx, method=method, squeeze=squeeze, 
             cache=cache, meta=False, _key=_key)
         
+        coriolis = extract_vars(_wrfin, timeidx, "F", 
+                                method, squeeze, cache, meta=False, 
+                                _key=_key)["F"]
+        
         p_hpa = p * ConversionFactors.PA_TO_HPA
         
         vcord_array = _monotonic(eth, p_hpa, coriolis, idir, delta, icorsw)
@@ -693,12 +730,29 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                          "Verify that the 'timeidx' parameter matches the "
                          "same value used when extracting the 'field' "
                          "variable.")
-            
-    res = _vintrp(field, p, tk, qv, ght, terht, sfp, smsfp,
+    
+    # Some field types are in different units than the Fortran routine 
+    # expects
+    
+    conv_factor = in_unitmap.get(field_type)
+    
+    if conv_factor is not None:
+        field_ = field * conv_factor
+    else:
+        field_ = field
+    
+    res = _vintrp(field_, p, tk, qv, ght, terht, sfp, smsfp,
                   vcord_array, interp_levels,
                   icase, extrap, vcor, log_p_int, missing)
     
-    return ma.masked_values(res, missing)
+    conv_factor = out_unitmap.get(field_type)
+    
+    if conv_factor is not None:
+        res_ = res * conv_factor
+    else:
+        res_ = res
+    
+    return ma.masked_values(res_, missing)
 
 
     
