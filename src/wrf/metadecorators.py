@@ -1839,11 +1839,12 @@ def set_smooth_metdata():
         if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
-        argvars = from_args(wrapped, ("field", "passes"), 
+        argvars = from_args(wrapped, ("field", "passes", "cenweight"), 
                             *args, **kwargs)
         
         field = argvars["field"]
         passes = argvars["passes"]
+        cenweight = argvars["cenweight"]
         
         result = wrapped(*args, **kwargs)
         
@@ -1858,6 +1859,7 @@ def set_smooth_metdata():
             outcoords.update(field.coords)
             outattrs.update(field.attrs)
             outattrs["passes"] = passes
+            outattrs["cenweight"] = cenweight
                 
         if isinstance(result, ma.MaskedArray):
             outattrs["_FillValue"] = result.fill_value

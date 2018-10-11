@@ -656,7 +656,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
     
-    smsfp = _smooth2d(sfp, 3)        
+    smsfp = _smooth2d(sfp, 3, 2.0)        
 
     vcor = 0
     

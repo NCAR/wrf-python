@@ -479,7 +479,7 @@ END SUBROUTINE DCOMPUTESEAPRS
 ! must make the same change below to filter2d.
 
 ! NCLFORTSTART
-SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
+SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing, cenweight)
 
     IMPLICIT NONE
 
@@ -488,14 +488,16 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
 
     INTEGER, INTENT(IN) :: nx, ny, it
     REAL(KIND=8), DIMENSION(nx, ny), INTENT(INOUT) :: a
-    REAL(KIND=8), INTENT(IN) :: missing
+    REAL(KIND=8), INTENT(IN) :: missing, cenweight
     REAL(KIND=8), DIMENSION(nx, ny), INTENT(INOUT) :: b
 
 ! NCLEND
 
-    REAL(KIND=8), PARAMETER :: COEF=0.25D0
-
     INTEGER :: i, j, iter
+    REAL(KIND=8) :: cenmult, coef
+
+    cenmult = (cenweight) / 2.
+    coef = 1.0 / (4. + cenweight)
 
     DO iter=1,it
         !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
@@ -508,25 +510,25 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
 
         !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
-            DO i=1,nx
+            DO i=2,nx-1
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i,j+1) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i,j-1) - 2*b(i,j) + b(i,j+1))
+                    a(i,j) = coef*(b(i,j-1) + cenmult*b(i,j) + b(i,j+1))
                 END IF
             END DO
         END DO
         !$OMP END PARALLEL DO
 
         !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
-        DO j=1,ny
+        DO j=2,ny-1
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i+1,j) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i-1,j) - 2*b(i,j) + b(i+1,j))
+                    a(i,j) = a(i,j) + coef*(b(i-1,j) + cenmult*b(i,j) + b(i+1,j))
                 END IF
             END DO
         END DO
@@ -556,7 +558,7 @@ END SUBROUTINE DFILTER2D
 ! must make the same change below to dfilter2d.
 
 ! NCLFORTSTART
-SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
+SUBROUTINE FILTER2D(a, b, nx, ny, it, missing, cenweight)
     IMPLICIT NONE
 
     !f2py threadsafe
@@ -564,14 +566,17 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
 
     INTEGER, INTENT(IN) :: nx, ny, it
     REAL(KIND=4), DIMENSION(nx, ny), INTENT(INOUT) :: a
-    REAL(KIND=4), INTENT(IN) :: missing
+    REAL(KIND=4), INTENT(IN) :: missing, cenweight
     REAL(KIND=4), DIMENSION(nx, ny), INTENT(INOUT) :: b
 
 ! NCLEND
 
-    REAL(KIND=4), PARAMETER :: COEF=0.25
-
+    !REAL(KIND=8), PARAMETER :: COEF = .125
     INTEGER :: i, j, iter
+    REAL(KIND=8) :: cenmult, coef
+
+    cenmult = (cenweight) / 2.
+    coef = 1.0 / (4. + cenweight)
 
     !$OMP PARALLEL
 
@@ -586,25 +591,25 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
 
         !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
-            DO i=1,nx
+            DO i=2,nx-1
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i,j+1) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i,j-1) - 2*b(i,j) + b(i,j+1))
+                    a(i,j) = coef*(b(i,j-1) + cenmult*b(i,j) + b(i,j+1))
                 END IF
             END DO
         END DO
         !$OMP END DO
 
         !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
-        DO j=1,ny
+        DO j=2,ny-1
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i+1,j) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i-1,j) - 2*b(i,j)+b(i+1,j))
+                    a(i,j) = a(i,j) + coef*(b(i-1,j) + cenmult*b(i,j) + b(i+1,j))
                 END IF
             END DO
         END DO

@@ -799,10 +799,10 @@ def _ctt(p_hpa, tk, qice, qcld, qv, ght, ter, haveqci, fill_nocloud,
 
 
 @check_args(0, 2, (2,))
-@left_iteration(2, 2, ref_var_idx=0, ignore_args=(1,))
+@left_iteration(2, 2, ref_var_idx=0, ignore_args=(1,2))
 @cast_type(arg_idxs=(0,))
 @extract_and_transpose()
-def _smooth2d(field, passes, outview=None):
+def _smooth2d(field, passes, cenweight, outview=None):
     """Wrapper for dfilter2d.
     
     Located in wrf_user.f90.
@@ -826,7 +826,8 @@ def _smooth2d(field, passes, outview=None):
     dfilter2d(outview, 
               field_tmp,               
               passes,
-              missing)
+              missing,
+              cenweight)
     
     return outview
 

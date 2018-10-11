@@ -677,10 +677,24 @@ def uvmet(u, v, lat, lon, cen_long, cone, meta=True, units="m s-1"):
 
 
 @set_smooth_metdata()
-def smooth2d(field, passes, meta=True):
+def smooth2d(field, passes, cenweight=2.0, meta=True):
     """Return the field smoothed.
     
-    This routine does not modify the original data.
+    The smoothing kernel applied is:
+    
+    .. math:: 
+                
+        \\frac{1}{4 + cenweight} * \\begin{bmatrix}
+                               0 & 1 & 0 \\\\
+                               1 & cenweight & 1 \\\\
+                               0 & 1 & 0
+                             \\end{bmatrix}
+    
+    Data values along the borders are left unchanged. This routine does not 
+    modify the original data supplied by the *field* parameter..
+    
+    If you need more general purpose multidimensional filtering tools, 
+    try the :meth:`scipy.ndimage.convolve` method.
     
     Args:
     
@@ -691,6 +705,9 @@ def smooth2d(field, passes, meta=True):
             a *_FillValue* attribute.
             
         passes (:obj:`int`): The number of smoothing passes.
+        
+        cenweight (:obj:`float`, optional): The weight to apply to the 
+            center of the smoothing kernel. Default is 2.0.
         
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -705,9 +722,13 @@ def smooth2d(field, passes, meta=True):
         be either a :class:`numpy.ndarray` or a :class:`numpy.ma.MaskedArray` 
         depending on the type for *field*.
         
+    See Also:
+    
+        :meth:`scipy.ndimage.convolve`
+        
     
     """
-    return _smooth2d(field, passes)
+    return _smooth2d(field, passes, cenweight)
 
 
 @set_cape_alg_metadata(is2d=True, copyarg="pres_hpa")
