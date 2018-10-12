@@ -7,7 +7,7 @@ python sub_sizes.py
 cd ..
 ifort ompgen.F90 -qopenmp -fpp -save-temps > /dev/null 2>&1
 mv ompgen.i90 omp.f90
-f2py *.f90 -m _wrffortran -h wrffortran.pyf --overwrite-signature
+#f2py *.f90 -m _wrffortran -h wrffortran.pyf --overwrite-signature
 cd ..
 
 python setup.py clean --all
