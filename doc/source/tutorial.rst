@@ -12,7 +12,6 @@ Upcoming Tutorials
 .. toctree::
    :maxdepth: 1
    
-   tutorials/boise_2018.rst
    
 
 Past Tutorials
@@ -21,8 +20,11 @@ Past Tutorials
 .. toctree::
    :maxdepth: 1
 
-   tutorials/wrf_workshop_2017.rst
-   tutorials/tutorial_03_2018.rst
+   tutorials/boise_2018.rst
    tutorials/wrf_workshop_2018.rst
+   tutorials/tutorial_03_2018.rst
+   tutorials/wrf_workshop_2017.rst
+  
+   
    
    
