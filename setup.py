@@ -40,8 +40,7 @@ ext1 = numpy.distutils.core.Extension(
                "fortran/wrf_pw.f90",
                "fortran/wrf_vinterp.f90",
                "fortran/wrf_wind.f90",
-               "fortran/omp.f90",
-               "fortran/wrffortran.pyf"]
+               "fortran/omp.f90"]
     )
 
 with open("src/wrf/version.py") as f: 
