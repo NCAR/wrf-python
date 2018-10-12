@@ -1298,7 +1298,7 @@ def dbz(pres, tkel, qv, qr, qs=None, qg=None, use_varint=False,
 
 @set_alg_metadata(2, "terrain", units="m2 s-2",
                   description="storm relative helicity")
-def srhel(u, v, height, terrain, top=3000.0, meta=True):
+def srhel(u, v, height, terrain, lats=None, top=3000.0, meta=True):
     """Return the storm relative helicity.
     
     This function calculates storm relative helicity from WRF ARW output. 
@@ -1342,6 +1342,11 @@ def srhel(u, v, height, terrain, top=3000.0, meta=True):
                 dimension names to the output.  Otherwise, default names will
                 be used. 
                 
+        lats (:class:`xarray.DataArray` or :class:`numpy.ndarray`, optional): 
+            Array of latitudes. This is required if any (or all) of your 
+            domain is in the southern hemisphere. If not provided, the 
+            northern hemisphere is assumed. Default is None.
+                
         top (:obj:`float`):  The height of the layer below which helicity is 
             calculated (meters above ground level).
 
@@ -1373,7 +1378,12 @@ def srhel(u, v, height, terrain, top=3000.0, meta=True):
     _v = np.ascontiguousarray(v[...,::-1,:,:])
     _height = np.ascontiguousarray(height[...,::-1,:,:])
     
-    return _srhel(_u, _v, _height, terrain, top)
+    if lats is None:
+        _lats = np.ones_like(terrain)
+    else:
+        _lats = lats
+    
+    return _srhel(_u, _v, _height, terrain, _lats, top)
 
 
 @set_alg_metadata(2, "u", refvarndims=3, units="m2 s-2",

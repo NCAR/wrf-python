@@ -486,11 +486,11 @@ def _wetbulb(p, tk, qv,  psafile=psafilepath(), outview=None):
     return result
 
 
-@check_args(0, 3, (3,3,3,2))                         
-@left_iteration(3, 2, ref_var_idx=0, ignore_args=(4,))
-@cast_type(arg_idxs=(0,1,2,3))
+@check_args(0, 3, (3,3,3,2,2))                         
+@left_iteration(3, 2, ref_var_idx=0, ignore_args=(5,))
+@cast_type(arg_idxs=(0,1,2,3,4))
 @extract_and_transpose()
-def _srhel(u, v, z, ter, top, outview=None):
+def _srhel(u, v, z, ter, lats, top, outview=None):
     """Wrapper for dcalrelhl.
     
     Located in wrf_relhl.f90.
@@ -503,6 +503,7 @@ def _srhel(u, v, z, ter, top, outview=None):
                        v, 
                        z, 
                        ter, 
+                       lats,
                        top,
                        outview)
     

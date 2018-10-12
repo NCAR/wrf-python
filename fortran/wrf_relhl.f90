@@ -31,7 +31,7 @@
 !   ***************************************************************
 
 ! NCLFORTSTART
-SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
+SUBROUTINE DCALRELHL(u, v, ght, ter, lat, top, sreh, miy, mjx, mkzh)
     USE wrf_constants, ONLY : PI, RAD_PER_DEG, DEG_PER_RAD
 
     IMPLICIT NONE
@@ -43,6 +43,7 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
     REAL(KIND=8), DIMENSION(miy,mjx,mkzh), INTENT(IN) :: u, v, ght
     REAL(KIND=8), INTENT(IN) :: top
     REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) :: ter
+    REAL(KIND=8), DIMENSION(miy,mjx), INTENT(IN) :: lat
     REAL(KIND=8), DIMENSION(miy,mjx), INTENT(OUT) :: sreh
 
 ! NCLEND
@@ -100,7 +101,13 @@ SUBROUTINE DCALRELHL(u, v, ght, ter, top, sreh, miy, mjx, mkzh)
             ENDIF
 
             bsp = 0.75D0*asp
-            bdr = adr + 30.D0
+
+            IF (lat(i,j) .GE. 0) THEN ! Northern hemisphern
+                bdr = adr + 30.D0
+            ELSE ! Southern hemisphere
+                bdr = adr - 30.D0
+            END IF
+
             IF (bdr .GT. 360.D0) THEN
                 bdr = bdr - 360.D0
             ENDIF

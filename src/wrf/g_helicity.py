@@ -7,6 +7,7 @@ from .extension import _srhel, _udhel
 from .destag import destagger
 from .util import extract_vars, extract_global_attrs, either
 from .metadecorators import copy_and_set_metadata
+from .g_latlon import get_lat
 
 @copy_and_set_metadata(copy_varname="HGT", name="srh", 
                        description="storm relative helicity",
@@ -72,6 +73,9 @@ def get_srh(wrfin, timeidx=0, method="cat", squeeze=True,
     """
     # Top can either be 3000 or 1000 (for 0-1 srh or 0-3 srh)
     
+    lats = get_lat(wrfin, timeidx, method, squeeze, 
+                   cache, meta=False, _key=_key, stagger=None)
+    
     ncvars = extract_vars(wrfin, timeidx, ("HGT", "PH", "PHB"),
                           method, squeeze, cache, meta=False,
                           _key=_key)
@@ -101,7 +105,7 @@ def get_srh(wrfin, timeidx=0, method="cat", squeeze=True,
     v1 = np.ascontiguousarray(v[...,::-1,:,:])
     z1 = np.ascontiguousarray(z[...,::-1,:,:])
     
-    srh = _srhel(u1, v1, z1, ter, top)
+    srh = _srhel(u1, v1, z1, ter, lats, top)
     
     return srh
 
