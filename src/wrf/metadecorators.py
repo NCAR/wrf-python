@@ -889,7 +889,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                                   "latlon", "missing", 
                                   "wrfin", "timeidx", "stagger", "projection",
                                   "ll_point", "pivot_point", "angle",
-                                  "start_point", "end_point",
+                                  "start_point", "end_point", "autolevels",
                                   "cache"), 
                           *args, **kwargs)  
     
@@ -907,6 +907,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     angle = argvars["angle"]
     start_point = argvars["start_point"]
     end_point = argvars["end_point"]
+    autolevels = argvars["autolevels"]
     cache = argvars["cache"]
     
     start_point_xy = None
@@ -937,7 +938,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
             end_point_xy = (end_point.x, end_point.y)
     
     xy, var2dz, z_var2d = get_xy_z_params(to_np(z), pivot_point_xy, angle,
-              start_point_xy, end_point_xy, levels)
+              start_point_xy, end_point_xy, levels, autolevels)
     
     # Make a copy so we don't modify a user supplied cache
     if cache is not None:

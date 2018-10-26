@@ -65,6 +65,10 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             timeidx = 0
             if not pynio:
                 in_wrfnc = NetCDF(wrf_in)
+                try:
+                    in_wrfnc.set_auto_mask(False)
+                except:
+                    pass
             else:
                 # Note: Python doesn't like it if you reassign an outer scoped
                 # variable (wrf_in in this case)
@@ -77,6 +81,10 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             timeidx = None
             if not pynio:
                 nc = NetCDF(wrf_in)
+                try:
+                    nc.set_auto_mask(False)
+                except:
+                    pass
                 in_wrfnc = [nc for i in xrange(repeat)]
             else:
                 if not wrf_in.endswith(".nc"):
@@ -88,6 +96,10 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             
         
         refnc = NetCDF(referent)
+        try:
+            refnc.set_auto_mask(False)
+        except:
+            pass
         
         # These have a left index that defines the product type
         multiproduct = varname in ("uvmet", "uvmet10", "cape_2d", "cape_3d", 
@@ -204,6 +216,10 @@ def _get_refvals(referent, varname, repeat, multi):
         pass
         
     refnc = NetCDF(referent)
+    try:
+        refnc.set_auto_mask(False)
+    except:
+        pass
     
     if not multi:
         ref_vals = refnc.variables[varname][:]
@@ -244,6 +260,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             timeidx = 0
             if not pynio:
                 in_wrfnc = NetCDF(wrf_in)
+                try:
+                    in_wrfnc.set_auto_mask(False)
+                except:
+                    pass
             else:
                 # Note: Python doesn't like it if you reassign an outer scoped
                 # variable (wrf_in in this case)
@@ -256,6 +276,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             timeidx = None
             if not pynio:
                 nc = NetCDF(wrf_in)
+                try:
+                    nc.set_auto_mask(False)
+                except:
+                    pass
                 in_wrfnc = [nc for i in xrange(repeat)]
             else:
                 if not wrf_in.endswith(".nc"):
@@ -279,22 +303,35 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
         elif (varname == "vertcross"):
             ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)
             ref_p_cross = _get_refvals(referent, "p_cross", repeat, multi)
+            ref_ht_vertcross1 = _get_refvals(referent, "ht_vertcross1", repeat, 
+                                            multi)
+            ref_ht_vertcross2 = _get_refvals(referent, "ht_vertcross2", repeat, 
+                                            multi)
+            ref_ht_vertcross3 = _get_refvals(referent, "ht_vertcross3", repeat, 
+                                            multi)
             
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             
             pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
-            #ht_cross = vertcross(to_np(hts), p, pivot_point=pivot_point, 
-            #                     angle=90., latlon=True)
-            # Make sure the numpy versions work first
-            ht_cross = vertcross(to_np(hts), to_np(p), 
-                                 pivot_point=pivot_point, angle=90.)
-            ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.)
             
-            # Note:  Until the bug is fixed in NCL, the wrf-python cross 
-            # sections will contain one extra point
-            nt.assert_allclose(to_np(ht_cross)[...,0:-1], ref_ht_cross, 
-                               rtol=.01)
+            # Beginning in wrf-python 1.3, users can select number of levels.
+            # Originally, for pressure, dz was 10, so let's back calculate
+            # the number of levels.
+            p_max = np.floor(np.amax(p)/10) * 10     # bottom value
+            p_min = np.ceil(np.amin(p)/10) * 10      # top value
+            
+            p_autolevels = int((p_max - p_min) /10)
+
+            # Make sure the numpy versions work first
+            
+            ht_cross = vertcross(to_np(hts), to_np(p), 
+                                 pivot_point=pivot_point, angle=90.,
+                                 autolevels=p_autolevels)
+            ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.,
+                                 autolevels=p_autolevels)
+            
+            nt.assert_allclose(to_np(ht_cross), ref_ht_cross, rtol=.01)
             
             # Test the manual projection method with lat/lon
             lats = hts.coords["XLAT"]
@@ -304,6 +341,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                                        int(lats.shape[-1]/2)],
                               lon=lons[int(lons.shape[-2]/2), 
                                        int(lons.shape[-1]/2)])
+            
             v1 = vertcross(hts,p,wrfin=in_wrfnc,pivot_point=pivot_point,
                            angle=90.0)
             v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
@@ -313,9 +351,10 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(v1), to_np(v2), rtol=.01)
             
             # Test opposite
+            
             p_cross1 = vertcross(p,hts,pivot_point=pivot_point, angle=90.0)
             
-            nt.assert_allclose(to_np(p_cross1)[...,0:-1], 
+            nt.assert_allclose(to_np(p_cross1), 
                                ref_p_cross, 
                                rtol=.01)
             # Test point to point
@@ -328,6 +367,50 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             
             nt.assert_allclose(to_np(p_cross1), 
                                to_np(p_cross2))
+            
+            # Check the new vertcross routine
+            pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
+            ht_cross = vertcross(hts, p, 
+                                 pivot_point=pivot_point, angle=90.,
+                                 latlon=True)
+            
+            nt.assert_allclose(to_np(ht_cross), 
+                               to_np(ref_ht_vertcross1), atol=.01)
+            
+            
+            
+            levels = [1000., 850., 700., 500., 250.]
+            ht_cross = vertcross(hts, p, 
+                                 pivot_point=pivot_point, angle=90.,
+                                 levels=levels, latlon=True)
+            
+            nt.assert_allclose(to_np(ht_cross), 
+                               to_np(ref_ht_vertcross2), atol=.01)
+            
+            
+            start_lat = np.amin(lats) + .25*(np.amax(lats) - np.amin(lats))
+            end_lat = np.amin(lats) + .75*(np.amax(lats) - np.amin(lats))
+            
+            start_lon = np.amin(lons) + .25*(np.amax(lons) - np.amin(lons))
+            end_lon = np.amin(lons) + .75*(np.amax(lons) - np.amin(lons))
+            
+            start_point = CoordPair(lat=start_lat, lon=start_lon)
+            end_point = CoordPair(lat=end_lat, lon=end_lon)
+            
+            # ll_point and projection came from above 
+            ht_cross = vertcross(hts, p, 
+                                 start_point=start_point, 
+                                 end_point=end_point, 
+                                 projection=hts.attrs["projection"], 
+                                 ll_point=ll_point, 
+                                 latlon=True,
+                                 autolevels=1000)
+            
+            
+            nt.assert_allclose(to_np(ht_cross), 
+                               to_np(ref_ht_vertcross3),
+                               rtol=.01)
+            
               
         elif (varname == "interpline"):
             
@@ -336,15 +419,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
             pivot_point = CoordPair(t2.shape[-1] / 2, t2.shape[-2] / 2)
             
-            #t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
-            #                      angle=90.0, latlon=True)
             # Make sure the numpy version works
             t2_line1 = interpline(to_np(t2), pivot_point=pivot_point, 
                                   angle=90.0)
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
-            # Note:  After NCL is fixed, remove the slice.
-            nt.assert_allclose(to_np(t2_line1)[...,0:-1], ref_t2_line)
+            nt.assert_allclose(to_np(t2_line1), ref_t2_line)
             
             # Test the manual projection method with lat/lon
             lats = t2.coords["XLAT"]
@@ -575,6 +655,10 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
             timeidx = 0
             if not pynio:
                 in_wrfnc = NetCDF(wrf_in)
+                try:
+                    in_wrfnc.set_auto_mask(False)
+                except:
+                    pass
             else:
                 # Note: Python doesn't like it if you reassign an outer scoped
                 # variable (wrf_in in this case)
@@ -587,6 +671,10 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
             timeidx = None
             if not pynio:
                 nc = NetCDF(wrf_in)
+                try:
+                    nc.set_auto_mask(False)
+                except:
+                    pass
                 in_wrfnc = [nc for i in xrange(repeat)]
             else:
                 if not wrf_in.endswith(".nc"):
@@ -597,6 +685,10 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
                 in_wrfnc = [nc for i in xrange(repeat)]
                 
         refnc = NetCDF(referent)
+        try:
+            refnc.set_auto_mask(False)
+        except:
+            pass
                 
         if testid == "xy":
             # Since this domain is not moving, the reference values are the 
@@ -691,7 +783,8 @@ if __name__ == "__main__":
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", 
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
-                "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag"]
+                "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag",
+                "height_agl"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     latlon_tests = ["xy", "ll"]
     

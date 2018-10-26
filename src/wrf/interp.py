@@ -94,7 +94,7 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
               ll_point=None,
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
-              latlon=False, cache=None, meta=True):
+              latlon=False, autolevels=100, cache=None, meta=True):
     """Return the vertical cross section for a three-dimensional field.
     
     The cross section is defined by a horizontal line through the domain.  
@@ -213,6 +213,10 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                 *latlon* is set to True. Otherwise, a warning will be issued,
                 and the latitude and longitude information will not be 
                 present.
+                
+        autolevels(:obj:`int`, optional): The number of evenly spaced 
+            automatically chosen vertical levels to use when *levels* 
+            is None. Default is 100.
              
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 
@@ -279,7 +283,8 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                 
         xy, var2dz, z_var2d = get_xy_z_params(to_np(vert), pivot_point_xy, 
                                               angle, start_point_xy, 
-                                              end_point_xy, levels)
+                                              end_point_xy, levels,
+                                              autolevels)
     
     if not multi:
         result = _vertcross(field3d, xy, var2dz, z_var2d, missing)

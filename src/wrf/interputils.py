@@ -185,7 +185,7 @@ def _calc_xy(xdim, ydim, pivot_point=None, angle=None,
 
 def get_xy_z_params(z, pivot_point=None, angle=None,
                     start_point=None, end_point=None,
-                    levels=None):
+                    levels=None, autolevels=100):
     """Return the cross section parameters.
     
     This function returns the xy horizontal cross section line coordinates, 
@@ -224,6 +224,10 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
             vertical levels in the output array.  If None, a fixed set of 
             vertical levels is provided.  Default is None.
             
+        autolevels(:obj:`int`, optional): The number of evenly spaced 
+            automatically chosen vertical levels to use when *levels* 
+            is None. Default is 100.
+            
     Returns:
     
         :obj:`tuple`:  A tuple containing the xy horizontal cross section  
@@ -248,20 +252,18 @@ def get_xy_z_params(z, pivot_point=None, angle=None,
         if(var2dz[idx1] > var2dz[idx2]):  # monotonically decreasing coordinate
             z_max = floor(np.amax(z)/10) * 10     # bottom value
             z_min = ceil(np.amin(z)/10) * 10      # top value
-            dz = 10
-            nlevels = int((z_max - z_min)/dz)
-            z_var2d = np.zeros((nlevels), dtype=z.dtype)
+            dz = (1.0/autolevels) * (z_max - z_min)
+            z_var2d = np.zeros((autolevels), dtype=z.dtype)
             z_var2d[0] = z_max
             dz = -dz
         else:
             z_max = np.amax(z)
             z_min = 0.
-            dz = 0.01*z_max
-            nlevels = int(z_max/dz)
-            z_var2d = np.zeros((nlevels), dtype=z.dtype)
+            dz = (1.0/autolevels)*z_max
+            z_var2d = np.zeros((autolevels), dtype=z.dtype)
             z_var2d[0] = z_min
             
-        for i in py3range(1,nlevels):
+        for i in py3range(1,autolevels):
             z_var2d[i] = z_var2d[0] + i*dz
     else:
         z_var2d = np.asarray(levels, z.dtype)
