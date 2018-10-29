@@ -153,10 +153,15 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
+        elif (varname == "height_agl"):
+            # Change the vert_type to height_agl when NCL gets updated.
+            my_vals = getvar(in_wrfnc, "z", timeidx=timeidx, msl=False)
+            tol = 1/100.
+            atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
+            nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
         elif (varname == "cfrac"):
             # Change the vert_type to height_agl when NCL gets updated.
-            my_vals = getvar(in_wrfnc, "cfrac", timeidx=timeidx, 
-                             vert_type="pres")
+            my_vals = getvar(in_wrfnc, "cfrac", timeidx=timeidx)
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
@@ -203,7 +208,11 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             try:
                 nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
             except:
-                print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
+                absdiff = np.abs(to_np(my_vals) - ref_vals)
+                maxdiff = np.amax(absdiff)
+                print (maxdiff)
+                print np.argwhere(absdiff == maxdiff)
+                
                 raise
     
     
