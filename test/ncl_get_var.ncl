@@ -5,7 +5,7 @@
     ;system("printenv")
     
     if (.not. isvar("in_file")) then
-        in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d02_2010-06-13_21:00:00.nc"
+        in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00.nc"
     end if 
     
     if (.not. isvar("out_file")) then
@@ -48,20 +48,21 @@
     
     ; Do the interpolation routines manually
     ; 3D vertical cross section
-    z  = wrf_user_getvar(input_file, "z", 0)        ; grid point height
-    p  = wrf_user_getvar(input_file, "pressure", 0) ; total pressure
+    z := wrf_user_getvar(input_file, "z", 0)        ; grid point height
+    p := wrf_user_getvar(input_file, "pressure", 0) ; total pressure
     
     dimsz = dimsizes(z)
     pivot = (/ dimsz(2)/2, dimsz(1)/2 /)    ; pivot point is center of domain
     
     ht_cross = wrf_user_intrp3d(z,p,"v",pivot,90.0,False)
+    
     p_cross = wrf_user_intrp3d(p,z,"v",pivot,90.0,False)
     p_cross!0 = "Vertical_p"
     p_cross!1 = "Horizontal_p"
     
     fout->ht_cross = ht_cross
     fout->p_cross = p_cross
-    
+;    
     ; For the new cross section routine
     xopt = True
     xopt@use_pivot = True
@@ -90,17 +91,17 @@
     
     fout->ht_vertcross2 = ht_vertcross2
     
-    ; Note for the default file:
-    ; >>> np.amin(lats)
-    ; 32.77895
-    ; >>> np.amax(lats)
-    ; 40.209736
-    ; >>> np.amin(lons)
-    ; -104.71738
-    ; >>> np.amax(lons)
-    ; -95.153076
+    lats = wrf_user_getvar(input_file, "lat", 0)
+    lons = wrf_user_getvar(input_file, "lon", 0) 
     
-    start_end = (/ -102.0, 35.0, -98.0, 37.0 /)
+    start_lat = min(lats) + .25d*(max(lats) - min(lats))
+    end_lat = min(lats) + .75d*(max(lats) - min(lats))
+            
+    start_lon = min(lons) + .25d*(max(lons) - min(lons))
+    end_lon = min(lons) + .75d*(max(lons) - min(lons))
+    
+    start_end = (/ start_lon, start_lat, end_lon, end_lat /)
+    
     ; For the new cross section routine
     xopt := True
     xopt@use_pivot = False
@@ -108,6 +109,7 @@
     xopt@file_handle = input_file
     xopt@timeidx = 0
     xopt@linecoords = True
+    xopt@autolevels = 1000
     
     ht_vertcross3 = wrf_user_vertcross(z, p, start_end, xopt)
     ht_vertcross3!0 = "vertical3"
@@ -118,7 +120,6 @@
     ; 3D horizontal interpolation
     plev = 500.   ; 500 MB
     z_500 = wrf_user_intrp3d(z,p,"h",plev,0.,False)
-    ;z_500_dims = dimsizes(z_500)
     
     fout->z_500 = z_500
     
@@ -221,8 +222,8 @@
     
     
     ; lat/lon to x/y and x/y to lat/lon routines
-    lats = (/-55, -60, -65 /)
-    lons = (/25, 30, 35 /)
+    lats := (/-55, -60, -65 /)
+    lons := (/25, 30, 35 /)
     i_s = (/10, 100, 150 /)
     j_s = (/10, 100, 150 /)
     ij = wrf_user_ll_to_ij(input_file, lons, lats, True) 
