@@ -5,6 +5,7 @@ import numpy as np
 import wrapt 
 
 from .util import iter_left_indexes, to_np
+from .py3compat import py3range
 from .config import xarray_enabled
 from .constants import default_fill
 
@@ -520,6 +521,83 @@ def cloudfrac_left_iter(alg_dtype=np.float64):
     return func_wrapper
 
 
+def interplevel_left_iter(is2dlev, alg_dtype=np.float64):
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        new_args = list(args)
+        new_kwargs = dict(kwargs)
+        
+        field3d = args[0]
+        z = args[1]
+        levels = args[2]
+            
+        num_left_dims = z.ndim - 3
+        orig_dtype = field3d.dtype
+        left_dims = z.shape[0:num_left_dims]
+        multiproduct = True if field3d.ndim - z.ndim == 1 else False
+        
+        # No special left side iteration, build the output from the 
+        # low, mid, high results.
+        if (num_left_dims == 0):
+            if multiproduct:
+                if not is2dlev:
+                    outshape = (field3d.shape[0:-3] + levels.shape + 
+                                field3d.shape[-2:])
+                else:
+                    outshape = (field3d.shape[0:-3] + field3d.shape[-2:])
+                
+                output = np.empty(outshape, dtype=alg_dtype)
+                for i in py3range(field3d.shape[0]):
+                    new_args[0] = field3d[i,:]
+                    new_kwargs["outview"] = output[i,:]
+                    _ = wrapped(*new_args, **new_kwargs)
+            else:
+                output = wrapped(*args, **kwargs)
+
+            return output
+        
+        if multiproduct:
+            outdims = field3d.shape[0:1] + left_dims
+        else:
+            outdims = left_dims
+            
+        extra_dims = tuple(outdims)
+        
+        if not is2dlev:
+            outdims += levels.shape
+        
+        outdims += z.shape[-2:]
+        
+        outview_array = np.empty(outdims, alg_dtype)
+
+        for left_idxs in iter_left_indexes(extra_dims):
+            
+            field_out_slice_idxs = left_idxs + (slice(None),)
+            
+            if multiproduct:
+                z_slice_idxs = left_idxs[1:] + (slice(None),)
+            else:
+                z_slice_idxs = left_idxs + (slice(None),)
+                
+            
+            new_args[0] = field3d[field_out_slice_idxs]
+            new_args[1] = z[z_slice_idxs]
+            
+            if is2dlev:
+                if levels.ndim > 2:
+                    new_args[2] = levels[z_slice_idxs]
+            
+            new_kwargs["outview"] = outview_array[field_out_slice_idxs]
+            
+            _ = wrapped(*new_args, **new_kwargs)
+            
+        output = outview_array.astype(orig_dtype)
+ 
+        return output
+    
+    return func_wrapper
+     
+
 def check_cape_args():
     """A decorator to check that the cape_3d arguments are valid.
     
@@ -569,6 +647,50 @@ def check_cape_args():
                 raise ValueError("arguments 0-3 "
                                  "must be 1-dimensional when "
                                  "arguments 4 and 5 are scalars")
+      
+        return wrapped(*args, **kwargs)
+    
+    return func_wrapper
+
+
+def check_interplevel_args(is2dlev):
+    """A decorator to check that the interplevel arguments are valid.
+    
+    An exception is raised when an invalid argument is found.
+            
+    Returns:
+    
+        None
+        
+    Raises:
+    
+        :class:`ValueError`: Raised when an invalid argument is detected.
+        
+    """
+    @wrapt.decorator
+    def func_wrapper(wrapped, instance, args, kwargs):
+        
+        field3d = args[0]
+        z = args[1]
+        levels = args[2]
+        
+        multiproduct = True if (field3d.ndim - z.ndim) == 1 else False
+        
+        if not multiproduct:
+            if field3d.shape != z.shape:
+                raise ValueError("arguments 0 and 1 must have the same shape")
+        else:
+            if field3d.shape[1:] != z.shape:
+                raise ValueError("argument 0 and 1 must have same rightmost "
+                                 "dimensions")
+                
+        if is2dlev:
+            if levels.ndim != 2:
+                if (levels.shape[0:-2] != z.shape[0:-3] or 
+                    levels.shape[-2:] != z.shape[-2:]):
+                    raise ValueError("argument 1 and 2 must have "
+                                     "the same leftmost and rightmost "
+                                     "dimensions")
       
         return wrapped(*args, **kwargs)
     

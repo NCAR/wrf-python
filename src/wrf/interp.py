@@ -4,7 +4,7 @@ import numpy as np
 import numpy.ma as ma
 
 from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d, 
-                        _monotonic, _vintrp)
+                        _monotonic, _vintrp, _interpz3d_lev2d)
 
 from .metadecorators import set_interp_metadata
 from .util import extract_vars, is_staggered, get_id, to_np, get_iterable
@@ -20,7 +20,7 @@ from wrf.g_pressure import get_pressure
 #  Note:  Extension decorator is good enough to handle left dims
 @set_interp_metadata("horiz")
 def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64), 
-                meta=True):
+                squeeze=True, meta=True):
     """Return the three-dimensional field interpolated to a horizontal plane 
     at the specified vertical level.
 
@@ -35,11 +35,20 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             pressure or height. This array must have the same dimensionality
             as *field3d*.
         
-        desiredlev (:obj:`float`): The desired vertical level.  
+        desiredlev (:obj:`float`, 1D sequence, or :class:`numpy.ndarray`): The 
+            desired vertical level(s). This can be a single value (e.g. 500), 
+            a sequence of values (e.g. [1000, 850, 700, 500, 250]), or a 
+            multidimensional array where the right two dimensions (ny x nx) 
+            must match *field3d*, and any leftmost dimensions match 
+            field3d.shape[:-3] (e.g. planetary boundary layer).  
             Must be in the same units as the *vert* parameter.
         
         missing (:obj:`float`): The fill value to use for the output.  
             Default is :data:`wrf.default_fill(numpy.float64)`.
+            
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
         
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -66,26 +75,34 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             
             p = getvar(wrfin, "pressure")
             ht = getvar(wrfin, "z", units="dm")
+            pblh = getvar(wrfin, "PBLH")
             
             ht_500 = interplevel(ht, p, 500.0)
+            
+            
         
     
     """
-    # Some fields like uvmet have an extra left dimension for the product
-    # type, we'll handle that iteration here.
-    multi = True if field3d.ndim - vert.ndim == 1 else False
     
-    if not multi:
-        result = _interpz3d(field3d, vert, desiredlev, missing)
+    _desiredlev = np.asarray(desiredlev)
+    if _desiredlev.ndim == 0:
+        _desiredlev = np.array([desiredlev], np.float64)
+        levsare2d = False
     else:
-        outshape = field3d.shape[0:-3] + field3d.shape[-2:]
-        result = np.empty(outshape, dtype=field3d.dtype)
-            
-        for i in py3range(field3d.shape[0]):
-            result[i,:] = (
-                _interpz3d(field3d[i,:], vert, desiredlev, missing)[:])
-            
-    return ma.masked_values (result, missing)
+        levsare2d = _desiredlev.ndim >= 2
+
+    if not levsare2d:
+        result = _interpz3d(field3d, vert, _desiredlev, missing)
+    else:
+        result = _interpz3d_lev2d(field3d, vert, _desiredlev, missing)
+     
+    masked = ma.masked_values (result, missing)
+    
+    if not meta:
+        if squeeze:
+            return masked.squeeze()
+    
+    return masked
 
 
 @set_interp_metadata("cross")

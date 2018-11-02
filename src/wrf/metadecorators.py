@@ -792,16 +792,21 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         
     """  
     argvars = from_args(wrapped, ("field3d", "vert", "desiredlev", 
-                                  "missing"), 
+                                  "missing", "squeeze"), 
                           *args, **kwargs)  
     
     field3d = argvars["field3d"]
     z = argvars["vert"]
-    desiredloc = argvars["desiredlev"]
+    desiredlev = argvars["desiredlev"]
+    _desiredlev = np.asarray(desiredlev)
     missingval = argvars["missing"]
+    squeeze = argvars["squeeze"]
     
     result = wrapped(*args, **kwargs)
     
+    levsare2d = _desiredlev.ndim >= 2
+    multiproduct = field3d.ndim - z.ndim == 1
+        
     # Defaults, in case the data isn't a DataArray
     outname = None
     outdimnames = None
@@ -812,34 +817,49 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     vert_units = None
     if isinstance(z, DataArray):
         vert_units = z.attrs.get("units", None)
-    
-    # If we have no metadata to start with, only set the level
-    levelstr = ("{0} {1}".format(desiredloc, vert_units) 
-                if vert_units is not None 
-                else "{0}".format(desiredloc))
-    
-    name_levelstr = ("{0}_{1}".format(desiredloc, vert_units) 
-                if vert_units is not None 
-                else "{0}".format(desiredloc))
+        
     
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
-        outdimnames.remove(field3d.dims[-3])
+        
+        del outdimnames[-3]
+        
         try:
             del outcoords[field3d.dims[-3]]
         except KeyError:
             pass # xarray 0.9
+        
+        if not levsare2d:
+            outdimnames.insert(-2, "levels")
+            if _desiredlev.ndim == 0:
+                outcoords["levels"] = [desiredlev]
+            else:
+                outcoords["levels"] = _desiredlev
+        else:
+            if (_desiredlev.ndim == 2):
+                outcoords["levels"] = field3d.dims[-2:], _desiredlev[:]
+            else:
+                if multiproduct:
+                    d = field3d.dims[1:-3] + field3d.dims[-2:]
+                else:
+                    d = field3d.dims[0:-3] + field3d.dims[-2:]
+                outcoords["levels"] = d, _desiredlev[:]
+                
+                
+                
+                
+        
         outattrs.update(field3d.attrs)
-        outname = "{0}_{1}".format(field3d.name, name_levelstr)
+        outname = "{0}_interp".format(field3d.name)
         
     else:
-        outname = "field3d_{0}".format(name_levelstr)
-        
-    outattrs["level"] = levelstr
+        outname = "field3d_interp"
+    
     outattrs["missing_value"] = missingval
     outattrs["_FillValue"] = missingval
+    outattrs["vert_units"] = vert_units
     
     for key in ("MemoryOrder", "description"):
         try:
@@ -847,8 +867,10 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         except KeyError:
             pass
     
-    return DataArray(result, name=outname, dims=outdimnames, 
-                     coords=outcoords, attrs=outattrs)
+    da = DataArray(result, name=outname, dims=outdimnames, 
+                   coords=outcoords, attrs=outattrs)
+    
+    return da.squeeze() if squeeze else da
 
 
 def _set_cross_meta(wrapped, instance, args, kwargs):
@@ -1646,7 +1668,7 @@ def set_interp_metadata(interp_type):
     """   
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        do_meta = from_args(wrapped, ("meta"), *args, **kwargs)["meta"]
         
         if do_meta is None:
             do_meta = True

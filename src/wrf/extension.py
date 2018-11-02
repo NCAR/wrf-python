@@ -11,7 +11,7 @@ from wrf._wrffortran import (dcomputetk, dinterp3dz, dinterp2dxy, dinterp1d,
                           dcomputeabsvort, dlltoij, dijtoll, deqthecalc,
                           omgcalc, virtual_temp, wetbulbcalc, dcomputepw,
                           wrf_monotonic, wrf_vintrp, dcomputewspd, 
-                          dcomputewdir,
+                          dcomputewdir, dinterp3dz_2dlev,
                           fomp_set_num_threads, fomp_get_num_threads, 
                           fomp_get_max_threads, fomp_get_thread_num,
                           fomp_get_num_procs, fomp_in_parallel, 
@@ -34,7 +34,8 @@ from .decorators import (left_iteration, cast_type,
 from .util import combine_dims, npbytes_to_str, psafilepath
 from .py3compat import py3range
 from .specialdec import (uvmet_left_iter, cape_left_iter, 
-                         cloudfrac_left_iter, check_cape_args)
+                         cloudfrac_left_iter, check_cape_args,
+                         interplevel_left_iter, check_interplevel_args)
 
 class DiagnosticError(Exception):
     """Raised when an error occurs in a diagnostic routine."""
@@ -73,9 +74,9 @@ class DiagnosticError(Exception):
 # below assume that Fortran-ordered views are being used.  This allows
 # f2py to pass the array pointers directly to the Fortran routine.
 
-@check_args(0, 3, (3, 3, None, None))
-@left_iteration(3, 2, ref_var_idx=0, ignore_args=(2,3))
-@cast_type(arg_idxs=(0,1))
+@check_interplevel_args(is2dlev=False)
+@interplevel_left_iter(is2dlev=False)
+@cast_type(arg_idxs=(0,1,2))
 @extract_and_transpose()
 def _interpz3d(field3d, z, desiredloc, missingval, outview=None):
     """Wrapper for dinterp3dz.
@@ -83,14 +84,36 @@ def _interpz3d(field3d, z, desiredloc, missingval, outview=None):
     Located in wrf_user.f90.
     
     """
-    if outview is None:
-        outview = np.empty(field3d.shape[0:2], np.float64, order="F")
-        
+    if outview is None:   
+        outshape = field3d.shape[0:2] + desiredloc.shape
+        outview = np.empty(outshape, np.float64, order="F")
+    
     result = dinterp3dz(field3d, 
                         outview,
                         z, 
                         desiredloc, 
                         missingval)
+    return result
+
+
+@check_interplevel_args(is2dlev=True)
+@interplevel_left_iter(is2dlev=True)
+@cast_type(arg_idxs=(0,1,2))
+@extract_and_transpose()
+def _interpz3d_lev2d(field3d, z, lev2d, missingval, outview=None):
+    """Wrapper for dinterp3dz.
+    
+    Located in wrf_user.f90.
+    
+    """
+    if outview is None:
+        outview = np.empty(field3d.shape[0:2], np.float64, order="F")
+    
+    result = dinterp3dz_2dlev(field3d, 
+                              outview,
+                              z, 
+                              lev2d, 
+                              missingval)
     return result
 
 

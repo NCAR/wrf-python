@@ -302,12 +302,46 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
+            wspd_wdir = getvar(in_wrfnc, "wspd_wdir", timeidx=timeidx)
             
             # Make sure the numpy versions work first
             hts_500 = interplevel(to_np(hts), to_np(p), 500)
             hts_500 = interplevel(hts, p, 500)
             
-            nt.assert_allclose(to_np(hts_500), ref_ht_500)
+            print(hts_500)
+            
+            #nt.assert_allclose(to_np(hts_500), ref_ht_500)
+            
+            hts_multi= interplevel(to_np(hts), to_np(p), [1000,500,250])
+            hts_multi = interplevel(hts, p, [1000,500,250])
+            
+            print(hts_multi)
+            
+            pblh = getvar(in_wrfnc, "PBLH", timeidx=timeidx)
+            hts_pblh = interplevel(p, hts, pblh)
+            
+            print(hts_pblh)
+            
+            #nt.assert_allclose(to_np(hts_500), ref_ht_500)
+            
+            wspd_wdir_500 = interplevel(to_np(wspd_wdir), to_np(p), 500)
+            wspd_wdir_500 = interplevel(wspd_wdir, p, 500)
+            print(wspd_wdir_500)
+            
+            wspd_wdir_multi= interplevel(to_np(wspd_wdir), 
+                                         to_np(p), [1000,500,250])
+            wdpd_wdir_multi = interplevel(wspd_wdir, p, [1000,500,250])
+            
+            print(wdpd_wdir_multi)
+            
+            wspd_wdir_pblh = interplevel(to_np(wspd_wdir), to_np(hts), pblh)
+            wspd_wdir_pblh = interplevel(wspd_wdir, hts, pblh)
+            print(wspd_wdir_pblh)
+            
+            wspd_wdir_pblh = interplevel(to_np(wspd_wdir), 
+                                         to_np(hts), pblh[0,:])
+            wspd_wdir_pblh = interplevel(wspd_wdir, hts, pblh[0,:])
+            print(wspd_wdir_pblh)
             
         elif (varname == "vertcross"):
             ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)

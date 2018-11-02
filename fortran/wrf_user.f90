@@ -64,24 +64,24 @@ END SUBROUTINE DCOMPUTETK
 
 
 ! NCLFORTSTART
-SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
+SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, levels, nx, ny, nz, nlev, missingval)
     IMPLICIT NONE
 
     !f2py threadsafe
     !f2py intent(in,out) :: out2d
 
-    INTEGER, INTENT(IN) :: nx, ny, nz
+    INTEGER, INTENT(IN) :: nx, ny, nz, nlev
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) ::  data3d
-    REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: out2d
+    REAL(KIND=8), DIMENSION(nx,ny,nlev), INTENT(OUT) :: out2d
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: zdata
-    REAL(KIND=8), INTENT(IN) :: desiredloc
+    REAL(KIND=8), DIMENSION(nlev), INTENT(IN) :: levels
     REAL(KIND=8), INTENT(IN) :: missingval
 
 ! NCLEND
 
-    INTEGER :: i,j,kp,ip,im
+    INTEGER :: i,j,kp,ip,im,lev
     LOGICAL :: dointerp
-    REAL(KIND=8) :: w1,w2
+    REAL(KIND=8) :: w1,w2,desiredloc
 
     ! does vertical coordinate increase or decrease with increasing k?
     ! set offset appropriately
@@ -93,7 +93,67 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
         im = 0
     END IF
 
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,kp,dointerp,w1,w2) &
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,lev,kp,dointerp,w1,w2,desiredloc) &
+    !$OMP FIRSTPRIVATE(ip,im) SCHEDULE(runtime)
+    DO lev = 1,nlev
+        DO i = 1,nx
+            DO j = 1,ny
+                ! Initialize to missing.  Was initially hard-coded to -999999.
+                out2d(i,j,lev) = missingval
+                dointerp = .FALSE.
+                kp = nz
+                desiredloc = levels(lev)
+
+                DO WHILE ((.NOT. dointerp) .AND. (kp >= 2))
+                    IF (((zdata(i,j,kp-im) < desiredloc) .AND. (zdata(i,j,kp-ip) > desiredloc))) THEN
+                        w2 = (desiredloc - zdata(i,j,kp-im))/(zdata(i,j,kp-ip) - zdata(i,j,kp-im))
+                        w1 = 1.D0 - w2
+                        out2d(i,j,lev) = w1*data3d(i,j,kp-im) + w2*data3d(i,j,kp-ip)
+                        dointerp = .TRUE.
+                    END IF
+                    kp = kp - 1
+                END DO
+            END DO
+        END DO
+    END DO
+    !$OMP END PARALLEL DO
+
+    RETURN
+
+END SUBROUTINE DINTERP3DZ
+
+
+! NCLFORTSTART
+SUBROUTINE DINTERP3DZ_2DLEV(data3d, out2d, zdata, levs2d, nx, ny, nz, missingval)
+    IMPLICIT NONE
+
+    !f2py threadsafe
+    !f2py intent(in,out) :: out2d
+
+    INTEGER, INTENT(IN) :: nx, ny, nz
+    REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) ::  data3d
+    REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: out2d
+    REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: zdata
+    REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: levs2d
+    REAL(KIND=8), INTENT(IN) :: missingval
+
+! NCLEND
+
+    INTEGER :: i,j,kp,ip,im
+    LOGICAL :: dointerp
+    REAL(KIND=8) :: w1,w2,desiredloc
+
+    ! does vertical coordinate increase or decrease with increasing k?
+    ! set offset appropriately
+
+    ip = 0
+    im = 1
+    IF (zdata(1,1,1) .GT. zdata(1,1,nz)) THEN
+        ip = 1
+        im = 0
+    END IF
+
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,kp,dointerp,w1,w2,desiredloc) &
     !$OMP FIRSTPRIVATE(ip,im) SCHEDULE(runtime)
     DO i = 1,nx
         DO j = 1,ny
@@ -101,6 +161,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
             out2d(i,j) = missingval
             dointerp = .FALSE.
             kp = nz
+            desiredloc = levs2d(i,j)
 
             DO WHILE ((.NOT. dointerp) .AND. (kp >= 2))
                 IF (((zdata(i,j,kp-im) < desiredloc) .AND. (zdata(i,j,kp-ip) > desiredloc))) THEN
@@ -117,7 +178,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
 
     RETURN
 
-END SUBROUTINE DINTERP3DZ
+END SUBROUTINE DINTERP3DZ_2DLEV
 
 ! PORT DZSTAG HERE
 
