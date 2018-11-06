@@ -832,25 +832,21 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
             pass # xarray 0.9
         
         if not levsare2d:
-            outdimnames.insert(-2, "levels")
+            outdimnames.insert(-2, "level")
             if _desiredlev.ndim == 0:
-                outcoords["levels"] = [desiredlev]
+                outcoords["level"] = [desiredlev]
             else:
-                outcoords["levels"] = _desiredlev
+                outcoords["level"] = _desiredlev
         else:
             if (_desiredlev.ndim == 2):
-                outcoords["levels"] = field3d.dims[-2:], _desiredlev[:]
+                outcoords["level"] = field3d.dims[-2:], _desiredlev[:]
             else:
                 if multiproduct:
                     d = field3d.dims[1:-3] + field3d.dims[-2:]
                 else:
                     d = field3d.dims[0:-3] + field3d.dims[-2:]
-                outcoords["levels"] = d, _desiredlev[:]
+                outcoords["level"] = d, _desiredlev[:]
                 
-                
-                
-                
-        
         outattrs.update(field3d.attrs)
         outname = "{0}_interp".format(field3d.name)
         
