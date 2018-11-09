@@ -6,6 +6,7 @@
     
     if (.not. isvar("in_file")) then
         in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00.nc"
+        ;in_file = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-28_00:00:00.nc"
     end if 
     
     if (.not. isvar("out_file")) then
@@ -118,10 +119,51 @@
     fout->ht_vertcross3 = ht_vertcross3
     
     ; 3D horizontal interpolation
+    
+    ; First, check backwards compat
     plev = 500.   ; 500 MB
+    hlev = 5000; ; 5000 m
+    
     z_500 = wrf_user_intrp3d(z,p,"h",plev,0.,False)
+    p_5000 = wrf_user_intrp3d(p,z,"h",hlev,0.,False)
     
     fout->z_500 = z_500
+    fout->p_5000 = p_5000
+    
+    plev := (/1000., 850., 500., 250./) 
+    hlev := (/500., 2500., 5000., 10000. /)
+    z_multi = wrf_user_intrp3d(z,p,"h",plev,0.,False)
+    p_multi = wrf_user_intrp3d(p,z,"h",hlev,0.,False)
+    
+    fout->z_multi = z_multi
+    fout->p_multi = p_multi
+    
+    ; Now check the new routine
+    
+    plev := 500.   ; 500 MB
+    hlev := 5000   ; 5000 m
+    
+    z2_500 = wrf_user_interplevel(z,p,plev,False)
+    p2_5000 = wrf_user_interplevel(p,z,hlev,False)
+    
+    fout->z2_500 = z2_500
+    fout->p2_5000 = p2_5000
+    
+    
+    plev := (/1000., 850., 500., 250./) 
+    hlev := (/500., 2500., 5000., 10000. /)
+    z2_multi = wrf_user_interplevel(z,p,plev,False)
+    p2_multi = wrf_user_interplevel(p,z,hlev,False)
+    
+    fout->z2_multi = z2_multi
+    fout->p2_multi = p2_multi
+    
+    pblh = wrf_user_getvar(input_file, "PBLH", 0)
+    opts := False
+    opts@inc2dlevs = True
+    p_lev2d = wrf_user_interplevel(p, z, pblh, opts)
+    
+    fout->p_lev2d = p_lev2d
     
     
     ; 2D interpolation along line

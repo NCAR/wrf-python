@@ -300,6 +300,17 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
         
         if (varname == "interplevel"):
             ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
+            ref_p_5000 = _get_refvals(referent, "p_5000", repeat, multi)
+            ref_ht_multi = _get_refvals(referent, "z_multi", repeat, multi)
+            ref_p_multi = _get_refvals(referent, "p_multi", repeat, multi)
+            
+            ref_ht2_500 = _get_refvals(referent, "z2_500", repeat, multi)
+            ref_p2_5000 = _get_refvals(referent, "p2_5000", repeat, multi)
+            ref_ht2_multi = _get_refvals(referent, "z2_multi", repeat, multi)
+            ref_p2_multi = _get_refvals(referent, "p2_multi", repeat, multi)
+            
+            ref_p_lev2d = _get_refvals(referent, "p_lev2d", repeat, multi)
+            
             hts = getvar(in_wrfnc, "z", timeidx=timeidx)
             p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
             wspd_wdir = getvar(in_wrfnc, "wspd_wdir", timeidx=timeidx)
@@ -308,40 +319,67 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             hts_500 = interplevel(to_np(hts), to_np(p), 500)
             hts_500 = interplevel(hts, p, 500)
             
-            print(hts_500)
+            # Note: the '*2*' versions in the reference are testing 
+            # against the new version of interplevel in NCL
+            nt.assert_allclose(to_np(hts_500), ref_ht_500)
+            nt.assert_allclose(to_np(hts_500), ref_ht2_500)
             
-            #nt.assert_allclose(to_np(hts_500), ref_ht_500)
+            # Make sure the numpy versions work first
+            p_5000 = interplevel(to_np(p), to_np(hts), 5000)
+            p_5000 = interplevel(p, hts, 5000)
             
-            hts_multi= interplevel(to_np(hts), to_np(p), [1000,500,250])
-            hts_multi = interplevel(hts, p, [1000,500,250])
             
-            print(hts_multi)
+            nt.assert_allclose(to_np(p_5000), ref_p_5000)
+            nt.assert_allclose(to_np(p_5000), ref_p2_5000)
+            
+            hts_multi= interplevel(to_np(hts), to_np(p), 
+                                   [1000., 850., 500., 250.])
+            hts_multi = interplevel(hts, p, [1000., 850., 500., 250.])
+            
+            nt.assert_allclose(to_np(hts_multi), ref_ht_multi)
+            nt.assert_allclose(to_np(hts_multi), ref_ht2_multi)
+            
+            p_multi= interplevel(to_np(p), to_np(hts), 
+                                   [500., 2500., 5000., 10000. ])
+            p_multi = interplevel(p, hts, [500., 2500., 5000., 10000. ])
+            
+            nt.assert_allclose(to_np(p_multi), ref_p_multi)
+            nt.assert_allclose(to_np(p_multi), ref_p2_multi)
             
             pblh = getvar(in_wrfnc, "PBLH", timeidx=timeidx)
-            hts_pblh = interplevel(p, hts, pblh)
+            p_lev2d = interplevel(to_np(p), to_np(hts), to_np(pblh))
+            p_lev2d = interplevel(p, hts, pblh)
+            nt.assert_allclose(to_np(p_lev2d), ref_p_lev2d)
             
-            print(hts_pblh)
-            
-            #nt.assert_allclose(to_np(hts_500), ref_ht_500)
-            
+            # Just make sure these run below
             wspd_wdir_500 = interplevel(to_np(wspd_wdir), to_np(p), 500)
             wspd_wdir_500 = interplevel(wspd_wdir, p, 500)
-            print(wspd_wdir_500)
+            #print(wspd_wdir_500)
             
             wspd_wdir_multi= interplevel(to_np(wspd_wdir), 
                                          to_np(p), [1000,500,250])
             wdpd_wdir_multi = interplevel(wspd_wdir, p, [1000,500,250])
             
-            print(wdpd_wdir_multi)
             
             wspd_wdir_pblh = interplevel(to_np(wspd_wdir), to_np(hts), pblh)
             wspd_wdir_pblh = interplevel(wspd_wdir, hts, pblh)
-            print(wspd_wdir_pblh)
             
-            wspd_wdir_pblh = interplevel(to_np(wspd_wdir), 
+            if multi:
+                wspd_wdir_pblh_2 = interplevel(to_np(wspd_wdir), 
                                          to_np(hts), pblh[0,:])
-            wspd_wdir_pblh = interplevel(wspd_wdir, hts, pblh[0,:])
-            print(wspd_wdir_pblh)
+                wspd_wdir_pblh_2 = interplevel(wspd_wdir, hts, pblh[0,:])
+                
+                # Since PBLH doesn't change in this case, it should match
+                # the 0 time from previous computation. Note that this 
+                # only works when the data has 1 time step that is repeated.
+                # If you use a different case with multiple times, 
+                # this will probably fail.
+                nt.assert_allclose(to_np(wspd_wdir_pblh_2[:,0,:]), 
+                                   to_np(wspd_wdir_pblh[:,0,:]))
+                
+                nt.assert_allclose(to_np(wspd_wdir_pblh_2[:,-1,:]), 
+                                   to_np(wspd_wdir_pblh[:,0,:]))
+                
             
         elif (varname == "vertcross"):
             ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)
