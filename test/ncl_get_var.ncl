@@ -4,20 +4,29 @@
     
     ;system("printenv")
     
-    if (.not. isvar("in_file")) then
-        in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00.nc"
+    if (.not. isvar("dir")) then
+        dir = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi"
+        ;in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00.nc"
         ;in_file = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-28_00:00:00.nc"
     end if 
+    
+    if (.not. isvar("pattern")) then
+        pattern = "wrfout_d02_*"
+    end if
     
     if (.not. isvar("out_file")) then
         out_file = "/tmp/wrftest.nc"
     end if
-    input_file = addfile(in_file,"r")
+    
+    pat = dir + "/" + pattern
+    cmd = "ls " + pat
+    fils = systemfunc (cmd) ; file paths
+    input_file = addfiles(fils,"r")
     
     system("/bin/rm -f " + out_file) ; remove if exists
     fout = addfile(out_file, "c")
     
-    time = 0
+    time = -1
     
     wrf_vars = [/"avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", \
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", \
@@ -48,13 +57,16 @@
     
     
     ; Do the interpolation routines manually
-    ; 3D vertical cross section
-    z := wrf_user_getvar(input_file, "z", 0)        ; grid point height
-    p := wrf_user_getvar(input_file, "pressure", 0) ; total pressure
+    ;;;;;;;;;;;;;;;;;;; 3D vertical cross section
+    time = -1
+    
+    z := wrf_user_getvar(input_file, "z", time)        ; grid point height
+    p := wrf_user_getvar(input_file, "pressure", time) ; total pressure
     
     dimsz = dimsizes(z)
     pivot = (/ dimsz(2)/2, dimsz(1)/2 /)    ; pivot point is center of domain
     
+    time = 0
     ht_cross = wrf_user_intrp3d(z,p,"v",pivot,90.0,False)
     
     p_cross = wrf_user_intrp3d(p,z,"v",pivot,90.0,False)
@@ -69,10 +81,11 @@
     xopt@use_pivot = True
     xopt@angle = 90.0
     xopt@file_handle = input_file
-    xopt@timeidx = 0
+    xopt@timeidx = time
     xopt@linecoords = True
     
     ht_vertcross1 = wrf_user_vertcross(z, p, pivot, xopt)
+    printVarSummary(ht_vertcross1)
     
     fout->ht_vertcross1 = ht_vertcross1
     
@@ -82,25 +95,29 @@
     xopt@angle = 90.0
     xopt@levels = (/1000., 850., 700., 500., 250./)
     xopt@file_handle = input_file
-    xopt@timeidx = 0
+    xopt@timeidx = time
     xopt@linecoords = True
     
     ht_vertcross2 = wrf_user_vertcross(z, p, pivot, xopt)
     ht_vertcross2!0 = "vertical2"
     ht_vertcross2!1 = "cross_line_idx2"
     
-    
     fout->ht_vertcross2 = ht_vertcross2
+    
+    ; Can only use a single time for lat/lon version at this time
+    
+    vertdims = dimsizes(ht_vertcross2)
+    htdims = dimsizes(z)
     
     lats = wrf_user_getvar(input_file, "lat", 0)
     lons = wrf_user_getvar(input_file, "lon", 0) 
-    
+        
     start_lat = min(lats) + .25d*(max(lats) - min(lats))
     end_lat = min(lats) + .75d*(max(lats) - min(lats))
-            
+                
     start_lon = min(lons) + .25d*(max(lons) - min(lons))
     end_lon = min(lons) + .75d*(max(lons) - min(lons))
-    
+        
     start_end = (/ start_lon, start_lat, end_lon, end_lat /)
     
     ; For the new cross section routine
@@ -108,17 +125,26 @@
     xopt@use_pivot = False
     xopt@latlon = True
     xopt@file_handle = input_file
-    xopt@timeidx = 0
+    xopt@timeidx = -1
     xopt@linecoords = True
     xopt@autolevels = 1000
-    
+        
     ht_vertcross3 = wrf_user_vertcross(z, p, start_end, xopt)
-    ht_vertcross3!0 = "vertical3"
-    ht_vertcross3!1 = "cross_line_idx3"
+    
+    printVarSummary(ht_vertcross3)
+    
+    ht_vertcross3!0 = "Time"
+    ht_vertcross3!1 = "vertical3"
+    ht_vertcross3!2 = "cross_line_idx3"
     
     fout->ht_vertcross3 = ht_vertcross3
     
-    ; 3D horizontal interpolation
+    ;;;;;;;;;;;;;;;;;;;;;;;; 3D horizontal interpolation
+    
+    time = -1
+    
+    z := wrf_user_getvar(input_file, "z", time)        ; grid point height
+    p := wrf_user_getvar(input_file, "pressure", time) ; total pressure
     
     ; First, check backwards compat
     plev = 500.   ; 500 MB
@@ -158,7 +184,7 @@
     fout->z2_multi = z2_multi
     fout->p2_multi = p2_multi
     
-    pblh = wrf_user_getvar(input_file, "PBLH", 0)
+    pblh = wrf_user_getvar(input_file, "PBLH", time)
     opts := False
     opts@inc2dlevs = True
     p_lev2d = wrf_user_interplevel(p, z, pblh, opts)
@@ -166,19 +192,24 @@
     fout->p_lev2d = p_lev2d
     
     
-    ; 2D interpolation along line
-    t2 = wrf_user_getvar(input_file, "T2", 0)
+    ;;;;;;;;;;;;;;;;;;;;;;;; 2D interpolation along line
+    
+    time = -1
+    
+    t2 = wrf_user_getvar(input_file, "T2", time)
     dimst2 = dimsizes(t2)
-    pivot = (/ dimst2(1)/2, dimst2(0)/2 /)
+    pivot = (/ dimst2(2)/2, dimst2(1)/2 /)
     
     t2_line = wrf_user_intrp2d(t2, pivot, 90.0, False)
     
     fout->t2_line = (/t2_line/)
     
     
-    ; 3D interpolation to new vertical coordinates
+    ;;;;;;;;;;;;;;;;;;;;;;; 3D interpolation to new vertical coordinates
+    time = -1
+    
     ; interp t to theta
-    fld1 = wrf_user_getvar(input_file, "tk", -1)
+    fld1 = wrf_user_getvar(input_file, "tk", time)
     vert_coord       = "theta"
     interp_levels    = (/200,300,500,1000/)
  
@@ -231,7 +262,7 @@
     fout->fld_tk_ght_agl = fld5_intrp
     
     ; interp ht to pres
-    fld6 = wrf_user_getvar(input_file, "height", -1)
+    fld6 = wrf_user_getvar(input_file, "height", time)
     vert_coord := "pressure"
     opts@field_type  = "ght"
     interp_levels    := (/500,50/)
@@ -242,7 +273,7 @@
     
     
     ; interp pres to theta
-    fld7 = wrf_user_getvar(input_file, "pressure", -1)
+    fld7 = wrf_user_getvar(input_file, "pressure", time)
     vert_coord := "theta"
     opts@field_type  = "pressure"
     interp_levels    := (/200,300,500,1000/)
@@ -253,7 +284,7 @@
     
     
     ; interp theta-e to pressure
-    fld8 = wrf_user_getvar(input_file, "eth", -1)
+    fld8 = wrf_user_getvar(input_file, "eth", time)
     vert_coord := "pressure"
     opts@field_type  = "T"
     interp_levels    := (/850,500,5/)
@@ -263,16 +294,32 @@
     fout->fld_thetae_pres = fld8_intrp
     
     
-    ; lat/lon to x/y and x/y to lat/lon routines
-    lats := (/-55, -60, -65 /)
-    lons := (/25, 30, 35 /)
-    i_s = (/10, 100, 150 /)
-    j_s = (/10, 100, 150 /)
-    ij = wrf_user_ll_to_ij(input_file, lons, lats, True) 
-    ll = wrf_user_ij_to_ll(input_file, i_s, j_s, True)
+    ;;;;;;;;;;;;;;;;;;; lat/lon to x/y and x/y to lat/lon routines
     
-    fout->ij = ij
-    fout->ll = ll
+    lats := (/22.0, 25.0, 27.0 /)
+    lons := (/-90.0, -87.5, -83.75 /)
+    x_s = (/10, 50, 90 /)
+    y_s = (/10, 50, 90 /)
+    
+    opt = True
+    opt@useTime = -1
+    opt@returnInt = False
+    
+    xy1 = wrf_user_ll_to_xy(input_file, lons, lats, opt) 
+    ll1 = wrf_user_xy_to_ll(input_file, x_s, y_s, opt)
+    
+    fout->xy1 = xy1
+    fout->ll1 = ll1
+    
+    opt = True
+    opt@useTime = 8
+    opt@returnInt = True
+    
+    xy2 = wrf_user_ll_to_xy(input_file, lons, lats, opt) 
+    ll2 = wrf_user_xy_to_ll(input_file, x_s, y_s, opt)
+    
+    fout->xy2 = xy2
+    fout->ll2 = ll2
     
     delete(fout)
 

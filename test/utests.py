@@ -4,6 +4,7 @@ import numpy as np
 import numpy.ma as ma
 import os, sys
 import subprocess
+import glob
 
 from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  disable_xarray, xarray_enabled, to_np,
@@ -11,44 +12,46 @@ from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  extract_global_attrs, viewitems, CoordPair, ll_points)
 from wrf.util import is_multi_file
 
-NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
-TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
-OUT_NC_FILE = "/tmp/wrftest.nc"
+NCL_EXE = "/Users/ladwig/miniconda2/envs/ncl_build/bin/ncl"
+NCARG_ROOT = "/Users/ladwig/miniconda2/envs/ncl_build"
+#TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
+DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi"
+PATTERN = "wrfout_d02_*"
+REF_NC_FILE = "/tmp/wrftest.nc"
 
 # Python 3
 if sys.version_info > (3,):
     xrange = range
 
 def setUpModule():
-    ncarg_root = os.environ.get("NCARG_ROOT", None)
-    if ncarg_root is None:
-        raise RuntimeError("$NCARG_ROOT environment variable not set")
-        
+    #ncarg_root = os.environ.get("NCARG_ROOT", None)
+    #if ncarg_root is None:
+    #    raise RuntimeError("$NCARG_ROOT environment variable not set")
     
+    os.environ["NCARG_ROOT"] = NCARG_ROOT
+    os.environ["NCARG_NCARG"] = os.path.join(NCARG_ROOT, "lib", "ncarg")
+     
+        
     this_path = os.path.realpath(__file__)
     ncl_script = os.path.join(os.path.dirname(this_path),
                               "ncl_get_var.ncl")
-    ncfile = TEST_FILE + ".nc" # NCL requires extension
-    
-    # This needs to be set when PyNIO is installed, since PyNIOs data does
-    # not contain the dat file for the CAPE calcluations
-    os.environ["NCARG_NCARG"] = os.path.join(os.environ["NCARG_ROOT"],
-                                             "lib", "ncarg")
-    cmd = "%s %s 'in_file=\"%s\"' 'out_file=\"%s\"'" % (NCL_EXE,
+
+    cmd = "%s %s 'dir=\"%s\"' 'pattern=\"%s\"'  'out_file=\"%s\"'" % (NCL_EXE,
                                                         ncl_script,
-                                                        ncfile,
-                                                        OUT_NC_FILE)
+                                                        DIR,
+                                                        PATTERN,
+                                                        REF_NC_FILE)
     
-    #print cmd
+    print cmd
     
-    if not os.path.exists(OUT_NC_FILE):
+    if not os.path.exists(REF_NC_FILE):
         status = subprocess.call(cmd, shell=True)
         if (status != 0):
             raise RuntimeError("NCL script failed.  Could not set up test.")
 
 # Using helpful information at: 
 # http://eli.thegreenplace.net/2014/04/02/dynamically-generating-python-test-cases
-def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
+def make_test(varname, dir, pattern, referent, multi=False, pynio=False):
     def test(self):
 
         try:
@@ -61,40 +64,28 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
         except:
             pass
         
-        if not multi:
-            timeidx = 0
-            if not pynio:
-                in_wrfnc = NetCDF(wrf_in)
-                try:
-                    in_wrfnc.set_auto_mask(False)
-                except:
-                    pass
-            else:
-                # Note: Python doesn't like it if you reassign an outer scoped
-                # variable (wrf_in in this case)
-                if not wrf_in.endswith(".nc"):
-                    wrf_file = wrf_in + ".nc"
-                else:
-                    wrf_file = wrf_in
-                in_wrfnc = Nio.open_file(wrf_file)
-        else:
-            timeidx = None
-            if not pynio:
-                nc = NetCDF(wrf_in)
-                try:
-                    nc.set_auto_mask(False)
-                except:
-                    pass
-                in_wrfnc = [nc for i in xrange(repeat)]
-            else:
-                if not wrf_in.endswith(".nc"):
-                    wrf_file = wrf_in + ".nc"
-                else:
-                    wrf_file = wrf_in
-                nc = Nio.open_file(wrf_file)
-                in_wrfnc = [nc for i in xrange(repeat)]
-            
+        timeidx = 0 if not multi else None
+        pat = os.path.join(dir, pattern)
+        wrf_files = glob.glob(pat)
+        wrf_files.sort()
         
+        wrfin = []
+        for fname in wrf_files:
+            if not pynio:
+                f = NetCDF(fname)
+                try:
+                    f.set_auto_mask(False)
+                except:
+                    pass
+                wrfin.append(f)
+            else:
+                if not fname.endswith(".nc"):
+                    _fname = fname + ".nc"
+                else:
+                    _fname = fname
+                f = Nio.open_file(_fname)
+                wrfin.append(f)
+
         refnc = NetCDF(referent)
         try:
             refnc.set_auto_mask(False)
@@ -104,69 +95,42 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
         # These have a left index that defines the product type
         multiproduct = varname in ("uvmet", "uvmet10", "cape_2d", "cape_3d", 
                                    "cfrac")
+        multi2d = ("uvmet10", "cape_2d", "cfrac")
+        multi3d = ("uvmet", "cape_3d")
         
         # These varnames don't have NCL functions to test against
         ignore_referent = ("zstag", "geopt_stag")
         
         if varname not in ignore_referent:
             if not multi:
-                ref_vals = refnc.variables[varname][:]
-            else:
-                data = refnc.variables[varname][:]
-                if (varname != "uvmet" and varname != "uvmet10" 
-                    and varname != "cape_2d" and varname != "cape_3d"):
-                    new_dims = [repeat] + [x for x in data.shape]
-                elif (varname == "uvmet" or varname == "uvmet10" 
-                      or varname == "cape_3d"):
-                    new_dims = [2] + [repeat] + [x for x in data.shape[1:]]
-                elif (varname == "cape_2d"):
-                    new_dims = [4] + [repeat] + [x for x in data.shape[1:]]
-                elif (varname == "cfrac"):
-                    new_dims = [3] + [repeat] + [x for x in data.shape[1:]]
-    
-                    
-                masked=False
-                if (isinstance(data, ma.core.MaskedArray)):
-                    masked=True
-                
-                if not masked:
-                    ref_vals = np.zeros(new_dims, data.dtype)
+                if varname in multi2d:
+                    ref_vals = refnc.variables[varname][...,0,:,:]
+                elif varname in multi3d:
+                    ref_vals = refnc.variables[varname][...,0,:,:,:]
                 else:
-                    ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
-                
-                for i in xrange(repeat):
-                    if not multiproduct:
-                        ref_vals[i,:] = data[:]
-                    
-                        if masked:
-                            ref_vals.mask[i,:] = data.mask[:]
-                            
-                    else:
-                        for prod in xrange(ref_vals.shape[0]):
-                            ref_vals[prod,i,:] = data[prod,:]
-                            
-                            if masked:
-                                ref_vals.mask[prod,i,:] = data.mask[prod,:]
+                    ref_vals = refnc.variables[varname][0,:]
+            else:
+                ref_vals = refnc.variables[varname][:]
         
         if (varname == "tc"):
-            my_vals = getvar(in_wrfnc, "temp", timeidx=timeidx, units="c")
+            my_vals = getvar(wrfin, "temp", timeidx=timeidx, units="c")
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
         elif (varname == "height_agl"):
             # Change the vert_type to height_agl when NCL gets updated.
-            my_vals = getvar(in_wrfnc, "z", timeidx=timeidx, msl=False)
+            my_vals = getvar(wrfin, "z", timeidx=timeidx, msl=False)
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
         elif (varname == "cfrac"):
             # Change the vert_type to height_agl when NCL gets updated.
-            my_vals = getvar(in_wrfnc, "cfrac", timeidx=timeidx)
+            my_vals = getvar(wrfin, "cfrac", timeidx=timeidx)
             tol = 1/100.
             atol = .1 # Note:  NCL uses 273.16 as conversion for some reason
             nt.assert_allclose(to_np(my_vals), ref_vals, tol, atol)
         elif (varname == "pw"):
-            my_vals = getvar(in_wrfnc, "pw", timeidx=timeidx)
+            my_vals = getvar(wrfin, "pw", timeidx=timeidx)
             tol = .5/100.0
             atol = 0 # NCL uses different constants and doesn't use same
                      # handrolled virtual temp in method
@@ -176,7 +140,7 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
                 print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
                 raise
         elif (varname == "cape_2d"):
-            cape_2d = getvar(in_wrfnc, varname, timeidx=timeidx)
+            cape_2d = getvar(wrfin, varname, timeidx=timeidx)
             tol = 0/100.
             atol = 200.0
             # Let's only compare CAPE values until the F90 changes are 
@@ -185,7 +149,7 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             # causing wildly different values in LCL
             nt.assert_allclose(to_np(cape_2d[0,:]), ref_vals[0,:], tol, atol)
         elif (varname == "cape_3d"):
-            cape_3d = getvar(in_wrfnc, varname, timeidx=timeidx)
+            cape_3d = getvar(wrfin, varname, timeidx=timeidx)
             # Changing the R and CP constants, while keeping TK within
             # 2%, can lead to some big changes in CAPE.  Tolerances 
             # have been set wide when comparing the with the original
@@ -197,11 +161,11 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
             #print np.amax(np.abs(to_np(cape_3d[0,:]) - ref_vals[0,:]))
             nt.assert_allclose(to_np(cape_3d), ref_vals, tol, atol)
         elif (varname == "zstag" or varname == "geopt_stag"):
-            v = getvar(in_wrfnc, varname, timeidx=timeidx)
+            v = getvar(wrfin, varname, timeidx=timeidx)
             # For now, only make sure it runs without crashing since no NCL
             # to compare with yet.
         else:
-            my_vals = getvar(in_wrfnc, varname, timeidx=timeidx)
+            my_vals = getvar(wrfin, varname, timeidx=timeidx)
             tol = 2/100.
             atol = 0.1
             #print (np.amax(np.abs(to_np(my_vals) - ref_vals)))
@@ -218,7 +182,7 @@ def make_test(varname, wrf_in, referent, multi=False, repeat=3, pynio=False):
     
     return test
 
-def _get_refvals(referent, varname, repeat, multi):
+def _get_refvals(referent, varname, multi):
     try:
         from netCDF4 import Dataset as NetCDF
     except:
@@ -230,30 +194,27 @@ def _get_refvals(referent, varname, repeat, multi):
     except:
         pass
     
+    multi2d = ("uvmet10", "cape_2d", "cfrac")
+    multi3d = ("uvmet", "cape_3d")
+    
     if not multi:
-        ref_vals = refnc.variables[varname][:]
-    else:
-        data = refnc.variables[varname][:]
-        new_dims = [repeat] + [x for x in data.shape]
-        masked=False
-        if (isinstance(data, ma.core.MaskedArray)):
-            masked=True
-          
-        if not masked:
-            ref_vals = np.zeros(new_dims, data.dtype)
+        if varname in multi2d:
+            ref_vals = refnc.variables[varname][...,0,:,:]
+        elif varname in multi3d:
+            ref_vals = refnc.variables[varname][...,0,:,:,:]
         else:
-            ref_vals = ma.asarray(np.zeros(new_dims, data.dtype))
-              
-        for i in xrange(repeat):
-            ref_vals[i,:] = data[:]
-              
-            if masked:
-                ref_vals.mask[i,:] = data.mask[:]
+            v = refnc.variables[varname][:]
+            if v.ndim == 2:
+                ref_vals = v
+            else:
+                ref_vals = v[0,:]
+    else:
+        ref_vals = refnc.variables[varname][:]
                 
     return ref_vals
 
-def make_interp_test(varname, wrf_in, referent, multi=False, 
-                     repeat=3, pynio=False):
+def make_interp_test(varname, dir, pattern, referent, multi=False, 
+                     pynio=False):
     def test(self):
         try:
             from netCDF4 import Dataset as NetCDF
@@ -265,55 +226,44 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
         except:
             pass
         
-        if not multi:
-            timeidx = 0
+        timeidx = 0 if not multi else None
+        pat = os.path.join(dir, pattern)
+        wrf_files = glob.glob(pat)
+        wrf_files.sort()
+        
+        wrfin = []
+        for fname in wrf_files:
             if not pynio:
-                in_wrfnc = NetCDF(wrf_in)
+                f = NetCDF(fname)
                 try:
-                    in_wrfnc.set_auto_mask(False)
+                    f.set_auto_mask(False)
                 except:
                     pass
+                wrfin.append(f)
             else:
-                # Note: Python doesn't like it if you reassign an outer scoped
-                # variable (wrf_in in this case)
-                if not wrf_in.endswith(".nc"):
-                    wrf_file = wrf_in + ".nc"
+                if not fname.endswith(".nc"):
+                    _fname = fname + ".nc"
                 else:
-                    wrf_file = wrf_in
-                in_wrfnc = Nio.open_file(wrf_file)
-        else:
-            timeidx = None
-            if not pynio:
-                nc = NetCDF(wrf_in)
-                try:
-                    nc.set_auto_mask(False)
-                except:
-                    pass
-                in_wrfnc = [nc for i in xrange(repeat)]
-            else:
-                if not wrf_in.endswith(".nc"):
-                    wrf_file = wrf_in + ".nc"
-                else:
-                    wrf_file = wrf_in
-                nc = Nio.open_file(wrf_file)
-                in_wrfnc = [nc for i in xrange(repeat)]
+                    _fname = fname
+                f = Nio.open_file(_fname)
+                wrfin.append(f)
         
         if (varname == "interplevel"):
-            ref_ht_500 = _get_refvals(referent, "z_500", repeat, multi)
-            ref_p_5000 = _get_refvals(referent, "p_5000", repeat, multi)
-            ref_ht_multi = _get_refvals(referent, "z_multi", repeat, multi)
-            ref_p_multi = _get_refvals(referent, "p_multi", repeat, multi)
+            ref_ht_500 = _get_refvals(referent, "z_500", multi)
+            ref_p_5000 = _get_refvals(referent, "p_5000", multi)
+            ref_ht_multi = _get_refvals(referent, "z_multi", multi)
+            ref_p_multi = _get_refvals(referent, "p_multi", multi)
             
-            ref_ht2_500 = _get_refvals(referent, "z2_500", repeat, multi)
-            ref_p2_5000 = _get_refvals(referent, "p2_5000", repeat, multi)
-            ref_ht2_multi = _get_refvals(referent, "z2_multi", repeat, multi)
-            ref_p2_multi = _get_refvals(referent, "p2_multi", repeat, multi)
+            ref_ht2_500 = _get_refvals(referent, "z2_500", multi)
+            ref_p2_5000 = _get_refvals(referent, "p2_5000", multi)
+            ref_ht2_multi = _get_refvals(referent, "z2_multi", multi)
+            ref_p2_multi = _get_refvals(referent, "p2_multi", multi)
             
-            ref_p_lev2d = _get_refvals(referent, "p_lev2d", repeat, multi)
+            ref_p_lev2d = _get_refvals(referent, "p_lev2d", multi)
             
-            hts = getvar(in_wrfnc, "z", timeidx=timeidx)
-            p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
-            wspd_wdir = getvar(in_wrfnc, "wspd_wdir", timeidx=timeidx)
+            hts = getvar(wrfin, "z", timeidx=timeidx)
+            p = getvar(wrfin, "pressure", timeidx=timeidx)
+            wspd_wdir = getvar(wrfin, "wspd_wdir", timeidx=timeidx)
             
             # Make sure the numpy versions work first
             hts_500 = interplevel(to_np(hts), to_np(p), 500)
@@ -346,7 +296,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(p_multi), ref_p_multi)
             nt.assert_allclose(to_np(p_multi), ref_p2_multi)
             
-            pblh = getvar(in_wrfnc, "PBLH", timeidx=timeidx)
+            pblh = getvar(wrfin, "PBLH", timeidx=timeidx)
             p_lev2d = interplevel(to_np(p), to_np(hts), to_np(pblh))
             p_lev2d = interplevel(p, hts, pblh)
             nt.assert_allclose(to_np(p_lev2d), ref_p_lev2d)
@@ -382,17 +332,17 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                 
             
         elif (varname == "vertcross"):
-            ref_ht_cross = _get_refvals(referent, "ht_cross", repeat, multi)
-            ref_p_cross = _get_refvals(referent, "p_cross", repeat, multi)
-            ref_ht_vertcross1 = _get_refvals(referent, "ht_vertcross1", repeat, 
+            ref_ht_cross = _get_refvals(referent, "ht_cross", multi)
+            ref_p_cross = _get_refvals(referent, "p_cross", multi)
+            ref_ht_vertcross1 = _get_refvals(referent, "ht_vertcross1", 
                                             multi)
-            ref_ht_vertcross2 = _get_refvals(referent, "ht_vertcross2", repeat, 
+            ref_ht_vertcross2 = _get_refvals(referent, "ht_vertcross2", 
                                             multi)
-            ref_ht_vertcross3 = _get_refvals(referent, "ht_vertcross3", repeat, 
+            ref_ht_vertcross3 = _get_refvals(referent, "ht_vertcross3", 
                                             multi)
             
-            hts = getvar(in_wrfnc, "z", timeidx=timeidx)
-            p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
+            hts = getvar(wrfin, "z", timeidx=timeidx)
+            p = getvar(wrfin, "pressure", timeidx=timeidx)
             
             pivot_point = CoordPair(hts.shape[-1] / 2, hts.shape[-2] / 2) 
             
@@ -423,7 +373,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                               lon=lons[int(lons.shape[-2]/2), 
                                        int(lons.shape[-1]/2)])
             
-            v1 = vertcross(hts,p,wrfin=in_wrfnc,pivot_point=pivot_point,
+            v1 = vertcross(hts,p,wrfin,pivot_point=pivot_point,
                            angle=90.0)
             v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
                           ll_point=ll_point,
@@ -495,9 +445,9 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
               
         elif (varname == "interpline"):
             
-            ref_t2_line = _get_refvals(referent, "t2_line", repeat, multi)
+            ref_t2_line = _get_refvals(referent, "t2_line", multi)
             
-            t2 = getvar(in_wrfnc, "T2", timeidx=timeidx)
+            t2 = getvar(wrfin, "T2", timeidx=timeidx)
             pivot_point = CoordPair(t2.shape[-1] / 2, t2.shape[-2] / 2)
             
             # Make sure the numpy version works
@@ -510,12 +460,17 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             # Test the manual projection method with lat/lon
             lats = t2.coords["XLAT"]
             lons = t2.coords["XLONG"]
+            if multi:
+                lats = lats[0,:]
+                lons = lons[0,:]
+            
             ll_point = ll_points(lats, lons)
+            
             pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
                                        int(lats.shape[-1]/2)],
                               lon=lons[int(lons.shape[-2]/2), 
                                        int(lons.shape[-1]/2)])
-            l1 = interpline(t2,wrfin=in_wrfnc,pivot_point=pivot_point,
+            l1 = interpline(t2,wrfin,pivot_point=pivot_point,
                            angle=90.0)
             l2 = interpline(t2,projection=t2.attrs["projection"], 
                           ll_point=ll_point, 
@@ -532,15 +487,15 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(t2_line1), to_np(t2_line2))
         elif (varname == "vinterp"):
             # Tk to theta
-            fld_tk_theta = _get_refvals(referent, "fld_tk_theta", repeat, multi)
+            fld_tk_theta = _get_refvals(referent, "fld_tk_theta", multi)
             fld_tk_theta = np.squeeze(fld_tk_theta)
             
-            tk = getvar(in_wrfnc, "temp", timeidx=timeidx, units="k")
+            tk = getvar(wrfin, "temp", timeidx=timeidx, units="k")
             
             interp_levels = [200,300,500,1000]
             
             # Make sure the numpy version works
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=to_np(tk), 
                             vert_coord="theta", 
                             interp_levels=interp_levels, 
@@ -549,7 +504,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
                             timeidx=timeidx, 
                             log_p=True)
             
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=tk, 
                             vert_coord="theta", 
                             interp_levels=interp_levels, 
@@ -566,12 +521,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_tk_theta, tol, atol)
             
             # Tk to theta-e
-            fld_tk_theta_e = _get_refvals(referent, "fld_tk_theta_e", repeat, multi)
+            fld_tk_theta_e = _get_refvals(referent, "fld_tk_theta_e", multi)
             fld_tk_theta_e = np.squeeze(fld_tk_theta_e)
             
             interp_levels = [200,300,500,1000]
             
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=tk, 
                             vert_coord="theta-e", 
                             interp_levels=interp_levels, 
@@ -588,12 +543,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_tk_theta_e, tol, atol)
             
             # Tk to pressure
-            fld_tk_pres = _get_refvals(referent, "fld_tk_pres", repeat, multi)
+            fld_tk_pres = _get_refvals(referent, "fld_tk_pres", multi)
             fld_tk_pres = np.squeeze(fld_tk_pres)
             
             interp_levels = [850,500]
             
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=tk, 
                             vert_coord="pressure", 
                             interp_levels=interp_levels, 
@@ -608,11 +563,11 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_tk_pres, tol, atol)
             
             # Tk to geoht_msl
-            fld_tk_ght_msl = _get_refvals(referent, "fld_tk_ght_msl", repeat, multi)
+            fld_tk_ght_msl = _get_refvals(referent, "fld_tk_ght_msl", multi)
             fld_tk_ght_msl = np.squeeze(fld_tk_ght_msl)
             interp_levels = [1,2]
             
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=tk, 
                             vert_coord="ght_msl", 
                             interp_levels=interp_levels, 
@@ -626,11 +581,11 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_tk_ght_msl, tol, atol)
             
             # Tk to geoht_agl
-            fld_tk_ght_agl = _get_refvals(referent, "fld_tk_ght_agl", repeat, multi)
+            fld_tk_ght_agl = _get_refvals(referent, "fld_tk_ght_agl", multi)
             fld_tk_ght_agl = np.squeeze(fld_tk_ght_agl)
             interp_levels = [1,2]
             
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=tk, 
                             vert_coord="ght_agl", 
                             interp_levels=interp_levels, 
@@ -644,12 +599,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_tk_ght_agl, tol, atol)
             
             # Hgt to pressure
-            fld_ht_pres = _get_refvals(referent, "fld_ht_pres", repeat, multi)
+            fld_ht_pres = _get_refvals(referent, "fld_ht_pres", multi)
             fld_ht_pres = np.squeeze(fld_ht_pres)
             
-            z = getvar(in_wrfnc, "height", timeidx=timeidx, units="m")
+            z = getvar(wrfin, "height", timeidx=timeidx, units="m")
             interp_levels = [500,50]
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=z, 
                             vert_coord="pressure", 
                             interp_levels=interp_levels, 
@@ -663,12 +618,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_ht_pres, tol, atol)
             
             # Pressure to theta
-            fld_pres_theta = _get_refvals(referent, "fld_pres_theta", repeat, multi)
+            fld_pres_theta = _get_refvals(referent, "fld_pres_theta", multi)
             fld_pres_theta = np.squeeze(fld_pres_theta)
             
-            p = getvar(in_wrfnc, "pressure", timeidx=timeidx)
+            p = getvar(wrfin, "pressure", timeidx=timeidx)
             interp_levels = [200,300,500,1000]
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=p, 
                             vert_coord="theta", 
                             interp_levels=interp_levels, 
@@ -682,12 +637,12 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             nt.assert_allclose(to_np(field), fld_pres_theta, tol, atol)
             
             # Theta-e to pres
-            fld_thetae_pres = _get_refvals(referent, "fld_thetae_pres", repeat, multi)
+            fld_thetae_pres = _get_refvals(referent, "fld_thetae_pres", multi)
             fld_thetae_pres = np.squeeze(fld_thetae_pres)
             
-            eth = getvar(in_wrfnc, "eth", timeidx=timeidx)
+            eth = getvar(wrfin, "eth", timeidx=timeidx)
             interp_levels = [850,500,5]
-            field = vinterp(in_wrfnc, 
+            field = vinterp(wrfin, 
                             field=eth, 
                             vert_coord="pressure", 
                             interp_levels=interp_levels, 
@@ -702,25 +657,31 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
     
     return test
 
-def extract_proj_params(wrfnc):
+def extract_proj_params(wrfnc, timeidx=0):
     attrs = extract_global_attrs(wrfnc, ("MAP_PROJ", "TRUELAT1", "TRUELAT2",
                                          "STAND_LON", "POLE_LAT", "POLE_LON", 
                                          "DX", "DY"))
     
     result = {key.lower(): val for key,val in viewitems(attrs)}
     
+    _timeidx = timeidx
     if is_multi_file(wrfnc):
-        wrfnc = wrfnc[0]
+        wrfnc0 = wrfnc[0]
+        num_times_per_file = len(wrfnc0.dimensions["Time"])
+        file_idx = timeidx // num_times_per_file
+        _timeidx = timeidx % num_times_per_file
+        
+        wrfnc = wrfnc[file_idx]
     
     result["known_x"] = 0
     result["known_y"] = 0
-    result["ref_lat"] = wrfnc.variables["XLAT"][0,0,0]
-    result["ref_lon"] = wrfnc.variables["XLONG"][0,0,0]
+    result["ref_lat"] = wrfnc.variables["XLAT"][_timeidx,0,0]
+    result["ref_lon"] = wrfnc.variables["XLONG"][_timeidx,0,0]
     
     return result
 
-def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3, 
-                     pynio=False):
+def make_latlon_test(testid, dir, pattern, referent, single, 
+                     multi=False, pynio=False):
     def test(self):
         try:
             from netCDF4 import Dataset as NetCDF
@@ -732,113 +693,110 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
         except:
             pass
         
-        if not multi:
-            timeidx = 0
-            if not pynio:
-                in_wrfnc = NetCDF(wrf_in)
-                try:
-                    in_wrfnc.set_auto_mask(False)
-                except:
-                    pass
-            else:
-                # Note: Python doesn't like it if you reassign an outer scoped
-                # variable (wrf_in in this case)
-                if not wrf_in.endswith(".nc"):
-                    wrf_file = wrf_in + ".nc"
-                else:
-                    wrf_file = wrf_in
-                in_wrfnc = Nio.open_file(wrf_file)
-        else:
-            timeidx = None
-            if not pynio:
-                nc = NetCDF(wrf_in)
-                try:
-                    nc.set_auto_mask(False)
-                except:
-                    pass
-                in_wrfnc = [nc for i in xrange(repeat)]
-            else:
-                if not wrf_in.endswith(".nc"):
-                    wrf_file = wrf_in + ".nc"
-                else:
-                    wrf_file = wrf_in
-                nc = Nio.open_file(wrf_file)
-                in_wrfnc = [nc for i in xrange(repeat)]
-                
+        timeidx = 0 if not multi else None
+        pat = os.path.join(dir, pattern)
+        wrf_files = glob.glob(pat)
+        wrf_files.sort()
+        
         refnc = NetCDF(referent)
         try:
             refnc.set_auto_mask(False)
         except:
             pass
+        
+        wrfin = []
+        for fname in wrf_files:
+            if not pynio:
+                f = NetCDF(fname)
+                try:
+                    f.set_auto_mask(False)
+                except:
+                    pass
+                wrfin.append(f)
+            else:
+                if not fname.endswith(".nc"):
+                    _fname = fname + ".nc"
+                else:
+                    _fname = fname
+                f = Nio.open_file(_fname)
+                wrfin.append(f)
                 
         if testid == "xy":
-            # Since this domain is not moving, the reference values are the 
-            # same whether there are multiple or single files
-            ref_vals = refnc.variables["ij"][:]
+            
             # Lats/Lons taken from NCL script, just hard-coding for now
-            lats = [-55, -60, -65]
-            lons = [25, 30, 35]
+            lats = [22.0, 25.0, 27.0]
+            lons = [-90.0, -87.5, -83.75]
             
             # Just call with a single lat/lon
             if single:
-                xy = ll_to_xy(in_wrfnc, lats[0], lons[0])
-                xy = xy + 1 # NCL uses fortran indexing
+                timeidx = 8
+                ref_vals = refnc.variables["xy2"][:]
+                
+                xy = ll_to_xy(wrfin, lats[0], lons[0], timeidx=timeidx,
+                              as_int=True)
                 ref = ref_vals[:,0]
                 
                 nt.assert_allclose(to_np(xy), ref)
                 
                 # Next make sure the 'proj' version works
-                projparams = extract_proj_params(in_wrfnc)
-                xy_proj = ll_to_xy_proj(lats[0], lons[0], **projparams)
+                projparams = extract_proj_params(wrfin, timeidx=timeidx)
+                xy_proj = ll_to_xy_proj(lats[0], lons[0],
+                                        as_int=True, 
+                                        **projparams)
                 
-                nt.assert_allclose(to_np(xy_proj), to_np(xy-1))
+                nt.assert_allclose(to_np(xy_proj), to_np(xy))
                 
             
             else:
-                xy = ll_to_xy(in_wrfnc, lats, lons)
-                xy = xy + 1 # NCL uses fortran indexing
+                ref_vals = refnc.variables["xy1"][:]
+                xy = ll_to_xy(wrfin, lats, lons, timeidx=None, as_int=False)
+                
                 ref = ref_vals[:]
                 
                 nt.assert_allclose(to_np(xy), ref)
                 
-                # Next make sure the 'proj' version works
-                projparams = extract_proj_params(in_wrfnc)
-                xy_proj = ll_to_xy_proj(lats, lons, **projparams)
+                for tidx in range(9):
                 
-                nt.assert_allclose(to_np(xy_proj), to_np(xy-1))
+                    # Next make sure the 'proj' version works
+                    projparams = extract_proj_params(wrfin, timeidx=tidx)
+                    xy_proj = ll_to_xy_proj(lats, lons, as_int=False,
+                                            **projparams)
+                
+                    nt.assert_allclose(to_np(xy_proj), to_np(xy[:,tidx,:]))
                 
         else:
-            # Since this domain is not moving, the reference values are the 
-            # same whether there are multiple or single files
-            ref_vals = refnc.variables["ll"][:]
-            
              # i_s, j_s taken from NCL script, just hard-coding for now
              # NCL uses 1-based indexing for this, so need to subtract 1
-            i_s = np.asarray([10, 100, 150], int) - 1
-            j_s = np.asarray([10, 100, 150], int) - 1
+            x_s = np.asarray([10, 50, 90], int)
+            y_s = np.asarray([10, 50, 90], int)
             
             if single:
-                ll = xy_to_ll(in_wrfnc, i_s[0], j_s[0])
+                timeidx=8
+                ref_vals = refnc.variables["ll2"][:]
+                ll = xy_to_ll(wrfin, x_s[0], y_s[0], timeidx=timeidx)
                 ref = ref_vals[::-1,0]
                 
                 nt.assert_allclose(to_np(ll), ref)
                 
                 # Next make sure the 'proj' version works
-                projparams = extract_proj_params(in_wrfnc)
-                ll_proj = xy_to_ll_proj(i_s[0], j_s[0], **projparams)
+                projparams = extract_proj_params(wrfin, timeidx=8)
+                ll_proj = xy_to_ll_proj(x_s[0], y_s[0], **projparams)
                 
                 nt.assert_allclose(to_np(ll_proj), to_np(ll))
             else:
-                ll = xy_to_ll(in_wrfnc, i_s, j_s)
+                ref_vals = refnc.variables["ll1"][:]
+                ll = xy_to_ll(wrfin, x_s, y_s, timeidx=None)
                 ref = ref_vals[::-1,:]
                 
                 nt.assert_allclose(to_np(ll), ref)
                 
-                # Next make sure the 'proj' version works
-                projparams = extract_proj_params(in_wrfnc)
-                ll_proj = xy_to_ll_proj(i_s, j_s, **projparams)
                 
-                nt.assert_allclose(to_np(ll_proj), to_np(ll))
+                for tidx in range(9):
+                    # Next make sure the 'proj' version works
+                    projparams = extract_proj_params(wrfin, timeidx=tidx)
+                    ll_proj = xy_to_ll_proj(x_s, y_s, **projparams)
+                
+                    nt.assert_allclose(to_np(ll_proj), to_np(ll[:,tidx,:]))
         
     return test
 
@@ -878,16 +836,16 @@ if __name__ == "__main__":
             if var in ignore_vars:
                 continue
             
-            test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE)
-            test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True)
+            test_func1 = make_test(var, DIR, PATTERN, REF_NC_FILE)
+            test_func2 = make_test(var, DIR, PATTERN, REF_NC_FILE, multi=True)
             setattr(WRFVarsTest, 'test_{0}'.format(var), test_func1)
             setattr(WRFVarsTest, 'test_multi_{0}'.format(var), test_func2)
             
         for method in interp_methods:
-            test_interp_func1 = make_interp_test(method, TEST_FILE, 
-                                                 OUT_NC_FILE)
-            test_interp_func2 = make_interp_test(method, TEST_FILE, 
-                                                 OUT_NC_FILE, multi=True)
+            test_interp_func1 = make_interp_test(method, DIR, PATTERN, 
+                                                 REF_NC_FILE)
+            test_interp_func2 = make_interp_test(method, DIR, PATTERN, 
+                                                 REF_NC_FILE, multi=True)
             setattr(WRFInterpTest, 'test_{0}'.format(method), 
                     test_interp_func1)
             setattr(WRFInterpTest, 'test_multi_{0}'.format(method), 
@@ -896,10 +854,11 @@ if __name__ == "__main__":
         for testid in latlon_tests:
             for single in (True, False):
                 for multi in (True, False):
-                    test_ll_func = make_latlon_test(testid, TEST_FILE, 
-                                                    OUT_NC_FILE, 
-                                                    single=single, multi=multi, 
-                                                    repeat=3, pynio=False)
+                    test_ll_func = make_latlon_test(testid, DIR, PATTERN, 
+                                                    REF_NC_FILE, 
+                                                    single=single, 
+                                                    multi=multi, 
+                                                    pynio=False)
                     multistr = "" if not multi else "_multi"
                     singlestr = "_nosingle" if not single else "_single"
                     test_name = "test_{}{}{}".format(testid, singlestr, 
@@ -915,18 +874,18 @@ if __name__ == "__main__":
             if var in ignore_vars:
                 continue
             
-            test_func1 = make_test(var, TEST_FILE, OUT_NC_FILE, pynio=True)
-            test_func2 = make_test(var, TEST_FILE, OUT_NC_FILE, multi=True,
+            test_func1 = make_test(var, DIR, PATTERN, REF_NC_FILE, pynio=True)
+            test_func2 = make_test(var, DIR, PATTERN, REF_NC_FILE, multi=True,
                                    pynio=True)
             setattr(WRFVarsTest, 'test_pynio_{0}'.format(var), test_func1)
             setattr(WRFVarsTest, 'test_pynio_multi_{0}'.format(var), 
                     test_func2)
             
         for method in interp_methods:
-            test_interp_func1 = make_interp_test(method, TEST_FILE, 
-                                                 OUT_NC_FILE)
-            test_interp_func2 = make_interp_test(method, TEST_FILE, 
-                                                 OUT_NC_FILE, multi=True)
+            test_interp_func1 = make_interp_test(method, DIR, PATTERN, 
+                                                 REF_NC_FILE)
+            test_interp_func2 = make_interp_test(method, DIR, PATTERN, 
+                                                 REF_NC_FILE, multi=True)
             setattr(WRFInterpTest, 'test_pynio_{0}'.format(method), 
                     test_interp_func1)
             setattr(WRFInterpTest, 'test_pynio_multi_{0}'.format(method), 
@@ -935,10 +894,11 @@ if __name__ == "__main__":
         for testid in latlon_tests:
             for single in (True, False):
                 for multi in (True, False):
-                    test_ll_func = make_latlon_test(testid, TEST_FILE, 
-                                                    OUT_NC_FILE, 
-                                                    single=single, multi=multi, 
-                                                    repeat=3, pynio=False)
+                    test_ll_func = make_latlon_test(testid, DIR, PATTERN, 
+                                                    REF_NC_FILE, 
+                                                    single=single, 
+                                                    multi=multi, 
+                                                    pynio=False)
                     multistr = "" if not multi else "_multi"
                     singlestr = "_nosingle" if not single else "_single"
                     test_name = "test_pynio_{}{}{}".format(testid, 
