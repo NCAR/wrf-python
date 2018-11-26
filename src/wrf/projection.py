@@ -78,6 +78,10 @@ if cartopy_enabled():
             self._xlimits = tuple(xlimits)
             self._ylimits = tuple(limits[..., 1])
             
+            # Compatibility with cartopy >= 0.17
+            self._x_limits = self._xlimits
+            self._y_limits = self._ylimits
+
             self._threshold = np.diff(self.x_limits)[0] / 720
 
 
