@@ -20,6 +20,13 @@ jobs:
     steps:
       - checkout
 
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum ".circleci/config.yml" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
       - run:
           name: install conda
           command: |
@@ -34,6 +41,11 @@ jobs:
           command: |
             source ~/miniconda3/bin/activate root
             conda create -n wrf-python -c conda-forge gcc setuptools python numpy wrapt xarray netcdf4
+
+      - save_cache:
+          paths:
+            - ~/miniconda3
+          key: v1-dependencies-{{ checksum ".circleci/config.yml" }}
 
       - run:
           name: build wrf-python
