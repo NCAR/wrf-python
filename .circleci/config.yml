@@ -24,13 +24,11 @@ jobs:
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum ".circleci/conda_env.yml" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
 
       - run:
           name: install conda and dependencies
           command: |
-            test -d ~/miniconda3 || exit 0
+            test -d ~/miniconda3 && exit 0
             echo "Installing a fresh version of Miniconda."
             MINICONDA_URL="https://repo.continuum.io/miniconda"
             MINICONDA_FILE="Miniconda3-latest-Linux-x86_64.sh"
@@ -53,7 +51,6 @@ jobs:
             LD_LIBRARY_PATH=~/miniconda3/envs/wrf-python/lib python sub_sizes.py
             cd ..
             gfortran -E ompgen.F90 -fopenmp -cpp -o omp.f90
-            f2py *.f90 -m _wrffortran -h wrffortran.pyf --overwrite-signature
             cd ..
             python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
             python setup.py install --single-version-externally-managed --record=record.txt
