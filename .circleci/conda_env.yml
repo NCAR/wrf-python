@@ -1,0 +1,11 @@
+name: wrf-python
+channels:
+  - conda-forge
+dependencies:
+  - gcc
+  - setuptools
+  - python
+  - numpy
+  - wrapt
+  - xarray
+  - netcdf4

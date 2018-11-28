@@ -23,29 +23,26 @@ jobs:
       # Download and cache dependencies
       - restore_cache:
           keys:
-          - v1-dependencies-{{ checksum ".circleci/config.yml" }}
+          - v1-dependencies-{{ checksum ".circleci/conda_env.yml" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
 
       - run:
-          name: install conda
+          name: install conda and dependencies
           command: |
+            test -d ~/miniconda3 || exit 0
             echo "Installing a fresh version of Miniconda."
             MINICONDA_URL="https://repo.continuum.io/miniconda"
             MINICONDA_FILE="Miniconda3-latest-Linux-x86_64.sh"
             curl -L -O "${MINICONDA_URL}/${MINICONDA_FILE}"
             bash $MINICONDA_FILE -b
-
-      - run:
-          name: install dependencies
-          command: |
             source ~/miniconda3/bin/activate root
-            conda create -n wrf-python -c conda-forge gcc setuptools python numpy wrapt xarray netcdf4
+            conda env create -f .circleci/conda_env.yml
 
       - save_cache:
           paths:
             - ~/miniconda3
-          key: v1-dependencies-{{ checksum ".circleci/config.yml" }}
+          key: v1-dependencies-{{ checksum ".circleci/conda_env.yml" }}
 
       - run:
           name: build wrf-python
