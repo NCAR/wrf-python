@@ -7,7 +7,8 @@ from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d,
                         _monotonic, _vintrp, _interpz3d_lev2d)
 
 from .metadecorators import set_interp_metadata
-from .util import extract_vars, is_staggered, get_id, to_np, get_iterable
+from .util import (extract_vars, is_staggered, get_id, to_np, get_iterable,
+                   is_moving_domain, is_latlon_pair)
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
 from .constants import Constants, default_fill, ConversionFactors
@@ -103,6 +104,52 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             return masked.squeeze()
     
     return masked
+
+
+def _vertcross_nest_alltimes(field3d, vert, levels=None, 
+              missing=default_fill(np.float64),
+              wrfin=None, timeidx=0, stagger=None, projection=None,
+              ll_point=None,
+              pivot_point=None, angle=None,
+              start_point=None, end_point=None,
+              latlon=False, autolevels=100, cache=None, meta=True):
+    
+    # Some fields like uvmet have an extra left dimension for the product
+    # type, we'll handle that iteration here.
+    multi = True if field3d.ndim - vert.ndim == 1 else False
+    
+    # Check if we have a wrfin file, or this is a no go.
+    if wrfin is None:
+        raise ValueError("'wrfin' is required when using all times "
+                         "from a moving nest with lat/lon coords")
+        
+    if multi:
+        if field3d.ndim == 4:
+            raise ValueError("all times requested for a moving nest, "
+                             "but no time dimension found for "
+                             'field3d')
+    else:
+        if field3d.ndim < 4:
+            raise ValueError("all times requested for a moving nest, "
+                             "but no time dimension found for "
+                             'field3d')
+            
+    numtimes = field3d.shape[-4]
+    
+    for t in py3range(numtimes):
+        #_meta = True if t == 0 else False
+        _meta = True
+        
+        v = vertcross(field3d, vert, levels, missing, wrfin, t, stagger, 
+                      projection, ll_point, pivot_point, angle, start_point, 
+                      end_point, latlon, autolevels, cache, _meta)
+        
+        print(v.attrs)
+        
+        
+        
+        
+    
 
 
 @set_interp_metadata("cross")
@@ -257,13 +304,36 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         :class:`numpy.ndarray` object with no metadata.
         
     """
-    if timeidx is None:
-        raise ValueError("'timeidx' must be a positive or negative integer")
-    
-    
     # Some fields like uvmet have an extra left dimension for the product
     # type, we'll handle that iteration here.
     multi = True if field3d.ndim - vert.ndim == 1 else False
+    
+    
+    if timeidx is None:
+        if (latlon is True or is_latlon_pair(start_point) or 
+            is_latlon_pair(pivot_point)):
+            
+            if wrfin is not None:
+                # Moving nests aren't supported with ALL_TIMES because the 
+                # domain could move outside of the cross section, which causes 
+                # crashes or different line lengths.
+                if is_moving_domain(wrfin):
+                    raise ValueError("Requesting all times with a moving nest "
+                                     "is not supported when using lat/lon "
+                                     "cross sections because the domain could "
+                                     "move outside of the cross section. "
+                                     "You must request each time "
+                                     "individually.")
+                else:
+                    _timeidx = 0
+            
+        # If using grid coordinates, then don't care about lat/lon
+        # coordinates. Just use 0.
+        else:
+            _timeidx = 0
+    else:
+        _timeidx = timeidx
+    
     
     try:
         xy = cache["xy"]
@@ -277,7 +347,7 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
-                xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -285,14 +355,14 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                 
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
-                xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
-                xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -443,7 +513,29 @@ def interpline(field2d, pivot_point=None,
         
     """
     if timeidx is None:
-        raise ValueError("'timeidx' must be a positive or negative integer")
+        if (latlon is True or is_latlon_pair(start_point) or 
+            is_latlon_pair(pivot_point)):
+            
+            if wrfin is not None:
+                # Moving nests aren't supported with ALL_TIMES because the 
+                # domain could move outside of the line, which causes 
+                # crashes or different line lengths.
+                if is_moving_domain(wrfin):
+                    raise ValueError("Requesting all times with a moving nest "
+                                     "is not supported when using a lat/lon "
+                                     "line because the domain could "
+                                     "move outside of line. "
+                                     "You must request each time "
+                                     "individually.")
+                else:
+                    _timeidx = 0
+            
+        # If using grid coordinates, then don't care about lat/lon
+        # coordinates. Just use 0.
+        else:
+            _timeidx = 0
+    else:
+        _timeidx = timeidx
     
     try:
         xy = cache["xy"]
@@ -454,7 +546,7 @@ def interpline(field2d, pivot_point=None,
         
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
-                xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -462,14 +554,14 @@ def interpline(field2d, pivot_point=None,
                 
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
-                xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
-                xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -514,10 +606,14 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
             above for the *vert_coord* parameter.
             
         extrapolate (:obj:`bool`, optional): Set to True to extrapolate 
-            values below ground.  This is only performed when the 
-            vertical coordinate type is pressure or height. For temperature 
-            vertical coordinate types, setting this to True will set 
-            values below ground to the lowest model level. Default is False.
+            values below ground.  This is only performed when *vert_coord* is 
+            a pressure or height type, and the *field_type* is a pressure type 
+            (with height vertical coordinate), a height type (with pressure as 
+            the vertical coordinate), or a temperature type (with either height 
+            or pressure as the vertical coordinate). If those conditions are  
+            not met, or *field_type* is None, then the lowest model level 
+            will be used. Extrapolation is performed using standard atmosphere.
+            Default is False. 
             
         field_type (:obj:`str`, optional): 
             The type of field.  Default is None.
@@ -533,8 +629,11 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                 * 'theta', 'th': potential temperature [K]
                 * 'theta-e', 'thetae', 'eth': equivalent potential temperature
             
-        log_p (:obj:`bool`, optional): Use the log of the pressure for 
-            interpolation instead of pressure. Default is False.
+        log_p (:obj:`bool`, optional): Set to True to use the log of the 
+            vertical coordinate for interpolation. This is mainly intended 
+            for pressure vertical coordinate types, but note that the log 
+            will still be taken for any vertical coordinate type when 
+            this is set to True. Default is False.
             
         timeidx (:obj:`int`, optional):
             The time index to use when extracting auxiallary variables used in 
