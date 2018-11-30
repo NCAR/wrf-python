@@ -15,7 +15,7 @@ from wrf.util import is_multi_file
 NCL_EXE = "/Users/ladwig/miniconda2/envs/ncl_build/bin/ncl"
 NCARG_ROOT = "/Users/ladwig/miniconda2/envs/ncl_build"
 #TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
-DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi"
+DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest"
 PATTERN = "wrfout_d02_*"
 REF_NC_FILE = "/tmp/wrftest.nc"
 
@@ -74,7 +74,7 @@ def make_test(varname, dir, pattern, referent, multi=False, pynio=False):
             if not pynio:
                 f = NetCDF(fname)
                 try:
-                    f.set_auto_mask(False)
+                    f.set_always_mask(False)
                 except:
                     pass
                 wrfin.append(f)
@@ -190,7 +190,8 @@ def _get_refvals(referent, varname, multi):
         
     refnc = NetCDF(referent)
     try:
-        refnc.set_auto_mask(False)
+        pass
+        #refnc.set_auto_mask(False)
     except:
         pass
     
@@ -236,7 +237,7 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             if not pynio:
                 f = NetCDF(fname)
                 try:
-                    f.set_auto_mask(False)
+                    f.set_always_mask(False)
                 except:
                     pass
                 wrfin.append(f)
@@ -353,33 +354,40 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             p_min = np.ceil(np.amin(p)/10) * 10      # top value
             
             p_autolevels = int((p_max - p_min) /10)
-
+            
             # Make sure the numpy versions work first
             
             ht_cross = vertcross(to_np(hts), to_np(p), 
                                  pivot_point=pivot_point, angle=90.,
                                  autolevels=p_autolevels)
+            
             ht_cross = vertcross(hts, p, pivot_point=pivot_point, angle=90.,
                                  autolevels=p_autolevels)
             
             nt.assert_allclose(to_np(ht_cross), ref_ht_cross, rtol=.01)
             
-            # Test the manual projection method with lat/lon
             lats = hts.coords["XLAT"]
             lons = hts.coords["XLONG"]
-            ll_point = ll_points(lats, lons)
-            pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
+                
+            # Test the manual projection method with lat/lon
+            # Only do this for the non-multi case, since the domain 
+            # might be moving
+            if not multi:
+                
+                ll_point = ll_points(lats, lons)
+            
+                pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
                                        int(lats.shape[-1]/2)],
-                              lon=lons[int(lons.shape[-2]/2), 
+                                  lon=lons[int(lons.shape[-2]/2), 
                                        int(lons.shape[-1]/2)])
             
-            v1 = vertcross(hts,p,wrfin,pivot_point=pivot_point,
+                v1 = vertcross(hts,p,wrfin=wrfin,pivot_point=pivot_point,
                            angle=90.0)
-            v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
+                v2 = vertcross(hts,p,projection=hts.attrs["projection"], 
                           ll_point=ll_point,
                           pivot_point=pivot_point, angle=90.)
             
-            nt.assert_allclose(to_np(v1), to_np(v2), rtol=.01)
+                nt.assert_allclose(to_np(v1), to_np(v2), rtol=.01)
             
             # Test opposite
             
@@ -390,7 +398,7 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
                                rtol=.01)
             # Test point to point
             start_point = CoordPair(0, hts.shape[-2]/2)
-            end_point = CoordPair(-1,hts.shape[-2]/2)
+            end_point = CoordPair(-1, hts.shape[-2]/2)
           
              
             p_cross2 = vertcross(p,hts,start_point=start_point, 
@@ -418,17 +426,19 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             nt.assert_allclose(to_np(ht_cross), 
                                to_np(ref_ht_vertcross2), atol=.01)
             
+            idxs = (0, slice(None)) if multi else (slice(None),)
             
-            start_lat = np.amin(lats) + .25*(np.amax(lats) - np.amin(lats))
-            end_lat = np.amin(lats) + .75*(np.amax(lats) - np.amin(lats))
+            start_lat = np.amin(lats[idxs]) + .25*(np.amax(lats[idxs]) - np.amin(lats[idxs]))
+            end_lat = np.amin(lats[idxs]) + .65*(np.amax(lats[idxs]) - np.amin(lats[idxs]))
             
-            start_lon = np.amin(lons) + .25*(np.amax(lons) - np.amin(lons))
-            end_lon = np.amin(lons) + .75*(np.amax(lons) - np.amin(lons))
+            start_lon = np.amin(lons[idxs]) + .25*(np.amax(lons[idxs]) - np.amin(lons[idxs]))
+            end_lon = np.amin(lons[idxs]) + .65*(np.amax(lons[idxs]) - np.amin(lons[idxs]))
             
             start_point = CoordPair(lat=start_lat, lon=start_lon)
             end_point = CoordPair(lat=end_lat, lon=end_lon)
             
-            # ll_point and projection came from above 
+            ll_point = ll_points(lats[idxs], lons[idxs])
+            
             ht_cross = vertcross(hts, p, 
                                  start_point=start_point, 
                                  end_point=end_point, 
@@ -441,6 +451,27 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             nt.assert_allclose(to_np(ht_cross), 
                                to_np(ref_ht_vertcross3),
                                rtol=.01)
+            
+            if multi:
+                ntimes = hts.shape[0]
+                
+                for t in range(ntimes):
+                    hts = getvar(wrfin, "z", timeidx=t)
+                    p = getvar(wrfin, "pressure", timeidx=t)
+                    
+                    ht_cross = vertcross(hts, p, 
+                                 start_point=start_point, 
+                                 end_point=end_point, 
+                                 wrfin=wrfin,
+                                 timeidx=t,
+                                 latlon=True,
+                                 autolevels=1000)
+                    
+                    refname = "ht_vertcross_t{}".format(t)
+                    ref_ht_vertcross = _get_refvals(referent, refname, False)
+                    
+                    nt.assert_allclose(to_np(ht_cross), 
+                               to_np(ref_ht_vertcross),rtol=.02)
             
               
         elif (varname == "interpline"):
@@ -700,7 +731,7 @@ def make_latlon_test(testid, dir, pattern, referent, single,
         
         refnc = NetCDF(referent)
         try:
-            refnc.set_auto_mask(False)
+            refnc.set_always_mask(False)
         except:
             pass
         
@@ -813,9 +844,9 @@ class WRFLatLonTest(ut.TestCase):
 if __name__ == "__main__":
     from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
                      omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
-    omp_set_num_threads(omp_get_num_procs()//2)
-    omp_set_schedule(OMP_SCHED_STATIC, 0)
-    omp_set_dynamic(False)
+    #omp_set_num_threads(omp_get_num_procs()//2)
+    #omp_set_schedule(OMP_SCHED_STATIC, 0)
+    #omp_set_dynamic(False)
     
     ignore_vars = []  # Not testable yet
     wrf_vars = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
