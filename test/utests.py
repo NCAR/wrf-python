@@ -32,6 +32,7 @@ def setUpModule():
     
     os.environ["NCARG_ROOT"] = NCARG_ROOT
     os.environ["NCARG_NCARG"] = os.path.join(NCARG_ROOT, "lib", "ncarg")
+    os.environ["OMP_NUM_THREADS"] = "4"
      
         
     this_path = os.path.realpath(__file__)
