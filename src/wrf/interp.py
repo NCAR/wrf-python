@@ -106,52 +106,6 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
     return masked
 
 
-def _vertcross_nest_alltimes(field3d, vert, levels=None, 
-              missing=default_fill(np.float64),
-              wrfin=None, timeidx=0, stagger=None, projection=None,
-              ll_point=None,
-              pivot_point=None, angle=None,
-              start_point=None, end_point=None,
-              latlon=False, autolevels=100, cache=None, meta=True):
-    
-    # Some fields like uvmet have an extra left dimension for the product
-    # type, we'll handle that iteration here.
-    multi = True if field3d.ndim - vert.ndim == 1 else False
-    
-    # Check if we have a wrfin file, or this is a no go.
-    if wrfin is None:
-        raise ValueError("'wrfin' is required when using all times "
-                         "from a moving nest with lat/lon coords")
-        
-    if multi:
-        if field3d.ndim == 4:
-            raise ValueError("all times requested for a moving nest, "
-                             "but no time dimension found for "
-                             'field3d')
-    else:
-        if field3d.ndim < 4:
-            raise ValueError("all times requested for a moving nest, "
-                             "but no time dimension found for "
-                             'field3d')
-            
-    numtimes = field3d.shape[-4]
-    
-    for t in py3range(numtimes):
-        #_meta = True if t == 0 else False
-        _meta = True
-        
-        v = vertcross(field3d, vert, levels, missing, wrfin, t, stagger, 
-                      projection, ll_point, pivot_point, angle, start_point, 
-                      end_point, latlon, autolevels, cache, _meta)
-        
-        print(v.attrs)
-        
-        
-        
-        
-    
-
-
 @set_interp_metadata("cross")
 def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
               wrfin=None, timeidx=0, stagger=None, projection=None,
@@ -308,33 +262,6 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
     # type, we'll handle that iteration here.
     multi = True if field3d.ndim - vert.ndim == 1 else False
     
-    
-    if timeidx is None:
-        if (latlon is True or is_latlon_pair(start_point) or 
-            is_latlon_pair(pivot_point)):
-            
-            if wrfin is not None:
-                # Moving nests aren't supported with ALL_TIMES because the 
-                # domain could move outside of the cross section, which causes 
-                # crashes or different line lengths.
-                if is_moving_domain(wrfin):
-                    raise ValueError("Requesting all times with a moving nest "
-                                     "is not supported when using lat/lon "
-                                     "cross sections because the domain could "
-                                     "move outside of the cross section. "
-                                     "You must request each time "
-                                     "individually.")
-                else:
-                    _timeidx = 0
-            
-        # If using grid coordinates, then don't care about lat/lon
-        # coordinates. Just use 0.
-        else:
-            _timeidx = 0
-    else:
-        _timeidx = timeidx
-    
-    
     try:
         xy = cache["xy"]
         var2dz = cache["var2dz"]
@@ -344,6 +271,31 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         start_point_xy = None
         end_point_xy = None
         pivot_point_xy = None
+        
+        if timeidx is None:
+            if (latlon is True or is_latlon_pair(start_point) or 
+                is_latlon_pair(pivot_point)):
+                
+                if wrfin is not None:
+                    # Moving nests aren't supported with ALL_TIMES because the 
+                    # domain could move outside of the cross section, which causes 
+                    # crashes or different line lengths.
+                    if is_moving_domain(wrfin):
+                        raise ValueError("Requesting all times with a moving nest "
+                                         "is not supported when using lat/lon "
+                                         "cross sections because the domain could "
+                                         "move outside of the cross section. "
+                                         "You must request each time "
+                                         "individually.")
+                    else:
+                        _timeidx = 0
+                
+            # If using grid coordinates, then don't care about lat/lon
+            # coordinates. Just use 0.
+            else:
+                _timeidx = 0
+        else:
+            _timeidx = timeidx
         
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
@@ -512,30 +464,6 @@ def interpline(field2d, pivot_point=None,
         
         
     """
-    if timeidx is None:
-        if (latlon is True or is_latlon_pair(start_point) or 
-            is_latlon_pair(pivot_point)):
-            
-            if wrfin is not None:
-                # Moving nests aren't supported with ALL_TIMES because the 
-                # domain could move outside of the line, which causes 
-                # crashes or different line lengths.
-                if is_moving_domain(wrfin):
-                    raise ValueError("Requesting all times with a moving nest "
-                                     "is not supported when using a lat/lon "
-                                     "line because the domain could "
-                                     "move outside of line. "
-                                     "You must request each time "
-                                     "individually.")
-                else:
-                    _timeidx = 0
-            
-        # If using grid coordinates, then don't care about lat/lon
-        # coordinates. Just use 0.
-        else:
-            _timeidx = 0
-    else:
-        _timeidx = timeidx
     
     try:
         xy = cache["xy"]
@@ -543,6 +471,32 @@ def interpline(field2d, pivot_point=None,
         start_point_xy = None
         end_point_xy = None
         pivot_point_xy = None
+        
+        if timeidx is None:
+            if (latlon is True or is_latlon_pair(start_point) or 
+                is_latlon_pair(pivot_point)):
+                
+                if wrfin is not None:
+                    # Moving nests aren't supported with ALL_TIMES because the 
+                    # domain could move outside of the line, which causes 
+                    # crashes or different line lengths.
+                    if is_moving_domain(wrfin):
+                        raise ValueError("Requesting all times with a moving nest "
+                                         "is not supported when using a lat/lon "
+                                         "line because the domain could "
+                                         "move outside of line. "
+                                         "You must request each time "
+                                         "individually.")
+                    else:
+                        # Domain not moving, just use 0
+                        _timeidx = 0
+                
+            # If using grid coordinates, then don't care about lat/lon
+            # coordinates. Just use 0.
+            else:
+                _timeidx = 0
+        else:
+            _timeidx = timeidx
         
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
@@ -566,10 +520,10 @@ def interpline(field2d, pivot_point=None,
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 end_point_xy = (end_point.x, end_point.y)
-                
+        
         xy = get_xy(field2d, pivot_point_xy, angle, start_point_xy, 
                     end_point_xy)
-        
+    
     return _interpline(field2d, xy)
 
 

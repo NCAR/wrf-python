@@ -236,26 +236,31 @@
     
     t2_line2 = wrf_user_interpline(t2, pivot, xopt)
     
+    fout->t2_line2 = t2_line2
+    
     lats = wrf_user_getvar(input_file, "lat", 0)
     lons = wrf_user_getvar(input_file, "lon", 0) 
         
     start_lat = min(lats) + .25d*(max(lats) - min(lats))
-    end_lat = min(lats) + .75d*(max(lats) - min(lats))
+    end_lat = min(lats) + .65d*(max(lats) - min(lats))
                 
     start_lon = min(lons) + .25d*(max(lons) - min(lons))
-    end_lon = min(lons) + .75d*(max(lons) - min(lons))
+    end_lon = min(lons) + .65d*(max(lons) - min(lons))
         
     start_end = (/ start_lon, start_lat, end_lon, end_lat /)
     
-    ; For the new cross section routine
+    ; For the new line routine
     xopt := True
     xopt@use_pivot = False
     xopt@latlon = True
     xopt@file_handle = input_file
     xopt@timeidx = 0
     xopt@linecoords = True
-        
+    
     t2_line3 = wrf_user_interpline(t2, start_end, xopt)
+    t2_line3!1 = "line_idx_t2_line3"
+    
+    fout->t2_line3 = t2_line3
     
     times = wrf_user_getvar(input_file, "times", -1)
     ntimes = dimsizes(times)
@@ -269,6 +274,22 @@
       t2_line!0 = dim0name
       fout->$name$ = t2_line
     end do
+    
+    ; Make sure the 1 time case still works
+    t2 := wrf_user_getvar(input_file, "T2", 0)
+    
+    ; For the new line routine
+    xopt := True
+    xopt@use_pivot = False
+    xopt@latlon = True
+    xopt@file_handle = input_file
+    xopt@timeidx = 0
+    xopt@linecoords = True
+    
+    t2_line4 = wrf_user_interpline(t2, start_end, xopt)
+    t2_line4!0 = "t2_line4_idx"
+    
+    fout->t2_line4 = t2_line4
     
     
     ;;;;;;;;;;;;;;;;;;;;;;; 3D interpolation to new vertical coordinates

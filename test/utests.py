@@ -197,6 +197,7 @@ def _get_refvals(referent, varname, multi):
     
     multi2d = ("uvmet10", "cape_2d", "cfrac")
     multi3d = ("uvmet", "cape_3d")
+    interpline = ("t2_line","t2_line2", "t2_line3")
     
     if not multi:
         if varname in multi2d:
@@ -206,7 +207,10 @@ def _get_refvals(referent, varname, multi):
         else:
             v = refnc.variables[varname][:]
             if v.ndim == 2:
-                ref_vals = v
+                if varname in interpline:
+                    ref_vals = v[0,:]
+                else:
+                    ref_vals = v
             else:
                 ref_vals = v[0,:]
     else:
@@ -477,6 +481,8 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
         elif (varname == "interpline"):
             
             ref_t2_line = _get_refvals(referent, "t2_line", multi)
+            ref_t2_line2 = _get_refvals(referent, "t2_line2", multi)
+            ref_t2_line3 = _get_refvals(referent, "t2_line3", multi)
             
             t2 = getvar(wrfin, "T2", timeidx=timeidx)
             pivot_point = CoordPair(t2.shape[-1] / 2, t2.shape[-2] / 2)
@@ -487,6 +493,9 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             t2_line1 = interpline(t2, pivot_point=pivot_point, angle=90.0)
             
             nt.assert_allclose(to_np(t2_line1), ref_t2_line)
+            
+            # Test the new NCL wrf_user_interplevel result
+            nt.assert_allclose(to_np(t2_line1), ref_t2_line2)
             
             # Test the manual projection method with lat/lon
             lats = t2.coords["XLAT"]
@@ -516,6 +525,63 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
                                   end_point=end_point)
             
             nt.assert_allclose(to_np(t2_line1), to_np(t2_line2))
+            
+            # Now test the start/end with lat/lon points
+            
+            start_lat = float(np.amin(lats) + .25*(np.amax(lats) 
+                                                   - np.amin(lats)))
+            end_lat = float(np.amin(lats) + .65*(np.amax(lats) 
+                                                 - np.amin(lats)))
+            
+            start_lon = float(np.amin(lons) + .25*(np.amax(lons) 
+                                                   - np.amin(lons)))
+            end_lon = float(np.amin(lons) + .65*(np.amax(lons) 
+                                                 - np.amin(lons)))
+            
+            start_point = CoordPair(lat=start_lat, lon=start_lon)
+            end_point = CoordPair(lat=end_lat, lon=end_lon)
+            
+            t2_line3 = interpline(t2,wrfin=wrfin,timeidx=0,
+                                  start_point=start_point,
+                                  end_point=end_point,latlon=True)
+            
+            
+            nt.assert_allclose(to_np(t2_line3), ref_t2_line3, rtol=.01)
+            
+            # Test all time steps
+            if multi:
+                refnc = NetCDF(referent)
+                ntimes = t2.shape[0]
+                
+                for t in range(ntimes):
+                    t2 = getvar(wrfin, "T2", timeidx=t)
+                    
+                    line = interpline(t2,wrfin=wrfin,timeidx=t,
+                                  start_point=start_point,
+                                  end_point=end_point,latlon=True)
+                    
+                    refname = "t2_line_t{}".format(t)
+                    refline = refnc.variables[refname][:]
+                    
+                    nt.assert_allclose(to_np(line), 
+                               to_np(refline),rtol=.005)
+            
+                refnc.close()
+            
+            # Test NCLs single time case
+            if not multi:
+                refnc = NetCDF(referent)
+                ref_t2_line4 = refnc.variables["t2_line4"][:]
+                
+                t2 = getvar(wrfin, "T2", timeidx=0)
+                line = interpline(t2,wrfin=wrfin,timeidx=0,
+                                  start_point=start_point,
+                                  end_point=end_point,latlon=True)
+                
+                nt.assert_allclose(to_np(line), 
+                               to_np(ref_t2_line4),rtol=.005)
+                refnc.close()
+
         elif (varname == "vinterp"):
             # Tk to theta
             fld_tk_theta = _get_refvals(referent, "fld_tk_theta", multi)
@@ -844,9 +910,9 @@ class WRFLatLonTest(ut.TestCase):
 if __name__ == "__main__":
     from wrf import (omp_set_num_threads, omp_set_schedule, omp_get_schedule, 
                      omp_set_dynamic, omp_get_num_procs, OMP_SCHED_STATIC)
-    #omp_set_num_threads(omp_get_num_procs()//2)
-    #omp_set_schedule(OMP_SCHED_STATIC, 0)
-    #omp_set_dynamic(False)
+    omp_set_num_threads(omp_get_num_procs()//2)
+    omp_set_schedule(OMP_SCHED_STATIC, 0)
+    omp_set_dynamic(False)
     
     ignore_vars = []  # Not testable yet
     wrf_vars = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", 
