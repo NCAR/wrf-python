@@ -9,7 +9,8 @@ import numpy.ma as ma
 from .extension import _interpline
 from .util import (extract_vars, either, from_args, arg_location,
                    is_coordvar, latlon_coordvars, to_np, 
-                   from_var, iter_left_indexes, is_mapping)
+                   from_var, iter_left_indexes, is_mapping,
+                   is_moving_domain, is_latlon_pair)
 from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range
 from .interputils import get_xy_z_params, get_xy, to_xy_coords
@@ -932,9 +933,45 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     end_point_xy = None
     pivot_point_xy = None
     
+    if (inc_latlon is True or is_latlon_pair(start_point) or 
+        is_latlon_pair(pivot_point)):
+        
+        if wrfin is not None:
+            is_moving = is_moving_domain(wrfin)
+        else:
+            is_moving = False
+    
+        if timeidx is None:
+            if wrfin is not None:
+                # Moving nests aren't supported with ALL_TIMES because the 
+                # domain could move outside of the line, which causes 
+                # crashes or different line lengths.
+                if is_moving:
+                    raise ValueError("Requesting all times with a moving nest "
+                                     "is not supported when using lat/lon "
+                                     "cross sections because the domain could "
+                                     "move outside of the cross section. "
+                                     "You must request each time "
+                                     "individually.")
+                else:
+                    # Domain not moving, just use 0
+                    _timeidx = 0
+            
+            # If using grid coordinates, then don't care about lat/lon
+            # coordinates. Just use 0.
+            else:
+                _timeidx = 0
+        else:
+            if is_moving:
+                _timeidx = timeidx
+            else:
+                # When using non-moving nests, set the time to 0 
+                # to avoid problems downstream
+                _timeidx = 0
+    
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
-            xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
@@ -942,14 +979,14 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
             
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
-            xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
-            xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
@@ -1149,10 +1186,47 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     start_point_xy = None
     end_point_xy = None
     pivot_point_xy = None
+    
+    if (inc_latlon is True or is_latlon_pair(start_point) or 
+        is_latlon_pair(pivot_point)):
+        
+        if wrfin is not None:
+            is_moving = is_moving_domain(wrfin)
+        else:
+            is_moving = False
+    
+        if timeidx is None:
+            if wrfin is not None:
+                # Moving nests aren't supported with ALL_TIMES because the 
+                # domain could move outside of the line, which causes 
+                # crashes or different line lengths.
+                if is_moving:
+                    raise ValueError("Requesting all times with a moving nest "
+                                     "is not supported when using a lat/lon "
+                                     "line because the domain could "
+                                     "move outside of line. "
+                                     "You must request each time "
+                                     "individually.")
+                else:
+                    # Domain not moving, just use 0
+                    _timeidx = 0
+            
+            # If using grid coordinates, then don't care about lat/lon
+            # coordinates. Just use 0.
+            else:
+                _timeidx = 0
+        else:
+            if is_moving:
+                _timeidx = timeidx
+            else:
+                # When using non-moving nests, set the time to 0 
+                # to avoid problems downstream
+                _timeidx = 0
+        
         
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
-            xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
@@ -1161,19 +1235,20 @@ def _set_line_meta(wrapped, instance, args, kwargs):
             
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
-            xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
-            xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)
     
+
     xy = get_xy(field2d, pivot_point_xy, angle, start_point_xy, end_point_xy)
     
     # Make a copy so we don't modify a user supplied cache

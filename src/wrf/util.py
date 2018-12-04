@@ -3880,13 +3880,24 @@ def pairs_to_latlon(pairs):
         
         return lats, lons
         
-            
 
+def is_latlon_pair(pair):
+    """Return True if the :class:`wrf.CoordPair` is a lat/lon pair
     
-
-
-
-
+    Args:
+    
+        pair (:class:`wrf.CoordPair`): A single :class:`wrf.CoordPair` object.
+        
+    Returns:
+    
+        :obj:`bool`: True if the pair is a lat/lon pair.
+    
+    """
+    if pair is not None:
+        return (pair.lat is not None and pair.lon is not None)
+    else:
+        return False
+    
     
     
     

@@ -193,8 +193,8 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
             # same whether there are multiple or single files
             ref_vals = refnc.variables["xy"][:]
             # Lats/Lons taken from NCL script, just hard-coding for now
-            lats = [-55, -60, -65]
-            lons = [25, 30, 35]
+            lats = [22.0, 25.0, 27.0]
+            lons = [-90.0, -87.5, -83.75]
             
             xy = ll_to_xy(in_wrfnc, lats[0], lons[0])
                 
@@ -208,10 +208,10 @@ def make_latlon_test(testid, wrf_in, referent, single, multi=False, repeat=3,
             
              # i_s, j_s taken from NCL script, just hard-coding for now
              # NCL uses 1-based indexing for this, so need to subtract 1
-            i_s = np.asarray([10, 100, 150], int) - 1
-            j_s = np.asarray([10, 100, 150], int) - 1
+            x_s = np.asarray([10, 50, 90], int)
+            y_s = np.asarray([10, 50, 90], int)
             
-            ll = xy_to_ll(in_wrfnc, i_s[0], j_s[0])
+            ll = xy_to_ll(in_wrfnc, x_s[0], y_s[0])
             
             nt.assert_allclose(to_np(ll), ref_vals)
                 
