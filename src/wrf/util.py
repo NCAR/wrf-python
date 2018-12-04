@@ -3893,7 +3893,10 @@ def is_latlon_pair(pair):
         :obj:`bool`: True if the pair is a lat/lon pair.
     
     """
-    return (pair.lat is not None and pair.lon is not None)
+    if pair is not None:
+        return (pair.lat is not None and pair.lon is not None)
+    else:
+        return False
     
     
     

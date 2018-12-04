@@ -15,9 +15,11 @@ from wrf.util import is_multi_file
 NCL_EXE = "/Users/ladwig/miniconda2/envs/ncl_build/bin/ncl"
 NCARG_ROOT = "/Users/ladwig/miniconda2/envs/ncl_build"
 #TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
-DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest"
+DIRS = ["/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest",
+        "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/static_nest"]
 PATTERN = "wrfout_d02_*"
-REF_NC_FILE = "/tmp/wrftest.nc"
+REF_NC_FILES = ["/tmp/wrftest_moving.nc", "/tmp/wrftest_static.nc"]
+NEST = ["moving", "static"]
 
 # Python 3
 if sys.version_info > (3,):
@@ -35,19 +37,21 @@ def setUpModule():
     this_path = os.path.realpath(__file__)
     ncl_script = os.path.join(os.path.dirname(this_path),
                               "ncl_get_var.ncl")
-
-    cmd = "%s %s 'dir=\"%s\"' 'pattern=\"%s\"'  'out_file=\"%s\"'" % (NCL_EXE,
-                                                        ncl_script,
-                                                        DIR,
-                                                        PATTERN,
-                                                        REF_NC_FILE)
     
-    print cmd
+    for dir,outfile in zip(DIRS, REF_NC_FILES):
+        cmd = "%s %s 'dir=\"%s\"' 'pattern=\"%s\"'  'out_file=\"%s\"'" % (
+            NCL_EXE,
+            ncl_script,
+            dir,
+            PATTERN,
+            outfile)
     
-    if not os.path.exists(REF_NC_FILE):
-        status = subprocess.call(cmd, shell=True)
-        if (status != 0):
-            raise RuntimeError("NCL script failed.  Could not set up test.")
+        print cmd
+    
+        if not os.path.exists(outfile):
+            status = subprocess.call(cmd, shell=True)
+            if (status != 0):
+                raise RuntimeError("NCL script failed. Could not set up test.")
 
 # Using helpful information at: 
 # http://eli.thegreenplace.net/2014/04/02/dynamically-generating-python-test-cases
@@ -377,7 +381,10 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             # Only do this for the non-multi case, since the domain 
             # might be moving
             if not multi:
-                
+                if lats.ndim > 2: # moving nest
+                    lats = lats[0,:]
+                    lons = lons[0,:]
+                    
                 ll_point = ll_points(lats, lons)
             
                 pivot = CoordPair(lat=lats[int(lats.shape[-2]/2), 
@@ -430,7 +437,7 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             nt.assert_allclose(to_np(ht_cross), 
                                to_np(ref_ht_vertcross2), atol=.01)
             
-            idxs = (0, slice(None)) if multi else (slice(None),)
+            idxs = (0, slice(None)) if lats.ndim > 2 else (slice(None),)
             
             start_lat = np.amin(lats[idxs]) + .25*(np.amax(lats[idxs]) - np.amin(lats[idxs]))
             end_lat = np.amin(lats[idxs]) + .65*(np.amax(lats[idxs]) - np.amin(lats[idxs]))
@@ -501,8 +508,9 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             lats = t2.coords["XLAT"]
             lons = t2.coords["XLONG"]
             if multi:
-                lats = lats[0,:]
-                lons = lons[0,:]
+                if lats.ndim > 2: # moving nest
+                    lats = lats[0,:]
+                    lons = lons[0,:]
             
             ll_point = ll_points(lats, lons)
             
@@ -852,14 +860,27 @@ def make_latlon_test(testid, dir, pattern, referent, single,
                 
                 nt.assert_allclose(to_np(xy), ref)
                 
+                if xy.ndim > 2:
+                    # Moving nest
+                    is_moving = True
+                    numtimes = xy.shape[-2]
+                else:
+                    is_moving = False
+                    numtimes = 1
+                
                 for tidx in range(9):
                 
                     # Next make sure the 'proj' version works
                     projparams = extract_proj_params(wrfin, timeidx=tidx)
                     xy_proj = ll_to_xy_proj(lats, lons, as_int=False,
                                             **projparams)
+                    
+                    if is_moving:
+                        idxs = (slice(None), tidx, slice(None))
+                    else:
+                        idxs = (slice(None),)
                 
-                    nt.assert_allclose(to_np(xy_proj), to_np(xy[:,tidx,:]))
+                    nt.assert_allclose(to_np(xy_proj), to_np(xy[idxs]))
                 
         else:
              # i_s, j_s taken from NCL script, just hard-coding for now
@@ -887,13 +908,25 @@ def make_latlon_test(testid, dir, pattern, referent, single,
                 
                 nt.assert_allclose(to_np(ll), ref)
                 
+                if ll.ndim > 2:
+                    # Moving nest
+                    is_moving = True
+                    numtimes = ll.shape[-2]
+                else:
+                    is_moving = False
+                    numtimes = 1
                 
-                for tidx in range(9):
+                for tidx in range(numtimes):
                     # Next make sure the 'proj' version works
                     projparams = extract_proj_params(wrfin, timeidx=tidx)
                     ll_proj = xy_to_ll_proj(x_s, y_s, **projparams)
-                
-                    nt.assert_allclose(to_np(ll_proj), to_np(ll[:,tidx,:]))
+                    
+                    if is_moving:
+                        idxs = (slice(None), tidx, slice(None))
+                    else:
+                        idxs = (slice(None),)
+                        
+                    nt.assert_allclose(to_np(ll_proj), to_np(ll[idxs]))
         
     return test
 
@@ -924,84 +957,85 @@ if __name__ == "__main__":
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     latlon_tests = ["xy", "ll"]
     
-    try:
-        import netCDF4
-    except ImportError:
-        pass
-    else:
-        for var in wrf_vars:
-            if var in ignore_vars:
-                continue
-            
-            test_func1 = make_test(var, DIR, PATTERN, REF_NC_FILE)
-            test_func2 = make_test(var, DIR, PATTERN, REF_NC_FILE, multi=True)
-            setattr(WRFVarsTest, 'test_{0}'.format(var), test_func1)
-            setattr(WRFVarsTest, 'test_multi_{0}'.format(var), test_func2)
-            
-        for method in interp_methods:
-            test_interp_func1 = make_interp_test(method, DIR, PATTERN, 
-                                                 REF_NC_FILE)
-            test_interp_func2 = make_interp_test(method, DIR, PATTERN, 
-                                                 REF_NC_FILE, multi=True)
-            setattr(WRFInterpTest, 'test_{0}'.format(method), 
-                    test_interp_func1)
-            setattr(WRFInterpTest, 'test_multi_{0}'.format(method), 
-                    test_interp_func2)
-        
-        for testid in latlon_tests:
-            for single in (True, False):
-                for multi in (True, False):
-                    test_ll_func = make_latlon_test(testid, DIR, PATTERN, 
-                                                    REF_NC_FILE, 
-                                                    single=single, 
-                                                    multi=multi, 
-                                                    pynio=False)
-                    multistr = "" if not multi else "_multi"
-                    singlestr = "_nosingle" if not single else "_single"
-                    test_name = "test_{}{}{}".format(testid, singlestr, 
-                                                       multistr)
-                    setattr(WRFLatLonTest, test_name, test_ll_func)
+    for dir, ref_nc_file, nest in zip(DIRS, REF_NC_FILES, NEST):
+        try:
+            import netCDF4
+        except ImportError:
+            pass
+        else:
+            for var in wrf_vars:
+                if var in ignore_vars:
+                    continue
                 
-    try:
-        import PyNIO
-    except ImportError:
-        pass
-    else:
-        for var in wrf_vars:
-            if var in ignore_vars:
-                continue
+                test_func1 = make_test(var, dir, PATTERN, ref_nc_file)
+                test_func2 = make_test(var, dir, PATTERN, ref_nc_file, multi=True)
+                setattr(WRFVarsTest, 'test_{0}_{1}'.format(nest,var), test_func1)
+                setattr(WRFVarsTest, 'test_{0}_multi_{1}'.format(nest,var), test_func2)
+                
+            for method in interp_methods:
+                test_interp_func1 = make_interp_test(method, dir, PATTERN, 
+                                                     ref_nc_file)
+                test_interp_func2 = make_interp_test(method, dir, PATTERN, 
+                                                     ref_nc_file, multi=True)
+                setattr(WRFInterpTest, 'test_{0}_{1}'.format(nest,method), 
+                        test_interp_func1)
+                setattr(WRFInterpTest, 'test_{0}_multi_{1}'.format(nest,method), 
+                        test_interp_func2)
             
-            test_func1 = make_test(var, DIR, PATTERN, REF_NC_FILE, pynio=True)
-            test_func2 = make_test(var, DIR, PATTERN, REF_NC_FILE, multi=True,
-                                   pynio=True)
-            setattr(WRFVarsTest, 'test_pynio_{0}'.format(var), test_func1)
-            setattr(WRFVarsTest, 'test_pynio_multi_{0}'.format(var), 
-                    test_func2)
-            
-        for method in interp_methods:
-            test_interp_func1 = make_interp_test(method, DIR, PATTERN, 
-                                                 REF_NC_FILE)
-            test_interp_func2 = make_interp_test(method, DIR, PATTERN, 
-                                                 REF_NC_FILE, multi=True)
-            setattr(WRFInterpTest, 'test_pynio_{0}'.format(method), 
-                    test_interp_func1)
-            setattr(WRFInterpTest, 'test_pynio_multi_{0}'.format(method), 
-                    test_interp_func2)
-            
-        for testid in latlon_tests:
-            for single in (True, False):
-                for multi in (True, False):
-                    test_ll_func = make_latlon_test(testid, DIR, PATTERN, 
-                                                    REF_NC_FILE, 
-                                                    single=single, 
-                                                    multi=multi, 
-                                                    pynio=False)
-                    multistr = "" if not multi else "_multi"
-                    singlestr = "_nosingle" if not single else "_single"
-                    test_name = "test_pynio_{}{}{}".format(testid, 
-                                                              singlestr, 
-                                                              multistr)
-                    setattr(WRFLatLonTest, test_name, test_ll_func)
+            for testid in latlon_tests:
+                for single in (True, False):
+                    for multi in (True, False):
+                        test_ll_func = make_latlon_test(testid, dir, PATTERN, 
+                                                        ref_nc_file, 
+                                                        single=single, 
+                                                        multi=multi, 
+                                                        pynio=False)
+                        multistr = "" if not multi else "_multi"
+                        singlestr = "_nosingle" if not single else "_single"
+                        test_name = "test_{}_{}{}{}".format(nest, testid, singlestr, 
+                                                           multistr)
+                        setattr(WRFLatLonTest, test_name, test_ll_func)
+                    
+        try:
+            import PyNIO
+        except ImportError:
+            pass
+        else:
+            for var in wrf_vars:
+                if var in ignore_vars:
+                    continue
+                
+                test_func1 = make_test(var, dir, PATTERN, ref_nc_file, pynio=True)
+                test_func2 = make_test(var, dir, PATTERN, ref_nc_file, multi=True,
+                                       pynio=True)
+                setattr(WRFVarsTest, 'test_pynio_{0}_{1}'.format(nest,var), test_func1)
+                setattr(WRFVarsTest, 'test_pynio_{0}_multi_{1}'.format(nest,var), 
+                        test_func2)
+                
+            for method in interp_methods:
+                test_interp_func1 = make_interp_test(method, dir, PATTERN, 
+                                                     ref_nc_file)
+                test_interp_func2 = make_interp_test(method, dir, PATTERN, 
+                                                     ref_nc_file, multi=True)
+                setattr(WRFInterpTest, 'test_pynio_{0}_{1}'.format(nest,method), 
+                        test_interp_func1)
+                setattr(WRFInterpTest, 'test_pynio_{0}_multi_{1}'.format(nest,method), 
+                        test_interp_func2)
+                
+            for testid in latlon_tests:
+                for single in (True, False):
+                    for multi in (True, False):
+                        test_ll_func = make_latlon_test(testid, dir, PATTERN, 
+                                                        ref_nc_file, 
+                                                        single=single, 
+                                                        multi=multi, 
+                                                        pynio=False)
+                        multistr = "" if not multi else "_multi"
+                        singlestr = "_nosingle" if not single else "_single"
+                        test_name = "test_pynio_{}_{}{}{}".format(nest, testid, 
+                                                                  singlestr, 
+                                                                  multistr)
+                        setattr(WRFLatLonTest, test_name, test_ll_func)
      
     ut.main()
     

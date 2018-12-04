@@ -167,8 +167,8 @@ def _get_proj_params(wrfin, timeidx, stagger, method, squeeze, cache, _key):
     
     # Only need one file and one time if the domain is not moving
     if not is_moving:
-        if is_multi_time_req(timeidx):
-            lat_timeidx = 0
+        # Always use the 0th time for non-moving domains to avoid problems
+        lat_timeidx = 0
             
         if is_multi_file(wrfin):
             if not is_mapping(wrfin):
@@ -179,7 +179,7 @@ def _get_proj_params(wrfin, timeidx, stagger, method, squeeze, cache, _key):
                 key = _key[first_entry]
                 return _get_proj_params(wrfin, timeidx, stagger, 
                                         method, squeeze, cache, key)
-            
+    
     xlat = extract_vars(wrfin, lat_timeidx, (latvar,), method, squeeze, cache,
                            meta=False, _key=_key)[latvar]
     xlon = extract_vars(wrfin, lat_timeidx, (lonvar,), method, squeeze, cache,

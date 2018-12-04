@@ -272,15 +272,20 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         end_point_xy = None
         pivot_point_xy = None
         
-        if timeidx is None:
-            if (latlon is True or is_latlon_pair(start_point) or 
-                is_latlon_pair(pivot_point)):
-                
+        if (latlon is True or is_latlon_pair(start_point) or 
+            is_latlon_pair(pivot_point)):
+            
+            if wrfin is not None:
+                is_moving = is_moving_domain(wrfin)
+            else:
+                is_moving = False
+        
+            if timeidx is None:
                 if wrfin is not None:
                     # Moving nests aren't supported with ALL_TIMES because the 
-                    # domain could move outside of the cross section, which causes 
+                    # domain could move outside of the line, which causes 
                     # crashes or different line lengths.
-                    if is_moving_domain(wrfin):
+                    if is_moving:
                         raise ValueError("Requesting all times with a moving nest "
                                          "is not supported when using lat/lon "
                                          "cross sections because the domain could "
@@ -288,14 +293,20 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                                          "You must request each time "
                                          "individually.")
                     else:
+                        # Domain not moving, just use 0
                         _timeidx = 0
                 
-            # If using grid coordinates, then don't care about lat/lon
-            # coordinates. Just use 0.
+                # If using grid coordinates, then don't care about lat/lon
+                # coordinates. Just use 0.
+                else:
+                    _timeidx = 0
             else:
-                _timeidx = 0
-        else:
-            _timeidx = timeidx
+                if is_moving:
+                    _timeidx = timeidx
+                else:
+                    # When using non-moving nests, set the time to 0 
+                    # to avoid problems downstream
+                    _timeidx = 0
         
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
@@ -472,15 +483,20 @@ def interpline(field2d, pivot_point=None,
         end_point_xy = None
         pivot_point_xy = None
         
-        if timeidx is None:
-            if (latlon is True or is_latlon_pair(start_point) or 
-                is_latlon_pair(pivot_point)):
-                
+        if (latlon is True or is_latlon_pair(start_point) or 
+            is_latlon_pair(pivot_point)):
+            
+            if wrfin is not None:
+                is_moving = is_moving_domain(wrfin)
+            else:
+                is_moving = False
+        
+            if timeidx is None:
                 if wrfin is not None:
                     # Moving nests aren't supported with ALL_TIMES because the 
                     # domain could move outside of the line, which causes 
                     # crashes or different line lengths.
-                    if is_moving_domain(wrfin):
+                    if is_moving:
                         raise ValueError("Requesting all times with a moving nest "
                                          "is not supported when using a lat/lon "
                                          "line because the domain could "
@@ -491,12 +507,17 @@ def interpline(field2d, pivot_point=None,
                         # Domain not moving, just use 0
                         _timeidx = 0
                 
-            # If using grid coordinates, then don't care about lat/lon
-            # coordinates. Just use 0.
+                # If using grid coordinates, then don't care about lat/lon
+                # coordinates. Just use 0.
+                else:
+                    _timeidx = 0
             else:
-                _timeidx = 0
-        else:
-            _timeidx = timeidx
+                if is_moving:
+                    _timeidx = timeidx
+                else:
+                    # When using non-moving nests, set the time to 0 
+                    # to avoid problems downstream
+                    _timeidx = 0
         
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
