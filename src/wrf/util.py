@@ -3392,7 +3392,7 @@ def latlon_coords(var, as_np=False):
     
         var (:class:`xarray.DataArray`):  A variable.
         
-        to_np (:obj:`bool`): Set to True to return the coordinates as 
+        as_np (:obj:`bool`): Set to True to return the coordinates as 
             :class:`numpy.ndarray` objects instead of 
             :class:`xarray.DataArray` objects.
             
