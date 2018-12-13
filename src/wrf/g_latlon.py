@@ -546,18 +546,19 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
             :class:`xarray.DataArray`.  Default is True.
         
         as_int (:obj:`bool`): Set to False to return the x,y values as 
-            :obj:`float`, otherwise they will be returned as :obj:`int`.
+            :obj:`float`, otherwise they will be returned as :obj:`int`. 
+            Default is True.
             
         map_proj (:obj:`int`): Model projection [1=Lambert Conformal, 
             2=Polar Stereographic, 3=Mercator, 6=Lat-Lon].  Required.
         
-        truelat1 (:obj:`float`): True latitude 1.  Required for 
+        truelat1 (:obj:`float`): Latitude of true scale 1.  Required for 
             map_proj = 1, 2, 3 (defaults to 0 otherwise).
         
-        truelat2 (:obj:`float`): True latitude 2.  Optional for 
+        truelat2 (:obj:`float`): Latitude of true scale 2.  Optional for 
             map_proj = 1 (defaults to 0 otherwise).
         
-        stand_lon (:obj:`float`): Standard longitude. Required for map_proj = 
+        stand_lon (:obj:`float`): Standard longitude. Required for *map_proj* = 
             1, 2, 6 (defaults to 0 otherwise).
         
         ref_lat (:obj:`float`): A reference latitude.  Required. 
@@ -570,11 +571,11 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
         known_y (:obj:`float`): The known y-coordinate associated with 
             *ref_lat*.  Required.
         
-        pole_lat (:obj:`float`): Pole latitude. Optional for 
-            *map_proj* = 6 (defaults to 90 otherwise).
+        pole_lat (:obj:`float`): Pole latitude. Required for 
+            *map_proj* = 6 (use 90 for no rotation).
         
-        pole_lon (:obj:`float`): Pole longitude. Optional for 
-            *map_proj* = 6 (defaults to 0 otherwise).
+        pole_lon (:obj:`float`): Pole longitude. Required for 
+            *map_proj* = 6 (use 0 for no rotation).
         
         dx (:obj:`float`): The x spacing in meters at the true latitude.  
             Required for all map projections.
@@ -582,13 +583,13 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
         dy (:obj:`float`) - The y spacing in meters at the true latitude.  
             Required for *map_proj* = 6 (defaults to 0 otherwise).
         
-        latinc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        latinc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
                 latinc = (dy*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
         
-        loninc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        loninc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
@@ -719,13 +720,13 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
         map_proj (:obj:`int`): Model projection [1=Lambert Conformal, 
             2=Polar Stereographic, 3=Mercator, 6=Lat-Lon].  Required.
         
-        truelat1 (:obj:`float`): True latitude 1.  Required for 
+        truelat1 (:obj:`float`): Latitude of true scale 1.  Required for 
             map_proj = 1, 2, 3 (defaults to 0 otherwise).
         
-        truelat2 (:obj:`float`): True latitude 2.  Optional for 
+        truelat2 (:obj:`float`): Latitude of true scale 2.  Optional for 
             map_proj = 1 (defaults to 0 otherwise).
         
-        stand_lon (:obj:`float`): Standard longitude. Required for map_proj = 
+        stand_lon (:obj:`float`): Standard longitude. Required for *map_proj* = 
             1, 2, 6 (defaults to 0 otherwise).
         
         ref_lat (:obj:`float`): A reference latitude.  Required. 
@@ -738,25 +739,25 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
         known_y (:obj:`float`): The known y-coordinate associated with 
             *ref_lat*.  Required.
         
-        pole_lat (:obj:`float`): Pole latitude. Optional for 
-            *map_proj* = 6 (defaults to 90 otherwise).
+        pole_lat (:obj:`float`): Pole latitude. Required for 
+            *map_proj* = 6 (use 90 for no rotation).
         
-        pole_lon (:obj:`float`): Pole longitude. Optional for 
-            *map_proj* = 6 (defaults to 0 otherwise).
+        pole_lon (:obj:`float`): Pole longitude. Required for 
+            *map_proj* = 6 (use 0 for no rotation).
         
         dx (:obj:`float`): The x spacing in meters at the true latitude.  
-            Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
+            Required for all map projections.
         
         dy (:obj:`float`) - The y spacing in meters at the true latitude.  
             Required for *map_proj* = 6 (defaults to 0 otherwise).
         
-        latinc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        latinc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
                 latinc = (dy*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
         
-        loninc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        loninc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
