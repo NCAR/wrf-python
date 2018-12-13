@@ -47,7 +47,7 @@ def setUpModule():
             PATTERN,
             outfile)
     
-        print cmd
+        print(cmd)
     
         if not os.path.exists(outfile):
             status = subprocess.call(cmd, shell=True)
@@ -179,8 +179,8 @@ def make_test(varname, dir, pattern, referent, multi=False, pynio=False):
             except:
                 absdiff = np.abs(to_np(my_vals) - ref_vals)
                 maxdiff = np.amax(absdiff)
-                print (maxdiff)
-                print np.argwhere(absdiff == maxdiff)
+                print(maxdiff)
+                print(np.argwhere(absdiff == maxdiff))
                 
                 raise
     
@@ -519,8 +519,10 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
                                        int(lats.shape[-1]/2)],
                               lon=lons[int(lons.shape[-2]/2), 
                                        int(lons.shape[-1]/2)])
-            l1 = interpline(t2,wrfin,pivot_point=pivot_point,
+
+            l1 = interpline(t2,wrfin=wrfin,pivot_point=pivot_point,
                            angle=90.0)
+            
             l2 = interpline(t2,projection=t2.attrs["projection"], 
                           ll_point=ll_point, 
                           pivot_point=pivot_point, angle=90.)
@@ -890,7 +892,7 @@ def make_latlon_test(testid, dir, pattern, referent, single,
             y_s = np.asarray([10, 50, 90], int)
             
             if single:
-                timeidx=8
+                timeidx = 8
                 ref_vals = refnc.variables["ll2"][:]
                 ll = xy_to_ll(wrfin, x_s[0], y_s[0], timeidx=timeidx)
                 ref = ref_vals[::-1,0]
@@ -902,6 +904,8 @@ def make_latlon_test(testid, dir, pattern, referent, single,
                 ll_proj = xy_to_ll_proj(x_s[0], y_s[0], **projparams)
                 
                 nt.assert_allclose(to_np(ll_proj), to_np(ll))
+                 
+                
             else:
                 ref_vals = refnc.variables["ll1"][:]
                 ll = xy_to_ll(wrfin, x_s, y_s, timeidx=None)

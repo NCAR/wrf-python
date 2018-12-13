@@ -350,10 +350,9 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
 
 
 @set_interp_metadata("line")
-def interpline(field2d, pivot_point=None, 
-               wrfin=None, timeidx=0, stagger=None, projection=None,
+def interpline(field2d, wrfin=None, timeidx=0, stagger=None, projection=None,
                ll_point=None,
-               angle=None, start_point=None,
+               pivot_point=None, angle=None, start_point=None,
                end_point=None, latlon=False, 
                cache=None, meta=True):
     """Return the two-dimensional field interpolated along a line.

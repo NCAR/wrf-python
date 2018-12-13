@@ -233,7 +233,6 @@ def _kwarg_proj_params(**projparams):
     # Sanity checks
     # Required args for all projections
     for name, var in viewitems({"MAP_PROJ" : map_proj, 
-                                "STAND_LON" : stdlon, 
                                 "REF_LAT" : ref_lat, 
                                 "REF_LON" : ref_lon, 
                                 "KNOWN_X" : known_x, 
