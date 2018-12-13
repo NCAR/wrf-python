@@ -160,8 +160,12 @@ def _undo_alias(alias):
 def _check_kargs(var, kargs):
     for arg in viewkeys(kargs):
         if arg not in _VALID_KARGS[var]:
-            raise ValueError("'%s' is an invalid keyword "
-                          "argument for '%s'" % (arg, var))
+            if var != "default":
+                raise ValueError("'{}' is an invalid keyword "
+                          "argument for '{}'".format(arg, var))
+            else:
+                raise ValueError("'{}' is an invalid keyword "
+                                 "argument".format(arg))
               
   
 def getvar(wrfin, varname, timeidx=0, 
@@ -277,6 +281,7 @@ def getvar(wrfin, varname, timeidx=0,
     wrfin = get_iterable(wrfin)
     
     if is_standard_wrf_var(wrfin, varname) and varname != "Times":
+        _check_kargs("default", kwargs)
         return extract_vars(wrfin, timeidx, varname, 
                             method, squeeze, cache, meta, _key)[varname]
     elif varname == "Times":
