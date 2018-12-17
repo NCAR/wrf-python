@@ -309,7 +309,8 @@ class WrfProj(object):
         return (None if not cartopy_enabled() 
                 else crs.Globe(ellipse=None,
                                semimajor_axis=Constants.WRF_EARTH_RADIUS,
-                               semiminor_axis=Constants.WRF_EARTH_RADIUS))
+                               semiminor_axis=Constants.WRF_EARTH_RADIUS,
+                               nadgrids="@null"))
      
     def cartopy_xlim(self, geobounds):
         """Return the x extents in projected coordinates for cartopy.
@@ -610,7 +611,7 @@ class LambertConformal(WrfProj):
                     else self.truelat2)
         
         _proj4 = ("+proj=lcc +units=meters +a={} +b={} +lat_1={} "
-                       "+lat_2={} +lat_0={} +lon_0={}".format(
+                  "+lat_2={} +lat_0={} +lon_0={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self.truelat1,
@@ -731,7 +732,7 @@ class Mercator(WrfProj):
     def _proj4(self):
         
         _proj4 = ("+proj=merc +units=meters +a={} +b={} "
-                       "+lon_0={} +lat_ts={}".format(
+                  "+lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self._stand_lon,
@@ -845,7 +846,7 @@ class PolarStereographic(WrfProj):
     
     def _proj4(self):
         _proj4 = ("+proj=stere +units=meters +a={} +b={} "
-                       "+lat0={} +lon_0={} +lat_ts={}".format(
+                  "+lat0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self._hemi,
@@ -939,7 +940,7 @@ class LatLon(WrfProj):
             return None
         
         _cartopy = crs.PlateCarree(central_longitude=self.stand_lon,
-                                            globe=self._globe())
+                                   globe=self._globe())
         
         return _cartopy
     
@@ -951,7 +952,7 @@ class LatLon(WrfProj):
     
     def _proj4(self):
         _proj4 = ("+proj=eqc +units=meters +a={} +b={} "
-                       "+lon_0={}".format(Constants.WRF_EARTH_RADIUS,
+                  "+lon_0={} +nadgrids=@null".format(Constants.WRF_EARTH_RADIUS,
                                           Constants.WRF_EARTH_RADIUS,
                                           self.stand_lon))
         return _proj4
