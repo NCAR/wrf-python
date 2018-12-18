@@ -223,6 +223,44 @@ def get_3dcape(wrfin, timeidx=0, method="cat",
     
     
     return ma.masked_values(cape_cin, missing)
+
+
+def get_cape2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
+              meta=True, _key=None, missing=default_fill(np.float64)):
+    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+               meta, _key, missing)[0,:]
+              
+               
+def get_cin2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
+              meta=True, _key=None, missing=default_fill(np.float64)):
+    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+               meta, _key, missing)[1,:]
+
+            
+def get_lcl(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
+              meta=True, _key=None, missing=default_fill(np.float64)):
+    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+               meta, _key, missing)[2,:]
+               
+               
+def get_lfc(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
+              meta=True, _key=None, missing=default_fill(np.float64)):
+    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+               meta, _key, missing)[3,:]
+               
+
+def get_3dcape_only(wrfin, timeidx=0, method="cat", 
+               squeeze=True, cache=None, meta=True,
+               _key=None, missing=default_fill(np.float64)):
+    return get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
+                      _key, missing)[0,:]
+                      
+                      
+def get_3dcin_only(wrfin, timeidx=0, method="cat", 
+               squeeze=True, cache=None, meta=True,
+               _key=None, missing=default_fill(np.float64)):
+    return get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
+                      _key, missing)[1,:]
     
     
     

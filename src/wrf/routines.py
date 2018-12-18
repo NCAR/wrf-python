@@ -2,7 +2,9 @@ from __future__ import (absolute_import, division, print_function)
 
 from .util import (get_iterable, is_standard_wrf_var, extract_vars, viewkeys,
                    get_id)
-from .g_cape import get_2dcape, get_3dcape
+from .g_cape import (get_2dcape, get_3dcape, get_cape2d_only, 
+                     get_cin2d_only, get_lcl, get_lfc, get_3dcape_only, 
+                     get_3dcin_only)
 from .g_ctt import get_ctt
 from .g_dbz import get_dbz, get_max_dbz
 from .g_dewpoint import get_dp, get_dp_2m
@@ -17,12 +19,16 @@ from .g_slp import get_slp
 from .g_temp import get_tc, get_eth, get_temp, get_theta, get_tk, get_tv, get_tw
 from .g_terrain import get_terrain
 from .g_uvmet import (get_uvmet, get_uvmet10, get_uvmet10_wspd_wdir, 
-                    get_uvmet_wspd_wdir)
+                      get_uvmet_wspd_wdir, get_uvmet_wspd, get_uvmet_wdir,
+                      get_uvmet10_wspd, get_uvmet10_wdir)
 from .g_vorticity import get_avo, get_pvo
 from .g_wind import (get_destag_wspd_wdir, get_destag_wspd_wdir10, 
-                   get_u_destag, get_v_destag, get_w_destag)
+                   get_u_destag, get_v_destag, get_w_destag,
+                   get_destag_wspd, get_destag_wdir, get_destag_wspd10, 
+                   get_destag_wdir10)
 from .g_times import get_times, get_xtimes
-from .g_cloudfrac import get_cloudfrac
+from .g_cloudfrac import (get_cloudfrac, get_low_cloudfrac, get_mid_cloudfrac.
+                          get_high_cloudfrac)
 
 
 # func is the function to call.  kargs are required arguments that should 
@@ -70,7 +76,25 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "ctt" : get_ctt,
              "cloudfrac" : get_cloudfrac,
              "geopt_stag" : get_stag_geopt,
-             "zstag" : get_stag_height
+             "zstag" : get_stag_height,
+             # Diagnostics below are extracted from multi-product diagnostics
+             "cape2d_only" : get_cape2d_only,
+             "cin2d_only" : get_cin2d_only, 
+             "lcl" : get_lcl,
+             "lfc" : get_lfc, 
+             "cape3d_only" : get_3dcape_only, 
+             "cin3d_only": get_3dcin_only,
+             "uvmet_wspd" : get_uvmet_wspd, 
+             "uvmet_wdir" : get_uvmet_wdir,
+             "uvmet10_wspd" : get_uvmet10_wspd, 
+             "uvmet10_wdir" : get_uvmet10_wdir,
+             "wspd" : get_destag_wspd, 
+             "wdir" : get_destag_wdir, 
+             "wspd10" : get_destag_wspd10, 
+             "wdir10" : get_destag_wdir10,
+             "low_cfrac" : get_low_cloudfrac, 
+             "mid_cfrac" : get_mid_cloudfrac.
+             "high_cfrac" : get_high_cloudfrac
              }
   
 _VALID_KARGS = {"cape2d" : ["missing"],
@@ -118,6 +142,26 @@ _VALID_KARGS = {"cape2d" : ["missing"],
                             "mid_thresh", "high_thresh"],
              "geopt_stag" : [],
              "zstag" : ["msl", "units"],
+             "cape2d_only" : ["missing"],
+             "cin2d_only" : ["missing"], 
+             "lcl" : ["missing"],
+             "lfc" : ["missing"], 
+             "cape3d_only" : ["missing"], 
+             "cin3d_only": ["missing"],
+             "uvmet_wspd" : ["units"], 
+             "uvmet_wdir" : ["units"],
+             "uvmet10_wspd" : ["units"], 
+             "uvmet10_wdir" : ["units"],
+             "wspd" : ["units"], 
+             "wdir" : ["units"], 
+             "wspd10" : ["units"], 
+             "wdir10" : ["units"],
+             "low_cloudfrac" : ["vert_type", "low_thresh", 
+                            "mid_thresh", "high_thresh"], 
+             "mid_cloudfrac" : ["vert_type", "low_thresh", 
+                            "mid_thresh", "high_thresh"].
+             "high_cloudfrac" : ["vert_type", "low_thresh", 
+                            "mid_thresh", "high_thresh"],
              "default" : []
             }
   
@@ -140,7 +184,14 @@ _ALIASES = {"cape_2d" : "cape2d",
             "cfrac" : "cloudfrac",
             "wspd_wdir_uvmet" : "uvmet_wspd_wdir",
             "wspd_wdir_uvmet10" : "uvmet10_wspd_wdir",
-            "th" : "theta"
+            "th" : "theta",
+            "low_cfrac" : "low_cloudfrac",
+            "mid_cfrac" : "mid_cloudfrac",
+            "migh_cfrac" : "high_cloudfrac",
+            "wspd_uvmet" : "uvmet_wspd" , 
+            "wdir_uvmet" : "uvmet_wdir" ,
+            "wspd_uvmet10" : "uvmet10_wspd" , 
+            "wdir_uvmet10" : "uvmet10_wdir" ,
             }
   
 class ArgumentError(Exception):

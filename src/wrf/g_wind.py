@@ -507,3 +507,30 @@ def get_destag_wspd_wdir10(wrfin, timeidx=0, method="cat",
     
     return _calc_wspd_wdir(u, v, True, units)
 
+
+def get_destag_wspd(wrfin, timeidx=0, method="cat", 
+                    squeeze=True, cache=None, meta=True, _key=None,
+                    units="m s-1"):
+    return get_destag_wspd_wdir(wrfin, timeidx, method, squeeze, cache, 
+                                meta, _key, units)[0,:]
+                                
+def get_destag_wdir(wrfin, timeidx=0, method="cat", 
+                    squeeze=True, cache=None, meta=True, _key=None,
+                    units="m s-1"):
+    return get_destag_wspd_wdir(wrfin, timeidx, method, squeeze, cache, 
+                                meta, _key, units)[1,:]
+                                
+                                
+def get_destag_wspd10(wrfin, timeidx=0, method="cat", 
+                      squeeze=True, cache=None, meta=True, _key=None, 
+                      units="m s-1"):
+    return get_destag_wspd_wdir10(wrfin, timeidx, method, 
+                                  squeeze, cache, meta, _key, units)[0,:]
+                                  
+                                  
+def get_destag_wdir10(wrfin, timeidx=0, method="cat", 
+                      squeeze=True, cache=None, meta=True, _key=None, 
+                      units="m s-1"):
+    return get_destag_wspd_wdir10(wrfin, timeidx, method, 
+                                  squeeze, cache, meta, _key, units)[1,:]
+                                
