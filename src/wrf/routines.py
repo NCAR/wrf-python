@@ -27,7 +27,7 @@ from .g_wind import (get_destag_wspd_wdir, get_destag_wspd_wdir10,
                    get_destag_wspd, get_destag_wdir, get_destag_wspd10, 
                    get_destag_wdir10)
 from .g_times import get_times, get_xtimes
-from .g_cloudfrac import (get_cloudfrac, get_low_cloudfrac, get_mid_cloudfrac.
+from .g_cloudfrac import (get_cloudfrac, get_low_cloudfrac, get_mid_cloudfrac,
                           get_high_cloudfrac)
 
 
@@ -93,7 +93,7 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "wspd10" : get_destag_wspd10, 
              "wdir10" : get_destag_wdir10,
              "low_cfrac" : get_low_cloudfrac, 
-             "mid_cfrac" : get_mid_cloudfrac.
+             "mid_cfrac" : get_mid_cloudfrac,
              "high_cfrac" : get_high_cloudfrac
              }
   
@@ -159,7 +159,7 @@ _VALID_KARGS = {"cape2d" : ["missing"],
              "low_cloudfrac" : ["vert_type", "low_thresh", 
                             "mid_thresh", "high_thresh"], 
              "mid_cloudfrac" : ["vert_type", "low_thresh", 
-                            "mid_thresh", "high_thresh"].
+                            "mid_thresh", "high_thresh"],
              "high_cloudfrac" : ["vert_type", "low_thresh", 
                             "mid_thresh", "high_thresh"],
              "default" : []
