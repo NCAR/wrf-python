@@ -523,29 +523,48 @@ def get_uvmet10_wspd_wdir(wrfin, timeidx=0, method="cat", squeeze=True,
 def get_uvmet_wspd(wrfin, timeidx=0, method="cat", squeeze=True, 
                    cache=None, meta=True, _key=None,
                    units="m s-1"):
-    return get_uvmet_wspd_wdir(wrfin, timeidx, method, squeeze, 
+    result = get_uvmet_wspd_wdir(wrfin, timeidx, method, squeeze, 
                                cache, meta, _key, units)[0,:]
+                               
+    if meta:
+        result.attrs["description"] = "earth rotated wspd"
+        
+    return result
                                
                                
 def get_uvmet_wdir(wrfin, timeidx=0, method="cat", squeeze=True, 
                    cache=None, meta=True, _key=None,
                    units="m s-1"):
-    return get_uvmet_wspd_wdir(wrfin, timeidx, method, squeeze, 
+    result = get_uvmet_wspd_wdir(wrfin, timeidx, method, squeeze, 
                                cache, meta, _key, units)[1,:]
+                               
+    if meta:
+        result.attrs["description"] = "earth rotated wdir"
+        
+    return result
                                
                                
 def get_uvmet10_wspd(wrfin, timeidx=0, method="cat", squeeze=True, 
                    cache=None, meta=True, _key=None,
                    units="m s-1"):
-    return get_uvmet10_wspd_wdir(wrfin, timeidx, method, squeeze, 
+    result = get_uvmet10_wspd_wdir(wrfin, timeidx, method, squeeze, 
                                cache, meta, _key, units)[0,:]
+    if meta:
+        result.attrs["description"] = "10m earth rotated wspd"
+        
+    return result
                                
                                
 def get_uvmet10_wdir(wrfin, timeidx=0, method="cat", squeeze=True, 
                    cache=None, meta=True, _key=None,
                    units="m s-1"):
-    return get_uvmet10_wspd_wdir(wrfin, timeidx, method, squeeze, 
+    result = get_uvmet10_wspd_wdir(wrfin, timeidx, method, squeeze, 
                                cache, meta, _key, units)[1,:]
+                               
+    if meta:
+        result.attrs["description"] = "10m earth rotated wdir"
+        
+    return result
         
             
             

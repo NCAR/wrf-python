@@ -227,40 +227,76 @@ def get_3dcape(wrfin, timeidx=0, method="cat",
 
 def get_cape2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
-    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+    result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[0,:]
+               
+    if meta:
+        result.attrs["description"] = "mcape"
+        result.attrs["units"] = "J kg-1"
+        
+    return result
               
                
 def get_cin2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
-    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+    result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[1,:]
+               
+    if meta:
+        result.attrs["description"] = "mcin"
+        result.attrs["units"] = "J kg-1"
+        
+    return result
 
             
 def get_lcl(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
-    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+    result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[2,:]
+               
+    if meta:
+        result.attrs["description"] = "lcl"
+        result.attrs["units"] = "m"
+        
+    return result
                
                
 def get_lfc(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
-    return get_2dcape(wrfin, timeidx, method, squeeze, cache, 
+    result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[3,:]
+               
+    if meta:
+        result.attrs["description"] = "lfc"
+        result.attrs["units"] = "m"
+        
+    return result
                
 
 def get_3dcape_only(wrfin, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
                _key=None, missing=default_fill(np.float64)):
-    return get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
+    result = get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
                       _key, missing)[0,:]
+                      
+    if meta:
+        result.attrs["description"] = "cape"
+        result.attrs["units"] = "J kg-1"
+        
+    return result
                       
                       
 def get_3dcin_only(wrfin, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
                _key=None, missing=default_fill(np.float64)):
-    return get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
+    result = get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
                       _key, missing)[1,:]
+                      
+    if meta:
+        result.attrs["description"] = "cin"
+        result.attrs["units"] = "J kg-1"
+        
+    return result
     
     
     

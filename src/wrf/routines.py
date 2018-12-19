@@ -92,9 +92,9 @@ _FUNC_MAP = {"cape2d" : get_2dcape,
              "wdir" : get_destag_wdir, 
              "wspd10" : get_destag_wspd10, 
              "wdir10" : get_destag_wdir10,
-             "low_cfrac" : get_low_cloudfrac, 
-             "mid_cfrac" : get_mid_cloudfrac,
-             "high_cfrac" : get_high_cloudfrac
+             "low_cloudfrac" : get_low_cloudfrac, 
+             "mid_cloudfrac" : get_mid_cloudfrac,
+             "high_cloudfrac" : get_high_cloudfrac
              }
   
 _VALID_KARGS = {"cape2d" : ["missing"],
@@ -187,7 +187,7 @@ _ALIASES = {"cape_2d" : "cape2d",
             "th" : "theta",
             "low_cfrac" : "low_cloudfrac",
             "mid_cfrac" : "mid_cloudfrac",
-            "migh_cfrac" : "high_cloudfrac",
+            "high_cfrac" : "high_cloudfrac",
             "wspd_uvmet" : "uvmet_wspd" , 
             "wdir_uvmet" : "uvmet_wdir" ,
             "wspd_uvmet10" : "uvmet10_wspd" , 
