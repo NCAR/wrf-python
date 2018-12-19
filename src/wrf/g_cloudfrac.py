@@ -161,3 +161,47 @@ def get_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
     
     return ma.masked_values(cfrac, missing)
 
+
+def get_low_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True, 
+                 cache=None, meta=True, _key=None,
+                 vert_type="height_agl", low_thresh=None, mid_thresh=None, 
+                 high_thresh=None, missing=default_fill(np.float64)):
+    result =  get_cloudfrac(wrfin, timeidx, method, squeeze, 
+                         cache, meta, _key,
+                         vert_type, low_thresh, mid_thresh, 
+                         high_thresh, missing)[0,:]
+                         
+    if meta:
+        result.attrs["description"] = "low clouds"
+                         
+    return result
+                         
+                         
+def get_mid_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True, 
+                 cache=None, meta=True, _key=None,
+                 vert_type="height_agl", low_thresh=None, mid_thresh=None, 
+                 high_thresh=None, missing=default_fill(np.float64)):
+    result = get_cloudfrac(wrfin, timeidx, method, squeeze, 
+                         cache, meta, _key,
+                         vert_type, low_thresh, mid_thresh, 
+                         high_thresh, missing)[1,:]
+    
+    if meta:
+        result.attrs["description"] = "mid clouds"
+                         
+    return result
+                         
+                         
+def get_high_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True, 
+                 cache=None, meta=True, _key=None,
+                 vert_type="height_agl", low_thresh=None, mid_thresh=None, 
+                 high_thresh=None, missing=default_fill(np.float64)):
+    result = get_cloudfrac(wrfin, timeidx, method, squeeze, 
+                         cache, meta, _key,
+                         vert_type, low_thresh, mid_thresh, 
+                         high_thresh, missing)[2,:]
+                         
+    if meta:
+        result.attrs["description"] = "high clouds"
+                         
+    return result
