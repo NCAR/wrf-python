@@ -332,7 +332,7 @@ def get_destag_wspd_wdir(wrfin, timeidx=0, method="cat",
                          squeeze=True, cache=None, meta=True, _key=None,
                          units="m s-1"):
     """Return the wind speed and wind direction for the wind in the projected
-    coordinate space.  
+    coordinate (i.e. grid) space.  
     
     The wind speed and direction from this function will be relative to the 
     grid.  This function should not be used to compare with observations, 
@@ -423,7 +423,7 @@ def get_destag_wspd_wdir10(wrfin, timeidx=0, method="cat",
                            squeeze=True, cache=None, meta=True, _key=None, 
                            units="m s-1"):
     """Return the wind speed and wind direction for the 10m wind in 
-    projected coordinate space.
+    projected coordinate (i.e. grid) space.
     
     The wind speed and direction from this function will be relative to the 
     grid.  This function should not be used to compare with observations, 
@@ -511,6 +511,63 @@ def get_destag_wspd_wdir10(wrfin, timeidx=0, method="cat",
 def get_destag_wspd(wrfin, timeidx=0, method="cat", 
                     squeeze=True, cache=None, meta=True, _key=None,
                     units="m s-1"):
+    """Return the wind speed in the projected coordinate (i.e. grid) space.  
+        
+    This function extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        units (:obj:`str`): The desired units.  Refer to the :meth:`getvar` 
+            product table for a list of available units for 'wspd_wdir'.  
+            Default is 'm s-1'.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The wind 
+        speed in projected space.  If 
+        xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_destag_wspd_wdir(wrfin, timeidx, method, squeeze, cache, 
                                 meta, _key, units)[0,:]
                                 
@@ -518,10 +575,68 @@ def get_destag_wspd(wrfin, timeidx=0, method="cat",
         result.attrs["description"] = "wspd in projection space"
         
     return result
+          
                                 
 def get_destag_wdir(wrfin, timeidx=0, method="cat", 
                     squeeze=True, cache=None, meta=True, _key=None,
                     units="m s-1"):
+    """Return the wind direction in the projected coordinate (i.e. grid) space.
+        
+    This function extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        units (:obj:`str`): The desired units.  Refer to the :meth:`getvar` 
+            product table for a list of available units for 'wspd_wdir'.  
+            Default is 'm s-1'.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The wind 
+        direction in projected space.  If 
+        xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_destag_wspd_wdir(wrfin, timeidx, method, squeeze, cache, 
                                 meta, _key, units)[1,:]
     
@@ -534,6 +649,64 @@ def get_destag_wdir(wrfin, timeidx=0, method="cat",
 def get_destag_wspd10(wrfin, timeidx=0, method="cat", 
                       squeeze=True, cache=None, meta=True, _key=None, 
                       units="m s-1"):
+    """Return the wind speed for the 10m wind in projected coordinate 
+    (i.e. grid) space.
+        
+    This function extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        units (:obj:`str`): The desired units.  Refer to the :meth:`getvar` 
+            product table for a list of available units for 
+            'wspd_wdir10'. Default is 'm s-1'.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The wind speed 
+        for the 10m wind in projected space.  If 
+        xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_destag_wspd_wdir10(wrfin, timeidx, method, 
                                   squeeze, cache, meta, _key, units)[0,:]
                                   
@@ -546,6 +719,64 @@ def get_destag_wspd10(wrfin, timeidx=0, method="cat",
 def get_destag_wdir10(wrfin, timeidx=0, method="cat", 
                       squeeze=True, cache=None, meta=True, _key=None, 
                       units="m s-1"):
+    """Return the wind direction for the 10m wind in projected coordinate 
+    (i.e. grid) space.
+        
+    This function extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        units (:obj:`str`): The desired units.  Refer to the :meth:`getvar` 
+            product table for a list of available units for 
+            'wspd_wdir10'. Default is 'm s-1'.
+            
+    Returns:
+    
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The wind direction 
+        for the 10m wind in projected space.  If 
+        xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_destag_wspd_wdir10(wrfin, timeidx, method, 
                                   squeeze, cache, meta, _key, units)[1,:]
                                   

@@ -53,6 +53,23 @@ The routines below are called internally by :meth:`wrf.getvar`.
    wrf.g_wind.get_w_destag
    wrf.g_wind.get_destag_wspd_wdir
    wrf.g_wind.get_destag_wspd_wdir10
+   wrf.g_wind.get_destag_wspd
+   wrf.g_wind.get_destag_wdir
+   wrf.g_wind.get_destag_wspd10
+   wrf.g_wind.get_destag_wdir10
+   wrf.g_uvmet.get_uvmet_wspd
+   wrf.g_uvmet.get_uvmet_wdir
+   wrf.g_uvmet.get_uvmet10_wspd
+   wrf.g_uvmet.get_uvmet10_wdir
+   wrf.g_cloudfrac.get_low_cloudfrac
+   wrf.g_cloudfrac.get_mid_cloudfrac
+   wrf.g_cloudfrac.get_high_cloudfrac
+   wrf.g_cape.get_cape2d_only
+   wrf.g_cape.get_cin2d_only
+   wrf.g_cape.get_lcl
+   wrf.g_cape.get_lfc
+   wrf.g_cape.get_3dcape_only
+   wrf.g_cape.get_3dcin_only
    
 -------------------------
 

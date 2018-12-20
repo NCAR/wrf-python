@@ -701,7 +701,7 @@ def smooth2d(field, passes, cenweight=2.0, meta=True):
         field (:class:`xarray.DataArray` or :class:`numpy.ndarray`): The field
             to smooth, which must be at least two dimensions.  Missing/fill 
             values will be ignored as long as the type is either a 
-            :class:`numpy.ma.MaskedArray or a :class:`xarray.DataArray` with 
+            :class:`numpy.ma.MaskedArray` or a :class:`xarray.DataArray` with 
             a *_FillValue* attribute.
             
         passes (:obj:`int`): The number of smoothing passes.

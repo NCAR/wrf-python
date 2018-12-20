@@ -4,8 +4,52 @@ What's New
 Releases
 -------------
 
-v1.2.0
-^^^^^^^^^^^^^^
+v1.3.0 (December 2018)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Release 1.3.0
+- Fixed FutureWarning issue with destag routine (thank you honnorat!)
+- Fixed computational problems with updraft_helicity, and values are no longer 
+  scaled by 1000.
+- Removed version constraints for wrapt and setuptools.
+- Fixed xarray being a hard dependency.
+- Fixed unit issues with vinterp when pressure values are extracted below 
+  ground. Also added support for height fields in km and pressure fields in 
+  hPa. The documentation has been improved.
+- Fixed the smooth2d routine so that it actually works. It never worked 
+  correctly before (nor did it work in NCL). Users can now specify the 
+  center weight of the kernel and the documentation has been updated to 
+  describe how it works.
+- Fixed the storm relative helicity algorithm so that it works in the southern
+  hemisphere. The raw algorithm now requires latitude input if used 
+  in the southern hemisphere, otherwise the northern hemisphere is assumed.
+- Fixed an issue with the latest version of cartopy 0.17 (thanks honnorat!)
+- Fixed an issue where invalid keyword arguments weren't throwing errors when 
+  extracting standard WRF variables.
+- Fixed minor issues related to moving nests when using line interpolation and 
+  vertical cross sections. It is still an error to request all times when 
+  using lat/lon coordinates with a moving nest, but otherwise knows how to 
+  run when all times are requested. This never really worked quite right.
+- Removed the pyf file from setup.py since it is generated via the build
+  system.
+- Added an autolevels parameter for the vertical cross section so that users 
+  can specify the number of vertical levels to use if they don't want to 
+  specify them manually.
+- The interplevel routine has been improved. Users can now specify a single 
+  level, multiple levels, or a 2D array (e.g. PBLH) to interpolate to. 
+  Performance has been improved when interpolating a multiple product 
+  field like wspd_wdir.
+- Products that produce multiple outputs can now have the outputs requested 
+  individually. See :ref:`subdiagnostic-table` for a list of what is available.
+- Much of this version of wrf-python has been back ported to NCL in the 
+  upcoming 6.6.0 release. The diagnostics should produce the same results 
+  in both packages.
+- Now released under the Apache 2.0 license.
+
+
+
+v1.2.0 (May 2018)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.2.0
 - Previous versions of wrf-python promoted the strings used in xarray (e.g. 
@@ -17,8 +61,8 @@ v1.2.0
   errors, so we've decided to bump the major version number. 
 
 
-v1.1.3
-^^^^^^^^^^^^^^
+v1.1.3 (March 2018)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.1.3
 - Fixed/Enhanced the cloud top temperature diagnostic.
@@ -39,15 +83,15 @@ v1.1.3
   cape_3d.
   
 
-v1.1.2
-^^^^^^^^^^^^^^
+v1.1.2 (February 2018)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.1.2
 - Fix OpenMP directive issue with cloud top temperature.
 
 
-v1.1.1
-^^^^^^^^^^^^^^
+v1.1.1 (February 2018)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.1.1
 - Added script for building on Cheyenne with maxed out Intel settings, which 
@@ -59,8 +103,8 @@ v1.1.1
 - Fix cape_2d private variable bug when running with multiple CPUs.
 
 
-v1.1.0
-^^^^^^^^^^^^^^
+v1.1.0 (January 2018)
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.1.0
 - Computational routines now support multiple cores using OpenMP.  See 
@@ -107,15 +151,15 @@ v1.1.0
   services like AppVeyor.
 
 
-v1.0.5
-^^^^^^^^^^^^^^
+v1.0.5 (September 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.0.5
 - Reduced the CI test file sizes by half.  
 
 
-v1.0.4
-^^^^^^^^^^^^^^
+v1.0.4 (September 2017)
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.0.4
 - Fix warnings with CI tests which were caused by fill values being written 
@@ -123,23 +167,25 @@ v1.0.4
 - Added the __eq__ operator to the WrfProj projection base class.
 - Fixed array order issue when using the raw CAPE routine with 1D arrays.
 
-v1.0.3
-^^^^^^^^^^^^^^
+
+v1.0.3 (June 2017)
+^^^^^^^^^^^^^^^^^^^^^
 
 - Relase 1.0.3
 - Fixed an issue with the cartopy Mercator subclass where the xlimits were 
   being calculated to the same value (or very close), causing blank plots.
 
-v1.0.2
-^^^^^^^^^^^^^^
+
+v1.0.2 (May 2017)
+^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.0.2
 - Fixed issue with the wspd_wdir product types when sequences of files are 
   used.
 
 
-v1.0.1
-^^^^^^^^^^^^^
+v1.0.1 (March 2017)
+^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.0.1
 - Fixed issue with initialization of PolarStereographic and LatLon map 
@@ -149,8 +195,8 @@ v1.0.1
   so wrf-python should as well.
   
 
-v1.0.0
-^^^^^^^^^^^^^
+v1.0.0 (March 2017)
+^^^^^^^^^^^^^^^^^^^^^
 
 - Release 1.0.0.
 - Fixed issue with not being able to set the thread-local coordinate cache to 
@@ -163,80 +209,6 @@ v1.0.0
   column of data.
 
 
-Beta Releases
---------------
-
-v1.0b3
-^^^^^^^^^^^^^
-
-- Beta release 3.
-- Improvements made for conda-forge integration testing.
-- Fixed an incorrectly initialized variable issue with vinterp.  This issue 
-  mainly impacts the unit tests for continuous integration testing with 
-  conda-forge, since the data set used for these tests is heavily cropped.
-- Back-ported the inspect.BoundArguments.apply_defaults so that Python 3.4
-  works.  Windows users that want to try out wrf-python with Python 3.4
-  can use the bladwig conda channel to get it.
-
-v1.0b2
-^^^^^^^^^^^^^^
-
-- Beta release 2.
-- xarray 0.9 no longer includes default index dimensions in the coordinate 
-  mappings.  This was causing a crash in the routines that cause a reduction
-  in dimension shape, mainly the interpolation routines.  This has been 
-  fixed.
-- Documentation updated to show the new output from xarray.
-
-v1.0b1
-^^^^^^^^^^^^^
-
-- Beta release 1.
-- Added more packaging boilerplate.
-- Note:  Currently unable to build with Python 3.5 on Windows, due to
-  issues with distutils, numpy distutils, and mingw compiler.  Will attempt
-  to find a workaround before the next release. Windows users should use 
-  Python 2.7 or Python 3.4 for now.
-
-
-----------------
-
-Alpha Releases
-----------------
-
-v1.0a3
-^^^^^^^^^^^^
-
-- Alpha release 3.
-- Added docstrings.
-- The mapping API has changed.
-    - The projection attributes are no longer arrays for moving domains.
-    - Utility functions have been added for extracting geobounds.  It is now 
-      easier to get map projection objects from sliced variables.
-    - Utility functions have been added for getting cartopy, basemap, and pyngl
-      objects.
-    - Users should no longer need to use xarray attributes directly
-- Now uses CoordPair for cross sections so that lat/lon can be used instead of 
-  raw x,y grid coordinates.
-- Renamed npvalues to to_np which is more intuitive.
-- Fixed issue with generator expressions.
-- Renamed some functions and arguments.
-
-
--------------
-
-  
-Known Issues
---------------
-
-v1.0.0
-^^^^^^^^
-
-- Currently unable to build on Windows with Python 3.5+ using open source 
-  mingw compiler.  The mingwpy project is working on resolving the 
-  incompatibilities between mingw and Visual Studio 2015 that was used to 
-  build Python 3.5+.  Numpy 1.13 also has improved f2py support for 
-  Python 3.5+ on Windows, so this will be revisited when it is released.
   
 
 

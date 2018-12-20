@@ -12,7 +12,7 @@ from .metadecorators import set_cape_metadata
 @set_cape_metadata(is2d=True)
 def get_2dcape(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
                meta=True, _key=None, missing=default_fill(np.float64)):
-    """Return the 2d fields of MCAPE, MCIN, LCL, and LFC.
+    """Return the two-dimensional fields of MCAPE, MCIN, LCL, and LFC.
     
     The leftmost dimension of the returned array represents four different 
     quantities:
@@ -227,6 +227,62 @@ def get_3dcape(wrfin, timeidx=0, method="cat",
 
 def get_cape2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
+    """Return the two-dimensional field of MCAPE (Max Convective Available 
+    Potential Energy).
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.default_fill(np.float64)`.
+   
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        2D MCAPE field. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[0,:]
                
@@ -239,6 +295,61 @@ def get_cape2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
                
 def get_cin2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
+    """Return the two-dimensional field of MCIN (Max Convective Inhibition).
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.default_fill(np.float64)`.
+   
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        2D MCIN field. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[1,:]
                
@@ -251,6 +362,61 @@ def get_cin2d_only(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
             
 def get_lcl(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
+    """Return the two-dimensional field of LCL (Lifted Condensation Level).
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.default_fill(np.float64)`.
+   
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        2D LCL field. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[2,:]
                
@@ -263,6 +429,61 @@ def get_lcl(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
                
 def get_lfc(wrfin, timeidx=0, method="cat", squeeze=True, cache=None, 
               meta=True, _key=None, missing=default_fill(np.float64)):
+    """Return the two-dimensional field of LFC (Level of Free Convection).
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.default_fill(np.float64)`.
+   
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        2D LFC field. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_2dcape(wrfin, timeidx, method, squeeze, cache, 
                meta, _key, missing)[3,:]
                
@@ -276,6 +497,62 @@ def get_lfc(wrfin, timeidx=0, method="cat", squeeze=True, cache=None,
 def get_3dcape_only(wrfin, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
                _key=None, missing=default_fill(np.float64)):
+    """Return the three-dimensional field of CAPE (Convective Available 
+    Potential Energy).
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.default_fill(np.float64)`.
+   
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        3D CAPE field. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
                       _key, missing)[0,:]
                       
@@ -289,6 +566,61 @@ def get_3dcape_only(wrfin, timeidx=0, method="cat",
 def get_3dcin_only(wrfin, timeidx=0, method="cat", 
                squeeze=True, cache=None, meta=True,
                _key=None, missing=default_fill(np.float64)):
+    """Return the three-dimensional field of CIN (Convective Inhibition).
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        missing (:obj:`float`): The fill value to use for the output.  
+            Default is :data:`wrf.default_fill(np.float64)`.
+   
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        3D CIN field. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_3dcape(wrfin, timeidx, method, squeeze, cache, meta,
                       _key, missing)[1,:]
                       

@@ -166,6 +166,103 @@ def get_low_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
                  cache=None, meta=True, _key=None,
                  vert_type="height_agl", low_thresh=None, mid_thresh=None, 
                  high_thresh=None, missing=default_fill(np.float64)):
+    """Return the cloud fraction for the low level clouds.
+        
+    If the vertical coordinate type is 'height_agl' or 'height_msl', the 
+    default cloud levels are defined as:
+    
+        300 m <= low_cloud < 2000 m
+        2000 m <= mid_cloud < 6000 m
+        6000 m <= high_cloud
+    
+    For 'pressure', the default cloud levels are defined as: 
+    
+        97000 Pa <= low_cloud < 80000 Pa
+        80000 Pa <= mid_cloud < 45000 Pa
+        45000 Pa <= high_cloud
+        
+    Note that the default low cloud levels are chosen to
+    exclude clouds near the surface (fog). If you want fog included, set 
+    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pressure', or 15 m if 
+    using 'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid 
+    points are slightly above the ground, and in order to find clouds, the 
+    *low_thresh* needs to be set to values that are slightly greater than 
+    (less than) the lowest height (pressure) values.
+    
+    When using 'pressure' or 'height_agl' for *vert_type*, there is a 
+    possibility that the lowest WRF level will be higher than the low_cloud or 
+    mid_cloud threshold, particularly for mountainous regions.  When this 
+    happens, a fill value will be used in the output.
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        vert_type (:obj:`str`, optional):  The type of vertical coordinate used 
+            to determine cloud type thresholds.  Must be 'height_agl', 
+            'height_msl', or 'pres'. The default is 'height_agl'.
+            
+        low_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a low cloud.  If *vert_type* is 'pres', the default is 
+            97000 Pa.  If *vert_type* is 'height_agl' or 'height_msl', then the 
+            default is 300 m. 
+            
+        mid_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a mid level cloud.  If *vert_type* is 'pres', the 
+            default is 80000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 2000 m. 
+            
+        high_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a high level cloud.  If *vert_type* is 'pres', the 
+            default is 45000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 6000 m.  
+            
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        cloud fraction array for low level clouds. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result =  get_cloudfrac(wrfin, timeidx, method, squeeze, 
                          cache, meta, _key,
                          vert_type, low_thresh, mid_thresh, 
@@ -181,6 +278,103 @@ def get_mid_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
                  cache=None, meta=True, _key=None,
                  vert_type="height_agl", low_thresh=None, mid_thresh=None, 
                  high_thresh=None, missing=default_fill(np.float64)):
+    """Return the cloud fraction for the mid level clouds.
+        
+    If the vertical coordinate type is 'height_agl' or 'height_msl', the 
+    default cloud levels are defined as:
+    
+        300 m <= low_cloud < 2000 m
+        2000 m <= mid_cloud < 6000 m
+        6000 m <= high_cloud
+    
+    For 'pressure', the default cloud levels are defined as: 
+    
+        97000 Pa <= low_cloud < 80000 Pa
+        80000 Pa <= mid_cloud < 45000 Pa
+        45000 Pa <= high_cloud
+        
+    Note that the default low cloud levels are chosen to
+    exclude clouds near the surface (fog). If you want fog included, set 
+    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pressure', or 15 m if 
+    using 'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid 
+    points are slightly above the ground, and in order to find clouds, the 
+    *low_thresh* needs to be set to values that are slightly greater than 
+    (less than) the lowest height (pressure) values.
+    
+    When using 'pressure' or 'height_agl' for *vert_type*, there is a 
+    possibility that the lowest WRF level will be higher than the low_cloud or 
+    mid_cloud threshold, particularly for mountainous regions.  When this 
+    happens, a fill value will be used in the output.
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        vert_type (:obj:`str`, optional):  The type of vertical coordinate used 
+            to determine cloud type thresholds.  Must be 'height_agl', 
+            'height_msl', or 'pres'. The default is 'height_agl'.
+            
+        low_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a low cloud.  If *vert_type* is 'pres', the default is 
+            97000 Pa.  If *vert_type* is 'height_agl' or 'height_msl', then the 
+            default is 300 m. 
+            
+        mid_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a mid level cloud.  If *vert_type* is 'pres', the 
+            default is 80000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 2000 m. 
+            
+        high_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a high level cloud.  If *vert_type* is 'pres', the 
+            default is 45000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 6000 m.  
+            
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        cloud fraction array for mid level clouds. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_cloudfrac(wrfin, timeidx, method, squeeze, 
                          cache, meta, _key,
                          vert_type, low_thresh, mid_thresh, 
@@ -196,6 +390,103 @@ def get_high_cloudfrac(wrfin, timeidx=0, method="cat", squeeze=True,
                  cache=None, meta=True, _key=None,
                  vert_type="height_agl", low_thresh=None, mid_thresh=None, 
                  high_thresh=None, missing=default_fill(np.float64)):
+    """Return the cloud fraction for the high level clouds.
+        
+    If the vertical coordinate type is 'height_agl' or 'height_msl', the 
+    default cloud levels are defined as:
+    
+        300 m <= low_cloud < 2000 m
+        2000 m <= mid_cloud < 6000 m
+        6000 m <= high_cloud
+    
+    For 'pressure', the default cloud levels are defined as: 
+    
+        97000 Pa <= low_cloud < 80000 Pa
+        80000 Pa <= mid_cloud < 45000 Pa
+        45000 Pa <= high_cloud
+        
+    Note that the default low cloud levels are chosen to
+    exclude clouds near the surface (fog). If you want fog included, set 
+    *low_thresh* to ~99500 Pa if *vert_type* is set to 'pressure', or 15 m if 
+    using 'height_msl' or 'height_agl'. Keep in mind that the lowest mass grid 
+    points are slightly above the ground, and in order to find clouds, the 
+    *low_thresh* needs to be set to values that are slightly greater than 
+    (less than) the lowest height (pressure) values.
+    
+    When using 'pressure' or 'height_agl' for *vert_type*, there is a 
+    possibility that the lowest WRF level will be higher than the low_cloud or 
+    mid_cloud threshold, particularly for mountainous regions.  When this 
+    happens, a fill value will be used in the output.
+    
+    This functions extracts the necessary variables from the NetCDF file 
+    object in order to perform the calculation.
+    
+    Args:
+    
+        wrfin (:class:`netCDF4.Dataset`, :class:`Nio.NioFile`, or an \
+            iterable): WRF-ARW NetCDF 
+            data as a :class:`netCDF4.Dataset`, :class:`Nio.NioFile` 
+            or an iterable sequence of the aforementioned types.
+        
+        timeidx (:obj:`int` or :data:`wrf.ALL_TIMES`, optional): The 
+            desired time index. This value can be a positive integer, 
+            negative integer, or 
+            :data:`wrf.ALL_TIMES` (an alias for None) to return 
+            all times in the file or sequence. The default is 0.
+        
+        method (:obj:`str`, optional): The aggregation method to use for 
+            sequences.  Must be either 'cat' or 'join'.  
+            'cat' combines the data along the Time dimension.  
+            'join' creates a new dimension for the file index.  
+            The default is 'cat'.
+        
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
+        
+        cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
+            that can be used to supply pre-extracted NetCDF variables to the 
+            computational routines.  It is primarily used for internal 
+            purposes, but can also be used to improve performance by 
+            eliminating the need to repeatedly extract the same variables 
+            used in multiple diagnostics calculations, particularly when using 
+            large sequences of files. 
+            Default is None.
+        
+        meta (:obj:`bool`, optional): Set to False to disable metadata and 
+            return :class:`numpy.ndarray` instead of 
+            :class:`xarray.DataArray`.  Default is True.
+            
+        _key (:obj:`int`, optional): A caching key. This is used for internal 
+            purposes only.  Default is None.
+            
+        vert_type (:obj:`str`, optional):  The type of vertical coordinate used 
+            to determine cloud type thresholds.  Must be 'height_agl', 
+            'height_msl', or 'pres'. The default is 'height_agl'.
+            
+        low_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a low cloud.  If *vert_type* is 'pres', the default is 
+            97000 Pa.  If *vert_type* is 'height_agl' or 'height_msl', then the 
+            default is 300 m. 
+            
+        mid_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a mid level cloud.  If *vert_type* is 'pres', the 
+            default is 80000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 2000 m. 
+            
+        high_thresh (:obj:`float`, optional): The lower bound for what is 
+            considered a high level cloud.  If *vert_type* is 'pres', the 
+            default is 45000 Pa.  If *vert_type* is 'height_agl' or 
+            'height_msl', then the default is 6000 m.  
+            
+    Returns:
+        :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
+        cloud fraction array for high level clouds. 
+        If xarray is enabled and the *meta* parameter is True, then the result 
+        will be a :class:`xarray.DataArray` object.  Otherwise, the result will 
+        be a :class:`numpy.ndarray` object with no metadata.
+    
+    """
     result = get_cloudfrac(wrfin, timeidx, method, squeeze, 
                          cache, meta, _key,
                          vert_type, low_thresh, mid_thresh, 
