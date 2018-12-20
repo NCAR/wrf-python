@@ -766,7 +766,7 @@ terrain filled.
     fig = pyplot.figure(figsize=(8,6))
     ax_cross = pyplot.axes()
     
-    dbz_levels = np.arange(5., 80., 5.)
+    dbz_levels = np.arange(5., 75., 5.)
     
     # Create the color table found on NWS pages.
     dbz_rgb = np.array([[4,233,231],
