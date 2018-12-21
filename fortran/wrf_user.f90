@@ -64,24 +64,24 @@ END SUBROUTINE DCOMPUTETK
 
 
 ! NCLFORTSTART
-SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
+SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, levels, nx, ny, nz, nlev, missingval)
     IMPLICIT NONE
 
     !f2py threadsafe
     !f2py intent(in,out) :: out2d
 
-    INTEGER, INTENT(IN) :: nx, ny, nz
+    INTEGER, INTENT(IN) :: nx, ny, nz, nlev
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) ::  data3d
-    REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: out2d
+    REAL(KIND=8), DIMENSION(nx,ny,nlev), INTENT(OUT) :: out2d
     REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: zdata
-    REAL(KIND=8), INTENT(IN) :: desiredloc
+    REAL(KIND=8), DIMENSION(nlev), INTENT(IN) :: levels
     REAL(KIND=8), INTENT(IN) :: missingval
 
 ! NCLEND
 
-    INTEGER :: i,j,kp,ip,im
+    INTEGER :: i,j,kp,ip,im,lev
     LOGICAL :: dointerp
-    REAL(KIND=8) :: w1,w2
+    REAL(KIND=8) :: w1,w2,desiredloc
 
     ! does vertical coordinate increase or decrease with increasing k?
     ! set offset appropriately
@@ -93,7 +93,67 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
         im = 0
     END IF
 
-    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,kp,dointerp,w1,w2) &
+    !$OMP PARALLEL DO COLLAPSE(3) PRIVATE(i,j,lev,kp,dointerp,w1,w2,desiredloc) &
+    !$OMP FIRSTPRIVATE(ip,im) SCHEDULE(runtime)
+    DO lev = 1,nlev
+        DO i = 1,nx
+            DO j = 1,ny
+                ! Initialize to missing.  Was initially hard-coded to -999999.
+                out2d(i,j,lev) = missingval
+                dointerp = .FALSE.
+                kp = nz
+                desiredloc = levels(lev)
+
+                DO WHILE ((.NOT. dointerp) .AND. (kp >= 2))
+                    IF (((zdata(i,j,kp-im) < desiredloc) .AND. (zdata(i,j,kp-ip) > desiredloc))) THEN
+                        w2 = (desiredloc - zdata(i,j,kp-im))/(zdata(i,j,kp-ip) - zdata(i,j,kp-im))
+                        w1 = 1.D0 - w2
+                        out2d(i,j,lev) = w1*data3d(i,j,kp-im) + w2*data3d(i,j,kp-ip)
+                        dointerp = .TRUE.
+                    END IF
+                    kp = kp - 1
+                END DO
+            END DO
+        END DO
+    END DO
+    !$OMP END PARALLEL DO
+
+    RETURN
+
+END SUBROUTINE DINTERP3DZ
+
+
+! NCLFORTSTART
+SUBROUTINE DINTERP3DZ_2DLEV(data3d, out2d, zdata, levs2d, nx, ny, nz, missingval)
+    IMPLICIT NONE
+
+    !f2py threadsafe
+    !f2py intent(in,out) :: out2d
+
+    INTEGER, INTENT(IN) :: nx, ny, nz
+    REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) ::  data3d
+    REAL(KIND=8), DIMENSION(nx,ny), INTENT(OUT) :: out2d
+    REAL(KIND=8), DIMENSION(nx,ny,nz), INTENT(IN) :: zdata
+    REAL(KIND=8), DIMENSION(nx,ny), INTENT(IN) :: levs2d
+    REAL(KIND=8), INTENT(IN) :: missingval
+
+! NCLEND
+
+    INTEGER :: i,j,kp,ip,im
+    LOGICAL :: dointerp
+    REAL(KIND=8) :: w1,w2,desiredloc
+
+    ! does vertical coordinate increase or decrease with increasing k?
+    ! set offset appropriately
+
+    ip = 0
+    im = 1
+    IF (zdata(1,1,1) .GT. zdata(1,1,nz)) THEN
+        ip = 1
+        im = 0
+    END IF
+
+    !$OMP PARALLEL DO COLLAPSE(2) PRIVATE(i,j,kp,dointerp,w1,w2,desiredloc) &
     !$OMP FIRSTPRIVATE(ip,im) SCHEDULE(runtime)
     DO i = 1,nx
         DO j = 1,ny
@@ -101,6 +161,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
             out2d(i,j) = missingval
             dointerp = .FALSE.
             kp = nz
+            desiredloc = levs2d(i,j)
 
             DO WHILE ((.NOT. dointerp) .AND. (kp >= 2))
                 IF (((zdata(i,j,kp-im) < desiredloc) .AND. (zdata(i,j,kp-ip) > desiredloc))) THEN
@@ -117,7 +178,7 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, desiredloc, nx, ny, nz, missingval)
 
     RETURN
 
-END SUBROUTINE DINTERP3DZ
+END SUBROUTINE DINTERP3DZ_2DLEV
 
 ! PORT DZSTAG HERE
 
@@ -479,7 +540,7 @@ END SUBROUTINE DCOMPUTESEAPRS
 ! must make the same change below to filter2d.
 
 ! NCLFORTSTART
-SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
+SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing, cenweight)
 
     IMPLICIT NONE
 
@@ -488,14 +549,16 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
 
     INTEGER, INTENT(IN) :: nx, ny, it
     REAL(KIND=8), DIMENSION(nx, ny), INTENT(INOUT) :: a
-    REAL(KIND=8), INTENT(IN) :: missing
+    REAL(KIND=8), INTENT(IN) :: missing, cenweight
     REAL(KIND=8), DIMENSION(nx, ny), INTENT(INOUT) :: b
 
 ! NCLEND
 
-    REAL(KIND=8), PARAMETER :: COEF=0.25D0
-
     INTEGER :: i, j, iter
+    REAL(KIND=8) :: cenmult, coef
+
+    cenmult = (cenweight) / 2.
+    coef = 1.0 / (4. + cenweight)
 
     DO iter=1,it
         !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
@@ -508,25 +571,25 @@ SUBROUTINE DFILTER2D(a, b, nx, ny, it, missing)
 
         !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
-            DO i=1,nx
+            DO i=2,nx-1
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i,j+1) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i,j-1) - 2*b(i,j) + b(i,j+1))
+                    a(i,j) = coef*(b(i,j-1) + cenmult*b(i,j) + b(i,j+1))
                 END IF
             END DO
         END DO
         !$OMP END PARALLEL DO
 
         !$OMP PARALLEL DO COLLAPSE(2) SCHEDULE(runtime)
-        DO j=1,ny
+        DO j=2,ny-1
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i+1,j) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i-1,j) - 2*b(i,j) + b(i+1,j))
+                    a(i,j) = a(i,j) + coef*(b(i-1,j) + cenmult*b(i,j) + b(i+1,j))
                 END IF
             END DO
         END DO
@@ -556,7 +619,7 @@ END SUBROUTINE DFILTER2D
 ! must make the same change below to dfilter2d.
 
 ! NCLFORTSTART
-SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
+SUBROUTINE FILTER2D(a, b, nx, ny, it, missing, cenweight)
     IMPLICIT NONE
 
     !f2py threadsafe
@@ -564,14 +627,17 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
 
     INTEGER, INTENT(IN) :: nx, ny, it
     REAL(KIND=4), DIMENSION(nx, ny), INTENT(INOUT) :: a
-    REAL(KIND=4), INTENT(IN) :: missing
+    REAL(KIND=4), INTENT(IN) :: missing, cenweight
     REAL(KIND=4), DIMENSION(nx, ny), INTENT(INOUT) :: b
 
 ! NCLEND
 
-    REAL(KIND=4), PARAMETER :: COEF=0.25
-
+    !REAL(KIND=8), PARAMETER :: COEF = .125
     INTEGER :: i, j, iter
+    REAL(KIND=8) :: cenmult, coef
+
+    cenmult = (cenweight) / 2.
+    coef = 1.0 / (4. + cenweight)
 
     !$OMP PARALLEL
 
@@ -586,25 +652,25 @@ SUBROUTINE FILTER2D(a, b, nx, ny, it, missing)
 
         !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
         DO j=2,ny-1
-            DO i=1,nx
+            DO i=2,nx-1
                 IF (b(i,j-1) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i,j+1) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i,j-1) - 2*b(i,j) + b(i,j+1))
+                    a(i,j) = coef*(b(i,j-1) + cenmult*b(i,j) + b(i,j+1))
                 END IF
             END DO
         END DO
         !$OMP END DO
 
         !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
-        DO j=1,ny
+        DO j=2,ny-1
             DO i=2,nx-1
                 IF (b(i-1,j) .EQ. missing .OR. b(i,j) .EQ. missing .OR. &
                     b(i+1,j) .EQ. missing) THEN
                     a(i,j) = a(i,j)
                 ELSE
-                    a(i,j) = a(i,j) + COEF*(b(i-1,j) - 2*b(i,j)+b(i+1,j))
+                    a(i,j) = a(i,j) + coef*(b(i-1,j) + cenmult*b(i,j) + b(i+1,j))
                 END IF
             END DO
         END DO

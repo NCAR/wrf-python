@@ -3,13 +3,16 @@ from __future__ import (absolute_import, division, print_function)
 from collections import OrderedDict
 
 import numpy as np
-from xarray import DataArray
 
 from .util import extract_vars, get_id, get_iterable, is_mapping, to_np
 from .py3compat import viewkeys
 from .latlonutils import _lat_varname, _lon_varname, _ll_to_xy, _xy_to_ll
 from .metadecorators import set_latlon_metadata
+from .constants import Constants, ProjectionTypes
 from .config import xarray_enabled
+
+if xarray_enabled():
+    from xarray import DataArray
 
 
 def get_lat(wrfin, timeidx=0, method="cat", squeeze=True, 
@@ -365,8 +368,8 @@ def ll_to_xy(wrfin, latitude, longitude, timeidx=0,
                 - 'v': Use the same staggered grid as the v wind component, 
                   which has a staggered south_north (y) dimension.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
+        as_int (:obj:`bool`): Set to False to return the x,y values as 
+            :obj:`float`, otherwise they will be returned as :obj:`int`.
         
     Returns:
         :class:`xarray.DataArray` or :class:`numpy.ndarray`: The 
@@ -384,7 +387,128 @@ def ll_to_xy(wrfin, latitude, longitude, timeidx=0,
 
     return _ll_to_xy(latitude, longitude, _wrfin, timeidx, stagger, "cat", 
                      squeeze, None, _key, as_int, **{})
+
+
+def _set_defaults(projparams):
+    """Check projection parameters and set defaults.
     
+    Throws an exception if projection parameters required by WPS are not 
+    provided, along with any other parameters required by the map projection
+    transformation routines. 
+    
+    For parameters not used by the projection type, defaults are used so that 
+    the None values don't pass through to fortran downstream.
+    
+    Args:
+    
+        projparams (:obj:`dict`): Projection parameters dictionary.
+        
+    Returns:
+        :obj:`dict`: The projection parameters with default values inserted 
+        where applicable.
+    
+    """
+    _params = dict(projparams)
+    
+    map_proj = _params.get("map_proj")
+    # All projections require these arguments
+    if map_proj is None:
+        raise ValueError("'map_proj' cannot be None")
+    
+    if _params.get("ref_lat") is None:
+        raise ValueError("'ref_lat' cannot be None")
+    
+    if _params.get("ref_lon") is None:
+        raise ValueError("'ref_lon' cannot be None")
+    
+    if _params.get("known_x") is None:
+        raise ValueError("'known_x' cannot be None")
+    
+    if _params.get("known_y") is None:
+        raise ValueError("'known_y' cannot be None")
+    
+    if _params.get("dx") is None:
+        raise ValueError("'dx' cannot be None")
+    
+    # Requires truelat1,stand_lon, truelat2, dx, dy
+    if map_proj == ProjectionTypes.LAMBERT_CONFORMAL:
+        if _params.get("truelat1") is None:
+            raise ValueError("'truelat1' cannot be None")
+        
+        if _params.get("stand_lon") is None:
+            raise ValueError("'stand_lon' cannot be None")
+        
+        if _params.get("truelat2") is None:
+            _params["truelat2"] = _params["truelat1"]
+
+    # Requires truelat1, stand_lon
+    elif map_proj == ProjectionTypes.POLAR_STEREOGRAPHIC:
+        if _params.get("truelat1") is None:
+            raise ValueError("'truelat1' cannot be None")
+        
+        if _params.get("stand_lon") is None:
+            raise ValueError("'stand_lon' cannot be None")
+    
+    # Requires truelat1
+    elif map_proj == ProjectionTypes.MERCATOR:
+        if _params.get("truelat1") is None:
+            raise ValueError("'truelat1' cannot be None")
+        
+        if _params.get("stand_lon") is None:
+            _params["stand_lon"] = 0.0
+    
+    # Requires pole_lat, pole_lon, stand_lon
+    elif map_proj == ProjectionTypes.LAT_LON:        
+        if _params.get("stand_lon") is None:
+            raise ValueError("'stand_lon' cannot be None")
+        
+        if _params.get("dy") is None:
+            raise ValueError("'dy' cannot be None")
+        
+        if _params.get("pole_lat") is None:
+            raise ValueError("'pole_lat' cannot be None")
+            
+        if _params.get("pole_lon") is None:
+            raise ValueError("'pole_lon' cannot be None")
+        
+        if _params.get("latinc") is None:
+            _params["latinc"] = ((_params["dy"]*360.0)/2.0 / 
+                                  Constants.PI/Constants.WRF_EARTH_RADIUS)
+            
+        if _params.get("loninc") is None:
+            _params["loninc"] = ((_params["dx"]*360.0)/2.0 / 
+                                 Constants.PI/Constants.WRF_EARTH_RADIUS)
+        
+    else:
+        raise ValueError("invalid 'map_proj' value of {}".format(map_proj))
+    
+    # Set these to defaults if not used so that the Fortran routines
+    # don't crash
+    if _params.get("truelat1") is None:
+        _params["truelat1"] = 0.
+        
+    if _params.get("truelat2") is None:
+        _params["truelat2"] = 0.
+    
+    if _params.get("pole_lat") is None:
+        _params["pole_lat"] = 90.0
+        
+    if _params.get("pole_lon") is None:
+        _params["pole_lon"] = 0.0
+        
+    if _params.get("dx") is None:
+        _params["dx"] = 0.0
+        
+    if _params.get("dy") is None:
+        _params["dy"] = 0.0
+        
+    if _params.get("latinc") is None:
+        _params["latinc"] = 0.
+        
+    if _params.get("loninc") is None:
+        _params["loninc"] = 0.
+    
+    return _params
 
 
 @set_latlon_metadata(xy=True) 
@@ -421,19 +545,21 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
             return :class:`numpy.ndarray` instead of 
             :class:`xarray.DataArray`.  Default is True.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
+        as_int (:obj:`bool`): Set to False to return the x,y values as 
+            :obj:`float`, otherwise they will be returned as :obj:`int`. 
+            Default is True.
             
         map_proj (:obj:`int`): Model projection [1=Lambert Conformal, 
             2=Polar Stereographic, 3=Mercator, 6=Lat-Lon].  Required.
         
-        truelat1 (:obj:`float`): True latitude 1.  Required for 
+        truelat1 (:obj:`float`): Latitude of true scale 1.  Required for 
             map_proj = 1, 2, 3 (defaults to 0 otherwise).
         
-        truelat2 (:obj:`float`): True latitude 2.  Optional for 
+        truelat2 (:obj:`float`): Latitude of true scale 2.  Optional for 
             map_proj = 1 (defaults to 0 otherwise).
         
-        stand_lon (:obj:`float`): Standard longitude. Required.
+        stand_lon (:obj:`float`): Standard longitude. Required for *map_proj* = 
+            1, 2, 6 (defaults to 0 otherwise).
         
         ref_lat (:obj:`float`): A reference latitude.  Required. 
         
@@ -445,25 +571,25 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
         known_y (:obj:`float`): The known y-coordinate associated with 
             *ref_lat*.  Required.
         
-        pole_lat (:obj:`float`): Pole latitude. Optional for 
-            *map_proj* = 6 (defaults to 90 otherwise).
+        pole_lat (:obj:`float`): Pole latitude. Required for 
+            *map_proj* = 6 (use 90 for no rotation).
         
-        pole_lon (:obj:`float`): Pole longitude. Optional for 
-            *map_proj* = 6 (defaults to 0 otherwise).
+        pole_lon (:obj:`float`): Pole longitude. Required for 
+            *map_proj* = 6 (use 0 for no rotation).
         
         dx (:obj:`float`): The x spacing in meters at the true latitude.  
-            Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
+            Required for all map projections.
         
         dy (:obj:`float`) - The y spacing in meters at the true latitude.  
-            Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
+            Required for *map_proj* = 6 (defaults to 0 otherwise).
         
-        latinc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        latinc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
                 latinc = (dy*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
         
-        loninc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        loninc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
@@ -478,11 +604,13 @@ def ll_to_xy_proj(latitude, longitude, meta=True, squeeze=True, as_int=True,
     
     """
     loc = locals()
-    projparams = {name : loc[name] for name in ("map_proj", "truelat1", 
+    _projparams = {name : loc[name] for name in ("map_proj", "truelat1", 
                                             "truelat2", "stand_lon", "ref_lat",
                                             "ref_lon", "pole_lat", "pole_lon",
                                             "known_x", "known_y", "dx", "dy",
                                             "latinc", "loninc")}
+    
+    projparams = _set_defaults(_projparams)
 
     return _ll_to_xy(latitude, longitude, None, 0, True, "cat", squeeze, None,
                      None, as_int, **projparams)
@@ -589,19 +717,17 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
             return :class:`numpy.ndarray` instead of 
             :class:`xarray.DataArray`.  Default is True.
         
-        as_int (:obj:`bool`): Set to True to return the x,y values as 
-            :obj:`int`, otherwise they will be returned as :obj:`float`.
-            
         map_proj (:obj:`int`): Model projection [1=Lambert Conformal, 
             2=Polar Stereographic, 3=Mercator, 6=Lat-Lon].  Required.
         
-        truelat1 (:obj:`float`): True latitude 1.  Required for 
+        truelat1 (:obj:`float`): Latitude of true scale 1.  Required for 
             map_proj = 1, 2, 3 (defaults to 0 otherwise).
         
-        truelat2 (:obj:`float`): True latitude 2.  Optional for 
+        truelat2 (:obj:`float`): Latitude of true scale 2.  Optional for 
             map_proj = 1 (defaults to 0 otherwise).
         
-        stand_lon (:obj:`float`): Standard longitude. Required.
+        stand_lon (:obj:`float`): Standard longitude. Required for *map_proj* = 
+            1, 2, 6 (defaults to 0 otherwise).
         
         ref_lat (:obj:`float`): A reference latitude.  Required. 
         
@@ -613,25 +739,25 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
         known_y (:obj:`float`): The known y-coordinate associated with 
             *ref_lat*.  Required.
         
-        pole_lat (:obj:`float`): Pole latitude. Optional for 
-            *map_proj* = 6 (defaults to 90 otherwise).
+        pole_lat (:obj:`float`): Pole latitude. Required for 
+            *map_proj* = 6 (use 90 for no rotation).
         
-        pole_lon (:obj:`float`): Pole longitude. Optional for 
-            *map_proj* = 6 (defaults to 0 otherwise).
+        pole_lon (:obj:`float`): Pole longitude. Required for 
+            *map_proj* = 6 (use 0 for no rotation).
         
         dx (:obj:`float`): The x spacing in meters at the true latitude.  
-            Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
+            Required for all map projections.
         
         dy (:obj:`float`) - The y spacing in meters at the true latitude.  
-            Required for *map_proj* = 1, 2, 3 (defaults to 0 otherwise).
+            Required for *map_proj* = 6 (defaults to 0 otherwise).
         
-        latinc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        latinc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
                 latinc = (dy*360.0)/2.0/Constants.PI/Constants.WRF_EARTH_RADIUS
         
-        loninc (:obj:`float`): Required for *map_proj* = 6. Defined as:
+        loninc (:obj:`float`): Optional for *map_proj* = 6. Default is:
             
             .. code-block:: python
             
@@ -646,11 +772,13 @@ def xy_to_ll_proj(x, y, meta=True, squeeze=True, map_proj=None, truelat1=None,
         be a :class:`numpy.ndarray` object with no metadata.
     """
     loc = locals()
-    projparams = {name : loc[name] for name in ("map_proj", "truelat1", 
+    _projparams = {name : loc[name] for name in ("map_proj", "truelat1", 
                                             "truelat2", "stand_lon", "ref_lat",
                                             "ref_lon", "pole_lat", "pole_lon",
                                             "known_x", "known_y", "dx", "dy",
                                             "latinc", "loninc")}
+    
+    projparams = _set_defaults(_projparams)
     return _xy_to_ll(x, y, None, 0, None, "cat", squeeze, None, None,
                      **projparams)
 

@@ -340,7 +340,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             plev = ((ezlev - ezlhsl)*&
                                    psurf + (ezsurf - ezlev)*plhsl)/(ezsurf - ezlhsl)
                             IF (icase .EQ. 1) THEN
-                                tempout(i,j) = plev
+                                tempout(i,j) = plev * 100.
                                 CYCLE
                             END IF
                         END IF
@@ -377,7 +377,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                             zlev = -sclht*LOG(vlev)
                             plev = pbot*(1. + USSALR/vt*(zbot - zlev))**EXPONI
                             IF (icase .EQ. 1) THEN
-                                tempout(i,j) = plev
+                                tempout(i,j) = plev * 100.
                                 CYCLE
                             END IF
                         END IF
@@ -395,7 +395,7 @@ SUBROUTINE wrf_vintrp(datain, dataout, pres, tk, qvp, ght, terrain,&
                     ! Potential temperature - theta
                     ELSE IF (icase .EQ. 5) THEN
                         tempout(i,j) = tlev*(1000.D0/plev)**gammam
-                    ! extraolation for equivalent potential temperature
+                    ! extrapolation for equivalent potential temperature
                     ELSE IF (icase .EQ. 6) THEN
                         e = qvapor*plev/(EPS + qvapor)
                         tlcl = TLCLC1/(LOG(tlev**TLCLC2/e) - TLCLC3) + TLCLC4

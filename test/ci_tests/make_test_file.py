@@ -146,17 +146,17 @@ def make_result_file(opts):
         for latlonmeth in LATLON_METHS:
             if latlonmeth == "xy":
                 # Hardcoded values from other unit tests
-                lats = [-55, -60, -65]
-                lons = [25, 30, 35]
+                lats = [22.0, 25.0, 27.0]
+                lons = [-90.0, -87.5, -83.75]
                 
                 xy = ll_to_xy(infile, lats[0], lons[0])
                 add_to_ncfile(outfile, xy, "xy")
             else:
                 # Hardcoded from other unit tests
-                i_s = np.asarray([10, 100, 150], int) - 1
-                j_s = np.asarray([10, 100, 150], int) - 1
+                x_s = np.asarray([10, 50, 90], int)
+                y_s = np.asarray([10, 50, 90], int)
                 
-                ll = xy_to_ll(infile, i_s[0], j_s[0])
+                ll = xy_to_ll(infile, x_s[0], y_s[0])
                 add_to_ncfile(outfile, ll, "ll")
 
 def main(opts):
@@ -166,7 +166,8 @@ def main(opts):
     
 if __name__ == "__main__":
     DEFAULT_FILE = ("/Users/ladwig/Documents/wrf_files/"
-                    "wrf_vortex_multi/wrfout_d02_2005-08-28_12:00:00")
+                    "wrf_vortex_multi/moving_nest/"
+                    "wrfout_d02_2005-08-28_12:00:00")
     parser = argparse.ArgumentParser(description="Generate conda test files "
                                      "for unit testing.")
     parser.add_argument("-f", "--filename", required=False,

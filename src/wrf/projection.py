@@ -78,25 +78,43 @@ if cartopy_enabled():
             self._xlimits = tuple(xlimits)
             self._ylimits = tuple(limits[..., 1])
             
+            # Compatibility with cartopy >= 0.17
+            self._x_limits = self._xlimits
+            self._y_limits = self._ylimits
+
             self._threshold = np.diff(self.x_limits)[0] / 720
 
 
-def _ismissing(val):
-    """Return True if a value is None, greater than 90.0, or less than -90.
+def _ismissing(val, islat=True):
+    """Return True if a value is None or out of bounds.
     
-    This function is used to check for invalid latitude values.
+    This function is used to check for invalid latitude/longitude values.
     
     Args:
     
         val (numeric): A numeric value.
         
+        islat (:obj:`bool`): Set to False if checking for longitude values.
+        
     Returns:
     
-        :obj:`bool`: True if the value is None, greater than 90.0, or less
-        than -90.0.  Otherwise, False is returned.
+        :obj:`bool`: True if the value is None, or an out of bounds value.
     
     """
-    return val is None or val > 90. or val < -90.
+    if islat:
+        if val is None:
+            return True 
+        
+        if math.fabs(val) > 90.:
+            return True
+    else:
+        if val is None:
+            return True 
+        
+        if math.fabs(val) > 360.:
+            return True
+    
+    return False
 
 
 class WrfProj(object):
@@ -291,7 +309,8 @@ class WrfProj(object):
         return (None if not cartopy_enabled() 
                 else crs.Globe(ellipse=None,
                                semimajor_axis=Constants.WRF_EARTH_RADIUS,
-                               semiminor_axis=Constants.WRF_EARTH_RADIUS))
+                               semiminor_axis=Constants.WRF_EARTH_RADIUS,
+                               nadgrids="@null"))
      
     def cartopy_xlim(self, geobounds):
         """Return the x extents in projected coordinates for cartopy.
@@ -592,7 +611,7 @@ class LambertConformal(WrfProj):
                     else self.truelat2)
         
         _proj4 = ("+proj=lcc +units=meters +a={} +b={} +lat_1={} "
-                       "+lat_2={} +lat_0={} +lon_0={}".format(
+                  "+lat_2={} +lat_0={} +lon_0={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self.truelat1,
@@ -635,6 +654,9 @@ class Mercator(WrfProj):
             if self.truelat1 == 0. or _ismissing(self.truelat1) 
             else self.truelat1) 
         
+        self._stand_lon = (0. if _ismissing(self.stand_lon, islat=False) 
+                           else self.stand_lon)
+        
     
     def _cf_params(self):
         
@@ -654,7 +676,7 @@ class Mercator(WrfProj):
         _pyngl.mpProjection = "Mercator"
         _pyngl.mpDataBaseVersion = "MediumRes"
         _pyngl.mpCenterLatF = 0.0
-        _pyngl.mpCenterLonF = self.stand_lon
+        _pyngl.mpCenterLonF = self._stand_lon
         
         _pyngl.mpLimitMode = "Corners"
         _pyngl.mpLeftCornerLonF = geobounds.bottom_left.lon
@@ -673,7 +695,7 @@ class Mercator(WrfProj):
             return None
         
         local_kwargs = dict(projection = "merc",
-                            lon_0 = self.stand_lon,
+                            lon_0 = self._stand_lon,
                             lat_0 = self.moad_cen_lat,
                             lat_ts = self._lat_ts,
                             llcrnrlat = geobounds.bottom_left.lat,
@@ -695,12 +717,12 @@ class Mercator(WrfProj):
         
         if self._lat_ts == 0.0:
             _cartopy = crs.Mercator(
-                                central_longitude = self.stand_lon,
+                                central_longitude = self._stand_lon,
                                 globe = self._globe())
         
         else:
             _cartopy = MercatorWithLatTS(
-                central_longitude = self.stand_lon,
+                central_longitude = self._stand_lon,
                 latitude_true_scale = self._lat_ts,
                 globe = self._globe())
             
@@ -710,10 +732,10 @@ class Mercator(WrfProj):
     def _proj4(self):
         
         _proj4 = ("+proj=merc +units=meters +a={} +b={} "
-                       "+lon_0={} +lat_ts={}".format(
+                  "+lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
-                                            self.stand_lon,
+                                            self._stand_lon,
                                             self._lat_ts))
         
         return _proj4
@@ -824,7 +846,7 @@ class PolarStereographic(WrfProj):
     
     def _proj4(self):
         _proj4 = ("+proj=stere +units=meters +a={} +b={} "
-                       "+lat0={} +lon_0={} +lat_ts={}".format(
+                  "+lat0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self._hemi,
@@ -918,7 +940,7 @@ class LatLon(WrfProj):
             return None
         
         _cartopy = crs.PlateCarree(central_longitude=self.stand_lon,
-                                            globe=self._globe())
+                                   globe=self._globe())
         
         return _cartopy
     
@@ -930,7 +952,7 @@ class LatLon(WrfProj):
     
     def _proj4(self):
         _proj4 = ("+proj=eqc +units=meters +a={} +b={} "
-                       "+lon_0={}".format(Constants.WRF_EARTH_RADIUS,
+                  "+lon_0={} +nadgrids=@null".format(Constants.WRF_EARTH_RADIUS,
                                           Constants.WRF_EARTH_RADIUS,
                                           self.stand_lon))
         return _proj4

@@ -57,7 +57,7 @@ def destagger(var, stagger_dim, meta=False):
     dim_ranges_1[stagger_dim] = slice1
     dim_ranges_2[stagger_dim] = slice2
     
-    result = .5*(var[dim_ranges_1] + var[dim_ranges_2])
+    result = .5*(var[tuple(dim_ranges_1)] + var[tuple(dim_ranges_2)])
     
     return result
 

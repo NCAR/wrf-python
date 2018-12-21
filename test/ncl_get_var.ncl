@@ -4,25 +4,35 @@
     
     ;system("printenv")
     
-    if (.not. isvar("in_file")) then
-        in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d02_2010-06-13_21:00:00.nc"
+    if (.not. isvar("dir")) then
+        dir = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest"
+        ;in_file = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00.nc"
+        ;in_file = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/wrfout_d02_2005-08-28_00:00:00.nc"
     end if 
+    
+    if (.not. isvar("pattern")) then
+        pattern = "wrfout_d02_*"
+    end if
     
     if (.not. isvar("out_file")) then
         out_file = "/tmp/wrftest.nc"
     end if
-    input_file = addfile(in_file,"r")
+    
+    pat = dir + "/" + pattern
+    cmd = "ls " + pat
+    fils = systemfunc (cmd) ; file paths
+    input_file = addfiles(fils,"r")
     
     system("/bin/rm -f " + out_file) ; remove if exists
     fout = addfile(out_file, "c")
     
-    time = 0
+    time = -1
     
     wrf_vars = [/"avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz", \
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", \
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", \
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", \
-                "wa", "uvmet10", "uvmet", "z", "cfrac"/]
+                "wa", "uvmet10", "uvmet", "z", "cfrac", "height_agl" /]
     
     unique_dimname_list = NewList("fifo")
     unique_dimsize_list = NewList("fifo")
@@ -40,148 +50,253 @@
     ; variables with unique names.  This is the reason for all of the 
     ; name attribute stuff below.     
     do i = 0, ListCount(wrf_vars) - 1
-       
        print("working on: " + wrf_vars[i])
        v := wrf_user_getvar(input_file, wrf_vars[i], time)
-       
-       ;if (wrf_vars[i] .eq. "avo") then
-       ;    print(v)
-       ;end if
-       
-       ; pw is written in pure NCL and does not contain dimension names
-       ; so manually creating the dimension names here
-       if (wrf_vars[i] .eq. "pw") then
-           dim_names := (/"south_north", "west_east"/)
-           dim_sizes := dimsizes(v)
-       else
-           dim_names := getvardims(v)
-           dim_sizes := dimsizes(v)
-       end if 
-       
-       vardata@$wrf_vars[i]$ := v
-       vardimnamedata@$wrf_vars[i]$ := dim_names
-       ListAppend(vardata_list,vardata@$wrf_vars[i]$) 
-       ListAppend(full_vardimname_list, vardimnamedata@$wrf_vars[i]$)
-       ;print(vardata_list)
-       
-       dimname=True
-       dimsize=True
-       
-       ; Determine the unique dimensions names, which will be used when 
-       ; creating the output NetCDF file
-       do j=0, dimsizes(dim_sizes)-1
-           ;print(dim_names)
-           ;print(dim_names(j))
-           
-           name_id = sprintf("dimname_%i",i*j)
-           size_id = sprintf("dimsize_%i",i*j)
-           
-           dimname@$name_id$ = dim_names(j) 
-           dimsize@$size_id$ = dim_sizes(j)
-           
-           has_name = False
-           do k=0, ListCount(unique_dimname_list)-1
-               if ((/unique_dimname_list[k]/) .eq. (/dimname@$name_id$/)) then
-                   has_name = True
-               end if
-           end do
-
-           if (.not. has_name) then 
-               ;print("inserting: " + dimname@$name_id$)
-               ListAppend(unique_dimname_list, dimname@$name_id$)
-               ListAppend(unique_dimsize_list, dimsize@$size_id$)
-           end if
-           
-       end do
+       fout->$wrf_vars[i]$ = v
     end do 
-        
-    setfileoption(fout,"DefineMode",True)
     
-    ; Set global attributes
-    f_att               = True            ; assign file attributes
-    f_att@title         = "NCL generated netCDF file"
-    f_att@Conventions   = "None"
-    fileattdef(fout, f_att)      ; copy file attributes
-    
-    ; Set up the NetCDF dimensions
-    d_names = new(ListCount(unique_dimname_list), string)
-    d_sizes = new(ListCount(unique_dimname_list), integer)
-    d_unlim  = new(ListCount(unique_dimname_list), logical)
-    
-    ; Note: Need to do this copy since NCL can't coerce the list data to 
-    ; array data
-    do i=0, ListCount(unique_dimname_list) - 1
-        d_names(i) = unique_dimname_list[i]
-        d_sizes(i) = unique_dimsize_list[i]
-        d_unlim(i) = False
-    end do
-    
-    filedimdef(fout, d_names, d_sizes, d_unlim)
-    
-    ; Save the variables to the NetCDF file
-    do i=0, ListCount(vardata_list)-1       
-       d := vardata_list[i]
-       filevardef(fout, wrf_vars[i], typeof(d), full_vardimname_list[i])
-       filevarattdef(fout,wrf_vars[i], d)
-       fout->$wrf_vars[i]$ = (/d/)
-    end do
     
     ; Do the interpolation routines manually
-    ; 3D vertical cross section
-    z  = wrf_user_getvar(input_file, "z", 0)        ; grid point height
-    p  = wrf_user_getvar(input_file, "pressure", 0) ; total pressure
+    ;;;;;;;;;;;;;;;;;;; 3D vertical cross section
+    time = -1
+    
+    z := wrf_user_getvar(input_file, "z", time)        ; grid point height
+    p := wrf_user_getvar(input_file, "pressure", time) ; total pressure
+    
     
     dimsz = dimsizes(z)
-    pivot = (/ dimsz(2)/2, dimsz(1)/2 /)    ; pivot point is center of domain
+    pivot = (/ dimsz(3)/2, dimsz(2)/2 /)    ; pivot point is center of domain
     
     ht_cross = wrf_user_intrp3d(z,p,"v",pivot,90.0,False)
+    
     p_cross = wrf_user_intrp3d(p,z,"v",pivot,90.0,False)
+    p_cross!0 = "Vertical_p"
+    p_cross!1 = "Horizontal_p"
     
-    ht_cross_dims = dimsizes(ht_cross)
-    p_cross_dims = dimsizes(p_cross)
+    fout->ht_cross = ht_cross
+    fout->p_cross = p_cross
+ 
+
+    time = 0
     
-    ; 3D horizontal interpolation
+    ; For the new cross section routine
+    xopt = True
+    xopt@use_pivot = True
+    xopt@angle = 90.0
+    xopt@file_handle = input_file
+    xopt@timeidx = time
+    xopt@linecoords = True
+    
+    ht_vertcross1 = wrf_user_vertcross(z, p, pivot, xopt)
+    
+    fout->ht_vertcross1 = ht_vertcross1
+    
+    ; For the new cross section routine
+    xopt := True
+    xopt@use_pivot = True
+    xopt@angle = 90.0
+    xopt@levels = (/1000., 850., 700., 500., 250./)
+    xopt@file_handle = input_file
+    xopt@timeidx = time
+    xopt@linecoords = True
+    
+    ht_vertcross2 = wrf_user_vertcross(z, p, pivot, xopt)
+    ht_vertcross2!1 = "vertical2"
+    ht_vertcross2!2 = "cross_line_idx2"
+    
+    fout->ht_vertcross2 = ht_vertcross2
+    
+    ; Can only use a single time for lat/lon version at this time
+    
+    vertdims = dimsizes(ht_vertcross2)
+    htdims = dimsizes(z)
+    
+    lats = wrf_user_getvar(input_file, "lat", 0)
+    lons = wrf_user_getvar(input_file, "lon", 0) 
+        
+    start_lat = min(lats) + .25d*(max(lats) - min(lats))
+    end_lat = min(lats) + .65d*(max(lats) - min(lats))
+                
+    start_lon = min(lons) + .25d*(max(lons) - min(lons))
+    end_lon = min(lons) + .65d*(max(lons) - min(lons))
+        
+    start_end = (/ start_lon, start_lat, end_lon, end_lat /)
+    
+    ; For the new cross section routine
+    xopt := True
+    xopt@use_pivot = False
+    xopt@latlon = True
+    xopt@file_handle = input_file
+    xopt@timeidx = 0
+    xopt@linecoords = True
+    xopt@autolevels = 1000
+        
+    ht_vertcross3 = wrf_user_vertcross(z, p, start_end, xopt)
+    
+    ht_vertcross3!0 = "Time"
+    ht_vertcross3!1 = "vertical3"
+    ht_vertcross3!2 = "cross_line_idx3"
+    
+    fout->ht_vertcross3 = ht_vertcross3
+    
+    ; Test the moving nest with lat/lon over time
+    
+    times = wrf_user_getvar(input_file, "times", -1)
+    ntimes = dimsizes(times)
+    
+    do i=0,ntimes-1
+      xopt@timeidx = i
+      name = sprinti("ht_vertcross_t%i", i)
+      p_var := p(i,:,:,:)
+      z_var := z(i,:,:,:)
+
+      ht_vertcross := wrf_user_vertcross(z_var, p_var, start_end, xopt)
+      
+      dim0name = sprinti("vertical_t%i",i)
+      dim1name = sprinti("cross_line_idx_t%i",i)
+      ht_vertcross!0 = dim0name
+      ht_vertcross!1 = dim1name
+      
+      fout->$name$ = ht_vertcross
+    end do
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;; 3D horizontal interpolation
+    
+    time = -1
+    
+    z := wrf_user_getvar(input_file, "z", time)        ; grid point height
+    p := wrf_user_getvar(input_file, "pressure", time) ; total pressure
+    
+    ; First, check backwards compat
     plev = 500.   ; 500 MB
+    hlev = 5000; ; 5000 m
+    
     z_500 = wrf_user_intrp3d(z,p,"h",plev,0.,False)
-    z_500_dims = dimsizes(z_500)
+    p_5000 = wrf_user_intrp3d(p,z,"h",hlev,0.,False)
+    
+    fout->z_500 = z_500
+    fout->p_5000 = p_5000
+    
+    plev := (/1000., 850., 500., 250./) 
+    hlev := (/500., 2500., 5000., 10000. /)
+    z_multi = wrf_user_intrp3d(z,p,"h",plev,0.,False)
+    p_multi = wrf_user_intrp3d(p,z,"h",hlev,0.,False)
+    
+    fout->z_multi = z_multi
+    fout->p_multi = p_multi
+    
+    ; Now check the new routine
+    
+    plev := 500.   ; 500 MB
+    hlev := 5000   ; 5000 m
+    
+    z2_500 = wrf_user_interplevel(z,p,plev,False)
+    p2_5000 = wrf_user_interplevel(p,z,hlev,False)
+    
+    fout->z2_500 = z2_500
+    fout->p2_5000 = p2_5000
     
     
-    ; 2D interpolation along line
-    t2 = wrf_user_getvar(input_file, "T2", 0)
+    plev := (/1000., 850., 500., 250./) 
+    hlev := (/500., 2500., 5000., 10000. /)
+    z2_multi = wrf_user_interplevel(z,p,plev,False)
+    p2_multi = wrf_user_interplevel(p,z,hlev,False)
+    
+    fout->z2_multi = z2_multi
+    fout->p2_multi = p2_multi
+    
+    pblh = wrf_user_getvar(input_file, "PBLH", time)
+    opts := False
+    opts@inc2dlevs = True
+    p_lev2d = wrf_user_interplevel(p, z, pblh, opts)
+    
+    fout->p_lev2d = p_lev2d
+    
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;; 2D interpolation along line
+    
+    time = -1
+    
+    t2 = wrf_user_getvar(input_file, "T2", time)
     dimst2 = dimsizes(t2)
-    pivot = (/ dimst2(1)/2, dimst2(0)/2 /)
+    pivot = (/ dimst2(2)/2, dimst2(1)/2 /)
     
     t2_line = wrf_user_intrp2d(t2, pivot, 90.0, False)
-    t2_line_dims = dimsizes(t2_line) 
     
-    filedimdef(fout, (/"ht_cross_vert", "ht_cross_horiz", "p_cross_vert", "p_cross_horiz"/), \
-                     (/ht_cross_dims(0), ht_cross_dims(1), p_cross_dims(0), p_cross_dims(1)/), \ 
-                     (/False,False,False,False/))
-    filedimdef(fout, (/"z500_vert", "z500_horiz"/), \
-                     (/z_500_dims(0), z_500_dims(1) /), \
-                     (/False, False/))                 
-    filedimdef(fout, (/"t2_line_horiz"/), \
-                     (/t2_line_dims(0) /), \
-                     (/False/))
+    fout->t2_line = t2_line
     
-    filevardef(fout, "ht_cross", typeof(ht_cross), (/"ht_cross_vert", "ht_cross_horiz"/))
-    filevardef(fout, "p_cross", typeof(p_cross), (/"p_cross_vert", "p_cross_horiz"/))
-    filevardef(fout, "z_500", typeof(z_500), (/"z500_vert", "z500_horiz"/))
-    filevardef(fout, "t2_line", typeof(t2_line), (/"t2_line_horiz"/))
+    ; For the new interplevel routine
+    xopt := True
+    xopt@use_pivot = True
+    xopt@angle = 90.0
+    xopt@latlon = False
+    xopt@file_handle = input_file
+    xopt@timeidx = 0
+    xopt@linecoords = True
     
-    filevarattdef(fout,"ht_cross", ht_cross)
-    filevarattdef(fout,"p_cross", p_cross)
-    filevarattdef(fout, "z_500", z_500)
-    filevarattdef(fout, "t2_line", t2_line)
-    fout->ht_cross = (/ht_cross/)
-    fout->p_cross = (/p_cross/)
-    fout->z_500 = (/z_500/)
-    fout->t2_line = (/t2_line/)
+    t2_line2 = wrf_user_interpline(t2, pivot, xopt)
+    
+    fout->t2_line2 = t2_line2
+    
+    lats = wrf_user_getvar(input_file, "lat", 0)
+    lons = wrf_user_getvar(input_file, "lon", 0) 
+        
+    start_lat = min(lats) + .25d*(max(lats) - min(lats))
+    end_lat = min(lats) + .65d*(max(lats) - min(lats))
+                
+    start_lon = min(lons) + .25d*(max(lons) - min(lons))
+    end_lon = min(lons) + .65d*(max(lons) - min(lons))
+        
+    start_end = (/ start_lon, start_lat, end_lon, end_lat /)
+    
+    ; For the new line routine
+    xopt := True
+    xopt@use_pivot = False
+    xopt@latlon = True
+    xopt@file_handle = input_file
+    xopt@timeidx = 0
+    xopt@linecoords = True
+    
+    t2_line3 = wrf_user_interpline(t2, start_end, xopt)
+    t2_line3!1 = "line_idx_t2_line3"
+    
+    fout->t2_line3 = t2_line3
+    
+    times = wrf_user_getvar(input_file, "times", -1)
+    ntimes = dimsizes(times)
+    
+    do i=0,ntimes-1
+      xopt@timeidx = i
+      name = sprinti("t2_line_t%i", i)
+      dim0name = sprinti("lineidx_t%i",i)
+      var := t2(i,:,:)
+      t2_line := wrf_user_interpline(var, start_end, xopt)
+      t2_line!0 = dim0name
+      fout->$name$ = t2_line
+    end do
+    
+    ; Make sure the 1 time case still works
+    t2 := wrf_user_getvar(input_file, "T2", 0)
+    
+    ; For the new line routine
+    xopt := True
+    xopt@use_pivot = False
+    xopt@latlon = True
+    xopt@file_handle = input_file
+    xopt@timeidx = 0
+    xopt@linecoords = True
+    
+    t2_line4 = wrf_user_interpline(t2, start_end, xopt)
+    t2_line4!0 = "t2_line4_idx"
+    
+    fout->t2_line4 = t2_line4
     
     
-    ; 3D interpolation to new vertical coordinates
+    ;;;;;;;;;;;;;;;;;;;;;;; 3D interpolation to new vertical coordinates
+    time = -1
+    
     ; interp t to theta
-    fld1 = wrf_user_getvar(input_file, "tk", -1)
+    fld1 = wrf_user_getvar(input_file, "tk", time)
     vert_coord       = "theta"
     interp_levels    = (/200,300,500,1000/)
  
@@ -191,32 +306,17 @@
     opts@logP        = True 
     
     fld1_intrp = wrf_user_vert_interp(input_file,fld1,vert_coord,interp_levels,opts)
+    fld1_intrp!1 = "interp_levels1"
     
-    fld1_dims = dimsizes(fld1_intrp)
-    
-    filedimdef(fout, (/"fld1_time", "fld1_levs", "fld1_sn", "fld1_we"/), \
-                     (/fld1_dims(0), fld1_dims(1), fld1_dims(2), fld1_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_tk_theta", typeof(fld1_intrp), (/"fld1_time", "fld1_levs", "fld1_sn", "fld1_we"/))
-    filevarattdef(fout,"fld_tk_theta", fld1_intrp)
-    fout->fld_tk_theta = (/fld1_intrp/)
+    fout->fld_tk_theta = fld1_intrp
     
     ; interp t to theta-e
     fld2 = fld1
     vert_coord := "theta-e"
     fld2_intrp = wrf_user_vert_interp(input_file,fld2,vert_coord,interp_levels,opts)
+    fld2_intrp!1 = "interp_levels2"
     
-    
-    fld2_dims = dimsizes(fld2_intrp)
-    
-    filedimdef(fout, (/"fld2_time", "fld2_levs", "fld2_sn", "fld2_we"/), \
-                     (/fld2_dims(0), fld2_dims(1), fld2_dims(2), fld2_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_tk_theta_e", typeof(fld2_intrp), (/"fld2_time", "fld2_levs", "fld2_sn", "fld2_we"/))
-    filevarattdef(fout,"fld_tk_theta_e", fld2_intrp)
-    fout->fld_tk_theta_e = (/fld2_intrp/)
+    fout->fld_tk_theta_e = fld2_intrp
     
     
     ; interp t to pressure
@@ -224,34 +324,19 @@
     vert_coord := "pressure"
     interp_levels    := (/850,500/)
     fld3_intrp = wrf_user_vert_interp(input_file,fld3,vert_coord,interp_levels,opts)
+    fld3_intrp!1 = "interp_levels3"
     
+    fout->fld_tk_pres = fld3_intrp
     
-    fld3_dims = dimsizes(fld3_intrp)
-    
-    filedimdef(fout, (/"fld3_time", "fld3_levs", "fld3_sn", "fld3_we"/), \
-                     (/fld3_dims(0), fld3_dims(1), fld3_dims(2), fld3_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_tk_pres", typeof(fld3_intrp), (/"fld3_time", "fld3_levs", "fld3_sn", "fld3_we"/))
-    filevarattdef(fout,"fld_tk_pres", fld3_intrp)
-    fout->fld_tk_pres = (/fld3_intrp/)
     
     ; interp t to ght_msl
     fld4 = fld1
     vert_coord := "ght_msl"
     interp_levels    := (/1,2/)
     fld4_intrp = wrf_user_vert_interp(input_file,fld4,vert_coord,interp_levels,opts)
+    fld4_intrp!1 = "interp_levels4"
     
-    
-    fld4_dims = dimsizes(fld4_intrp)
-    
-    filedimdef(fout, (/"fld4_time", "fld4_levs", "fld4_sn", "fld4_we"/), \
-                     (/fld4_dims(0), fld4_dims(1), fld4_dims(2), fld4_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_tk_ght_msl", typeof(fld4_intrp), (/"fld4_time", "fld4_levs", "fld4_sn", "fld4_we"/))
-    filevarattdef(fout,"fld_tk_ght_msl", fld4_intrp)
-    fout->fld_tk_ght_msl = (/fld4_intrp/)
+    fout->fld_tk_ght_msl = fld4_intrp
     
     
     ; interp t to ght_agl
@@ -259,99 +344,69 @@
     vert_coord := "ght_agl"
     interp_levels    := (/1,2/)
     fld5_intrp = wrf_user_vert_interp(input_file,fld1,vert_coord,interp_levels,opts)
+    fld5_intrp!1 = "interp_levels5"
     
-    
-    fld5_dims = dimsizes(fld5_intrp)
-    
-    filedimdef(fout, (/"fld5_time", "fld5_levs", "fld5_sn", "fld5_we"/), \
-                     (/fld5_dims(0), fld5_dims(1), fld5_dims(2), fld5_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_tk_ght_agl", typeof(fld5_intrp), (/"fld5_time", "fld5_levs", "fld5_sn", "fld5_we"/))
-    filevarattdef(fout,"fld_tk_ght_agl", fld5_intrp)
-    fout->fld_tk_ght_agl = (/fld5_intrp/)
+    fout->fld_tk_ght_agl = fld5_intrp
     
     ; interp ht to pres
-    fld6 = wrf_user_getvar(input_file, "height", -1)
+    fld6 = wrf_user_getvar(input_file, "height", time)
     vert_coord := "pressure"
     opts@field_type  = "ght"
     interp_levels    := (/500,50/)
     fld6_intrp = wrf_user_vert_interp(input_file,fld6,vert_coord,interp_levels,opts)
+    fld6_intrp!1 = "interp_levels6"
     
-    
-    fld6_dims = dimsizes(fld6_intrp)
-    
-    filedimdef(fout, (/"fld6_time", "fld6_levs", "fld6_sn", "fld6_we"/), \
-                     (/fld6_dims(0), fld6_dims(1), fld6_dims(2), fld6_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_ht_pres", typeof(fld6_intrp), (/"fld6_time", "fld6_levs", "fld6_sn", "fld6_we"/))
-    filevarattdef(fout,"fld_ht_pres", fld6_intrp)
-    fout->fld_ht_pres = (/fld6_intrp/)
+    fout->fld_ht_pres = fld6_intrp
     
     
     ; interp pres to theta
-    fld7 = wrf_user_getvar(input_file, "pressure", -1)
+    fld7 = wrf_user_getvar(input_file, "pressure", time)
     vert_coord := "theta"
     opts@field_type  = "pressure"
     interp_levels    := (/200,300,500,1000/)
     fld7_intrp = wrf_user_vert_interp(input_file,fld7,vert_coord,interp_levels,opts)
+    fld7_intrp!1 = "interp_levels7"
     
-    
-    fld7_dims = dimsizes(fld7_intrp)
-    
-    filedimdef(fout, (/"fld7_time", "fld7_levs", "fld7_sn", "fld7_we"/), \
-                     (/fld7_dims(0), fld7_dims(1), fld7_dims(2), fld7_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_pres_theta", typeof(fld7_intrp), (/"fld7_time", "fld7_levs", "fld7_sn", "fld7_we"/))
-    filevarattdef(fout,"fld_pres_theta", fld7_intrp)
     fout->fld_pres_theta = (/fld7_intrp/)
     
+    
     ; interp theta-e to pressure
-    fld8 = wrf_user_getvar(input_file, "eth", -1)
+    fld8 = wrf_user_getvar(input_file, "eth", time)
     vert_coord := "pressure"
     opts@field_type  = "T"
     interp_levels    := (/850,500,5/)
     fld8_intrp = wrf_user_vert_interp(input_file,fld8,vert_coord,interp_levels,opts)
+    fld8_intrp!1 = "interp_levels8"
+    
+    fout->fld_thetae_pres = fld8_intrp
     
     
-    fld8_dims = dimsizes(fld8_intrp)
+    ;;;;;;;;;;;;;;;;;;; lat/lon to x/y and x/y to lat/lon routines
     
-    filedimdef(fout, (/"fld8_time", "fld8_levs", "fld8_sn", "fld8_we"/), \
-                     (/fld8_dims(0), fld8_dims(1), fld8_dims(2), fld8_dims(3)/), \ 
-                     (/False,False,False,False/))
-                     
-    filevardef(fout, "fld_thetae_pres", typeof(fld8_intrp), (/"fld8_time", "fld8_levs", "fld8_sn", "fld8_we"/))
-    filevarattdef(fout,"fld_thetae_pres", fld8_intrp)
-    fout->fld_thetae_pres = (/fld8_intrp/)
+    lats := (/22.0, 25.0, 27.0 /)
+    lons := (/-90.0, -87.5, -83.75 /)
+    x_s = (/10, 50, 90 /)
+    y_s = (/10, 50, 90 /)
     
-    ; lat/lon to x/y and x/y to lat/lon routines
-    lats = (/-55, -60, -65 /)
-    lons = (/25, 30, 35 /)
-    i_s = (/10, 100, 150 /)
-    j_s = (/10, 100, 150 /)
-    ij = wrf_user_ll_to_ij(input_file, lons, lats, True) 
-    ll = wrf_user_ij_to_ll(input_file, i_s, j_s, True)
+    opt = True
+    opt@useTime = -1
+    opt@returnInt = False
     
-    ij_dims = dimsizes(ij)
-    ll_dims = dimsizes(ll)
+    xy1 = wrf_user_ll_to_xy(input_file, lons, lats, opt) 
+    ll1 = wrf_user_xy_to_ll(input_file, x_s, y_s, opt)
     
-    filedimdef(fout, (/"i_j", "ij_idx"/), \
-                     (/ij_dims(0), ij_dims(1)/), \ 
-                     (/False,False/))
-                     
-    filedimdef(fout, (/"lat_lon", "ll_idx"/), \
-                     (/ll_dims(0), ll_dims(1)/), \ 
-                     (/False,False/))
-                     
-    filevardef(fout, "ij", typeof(ij), (/"i_j", "ij_idx"/))
-    filevardef(fout, "ll", typeof(ll), (/"lat_lon", "ll_idx"/))
-    filevarattdef(fout,"ij", ij)
-    filevarattdef(fout,"ll", ll)
+    fout->xy1 = xy1
+    fout->ll1 = ll1
     
-    fout->ij = (/ij/)
-    fout->ll = (/ll/)
+    opt = True
+    opt@useTime = 8
+    opt@returnInt = True
+    
+    xy2 = wrf_user_ll_to_xy(input_file, lons, lats, opt) 
+    ll2 = wrf_user_xy_to_ll(input_file, x_s, y_s, opt)
+    
+    fout->xy2 = xy2
+    fout->ll2 = ll2
     
     delete(fout)
 

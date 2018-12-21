@@ -75,15 +75,18 @@ extensions = [
     'sphinx.ext.napoleon', 
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.mathjax'
 ]
+
+#mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
 
 intersphinx_mapping = {
                        'matplotlib': ('http://matplotlib.org/', None),
                        'basemap' : ('http://matplotlib.org/basemap/', None),
-                       'cartopy' : (
-                'http://scitools.org.uk/cartopy/docs/latest/index.html', None),
                        'python': ('http://docs.python.org/3/', None),
                        'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+                       'scipy' : 
+                       ('https://docs.scipy.org/doc/scipy/reference/', None),
                        'xarray': ('http://xarray.pydata.org/en/stable/', None),
                        'wrapt': ('http://wrapt.readthedocs.io/en/latest/', 
                                  None)

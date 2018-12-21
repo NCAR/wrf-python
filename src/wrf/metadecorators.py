@@ -9,7 +9,8 @@ import numpy.ma as ma
 from .extension import _interpline
 from .util import (extract_vars, either, from_args, arg_location,
                    is_coordvar, latlon_coordvars, to_np, 
-                   from_var, iter_left_indexes, is_mapping)
+                   from_var, iter_left_indexes, is_mapping,
+                   is_moving_domain, is_latlon_pair)
 from .coordpair import CoordPair
 from .py3compat import viewkeys, viewitems, py3range
 from .interputils import get_xy_z_params, get_xy, to_xy_coords
@@ -792,16 +793,21 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         
     """  
     argvars = from_args(wrapped, ("field3d", "vert", "desiredlev", 
-                                  "missing"), 
+                                  "missing", "squeeze"), 
                           *args, **kwargs)  
     
     field3d = argvars["field3d"]
     z = argvars["vert"]
-    desiredloc = argvars["desiredlev"]
+    desiredlev = argvars["desiredlev"]
+    _desiredlev = np.asarray(desiredlev)
     missingval = argvars["missing"]
+    squeeze = argvars["squeeze"]
     
     result = wrapped(*args, **kwargs)
     
+    levsare2d = _desiredlev.ndim >= 2
+    multiproduct = field3d.ndim - z.ndim == 1
+        
     # Defaults, in case the data isn't a DataArray
     outname = None
     outdimnames = None
@@ -812,34 +818,45 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
     vert_units = None
     if isinstance(z, DataArray):
         vert_units = z.attrs.get("units", None)
-    
-    # If we have no metadata to start with, only set the level
-    levelstr = ("{0} {1}".format(desiredloc, vert_units) 
-                if vert_units is not None 
-                else "{0}".format(desiredloc))
-    
-    name_levelstr = ("{0}_{1}".format(desiredloc, vert_units) 
-                if vert_units is not None 
-                else "{0}".format(desiredloc))
+        
     
     if isinstance(field3d, DataArray):
         outcoords = OrderedDict()
         outdimnames = list(field3d.dims)
         outcoords.update(field3d.coords)
-        outdimnames.remove(field3d.dims[-3])
+        
+        del outdimnames[-3]
+        
         try:
             del outcoords[field3d.dims[-3]]
         except KeyError:
             pass # xarray 0.9
+        
+        if not levsare2d:
+            outdimnames.insert(-2, "level")
+            if _desiredlev.ndim == 0:
+                outcoords["level"] = [desiredlev]
+            else:
+                outcoords["level"] = _desiredlev
+        else:
+            if (_desiredlev.ndim == 2):
+                outcoords["level"] = field3d.dims[-2:], _desiredlev[:]
+            else:
+                if multiproduct:
+                    d = field3d.dims[1:-3] + field3d.dims[-2:]
+                else:
+                    d = field3d.dims[0:-3] + field3d.dims[-2:]
+                outcoords["level"] = d, _desiredlev[:]
+                
         outattrs.update(field3d.attrs)
-        outname = "{0}_{1}".format(field3d.name, name_levelstr)
+        outname = "{0}_interp".format(field3d.name)
         
     else:
-        outname = "field3d_{0}".format(name_levelstr)
-        
-    outattrs["level"] = levelstr
+        outname = "field3d_interp"
+    
     outattrs["missing_value"] = missingval
     outattrs["_FillValue"] = missingval
+    outattrs["vert_units"] = vert_units
     
     for key in ("MemoryOrder", "description"):
         try:
@@ -847,8 +864,10 @@ def _set_horiz_meta(wrapped, instance, args, kwargs):
         except KeyError:
             pass
     
-    return DataArray(result, name=outname, dims=outdimnames, 
-                     coords=outcoords, attrs=outattrs)
+    da = DataArray(result, name=outname, dims=outdimnames, 
+                   coords=outcoords, attrs=outattrs)
+    
+    return da.squeeze() if squeeze else da
 
 
 def _set_cross_meta(wrapped, instance, args, kwargs):
@@ -889,7 +908,7 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
                                   "latlon", "missing", 
                                   "wrfin", "timeidx", "stagger", "projection",
                                   "ll_point", "pivot_point", "angle",
-                                  "start_point", "end_point",
+                                  "start_point", "end_point", "autolevels",
                                   "cache"), 
                           *args, **kwargs)  
     
@@ -907,15 +926,52 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
     angle = argvars["angle"]
     start_point = argvars["start_point"]
     end_point = argvars["end_point"]
+    autolevels = argvars["autolevels"]
     cache = argvars["cache"]
     
     start_point_xy = None
     end_point_xy = None
     pivot_point_xy = None
     
+    if (inc_latlon is True or is_latlon_pair(start_point) or 
+        is_latlon_pair(pivot_point)):
+        
+        if wrfin is not None:
+            is_moving = is_moving_domain(wrfin)
+        else:
+            is_moving = False
+    
+        if timeidx is None:
+            if wrfin is not None:
+                # Moving nests aren't supported with ALL_TIMES because the 
+                # domain could move outside of the line, which causes 
+                # crashes or different line lengths.
+                if is_moving:
+                    raise ValueError("Requesting all times with a moving nest "
+                                     "is not supported when using lat/lon "
+                                     "cross sections because the domain could "
+                                     "move outside of the cross section. "
+                                     "You must request each time "
+                                     "individually.")
+                else:
+                    # Domain not moving, just use 0
+                    _timeidx = 0
+            
+            # If using grid coordinates, then don't care about lat/lon
+            # coordinates. Just use 0.
+            else:
+                _timeidx = 0
+        else:
+            if is_moving:
+                _timeidx = timeidx
+            else:
+                # When using non-moving nests, set the time to 0 
+                # to avoid problems downstream
+                _timeidx = 0
+    
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
-            xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
@@ -923,21 +979,21 @@ def _set_cross_meta(wrapped, instance, args, kwargs):
             
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
-            xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
-            xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)
     
     xy, var2dz, z_var2d = get_xy_z_params(to_np(z), pivot_point_xy, angle,
-              start_point_xy, end_point_xy, levels)
+              start_point_xy, end_point_xy, levels, autolevels)
     
     # Make a copy so we don't modify a user supplied cache
     if cache is not None:
@@ -1130,10 +1186,47 @@ def _set_line_meta(wrapped, instance, args, kwargs):
     start_point_xy = None
     end_point_xy = None
     pivot_point_xy = None
+    
+    if (inc_latlon is True or is_latlon_pair(start_point) or 
+        is_latlon_pair(pivot_point)):
+        
+        if wrfin is not None:
+            is_moving = is_moving_domain(wrfin)
+        else:
+            is_moving = False
+    
+        if timeidx is None:
+            if wrfin is not None:
+                # Moving nests aren't supported with ALL_TIMES because the 
+                # domain could move outside of the line, which causes 
+                # crashes or different line lengths.
+                if is_moving:
+                    raise ValueError("Requesting all times with a moving nest "
+                                     "is not supported when using a lat/lon "
+                                     "line because the domain could "
+                                     "move outside of line. "
+                                     "You must request each time "
+                                     "individually.")
+                else:
+                    # Domain not moving, just use 0
+                    _timeidx = 0
+            
+            # If using grid coordinates, then don't care about lat/lon
+            # coordinates. Just use 0.
+            else:
+                _timeidx = 0
+        else:
+            if is_moving:
+                _timeidx = timeidx
+            else:
+                # When using non-moving nests, set the time to 0 
+                # to avoid problems downstream
+                _timeidx = 0
+        
         
     if pivot_point is not None:
         if pivot_point.lat is not None and pivot_point.lon is not None:
-            xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             pivot_point_xy = (xy_coords.x, xy_coords.y)
         else:
@@ -1142,19 +1235,20 @@ def _set_line_meta(wrapped, instance, args, kwargs):
             
     if start_point is not None and end_point is not None:
         if start_point.lat is not None and start_point.lon is not None:
-            xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             start_point_xy = (xy_coords.x, xy_coords.y)
         else:
             start_point_xy = (start_point.x, start_point.y)
             
         if end_point.lat is not None and end_point.lon is not None:
-            xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+            xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                      stagger, projection, ll_point)
             end_point_xy = (xy_coords.x, xy_coords.y)
         else:
             end_point_xy = (end_point.x, end_point.y)
     
+
     xy = get_xy(field2d, pivot_point_xy, angle, start_point_xy, end_point_xy)
     
     # Make a copy so we don't modify a user supplied cache
@@ -1645,7 +1739,7 @@ def set_interp_metadata(interp_type):
     """   
     @wrapt.decorator
     def func_wrapper(wrapped, instance, args, kwargs):
-        do_meta = from_args(wrapped, ("meta",), *args, **kwargs)["meta"]
+        do_meta = from_args(wrapped, ("meta"), *args, **kwargs)["meta"]
         
         if do_meta is None:
             do_meta = True
@@ -1839,11 +1933,12 @@ def set_smooth_metdata():
         if not xarray_enabled() or not do_meta:
             return wrapped(*args, **kwargs)
         
-        argvars = from_args(wrapped, ("field", "passes"), 
+        argvars = from_args(wrapped, ("field", "passes", "cenweight"), 
                             *args, **kwargs)
         
         field = argvars["field"]
         passes = argvars["passes"]
+        cenweight = argvars["cenweight"]
         
         result = wrapped(*args, **kwargs)
         
@@ -1858,6 +1953,7 @@ def set_smooth_metdata():
             outcoords.update(field.coords)
             outattrs.update(field.attrs)
             outattrs["passes"] = passes
+            outattrs["cenweight"] = cenweight
                 
         if isinstance(result, ma.MaskedArray):
             outattrs["_FillValue"] = result.fill_value

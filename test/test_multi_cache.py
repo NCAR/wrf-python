@@ -5,8 +5,8 @@ from netCDF4 import Dataset as nc
 
 #a = nc("/Users/ladwig/Documents/wrf_files/wrf_vortex_single/wrfout_d02_2005-08-28_00:00:00")
 #b = nc("/Users/ladwig/Documents/wrf_files/wrf_vortex_single/wrfout_d02_2005-08-28_03:00:00")
-a = nc("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-28_00:00:00")
-b = nc("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-28_12:00:00")
+a = nc("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/wrfout_d02_2005-08-28_00:00:00")
+b = nc("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/wrfout_d02_2005-08-28_12:00:00")
 q = {"outoutoutout" : {"outoutout" : {"outout" : {"out1" : {"blah" : [a,b], "blah2" : [a,b]}, "out2" : {"blah" : [a,b], "blah2" : [a,b]} } } } }
 
 t1 = time.time()

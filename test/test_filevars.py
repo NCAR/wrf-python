@@ -7,7 +7,7 @@ import subprocess
 
 from wrf import getvar, ALL_TIMES
 
-TEST_DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi"
+TEST_DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest"
 TEST_FILENAMES = ["wrfout_d02_2005-08-28_00:00:00",
               "wrfout_d02_2005-08-28_12:00:00",
               "wrfout_d02_2005-08-29_00:00:00"]

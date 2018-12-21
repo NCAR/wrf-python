@@ -4,10 +4,11 @@ import numpy as np
 import numpy.ma as ma
 
 from .extension import (_interpz3d, _vertcross, _interpline, _smooth2d, 
-                        _monotonic, _vintrp)
+                        _monotonic, _vintrp, _interpz3d_lev2d)
 
 from .metadecorators import set_interp_metadata
-from .util import extract_vars, is_staggered, get_id, to_np, get_iterable
+from .util import (extract_vars, is_staggered, get_id, to_np, get_iterable,
+                   is_moving_domain, is_latlon_pair)
 from .py3compat import py3range
 from .interputils import get_xy, get_xy_z_params, to_xy_coords
 from .constants import Constants, default_fill, ConversionFactors
@@ -20,7 +21,7 @@ from wrf.g_pressure import get_pressure
 #  Note:  Extension decorator is good enough to handle left dims
 @set_interp_metadata("horiz")
 def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64), 
-                meta=True):
+                squeeze=True, meta=True):
     """Return the three-dimensional field interpolated to a horizontal plane 
     at the specified vertical level.
 
@@ -35,11 +36,20 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             pressure or height. This array must have the same dimensionality
             as *field3d*.
         
-        desiredlev (:obj:`float`): The desired vertical level.  
+        desiredlev (:obj:`float`, 1D sequence, or :class:`numpy.ndarray`): The 
+            desired vertical level(s). This can be a single value (e.g. 500), 
+            a sequence of values (e.g. [1000, 850, 700, 500, 250]), or a 
+            multidimensional array where the right two dimensions (ny x nx) 
+            must match *field3d*, and any leftmost dimensions match 
+            field3d.shape[:-3] (e.g. planetary boundary layer).  
             Must be in the same units as the *vert* parameter.
         
         missing (:obj:`float`): The fill value to use for the output.  
             Default is :data:`wrf.default_fill(numpy.float64)`.
+            
+        squeeze (:obj:`bool`, optional): Set to False to prevent dimensions 
+            with a size of 1 from being automatically removed from the shape 
+            of the output. Default is True.
         
         meta (:obj:`bool`): Set to False to disable metadata and return 
             :class:`numpy.ndarray` instead of 
@@ -66,26 +76,34 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             
             p = getvar(wrfin, "pressure")
             ht = getvar(wrfin, "z", units="dm")
+            pblh = getvar(wrfin, "PBLH")
             
             ht_500 = interplevel(ht, p, 500.0)
+            
+            
         
     
     """
-    # Some fields like uvmet have an extra left dimension for the product
-    # type, we'll handle that iteration here.
-    multi = True if field3d.ndim - vert.ndim == 1 else False
     
-    if not multi:
-        result = _interpz3d(field3d, vert, desiredlev, missing)
+    _desiredlev = np.asarray(desiredlev)
+    if _desiredlev.ndim == 0:
+        _desiredlev = np.array([desiredlev], np.float64)
+        levsare2d = False
     else:
-        outshape = field3d.shape[0:-3] + field3d.shape[-2:]
-        result = np.empty(outshape, dtype=field3d.dtype)
-            
-        for i in py3range(field3d.shape[0]):
-            result[i,:] = (
-                _interpz3d(field3d[i,:], vert, desiredlev, missing)[:])
-            
-    return ma.masked_values (result, missing)
+        levsare2d = _desiredlev.ndim >= 2
+
+    if not levsare2d:
+        result = _interpz3d(field3d, vert, _desiredlev, missing)
+    else:
+        result = _interpz3d_lev2d(field3d, vert, _desiredlev, missing)
+     
+    masked = ma.masked_values (result, missing)
+    
+    if not meta:
+        if squeeze:
+            return masked.squeeze()
+    
+    return masked
 
 
 @set_interp_metadata("cross")
@@ -94,7 +112,7 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
               ll_point=None,
               pivot_point=None, angle=None,
               start_point=None, end_point=None,
-              latlon=False, cache=None, meta=True):
+              latlon=False, autolevels=100, cache=None, meta=True):
     """Return the vertical cross section for a three-dimensional field.
     
     The cross section is defined by a horizontal line through the domain.  
@@ -213,6 +231,10 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                 *latlon* is set to True. Otherwise, a warning will be issued,
                 and the latitude and longitude information will not be 
                 present.
+                
+        autolevels(:obj:`int`, optional): The number of evenly spaced 
+            automatically chosen vertical levels to use when *levels* 
+            is None. Default is 100.
              
         cache (:obj:`dict`, optional): A dictionary of (varname, ndarray) 
             that can be used to supply pre-extracted NetCDF variables to the 
@@ -236,10 +258,6 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         :class:`numpy.ndarray` object with no metadata.
         
     """
-    if timeidx is None:
-        raise ValueError("'timeidx' must be a positive or negative integer")
-    
-    
     # Some fields like uvmet have an extra left dimension for the product
     # type, we'll handle that iteration here.
     multi = True if field3d.ndim - vert.ndim == 1 else False
@@ -254,9 +272,45 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
         end_point_xy = None
         pivot_point_xy = None
         
+        if (latlon is True or is_latlon_pair(start_point) or 
+            is_latlon_pair(pivot_point)):
+            
+            if wrfin is not None:
+                is_moving = is_moving_domain(wrfin)
+            else:
+                is_moving = False
+        
+            if timeidx is None:
+                if wrfin is not None:
+                    # Moving nests aren't supported with ALL_TIMES because the 
+                    # domain could move outside of the line, which causes 
+                    # crashes or different line lengths.
+                    if is_moving:
+                        raise ValueError("Requesting all times with a moving nest "
+                                         "is not supported when using lat/lon "
+                                         "cross sections because the domain could "
+                                         "move outside of the cross section. "
+                                         "You must request each time "
+                                         "individually.")
+                    else:
+                        # Domain not moving, just use 0
+                        _timeidx = 0
+                
+                # If using grid coordinates, then don't care about lat/lon
+                # coordinates. Just use 0.
+                else:
+                    _timeidx = 0
+            else:
+                if is_moving:
+                    _timeidx = timeidx
+                else:
+                    # When using non-moving nests, set the time to 0 
+                    # to avoid problems downstream
+                    _timeidx = 0
+        
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
-                xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -264,14 +318,14 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                 
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
-                xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
-                xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -279,7 +333,8 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
                 
         xy, var2dz, z_var2d = get_xy_z_params(to_np(vert), pivot_point_xy, 
                                               angle, start_point_xy, 
-                                              end_point_xy, levels)
+                                              end_point_xy, levels,
+                                              autolevels)
     
     if not multi:
         result = _vertcross(field3d, xy, var2dz, z_var2d, missing)
@@ -295,10 +350,9 @@ def vertcross(field3d, vert, levels=None, missing=default_fill(np.float64),
 
 
 @set_interp_metadata("line")
-def interpline(field2d, pivot_point=None, 
-               wrfin=None, timeidx=0, stagger=None, projection=None,
+def interpline(field2d, wrfin=None, timeidx=0, stagger=None, projection=None,
                ll_point=None,
-               angle=None, start_point=None,
+               pivot_point=None, angle=None, start_point=None,
                end_point=None, latlon=False, 
                cache=None, meta=True):
     """Return the two-dimensional field interpolated along a line.
@@ -420,8 +474,6 @@ def interpline(field2d, pivot_point=None,
         
         
     """
-    if timeidx is None:
-        raise ValueError("'timeidx' must be a positive or negative integer")
     
     try:
         xy = cache["xy"]
@@ -430,9 +482,45 @@ def interpline(field2d, pivot_point=None,
         end_point_xy = None
         pivot_point_xy = None
         
+        if (latlon is True or is_latlon_pair(start_point) or 
+            is_latlon_pair(pivot_point)):
+            
+            if wrfin is not None:
+                is_moving = is_moving_domain(wrfin)
+            else:
+                is_moving = False
+        
+            if timeidx is None:
+                if wrfin is not None:
+                    # Moving nests aren't supported with ALL_TIMES because the 
+                    # domain could move outside of the line, which causes 
+                    # crashes or different line lengths.
+                    if is_moving:
+                        raise ValueError("Requesting all times with a moving nest "
+                                         "is not supported when using a lat/lon "
+                                         "line because the domain could "
+                                         "move outside of line. "
+                                         "You must request each time "
+                                         "individually.")
+                    else:
+                        # Domain not moving, just use 0
+                        _timeidx = 0
+                
+                # If using grid coordinates, then don't care about lat/lon
+                # coordinates. Just use 0.
+                else:
+                    _timeidx = 0
+            else:
+                if is_moving:
+                    _timeidx = timeidx
+                else:
+                    # When using non-moving nests, set the time to 0 
+                    # to avoid problems downstream
+                    _timeidx = 0
+        
         if pivot_point is not None:
             if pivot_point.lat is not None and pivot_point.lon is not None:
-                xy_coords = to_xy_coords(pivot_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(pivot_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 pivot_point_xy = (xy_coords.x, xy_coords.y)
             else:
@@ -440,22 +528,22 @@ def interpline(field2d, pivot_point=None,
                 
         if start_point is not None and end_point is not None:
             if start_point.lat is not None and start_point.lon is not None:
-                xy_coords = to_xy_coords(start_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(start_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 start_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 start_point_xy = (start_point.x, start_point.y)
                 
             if end_point.lat is not None and end_point.lon is not None:
-                xy_coords = to_xy_coords(end_point, wrfin, timeidx, 
+                xy_coords = to_xy_coords(end_point, wrfin, _timeidx, 
                                          stagger, projection, ll_point)
                 end_point_xy = (xy_coords.x, xy_coords.y)
             else:
                 end_point_xy = (end_point.x, end_point.y)
-                
+        
         xy = get_xy(field2d, pivot_point_xy, angle, start_point_xy, 
                     end_point_xy)
-        
+    
     return _interpline(field2d, xy)
 
 
@@ -488,25 +576,38 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                 [K]
                 
         interp_levels (sequence): A 1D sequence of vertical levels to 
-            interpolate to.
+            interpolate to. Values must be in the same units as specified 
+            above for the *vert_coord* parameter.
             
         extrapolate (:obj:`bool`, optional): Set to True to extrapolate 
-            values below ground.  Default is False.
+            values below ground.  This is only performed when *vert_coord* is 
+            a pressure or height type, and the *field_type* is a pressure type 
+            (with height vertical coordinate), a height type (with pressure as 
+            the vertical coordinate), or a temperature type (with either height 
+            or pressure as the vertical coordinate). If those conditions are  
+            not met, or *field_type* is None, then the lowest model level 
+            will be used. Extrapolation is performed using standard atmosphere.
+            Default is False. 
             
         field_type (:obj:`str`, optional): 
             The type of field.  Default is None.
             
             Valid strings are:
                 * 'none': None
-                * 'pressure', 'pres', 'p': pressure
-                * 'z', 'ght': geopotential height
+                * 'pressure', 'pres', 'p': pressure [Pa]
+                * 'pressure_hpa', 'pres_hpa', 'p_hpa': pressure [hPa]
+                * 'z', 'ght': geopotential height [m]
+                * 'z_km', 'ght_km': geopotential height [km]
                 * 'tc': temperature [degC]
                 * 'tk': temperature [K]
                 * 'theta', 'th': potential temperature [K]
                 * 'theta-e', 'thetae', 'eth': equivalent potential temperature
             
-        log_p (:obj:`bool`, optional): Use the log of the pressure for 
-            interpolation instead of pressure. Default is False.
+        log_p (:obj:`bool`, optional): Set to True to use the log of the 
+            vertical coordinate for interpolation. This is mainly intended 
+            for pressure vertical coordinate types, but note that the log 
+            will still be taken for any vertical coordinate type when 
+            this is set to True. Default is False.
             
         timeidx (:obj:`int`, optional):
             The time index to use when extracting auxiallary variables used in 
@@ -556,16 +657,22 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     valid_coords = ("pressure", "pres", "p", "ght_msl", 
                     "ght_agl", "theta", "th", "theta-e", "thetae", "eth")
     
-    valid_field_types = ("none", "pressure", "pres", "p", "z",
+    valid_field_types = ("none", "pressure", "pres", "p", 
+                         'pressure_hpa', 'pres_hpa', 'p_hpa', "z",
                          "tc", "tk", "theta", "th", "theta-e", "thetae", 
-                         "eth", "ght")
+                         "eth", "ght", 'z_km', 'ght_km')
     
     icase_lookup = {"none" : 0,
                     "p" : 1,
                     "pres" : 1,
                     "pressure" : 1,
+                    "p_hpa" : 1,
+                    "pres_hpa" : 1,
+                    "pressure_hpa" : 1,
                     "z" : 2,
                     "ght" : 2,
+                    "z_km" : 2,
+                    "ght_km" : 2,
                     "tc" : 3, 
                     "tk" : 4,
                     "theta" : 5,
@@ -573,6 +680,22 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                     "theta-e" : 6,
                     "thetae" : 6,
                     "eth" : 6}
+    
+    in_unitmap = {"p_hpa" : 1.0/ConversionFactors.PA_TO_HPA,
+                  "pres_hpa" : 1.0/ConversionFactors.PA_TO_HPA,
+                  "pressure_hpa" : 1.0/ConversionFactors.PA_TO_HPA,
+                  "z_km" : 1.0/ConversionFactors.M_TO_KM,
+                  "ght_km" : 1.0/ConversionFactors.M_TO_KM,
+        
+        }
+    
+    out_unitmap = {"p_hpa" : ConversionFactors.PA_TO_HPA,
+                   "pres_hpa" : ConversionFactors.PA_TO_HPA,
+                   "pressure_hpa" : ConversionFactors.PA_TO_HPA,
+                   "z_km" : ConversionFactors.M_TO_KM,
+                   "ght_km" : ConversionFactors.M_TO_KM,
+        
+        }
     
     # These constants match what's in the fortran code.  
     rgas = Constants.RD
@@ -583,18 +706,21 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
     if not isinstance(interp_levels, np.ndarray):
         interp_levels = np.asarray(interp_levels, np.float64)
         
-    # TODO: Check if field is staggered
+    if len(interp_levels) == 0:
+        raise ValueError("'interp_levels' contains no values")
+        
+    # Check if field is staggered
     if is_staggered(_wrfin, field):
-        raise RuntimeError("Please unstagger field in the vertical")
+        raise ValueError("Please unstagger field in the vertical")
     
     # Check for valid coord
     if vert_coord not in valid_coords:
-        raise RuntimeError("'%s' is not a valid vertical "
+        raise ValueError("'%s' is not a valid vertical "
                            "coordinate type" %  vert_coord)
     
     # Check for valid field type
     if field_type not in valid_field_types:
-        raise RuntimeError("'%s' is not a valid field type" % field_type)
+        raise ValueError("'%s' is not a valid field type" % field_type)
     
     log_p_int = 1 if log_p else 0
     
@@ -605,14 +731,12 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         extrap = 1
         icase = icase_lookup[field_type]
     
-    # Extract vriables
-    #timeidx = -1 # Should this be an argument?
-    ncvars = extract_vars(_wrfin, timeidx, ("PSFC", "QVAPOR", "F"), 
+    # Extract variables
+    ncvars = extract_vars(_wrfin, timeidx, ("PSFC", "QVAPOR"), 
                           method, squeeze, cache, meta=False, _key=_key)
     
     sfp = ncvars["PSFC"] * ConversionFactors.PA_TO_HPA
     qv = ncvars["QVAPOR"]
-    coriolis = ncvars["F"]
     
     terht = get_terrain(_wrfin, timeidx, units="m", 
                         method=method, squeeze=squeeze, cache=cache,
@@ -627,7 +751,7 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                      method=method, squeeze=squeeze, cache=cache,
                      meta=False, _key=_key)
     
-    smsfp = _smooth2d(sfp, 3)        
+    smsfp = _smooth2d(sfp, 3, 2.0)        
 
     vcor = 0
     
@@ -652,6 +776,10 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                   method=method, squeeze=squeeze, cache=cache, 
                   meta=False, _key=_key)
         
+        coriolis = extract_vars(_wrfin, timeidx, "F", 
+                                method, squeeze, cache, meta=False, 
+                                _key=_key)["F"]
+        
         vcor = 4
         idir = 1
         icorsw = 0
@@ -675,6 +803,10 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
         eth = get_eth(_wrfin, timeidx, method=method, squeeze=squeeze, 
             cache=cache, meta=False, _key=_key)
         
+        coriolis = extract_vars(_wrfin, timeidx, "F", 
+                                method, squeeze, cache, meta=False, 
+                                _key=_key)["F"]
+        
         p_hpa = p * ConversionFactors.PA_TO_HPA
         
         vcord_array = _monotonic(eth, p_hpa, coriolis, idir, delta, icorsw)
@@ -693,12 +825,29 @@ def vinterp(wrfin, field, vert_coord, interp_levels, extrapolate=False,
                          "Verify that the 'timeidx' parameter matches the "
                          "same value used when extracting the 'field' "
                          "variable.")
-            
-    res = _vintrp(field, p, tk, qv, ght, terht, sfp, smsfp,
+    
+    # Some field types are in different units than the Fortran routine 
+    # expects
+    
+    conv_factor = in_unitmap.get(field_type)
+    
+    if conv_factor is not None:
+        field_ = field * conv_factor
+    else:
+        field_ = field
+    
+    res = _vintrp(field_, p, tk, qv, ght, terht, sfp, smsfp,
                   vcord_array, interp_levels,
                   icase, extrap, vcor, log_p_int, missing)
     
-    return ma.masked_values(res, missing)
+    conv_factor = out_unitmap.get(field_type)
+    
+    if conv_factor is not None:
+        res_ = res * conv_factor
+    else:
+        res_ = res
+    
+    return ma.masked_values(res_, missing)
 
 
     

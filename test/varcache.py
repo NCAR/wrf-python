@@ -4,9 +4,9 @@ import time
 from netCDF4 import Dataset
 from wrf import getvar, ALL_TIMES, extract_vars
 
-wrf_filenames = ["/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-28_00:00:00",
-                 "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-28_12:00:00", 
-                 "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/wrfout_d02_2005-08-29_00:00:00"]
+wrf_filenames = ["/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/wrfout_d02_2005-08-28_00:00:00",
+                 "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/wrfout_d02_2005-08-28_12:00:00", 
+                 "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/wrfout_d02_2005-08-29_00:00:00"]
 
 wrfin = [Dataset(x) for x in wrf_filenames]
 

@@ -40,8 +40,7 @@ ext1 = numpy.distutils.core.Extension(
                "fortran/wrf_pw.f90",
                "fortran/wrf_vinterp.f90",
                "fortran/wrf_wind.f90",
-               "fortran/omp.f90",
-               "fortran/wrffortran.pyf"]
+               "fortran/omp.f90"]
     )
 
 with open("src/wrf/version.py") as f: 
@@ -86,12 +85,13 @@ numpy.distutils.core.setup(
     classifiers = ["Development Status :: 5 - Production/Stable",
                 "Intended Audience :: Science/Research",
                 "Intended Audience :: Developers",
-                "License :: OSI Approved",
+                "License :: OSI Approved :: Apache Software License",
                 "Programming Language :: Fortran",
                 "Programming Language :: Python :: 2.7",
                 "Programming Language :: Python :: 3.4",
                 "Programming Language :: Python :: 3.5",
                 "Programming Language :: Python :: 3.6",
+                "Programming Language :: Python :: 3.7",
                 "Topic :: Scientific/Engineering :: Atmospheric Science",
                 "Topic :: Software Development",
                 "Operating System :: POSIX",
@@ -100,7 +100,7 @@ numpy.distutils.core.setup(
                 "Operating System :: Microsoft :: Windows"],
     name = "wrf-python",
     platforms = ["any"],
-    license = "OSI Approved",
+    license = "Apache License 2.0",
     version =  __version__,
     packages = setuptools.find_packages("src"),
     ext_modules = ext_modules,

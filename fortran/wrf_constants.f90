@@ -1,8 +1,8 @@
 ! These are chosen to match the wrf module_model_constants.F where
 ! applicable
 MODULE wrf_constants
-    INTEGER :: ERRLEN=512
-    INTEGER :: ALGERR=64
+    INTEGER, PARAMETER :: ERRLEN=512
+    INTEGER, PARAMETER :: ALGERR=64
 
     REAL(KIND=8), PARAMETER :: WRF_EARTH_RADIUS = 6370000.D0
     REAL(KIND=8), PARAMETER :: T_BASE = 300.0D0
