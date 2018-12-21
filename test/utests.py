@@ -65,7 +65,7 @@ def make_test(varname, dir, pattern, referent, multi=False, pynio=False):
             pass
         
         try:
-            from PyNIO import Nio
+            import Nio
         except:
             pass
         
@@ -232,7 +232,7 @@ def make_interp_test(varname, dir, pattern, referent, multi=False,
             pass
         
         try:
-            from PyNIO import Nio
+            import Nio
         except:
             pass
         
@@ -797,7 +797,7 @@ def make_latlon_test(testid, dir, pattern, referent, single,
             pass
         
         try:
-            from PyNIO import Nio
+            import Nio
         except:
             pass
         
