@@ -1,35 +1,17 @@
 License
 ==========
 
-PLEASE READ THIS SOFTWARE LICENSE ("LICENSE") CAREFULLY BEFORE USING THE 
-SOFTWARE. BY USING THE SOFTWARE, YOU ARE AGREEING TO BE BOUND BY ALL OF THE 
-TERMS OF THIS LICENSE. IF YOU DO NOT AGREE TO THE TERMS OF THIS LICENSE, 
-DO NOT USE THE SOFTWARE.
+Copyright 2016 University Corporation for Atmospheric Research
 
-Copyright © 2016 the University Corporation for Atmospheric Research ("UCAR"). 
-All rights reserved. Developed by NCAR's Computational and Information Systems 
-Laboratory, UCAR, www2.cisl.ucar.edu.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-Redistribution and use of the Software in source and binary forms, with or 
-without modification, is permitted provided that the following conditions 
-are met:
+    http://www.apache.org/licenses/LICENSE-2.0
 
-- Neither the names of NCAR's Computational and Information Systems Laboratory, 
-  the University Corporation for Atmospheric Research, nor the names of its 
-  sponsors or contributors may be used to endorse or promote products derived 
-  from this Software without specific prior written permission.
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
-- Redistributions of source code must retain the above copyright notices, this 
-  list of conditions, and the disclaimer below.
-
-- Redistributions in binary form must reproduce the above copyright notice, this 
-  list of conditions, and the disclaimer below in the documentation and/or other 
-  materials provided with the distribution.
-
-THIS SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED, INCLUDING, BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
-CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, INDIRECT, 
-INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES OR OTHER LIABILITY, 
-WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR 
-IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS WITH THE SOFTWARE.
