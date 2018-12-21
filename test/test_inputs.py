@@ -12,7 +12,7 @@ from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  extract_global_attrs, viewitems, CoordPair, ll_points)
 from wrf.util import is_multi_file
 
-IN_DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi"
+IN_DIR = "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest"
 TEST_FILES = [os.path.join(IN_DIR, "wrfout_d02_2005-08-28_00:00:00"),
               os.path.join(IN_DIR, "wrfout_d02_2005-08-28_12:00:00"),
               os.path.join(IN_DIR, "wrfout_d02_2005-08-29_00:00:00")]
