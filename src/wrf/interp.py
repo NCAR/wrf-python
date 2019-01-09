@@ -76,11 +76,24 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             
             p = getvar(wrfin, "pressure")
             ht = getvar(wrfin, "z", units="dm")
-            pblh = getvar(wrfin, "PBLH")
             
             ht_500 = interplevel(ht, p, 500.0)
             
+        
+        Interpolate Relative Humidity to Boundary Layer Heights
+        
+        .. code-block:: python
+        
+            from netCDF4 import Dataset
+            from wrf import getvar, interplevel
+        
+            wrfin = Dataset("wrfout_d02_2010-06-13_21:00:00")
             
+            rh = getvar(wrfin, "rh")
+            z = getvar(wrfin, "z")
+            pblh = getvar(wrfin, "PBLH")
+            
+            rh_pblh = interplevel(rh, p, pblh)
         
     
     """
