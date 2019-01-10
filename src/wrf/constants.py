@@ -10,10 +10,12 @@ from ._wrffortran import wrf_constants, omp_constants
 #: Indicates that all times should be used in a diagnostic routine.
 ALL_TIMES = None
 
+
 class Constants(object):
     pass
-    
-for key,val in viewitems(wrf_constants.__dict__):
+
+
+for key, val in viewitems(wrf_constants.__dict__):
     setattr(Constants, key.upper(), np.asscalar(val))
 
 OMP_SCHED_STATIC = omp_constants.fomp_sched_static
@@ -35,7 +37,7 @@ class ConversionFactors(object):
     M_TO_DM = 1.0/10.0
     M_TO_FT = 3.28084
     M_TO_MILES = .000621371
-    
+
 
 class ProjectionTypes(object):
     ZERO = 0
@@ -44,21 +46,22 @@ class ProjectionTypes(object):
     MERCATOR = 3
     LAT_LON = 6
 
-# Create the default fill mapping based on type.  
+
+# Create the default fill mapping based on type.
 _DEFAULT_FILL_MAP = {None: Constants.DEFAULT_FILL,
-                     np.dtype(np.bool_) : False,
-                     np.dtype(np.intc) : Constants.DEFAULT_FILL_INT32, # Usually true
-                     np.dtype(np.int8) : Constants.DEFAULT_FILL_INT8,
-                     np.dtype(np.uint8) : 255,
-                     np.dtype(np.int16) : Constants.DEFAULT_FILL_INT16,
-                     np.dtype(np.uint16) : 65535,
-                     np.dtype(np.int32) : Constants.DEFAULT_FILL_INT32,
-                     np.dtype(np.uint32) : 4294967295,
-                     np.dtype(np.int64) : Constants.DEFAULT_FILL_INT64,
-                     np.dtype(np.uint64) : 18446744073709551614,
-                     np.dtype(np.float_) : Constants.DEFAULT_FILL_DOUBLE,
-                     np.dtype(np.float32) : Constants.DEFAULT_FILL_FLOAT,
-                     np.dtype(np.float64) : Constants.DEFAULT_FILL_DOUBLE
+                     np.dtype(np.bool_): False,
+                     np.dtype(np.intc): Constants.DEFAULT_FILL_INT32,
+                     np.dtype(np.int8): Constants.DEFAULT_FILL_INT8,
+                     np.dtype(np.uint8): 255,
+                     np.dtype(np.int16): Constants.DEFAULT_FILL_INT16,
+                     np.dtype(np.uint16): 65535,
+                     np.dtype(np.int32): Constants.DEFAULT_FILL_INT32,
+                     np.dtype(np.uint32): 4294967295,
+                     np.dtype(np.int64): Constants.DEFAULT_FILL_INT64,
+                     np.dtype(np.uint64): 18446744073709551614,
+                     np.dtype(np.float_): Constants.DEFAULT_FILL_DOUBLE,
+                     np.dtype(np.float32): Constants.DEFAULT_FILL_FLOAT,
+                     np.dtype(np.float64): Constants.DEFAULT_FILL_DOUBLE
                      }
 
 if version_info >= (3, ):
@@ -76,9 +79,3 @@ else:
 def default_fill(dtype=None):
     dt = np.dtype(dtype) if dtype is not None else None
     return _DEFAULT_FILL_MAP.get(dt, Constants.DEFAULT_FILL)
-    
-    
-    
-    
-    
-    
