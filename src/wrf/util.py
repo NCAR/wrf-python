@@ -756,9 +756,15 @@ def is_moving_domain(wrfin, varname=None, latvar=either("XLAT", "XLAT_M"),
             # arguments
             lon_coord = lonvar
             lat_coord = latvar
-        else:   
-            lon_coord = coord_names[0]
-            lat_coord = coord_names[1]
+        else:
+            for name in coord_names:
+                if name in _LAT_COORDS:
+                    lat_coord = name
+                    continue
+                    
+                if name in _LON_COORDS:
+                    lon_coord = name
+                    continue
     else:
         lon_coord = lonvar
         lat_coord = latvar
@@ -1181,15 +1187,22 @@ def _get_coord_names(wrfin, varname):
             coord_names = coord_attr.split()
         else:
             coord_names = coord_attr.decode().split()
-        lon_coord = coord_names[0]
-        lat_coord = coord_names[1]
         
-        try:
-            time_coord = coord_names[2]
-        except IndexError:
-            time_coord = None
-        else:
-            # Make sure they time variable wasn't removed
+        for name in coord_names:
+            if name in _LAT_COORDS:
+                lat_coord = name
+                continue
+                    
+            if name in _LON_COORDS:
+                lon_coord = name
+                continue
+                
+            if name in _TIME_COORD_VARS:
+                time_coord = name
+                continue
+        
+        if time_coord is not None:
+            # Make sure the time variable wasn't removed
             try:
                 _ = wrfnc.variables[time_coord]
             except KeyError:
@@ -3897,30 +3910,3 @@ def is_latlon_pair(pair):
         return (pair.lat is not None and pair.lon is not None)
     else:
         return False
-    
-    
-    
-    
-
-    
-    
-    
-        
-
-
-        
-    
-    
-    
-    
-    
-    
-    
-
-
-
-
-        
-    
-    
-    
