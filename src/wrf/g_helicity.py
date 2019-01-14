@@ -102,13 +102,14 @@ def get_srh(wrfin, timeidx=0, method="cat", squeeze=True,
     z = geopt_unstag / Constants.G
 
     # Re-ordering from high to low
-    u1 = np.ascontiguousarray(u[...,::-1,:,:])
-    v1 = np.ascontiguousarray(v[...,::-1,:,:])
-    z1 = np.ascontiguousarray(z[...,::-1,:,:])
+    u1 = np.ascontiguousarray(u[..., ::-1, :, :])
+    v1 = np.ascontiguousarray(v[..., ::-1, :, :])
+    z1 = np.ascontiguousarray(z[..., ::-1, :, :])
 
     srh = _srhel(u1, v1, z1, ter, lats, top)
 
     return srh
+
 
 @copy_and_set_metadata(copy_varname="MAPFAC_M", name="updraft_helicity",
                        description="updraft helicity",
@@ -187,7 +188,7 @@ def get_uh(wrfin, timeidx=0, method="cat", squeeze=True,
     phb = ncvars["PHB"]
     mapfct = ncvars["MAPFAC_M"]
 
-    attrs  = extract_global_attrs(wrfin, attrs=("DX", "DY"))
+    attrs = extract_global_attrs(wrfin, attrs=("DX", "DY"))
     dx = attrs["DX"]
     dy = attrs["DY"]
 
@@ -207,4 +208,3 @@ def get_uh(wrfin, timeidx=0, method="cat", squeeze=True,
     uh = _udhel(zp, mapfct, u, v, wstag, dx, dy, bottom, top)
 
     return uh
-    
