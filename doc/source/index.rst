@@ -53,7 +53,6 @@ Documentation
    ./api
    ./faq
    ./support
-   ./contrib
    ./citation
    ./license
    ./tutorial
