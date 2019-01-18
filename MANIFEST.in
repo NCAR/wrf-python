@@ -4,6 +4,7 @@ include requirements.txt
 
 include fortran/*.f90
 include fortran/*.pyf
+include fortran/ompgen.F90.template
 include fortran/build_help/omp_sizes.f90
 include fortran/build_help/sub_sizes.py
 include build_scripts/*.sh
