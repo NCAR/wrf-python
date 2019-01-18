@@ -4,6 +4,12 @@ What's New
 Releases
 -------------
 
+v1.3.1 (January 2019)
+
+- Release 1.3.1
+- Added the ompgen template file to the manifest.
+
+
 v1.3.0 (December 2018)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
