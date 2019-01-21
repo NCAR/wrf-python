@@ -3,6 +3,14 @@ import sys
 import setuptools
 import socket
 
+# Bootstrap a numpy installation before trying to import it.
+import imp
+try:
+    imp.find_module('numpy')
+except ImportError:
+    import subprocess
+    subprocess.call([sys.executable, '-m', 'pip', 'install', 'numpy'])
+
 if not socket.gethostname().startswith("cheyenne"):
     import numpy.distutils.core
 else:
