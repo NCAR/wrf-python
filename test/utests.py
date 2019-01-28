@@ -98,10 +98,13 @@ def make_test(varname, dir, pattern, referent, multi=False, pynio=False):
             pass
         
         # These have a left index that defines the product type
-        multiproduct = varname in ("uvmet", "uvmet10", "cape_2d", "cape_3d", 
-                                   "cfrac")
-        multi2d = ("uvmet10", "cape_2d", "cfrac")
-        multi3d = ("uvmet", "cape_3d")
+        multiproduct = varname in ("uvmet", "uvmet10", "wspd_wdir", 
+                                   "wspd_wdir10", "uvmet_wspd_wdir",
+                                   "uvmet10_wspd_wdir", 
+                                   "cape_2d", "cape_3d", "cfrac")
+        multi2d = ("uvmet10", "wspd_wdir10", "uvmet10_wspd_wdir", 
+                   "cape_2d", "cfrac")
+        multi3d = ("uvmet", "wspd_wdir", "uvmet_wspd_wdir", "cape_3d")
         
         # These varnames don't have NCL functions to test against
         ignore_referent = ("zstag", "geopt_stag")
@@ -200,8 +203,9 @@ def _get_refvals(referent, varname, multi):
     except:
         pass
     
-    multi2d = ("uvmet10", "cape_2d", "cfrac")
-    multi3d = ("uvmet", "cape_3d")
+    multi2d = ("uvmet10", "wspd_wdir10", "uvmet10_wspd_wdir", 
+               "cape_2d", "cfrac")
+    multi3d = ("uvmet", "wspd_wdir", "uvmet_wspd_wdir", "cape_3d")
     interpline = ("t2_line","t2_line2", "t2_line3")
     
     if not multi:
@@ -958,7 +962,8 @@ if __name__ == "__main__":
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", 
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", 
                 "wa", "uvmet10", "uvmet", "z", "cfrac", "zstag", "geopt_stag",
-                "height_agl"]
+                "height_agl", "wspd_wdir", "wspd_wdir10", "uvmet_wspd_wdir",
+                "uvmet10_wspd_wdir"]
     interp_methods = ["interplevel", "vertcross", "interpline", "vinterp"]
     latlon_tests = ["xy", "ll"]
     
