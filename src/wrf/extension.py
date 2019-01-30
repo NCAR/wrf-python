@@ -949,12 +949,15 @@ def _wspd(u, v, outview=None):
     Located in wrf_wind.f90.
 
     """
+    shape = u.shape
     if outview is None:
         outview = np.empty_like(u)
 
-    result = dcomputewspd(outview,
-                          u,
-                          v)
+    result = dcomputewspd(outview.ravel(order="A"),
+                          u.ravel(order="A"),
+                          v.ravel(order="A"))
+
+    result = np.reshape(result, shape, order="F")
 
     return result
 
@@ -969,12 +972,15 @@ def _wdir(u, v, outview=None):
     Located in wrf_wind.f90.
 
     """
+    shape = u.shape
     if outview is None:
         outview = np.empty_like(u)
 
-    result = dcomputewdir(outview,
-                          u,
-                          v)
+    result = dcomputewdir(outview.ravel(order="A"),
+                          u.ravel(order="A"),
+                          v.ravel(order="A"))
+
+    result = np.reshape(result, shape, order="F")
 
     return result
 
