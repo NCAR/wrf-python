@@ -4,10 +4,12 @@ from matplotlib.cm import get_cmap
 import cartopy.crs as crs
 from cartopy.feature import NaturalEarthFeature
 
-from wrf import to_np, getvar, smooth2d, get_cartopy, cartopy_xlim, cartopy_ylim, latlon_coords
+from wrf import (to_np, getvar, smooth2d, get_cartopy, cartopy_xlim,
+                 cartopy_ylim, latlon_coords)
 
 # Open the NetCDF file
-ncfile = Dataset("/Users/ladwig/Documents/wrf_files/problem_files/cfrac_bug/wrfout_d02_1987-10-01_00:00:00")
+ncfile = Dataset("/Users/ladwig/Documents/wrf_files/"
+                 "problem_files/cfrac_bug/wrfout_d02_1987-10-01_00:00:00")
 
 # Get the sea level pressure
 ctt = getvar(ncfile, "ctt")
@@ -19,20 +21,23 @@ lats, lons = latlon_coords(ctt)
 cart_proj = get_cartopy(ctt)
 
 # Create a figure
-fig = plt.figure(figsize=(12,9))
+fig = plt.figure(figsize=(12, 9))
 # Set the GeoAxes to the projection used by WRF
 ax = plt.axes(projection=cart_proj)
 
 # Download and add the states and coastlines
-states = NaturalEarthFeature(category='cultural', scale='50m', facecolor='none',
+states = NaturalEarthFeature(category='cultural', scale='50m',
+                             facecolor='none',
                              name='admin_1_states_provinces_shp')
 ax.add_feature(states, linewidth=.5)
 ax.coastlines('50m', linewidth=0.8)
 
-# Make the contour outlines and filled contours for the smoothed sea level pressure.
+# Make the contour outlines and filled contours for the smoothed sea level
+# pressure.
 plt.contour(to_np(lons), to_np(lats), to_np(ctt), 10, colors="black",
             transform=crs.PlateCarree())
-plt.contourf(to_np(lons), to_np(lats), to_np(ctt), 10, transform=crs.PlateCarree(),
+plt.contourf(to_np(lons), to_np(lats), to_np(ctt), 10,
+             transform=crs.PlateCarree(),
              cmap=get_cmap("jet"))
 
 # Add a color bar
