@@ -35,7 +35,7 @@ def setUpModule():
     os.environ["OMP_NUM_THREADS"] = "4"
 
     this_path = os.path.realpath(__file__)
-    ncl_script = os.path.join(os.path.dirname(this_path),
+    ncl_script = os.path.join(os.path.dirname(this_path), "ncl",
                               "ncl_get_var.ncl")
 
     for dir, outfile in zip(DIRS, REF_NC_FILES):

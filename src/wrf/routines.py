@@ -8,7 +8,8 @@ from .g_cape import (get_2dcape, get_3dcape, get_cape2d_only,
 from .g_ctt import get_ctt
 from .g_dbz import get_dbz, get_max_dbz
 from .g_dewpoint import get_dp, get_dp_2m
-from .g_geoht import get_geopt, get_height, get_stag_geopt, get_stag_height
+from .g_geoht import (get_geopt, get_height, get_stag_geopt, get_stag_height,
+                      get_height_agl)
 from .g_helicity import get_srh, get_uh
 from .g_latlon import get_lat, get_lon
 from .g_omega import get_omega
@@ -78,6 +79,7 @@ _FUNC_MAP = {"cape2d": get_2dcape,
              "cloudfrac": get_cloudfrac,
              "geopt_stag": get_stag_geopt,
              "zstag": get_stag_height,
+             "height_agl": get_height_agl,
              # Diagnostics below are extracted from multi-product diagnostics
              "cape2d_only": get_cape2d_only,
              "cin2d_only": get_cin2d_only,
@@ -143,6 +145,7 @@ _VALID_KARGS = {"cape2d": ["missing"],
                               "mid_thresh", "high_thresh"],
                 "geopt_stag": [],
                 "zstag": ["msl", "units"],
+                "height_agl": ["units"],
                 "cape2d_only": ["missing"],
                 "cin2d_only": ["missing"],
                 "lcl": ["missing"],
