@@ -391,15 +391,15 @@ def get_stag_height(wrfin, timeidx=0, method="cat", squeeze=True,
 
     return _get_geoht(wrfin, timeidx, method, squeeze, cache, meta, _key,
                       True, msl, stag=True)
-  
-  
+
+
 @set_height_metadata(geopt=False, stag=False)
 @convert_units("height", "m")
 def get_height_agl(wrfin, timeidx=0, method="cat", squeeze=True,
-               cache=None, meta=True, _key=None, units="m"):
+                   cache=None, meta=True, _key=None, units="m"):
     """Return the geopotential height (AGL).
 
-    The geopotential height is returned as Above Ground Level (AGL) by 
+    The geopotential height is returned as Above Ground Level (AGL) by
     subtracting the terrain height.
 
     This functions extracts the necessary variables from the NetCDF file
@@ -445,7 +445,7 @@ def get_height_agl(wrfin, timeidx=0, method="cat", squeeze=True,
             purposes only.  Default is None.
 
         units (:obj:`str`): The desired units.  Refer to the :meth:`getvar`
-            product table for a list of available units for 'height_agl'.  
+            product table for a list of available units for 'height_agl'.
             Default is 'm'.
 
     Returns:
