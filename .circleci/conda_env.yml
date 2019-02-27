@@ -2,7 +2,8 @@ name: wrf-python
 channels:
   - conda-forge
 dependencies:
-  - gcc
+  - gcc_linux-64
+  - gfortran_linux-64
   - setuptools
   - python
   - numpy

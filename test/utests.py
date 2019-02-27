@@ -13,8 +13,8 @@ from wrf import (getvar, interplevel, interpline, vertcross, vinterp,
                  extract_global_attrs, viewitems, CoordPair, ll_points)
 from wrf.util import is_multi_file
 
-NCL_EXE = "/Users/ladwig/miniconda2/envs/ncl_build/bin/ncl"
-NCARG_ROOT = "/Users/ladwig/miniconda2/envs/ncl_build"
+NCL_EXE = "/Users/ladwig/miniconda3/envs/ncl_build/bin/ncl"
+NCARG_ROOT = "/Users/ladwig/miniconda3/envs/ncl_build"
 DIRS = ["/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest",
         "/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/static_nest"]
 PATTERN = "wrfout_d02_*"
