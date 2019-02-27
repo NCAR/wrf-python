@@ -46,6 +46,9 @@ jobs:
           name: build wrf-python
           command: |
             source ~/miniconda3/bin/activate wrf-python
+            unset FFLAGS
+            unset LDFLAGS
+            unset CFLAGS
             cd fortran/build_help
             $FC -o sizes -fopenmp omp_sizes.f90
             LD_LIBRARY_PATH=~/miniconda3/envs/wrf-python/lib python sub_sizes.py
