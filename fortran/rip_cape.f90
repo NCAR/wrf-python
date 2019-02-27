@@ -316,7 +316,9 @@ SUBROUTINE DCAPECALC3D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8) :: facden, qvplift, tmklift, tvenv, tvlift, ghtlift
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz
-    REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
+    ! Set a safety factor of 2*mkzh + 1 instead of previously chosen
+    ! 150 levels
+    REAL(KIND=8), DIMENSION(2*mkzh + 1) :: buoy, zrel, benaccum
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
@@ -646,7 +648,9 @@ SUBROUTINE DCAPECALC2D(prs,tmk,qvp,ght,ter,sfp,cape,cin,&
     REAL(KIND=8) :: facden, qvplift, tmklift, tvenv, tvlift, ghtlift
     REAL(KIND=8) :: eslift, tmkenv, qvpenv, tonpsadiabat
     REAL(KIND=8) :: benamin, dz, pup, pdn
-    REAL(KIND=8), DIMENSION(150) :: buoy, zrel, benaccum
+    ! Set a safety factor of 2*mkzh + 1 instead of previously chosen
+    ! 150 levels
+    REAL(KIND=8), DIMENSION(2*mkzh + 1) :: buoy, zrel, benaccum
     REAL(KIND=8), DIMENSION(150) :: psadithte, psadiprs
     REAL(KIND=8), DIMENSION(150,150) :: psaditmk
     LOGICAL :: elfound
