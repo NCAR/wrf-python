@@ -1,8 +1,9 @@
 #!/bin/bash
 
+unset LDFLAGS
+
 cd ../fortran
-gfortran -E ompgen.F90 -cpp -o omp.f90
-#f2py *.f90 -m _wrffortran -h wrffortran.pyf --overwrite-signature
+$FC -E ompgen.F90 -cpp -o omp.f90
 cd ..
 
 python setup.py clean --all

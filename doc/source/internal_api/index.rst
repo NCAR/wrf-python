@@ -23,6 +23,9 @@ The routines below are called internally by :meth:`wrf.getvar`.
    wrf.g_dewpoint.get_dp_2m
    wrf.g_geoht.get_geopt
    wrf.g_geoht.get_height
+   wrf.g_geoht.get_height_agl
+   wrf.g_geoht.get_stag_geopt
+   wrf.g_geoht.get_stag_height
    wrf.g_helicity.get_srh
    wrf.g_helicity.get_uh
    wrf.g_omega.get_omega

@@ -13,6 +13,14 @@
               university corporation for atmospheric research,
               pynio, pyngl, interpolation
 
+
+.. .. image:: _static/images/nsf.png    
+..    :scale: 100%
+..   :align: right
+
+.. |
+.. |
+
 wrf-python
 ===========
 
@@ -57,11 +65,11 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+
 --------------------
 
 *The National Center for Atmospheric Research is sponsored by the National 
 Science Foundation. Any opinions, findings and conclusions or recommendations 
 expressed in this material do not necessarily reflect the views of the 
 National Science Foundation.*
-
 

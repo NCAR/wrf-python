@@ -13,22 +13,22 @@ for att_name in in_nc.ncattrs():
 # Copy Dimensions, but modify the vertical dimensions
 for dimname, dim in in_nc.dimensions.iteritems():
     out_nc.createDimension(dimname, len(dim))
-        
+
 # Copy Variables and their Attributes, using the reduced vertical dimension
 for varname, var in in_nc.variables.iteritems():
     if varname in ("T2", "XLAT", "XLONG", "XTIME"):
         datatype = var.datatype
         dimensions = var.dimensions
         shape = var.shape
-        
+
         new_shape = shape
-        
+
         new_var = out_nc.createVariable(varname, datatype, dimensions)
-        
+
         new_var[:] = var[:]
-        
+
         for att_name in var.ncattrs():
             setattr(new_var, att_name, getattr(var, att_name))
-            
+
 in_nc.close()
 out_nc.close()

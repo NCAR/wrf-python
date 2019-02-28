@@ -32,7 +32,9 @@
                 "geopt", "helicity", "lat", "lon", "omg", "p", "pressure", \
                 "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc", \
                 "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va", \
-                "wa", "uvmet10", "uvmet", "z", "cfrac", "height_agl" /]
+                "wa", "uvmet10", "uvmet", "z", "cfrac", "height_agl", \
+                "wspd_wdir", "wspd_wdir10", "uvmet_wspd_wdir", \
+                "uvmet10_wspd_wdir" /]
     
     unique_dimname_list = NewList("fifo")
     unique_dimsize_list = NewList("fifo")
@@ -87,7 +89,7 @@
     xopt@timeidx = time
     xopt@linecoords = True
     
-    ht_vertcross1 = wrf_user_vertcross(z, p, pivot, xopt)
+    ht_vertcross1 = wrf_user_vert_cross(z, p, pivot, xopt)
     
     fout->ht_vertcross1 = ht_vertcross1
     
@@ -100,7 +102,7 @@
     xopt@timeidx = time
     xopt@linecoords = True
     
-    ht_vertcross2 = wrf_user_vertcross(z, p, pivot, xopt)
+    ht_vertcross2 = wrf_user_vert_cross(z, p, pivot, xopt)
     ht_vertcross2!1 = "vertical2"
     ht_vertcross2!2 = "cross_line_idx2"
     
@@ -131,7 +133,7 @@
     xopt@linecoords = True
     xopt@autolevels = 1000
         
-    ht_vertcross3 = wrf_user_vertcross(z, p, start_end, xopt)
+    ht_vertcross3 = wrf_user_vert_cross(z, p, start_end, xopt)
     
     ht_vertcross3!0 = "Time"
     ht_vertcross3!1 = "vertical3"
@@ -150,7 +152,7 @@
       p_var := p(i,:,:,:)
       z_var := z(i,:,:,:)
 
-      ht_vertcross := wrf_user_vertcross(z_var, p_var, start_end, xopt)
+      ht_vertcross := wrf_user_vert_cross(z_var, p_var, start_end, xopt)
       
       dim0name = sprinti("vertical_t%i",i)
       dim1name = sprinti("cross_line_idx_t%i",i)
@@ -190,8 +192,8 @@
     plev := 500.   ; 500 MB
     hlev := 5000   ; 5000 m
     
-    z2_500 = wrf_user_interplevel(z,p,plev,False)
-    p2_5000 = wrf_user_interplevel(p,z,hlev,False)
+    z2_500 = wrf_user_interp_level(z,p,plev,False)
+    p2_5000 = wrf_user_interp_level(p,z,hlev,False)
     
     fout->z2_500 = z2_500
     fout->p2_5000 = p2_5000
@@ -199,8 +201,8 @@
     
     plev := (/1000., 850., 500., 250./) 
     hlev := (/500., 2500., 5000., 10000. /)
-    z2_multi = wrf_user_interplevel(z,p,plev,False)
-    p2_multi = wrf_user_interplevel(p,z,hlev,False)
+    z2_multi = wrf_user_interp_level(z,p,plev,False)
+    p2_multi = wrf_user_interp_level(p,z,hlev,False)
     
     fout->z2_multi = z2_multi
     fout->p2_multi = p2_multi
@@ -208,7 +210,7 @@
     pblh = wrf_user_getvar(input_file, "PBLH", time)
     opts := False
     opts@inc2dlevs = True
-    p_lev2d = wrf_user_interplevel(p, z, pblh, opts)
+    p_lev2d = wrf_user_interp_level(p, z, pblh, opts)
     
     fout->p_lev2d = p_lev2d
     
@@ -234,7 +236,7 @@
     xopt@timeidx = 0
     xopt@linecoords = True
     
-    t2_line2 = wrf_user_interpline(t2, pivot, xopt)
+    t2_line2 = wrf_user_interp_line(t2, pivot, xopt)
     
     fout->t2_line2 = t2_line2
     
@@ -257,7 +259,7 @@
     xopt@timeidx = 0
     xopt@linecoords = True
     
-    t2_line3 = wrf_user_interpline(t2, start_end, xopt)
+    t2_line3 = wrf_user_interp_line(t2, start_end, xopt)
     t2_line3!1 = "line_idx_t2_line3"
     
     fout->t2_line3 = t2_line3
@@ -270,7 +272,7 @@
       name = sprinti("t2_line_t%i", i)
       dim0name = sprinti("lineidx_t%i",i)
       var := t2(i,:,:)
-      t2_line := wrf_user_interpline(var, start_end, xopt)
+      t2_line := wrf_user_interp_line(var, start_end, xopt)
       t2_line!0 = dim0name
       fout->$name$ = t2_line
     end do
@@ -286,7 +288,7 @@
     xopt@timeidx = 0
     xopt@linecoords = True
     
-    t2_line4 = wrf_user_interpline(t2, start_end, xopt)
+    t2_line4 = wrf_user_interp_line(t2, start_end, xopt)
     t2_line4!0 = "t2_line4_idx"
     
     fout->t2_line4 = t2_line4
