@@ -1,8 +1,6 @@
 #!/bin/bash
 
 unset LDFLAGS
-unset FFLAGS
-unset CFLAGS
 
 cd ../fortran/build_help
 $FC -o sizes -fopenmp omp_sizes.f90

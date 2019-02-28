@@ -1,8 +1,6 @@
 #!/bin/bash
 
 unset LDFLAGS
-unset FFLAGS
-unset CFLAGS
 
 cd ../fortran
 $FC -E ompgen.F90 -cpp -o omp.f90

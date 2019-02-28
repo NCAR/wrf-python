@@ -4,6 +4,18 @@ What's New
 Releases
 -------------
 
+v1.3.2 (February 2019)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Release 1.3.2
+- Coordinate name index positions are no longer assumed and are searched 
+  instead. Some users use xarray to rewrite WRF output files, and xarray 
+  might reorder the coordinate name positions.
+- Fixed a segfault issue with CAPE when more than 150 vertical levels are 
+  used (e.g. LES runs).
+- setup.py will now bootstrap the numpy installation (thanks bbonenfant!).
+
+
 v1.3.1 (January 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
