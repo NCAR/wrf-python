@@ -12,11 +12,21 @@ from netCDF4 import Dataset as nc
 
 from wrf import *
 
-NCL_EXE = "/Users/ladwig/nclbuild/6.3.0/bin/ncl"
-TEST_FILE = "/Users/ladwig/Documents/wrf_files/wrfout_d01_2010-06-13_21:00:00"
+TEST_FILE = ("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/"
+             "wrfout_d02_2005-08-28_00:00:00")
+             
 OUT_NC_FILE = "/tmp/wrftest.nc"
 NCFILE = nc(TEST_FILE)
-NCGROUP = [NCFILE, NCFILE, NCFILE]
+GROUP_FILES = [
+    ("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/"
+     "wrfout_d02_2005-08-28_00:00:00"),
+    ("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/"
+     "wrfout_d02_2005-08-28_12:00:00"),
+    ("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/"
+     "wrfout_d02_2005-08-29_00:00:00")]
+
+NCGROUP = [nc(file) for file in GROUP_FILES]
+
 
 # Python 3
 if sys.version_info > (3,):
@@ -294,7 +304,7 @@ def get_args(varname, wrfnc, timeidx, method, squeeze):
                               cache=None, meta=True)
         v = destagger(v_vars[varname], -2, meta=True)
 
-        zstag = ph + phb
+        zstag = (ph + phb) / Constants.G
 
         return (zstag, mapfct, u, v, wstag, dx, dy)
 
@@ -666,12 +676,10 @@ if __name__ == "__main__":
     omp_set_num_threads(omp_get_num_procs()//2)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
-
-    varnames = ["avo", "eth", "cape_2d", "cape_3d", "ctt", "dbz", "mdbz",
-                "geopt", "helicity", "lat", "lon", "omg", "p", "pressure",
-                "pvo", "pw", "rh2", "rh", "slp", "ter", "td2", "td", "tc",
-                "theta", "tk", "tv", "twb", "updraft_helicity", "ua", "va",
-                "wa", "uvmet10", "uvmet", "z", "cloudfrac"]
+    
+    varnames=["avo", "pvo", "eth", "dbz", "helicity", "updraft_helicity",
+              "omg", "pw", "rh", "slp", "td", "tk", "tv", "twb", "uvmet",
+              "cloudfrac", "ctt"]
 
     omp_set_num_threads(omp_get_num_procs()-1)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
