@@ -4,6 +4,20 @@
 #
 version: 2
 jobs:
+  pep8:
+    docker:
+      - image: circleci/python:3.6.1
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+      - run:
+        name: run pycodestyle
+        command: |
+          - pip install pycodestyle
+          - pycodestyle src test
+
   build:
     docker:
       # specify the version you desire here
