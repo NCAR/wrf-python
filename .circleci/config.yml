@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  pep8:
+  lint:
     docker:
       - image: circleci/python:3.6.1
 
@@ -88,3 +88,9 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
+workflows:
+  version: 2
+  build_and_lint:
+    jobs:
+      - build
+      - lint
