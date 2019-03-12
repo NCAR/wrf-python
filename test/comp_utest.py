@@ -14,7 +14,7 @@ from wrf import *
 
 TEST_FILE = ("/Users/ladwig/Documents/wrf_files/wrf_vortex_multi/moving_nest/"
              "wrfout_d02_2005-08-28_00:00:00")
-             
+
 OUT_NC_FILE = "/tmp/wrftest.nc"
 NCFILE = nc(TEST_FILE)
 GROUP_FILES = [
@@ -676,10 +676,10 @@ if __name__ == "__main__":
     omp_set_num_threads(omp_get_num_procs()//2)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
     omp_set_dynamic(False)
-    
-    varnames=["avo", "pvo", "eth", "dbz", "helicity", "updraft_helicity",
-              "omg", "pw", "rh", "slp", "td", "tk", "tv", "twb", "uvmet",
-              "cloudfrac", "ctt"]
+
+    varnames = ["avo", "pvo", "eth", "dbz", "helicity", "updraft_helicity",
+                "omg", "pw", "rh", "slp", "td", "tk", "tv", "twb", "uvmet",
+                "cloudfrac", "ctt"]
 
     omp_set_num_threads(omp_get_num_procs()-1)
     omp_set_schedule(OMP_SCHED_STATIC, 0)
