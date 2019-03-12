@@ -15,8 +15,8 @@ jobs:
       - run:
           name: run pycodestyle
           command: |
-            - pip install pycodestyle
-            - pycodestyle src test
+            pip install pycodestyle
+            pycodestyle src test
 
   build:
     docker:
