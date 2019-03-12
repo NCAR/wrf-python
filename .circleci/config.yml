@@ -13,9 +13,12 @@ jobs:
     steps:
       - checkout
       - run:
-          name: run pycodestyle
+          name: install pycodestyle
           command: |
             sudo pip install pycodestyle
+      - run:
+          name: run pycodestyle
+          command: |
             pycodestyle src test
 
   build:
