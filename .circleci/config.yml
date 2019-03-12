@@ -13,10 +13,10 @@ jobs:
     steps:
       - checkout
       - run:
-        name: run pycodestyle
-        command: |
-          - pip install pycodestyle
-          - pycodestyle src test
+          name: run pycodestyle
+          command: |
+            - pip install pycodestyle
+            - pycodestyle src test
 
   build:
     docker:
