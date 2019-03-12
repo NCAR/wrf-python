@@ -15,7 +15,7 @@ jobs:
       - run:
           name: run pycodestyle
           command: |
-            pip install pycodestyle
+            sudo pip install pycodestyle
             pycodestyle src test
 
   build:
