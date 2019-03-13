@@ -8,22 +8,22 @@ Contributor Guide
    This contributor guide is written for wrf-python v1.3.x. In the 
    not-too-distant future, wrf-python will undergo a significant refactoring 
    to remove the wrapt decorators (which don't serialize for dask), but the 
-   concepts will remain the same as described below.
+   concepts will remain similar to what is described in :ref:`internals`.
 
-  
-Ways to Contribute
+
+Introduction
 -----------------------------
 
-Users are encouraged to contribute various ways. This includes:
+Thank you for your interest in contributing to the WRF-Python project. 
+WRF-Python is made up of a very small amount of developers, tasked with 
+supporting more than one project, so we rely on outside contributions 
+to help keep the project moving forward.
 
-- Submitting a bug report
-- Submitting bug fixes
-- Submitting new Fortran computational routines
-- Submitting new Python computational routines
-- Submitting fully wrapped computational routines
+The guidelines below help to ensure that the developers and outside 
+collaborators remain on the same page regarding contributions. 
 
 
-Getting the source code
+Source Code Location
 ------------------------------
 
 The source code is available on GitHub:
@@ -43,103 +43,175 @@ is new to you:
 
 https://leanpub.com/git-flow/read
 
-When you first clone the repository, by default you will be on the 'develop' 
-branch, which is what you should use for your development. 
+For external contributors, this isn't important, other than making you aware 
+that when you first clone the repository, you will be on the 
+**develop** branch, which is what you should use for your development. 
+
+Since you will be submitting pull requests for your contributions, you don't 
+really need to know much about GitFlow, other than making sure that you 
+are not developing off of the master branch.
+
+  
+Ways to Contribute
+-----------------------------
+
+Users are encouraged to contribute various ways. This includes:
+
+- Submitting a bug report
+- Submitting bug fixes
+- Submitting new Fortran computational routines
+- Submitting new Python computational routines
+- Submitting fully wrapped computational routines
+- Fixing documentation errors
+- Creating new examples in the documentation (e.g. plotting examples)
+
+
+Ground Rules
+------------------------------
+
+Please follow the code of conduct.
+
+- Each pull request should be for a logical collection of changes. You can 
+  submit multiple bug fixes in a single pull request if the bugs are related. 
+  Otherwise, please submit seperate pull requests.
+- Do not commit changes to files that are unrelated to your bug fix 
+  (e.g. .gitignore).
+- The pull request and code review process is not immediate, so please be 
+  patient. 
+  
+
+Submitting Bug Reports
+-----------------------------
+
+Submitting bug reports is the easiest way to contribute. You will need to 
+create an account on GitHub to submit a report.
+
+1. Go to the issues page here: 
+
+   https://github.com/NCAR/wrf-python/issues
+   
+2. Check to see if an issue has already been created for the problem that 
+   you are having.
+   
+3. If an issue already exists for your problem, feel free to add any 
+   additional information to the issue conversation.
+   
+4. If there is not an issue created yet for your problem, use the 
+   "New Issue" button to start your new issue.
+   
+5. Please provide as much information as you can for the issue. Please supply 
+   your version of WRF-Python you are using and which platform you are 
+   using (e.g. conda-forge build on OSX). Supply a code snippet if you 
+   are doing something more detailed than simply calling :meth:`wrf.getvar`.
+   
+6. If you are getting a crash (e.g. segmentation fault), we will most likely 
+   need to see your data file if we cannot reproduce the problem here. 
+   See :ref:`submitting_files`.
+
+
+Setting Up Your Development Environment
+---------------------------------------------
+
+We recommend using the `conda <https://conda.io/en/latest/>`_ 
+package manager for your Python environments. Our recommended setup for 
+contributing is:
+
+- Install `miniconda <https://docs.conda.io/en/latest/miniconda.html>`_
+- Install git on your system if it is not already there (install XCode command 
+  line tools on a Mac or git bash on Windows)
+- Login to your GitHub account and make a fork of the
+  `WRF-Python <https://github.com/ncar/wrf-python>`_ repository by clicking 
+  the **Fork** button.
+- Clone your fork of the WRF-Python repository (in terminal on Mac/Linux or 
+  git shell/ GUI on Windows) in the location you'd like to keep it.
+  
+  .. code::
+   
+     git clone https://github.com/your-user-name/wrf-python.git
+
+- Navigate to that folder in the terminal or in Anaconda Prompt if you're 
+  on Windows.
+  
+  .. code::
+  
+     cd wrf-python
+     
+- Connect your repository to the NCAR WRF-Python repository. 
+
+  .. code::
+  
+     git remote add ncar https://github.com/ncar/wrf-python.git
+     
+- To create the development environment, you'll need to run the appropriate 
+  command below for your operating system.
+  
+  OSX:
+  
+  .. code::
+  
+     conda env create -f osx.yml
+     
+  Linux:
+  
+  .. code::
+  
+     conda env create -f linux.yml
+     
+  Win64:
+  
+  .. code::
+  
+     conda env create -f win64.yml
+     
+  Note: For Win64, you will also need VS2015 installed on your system.
+  
+- Activate your conda environment.
+
+  .. code::
+  
+     conda activate develop
+     
+- CD to the build_scripts directory.
+
+  .. code::
+  
+     cd build_scripts
+     
+- Build and install WRF-Python.
+
+  OSX/Linux:
+  
+  .. code::
+  
+     sh gnu_omp.sh
+     
+  Windows:
+  
+     ./win_msvc_mingw_omp.bat
+     
+- The previous step will build and install WRF-Python in to the 'develop' 
+  environment. If you make changes and want to rebuild, uninstall WRF-Python 
+  by running:
+  
+  .. code::
+  
+     pip uninstall wrf-python
+     
+  Now follow the previous step to rebuild.
 
 
 Pull Requests
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------
 
-In order to submit changes, you must use GitHub to issue a pull request. 
-
-
-Overview of WRF-Python Internals
-----------------------------------
-
-WRF-Python is a collection of diagnostic and interpolation routines for 
-WRF-ARW data. The API is kept to a minimal set of functions, since we've found
-this to be the easiest to teach to new programmers, students, and scientists. 
-Future plans do include adopting the Pangeo xarray/dask model for more 
-advanced programmers, but is not currently supported as of this user guide.
-
-A typical use case for a WRF-Python user is to:
-
-1) Open a WRF data file (or sequence of files) using NetCDF4-python or PyNIO.
-2) Compute a WRF diagnostic using :meth:`wrf.getvar`.
-3) Performing other computations using methods outside of WRF-Python.
-4) Creating a plot of the output using matplotlib (basemap or cartopy) or 
-   PyNGL.
-   
-The purpose of this guide is to explain the internals of item 2 so that 
-users can help contribute or support the computational diagnostics.
+In order to submit changes, you must use GitHub to issue a pull request. Your 
+pull requests should be made against the **develop** branch, since we are 
+following GitFlow for this project. 
 
 
-Overview of a :meth:`wrf.getvar` Diagnostic Computation
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-A diagnostic computed using the :meth:`wrf.getvar` function consists of the 
-following steps:
-
-1) Using the diagnostic string, call the appropriate 'get' function. This 
-   step occurs in the :met:`wrf.getvar` routine in routines.py. 
-2) Extract the required variables from the NetCDF data file (or files).
-3) Compute the diagnostic using a wrapped Fortran, C, or Python routine.
-4) Convert to the desired units if applicable.
-5) If desired, set the metadata and return the result as an 
-   :class:`xarray.DataArray`, or return a :class:`numpy.ndarray` if no 
-   metadata is desired.
-   
-In the source directory, the :meth:`wrf.getvar` 'get' routines have a 
-"g_" prefix for the naming convention (the "g" stands for "get", but didn't 
-want to cause namespace conflicts with functions already named with "get" in 
-the title). 
-
-The unit conversion is handled by a wrapt decorator that can be found in 
-decorators.py. The setting of the metadata is handled using a wrapt decorator, 
-which can be found in the metadecorators.py file.
 
 
-Overview of Compiled Computational Routines
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Currently, the compiled computational routines are written in Fortran 
-90 and exposed the Python using f2py. The routines have been aquired over 
-decades, originated from NCL's Fortran77 codebase, and do not necessarily 
-conform to a common mindset (e.g. some use 1D arrays, 2D arrays, etc).
 
-The raw Fortran routines are compiled in to the :mod:`wrf._wrffortran`, but 
-are not particularly useful for applications in that raw form. These 
-routines are imported in the extention.py module, where additional
-functionality is added to make the routines more user friendly.
 
-The common behavior for the fully exported Fortran routine in extension.py 
-is:
-
-1) Verify that the arguments passed in are valid in shape. While f2py does this 
-   as well, the errors thrown by f2py are confusing to users, so this step 
-   helps provide better error messages.
-
-2) Allocate the ouput array based on the output shape of the algorithm, 
-   number of "leftmost" dimensions, and size of the data.
-   
-3) Iterate over the leftmost dimensions and compute output for argument 
-   data slices that are of the same dimensionality as the compiled algorithm. 
-   For example, if the compiled algorithm is written for two dimensional data, 
-   but your data is four dimensional, you have two leftmost dimensions.
-   
-4) Cast the argument arrays in to the type used in the 
-   compiled routine (usually for WRF data, the conversion is from 4-byte float 
-   to 8-byte double).
-   
-5) Extract the argument arrays out of xarray in to numpy arrays 
-   (if applicable) and transpose them in to Fortran ordering. Note that this 
-   does not actually do any copying of the data, it simply reorders the shape 
-   tuple for the data and sets the Fortran ordering flag. This allows data
-   pointers from the output array to be directly passed through f2py so that 
-   copying is not required in to the output array.
-   
-The steps described above are handled in wrapt decorators that can be found in 
-decorators.py. For some routines that produce multiple outputs or have 
-atypical behavior, the special case decorators are located in specialdec.py. 
 
 
