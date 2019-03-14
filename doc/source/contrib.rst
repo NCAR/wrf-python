@@ -208,6 +208,68 @@ pull requests should be made against the **develop** branch, since we are
 following GitFlow for this project. 
 
 
+Code Style
+--------------------------
+
+Python Contributions
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The Python code in WRF-Python follows the 
+`PEP8 <https://www.python.org/dev/peps/pep-0008/>`_ coding standard. All 
+Python code submitted must pass the PEP8 checks performed by the 
+`pycodestyle <https://pycodestyle.readthedocs.io/en/latest/>`_ code 
+style guide utility. The utility must pass without any errors or warnings.
+For a tool to help automate some of the mundane formatting corrections (e.g. 
+whitespace characters in blank lines, etc.), try the 
+`autopep8 <https://pypi.org/project/autopep8/0.8/>`_ utility.
+
+
+Fortran Contributions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+WRF-Python is a Fortran friendly project and we appreciate your contributions. 
+However, we are only accepting Fortran 90 contributions, so you must 
+convert any F77 code to F90 before contributing.
+
+Although there is no formal style guide for Fortran contributions, Fortran 
+code should look similar to other Fortran code in the WRF-Python *fortran* 
+directory. 
+
+A summary of style notes is below:
+
+- Fortran 90 only.
+- Use 4 spaces for indentation, not tabs.
+- Use all capital letters for Fortran key words (e.g. IF, DO, REAL, INTENT)
+- Use all capital letters for Fortran intrinsics (e.g. MAX, MIN, SUM)
+- Use all capital letters for any PARAMETER constants.
+- Use all lowercase letters for variables with '_' separting words 
+  (snake case).
+- Use all lowercase letters for functions and subroutines with '_' separting 
+  words (snake case).
+- Declare your REAL variables as REAL(KIND=8), unless you really need 4-byte
+  REALs for a specific reason.
+- Do not allocate any memory in your Fortran routine (e.g work arrays). We 
+  will use numpy arrays to manage all memory. Instead, declare your work 
+  array (or dynamic array) as an INOUT argument in your function 
+  signature.
+- Avoid submitting code that uses global variables (other than for read only 
+  constants). All Fortran contributions must be threadsafe and have no side 
+  effects.
+- Place any computational constants in the wrf_constants module found in 
+  wrf_constants.f90 and use "USE wrf_constants, ONLY : YOUR_CONSTANT" 
+  declaration in your function.
+- Please do not redefine constants already declared in 
+  wrf_constants.f90 (e.g. G, RD, RV, etc). Although the WRF model itself 
+  does not adhere to this, we are trying to be consistent with the constants 
+  used throughout this project.
+- Do not put any STOP statements in your code to deal with errors. STOP
+  statements will bring down the entire Python interpreter with it. Instead, 
+  add *errstat* and *errmsg* arguments to your function signature to tell 
+  Python about the error so it can throw an exception. See WETBULBCALC
+  in wrf_rip_phys_routines.f90 for how this is handled. 
+- Don't worry about adding OpenMP directives to your code if you are 
+  unfamiliar OpenMP, but feel free to do so if you are already familiar.
+
 
 
 
