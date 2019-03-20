@@ -3,14 +3,6 @@
 Contributor Guide
 =================================
 
-.. note::
-
-   This contributor guide is written for wrf-python v1.3.x. In the 
-   not-too-distant future, wrf-python will undergo a significant refactoring 
-   to remove the wrapt decorators (which don't serialize for dask), but the 
-   concepts will remain similar to what is described in :ref:`internals`.
-
-
 Introduction
 -----------------------------
 
@@ -29,10 +21,6 @@ Source Code Location
 The source code is available on GitHub:
 
     https://github.com/NCAR/wrf-python
-
-To checkout the code::
-
-    git clone https://github.com/NCAR/wrf-python    
 
 
 Git Flow
@@ -66,11 +54,14 @@ Users are encouraged to contribute various ways. This includes:
 - Creating new examples in the documentation (e.g. plotting examples)
 
 
+
 Ground Rules
 ------------------------------
 
-Please follow the code of conduct.
+Please follow the `Code of Conduct <https://github.com/ncar/wrf-python>`_.
 
+- Please create an issue on GitHub for any pull request you wish to submit, 
+  except for documentation issues.
 - Each pull request should be for a logical collection of changes. You can 
   submit multiple bug fixes in a single pull request if the bugs are related. 
   Otherwise, please submit seperate pull requests.
@@ -107,7 +98,165 @@ create an account on GitHub to submit a report.
 6. If you are getting a crash (e.g. segmentation fault), we will most likely 
    need to see your data file if we cannot reproduce the problem here. 
    See :ref:`submitting_files`.
+   
 
+Submitting Fortran Computational Routines
+--------------------------------------------
+
+If you have Fortran computational routines that you'd like to contribute,
+but don't know how to wrap them in to Python, please follow the instructions
+below.
+
+1. Only Fortran 90 code will be accepted, so please port your F77 code to 
+   F90.
+   
+2. Follow the :ref:`fortranstyle`.
+
+3. Please only submit routines relevant to WRF-Python (e.g. diagnostics, 
+   interpolation). General purpose climate/meteorology should go in the 
+   SkyLab project (a project providing similar functionality as 
+   NCL).
+   
+4. If you are unsure if you should contribute your Fortran code, make an 
+   issue on GitHub and we can begin a discussion there. 
+   
+5. Place your code in the fortran/contrib directory in the WRF-Python 
+   source tree.
+   
+6. Document your code with a text file that has same name as your Fortran 
+   file, but ending in .rst. This file should placed with your F90 code 
+   in the fortran/contrib directory. Your documentation can use 
+   restructured text formatting, or just plain text. This documentation 
+   will be used in the docstring when Python wrappers are made.
+
+7. If you are unable to provide any type of test for your routine, please 
+   ensure that your documentation describes what your computation 
+   should produce. You can submit auxiallary documentation and/or images for 
+   this purpose if needed.
+
+
+Submitting Python Computational Routines
+---------------------------------------------
+
+If you would like to submit a computational routine in Python, but don't know 
+how to integrate it with the rest of WRF-Python's internals 
+(e.g. left indexing, arg checking, etc), feel free to 
+submit the pure Python routine. Below is the guide for submitting pure 
+Python routines.
+
+1. These routines should be placed in src/wrf/contrib.py. These algorithms 
+   will not be imported in to WRF-Python's default namespace.
+   
+2. Follow the :ref:`pythonstyle`. 
+  
+2. Write your computation as dimension unaware as possible. For example, 
+   adding pressure and perturbation pressure is simply P + PB.
+   
+3. If dimensionality is needed, then write for the minimum dimensionality 
+   required to make the computation for one time step (if applicable). For 
+   example, if you're computing CAPE, then you should use three dimensions for 
+   your algorithm, and we will handle the looping over all times.
+   
+4. Document your routine by creating a docstring that follows Google docstring 
+   format (see `Sphinx Napoleon <https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy>`_).
+   
+5. If you are unable to provide a test for this function, please provide 
+   additional documentation (or images) to show what this function should 
+   produce.
+
+
+Submitting Fully Wrapped Computational Routines
+---------------------------------------------------
+
+Submitting a fully wrapped computational routines is the fastest way to get 
+your contributation released. However, it requires the most effort on your 
+part. (This process will be simplified in the future, but it's a little  
+tedious at this time).
+
+1. Read the :ref:`internals` guide. This will show you how to wrap your
+   routine.
+
+2. Follow the :ref:`fortranstyle` and :ref:`pythonstyle`.
+
+3. You should create your contribution in the WRF-Pyhon source tree as if 
+   you were one of the core developers of it. This means:
+   
+   - Your Fortran code (if applicable) should be placed in the fortran folder.
+   
+   - Update the "ext1 = numpy.distutils.core.Extension" section of setup.py 
+     to include your new Fortran source (if applicable).
+     
+   - Update extension.py to create the Python wrapper that calls your 
+     Fortran function. This must include the appropriate function decorators
+     for handling argument checking, leftmost dimension indexing, etc. as 
+     described in :ref:`internals`.
+     
+   - If the current function decorators do not cover your specific needs, 
+     place your custom decorator in specialdec.py.  Most of the decorators 
+     in this module are used for products that contain multiple outputs like 
+     cape_2d, but this 
+     
+   - If your function is pure python, you can create a new module for it, 
+     or place it in another module with similar functionality. For example, 
+     if your routine is a new interpolation routine, then it should go 
+     in interp.py. Remember to apply the same type of decorators as 
+     done with Fortran extensions (checking args, leftmost indexings, etc).
+     
+   - Create a 'getter' routine which is responsible for extracting the 
+     required variables from a WRF file and calling your computational 
+     routine. This is what will be called by :meth:`wrf.getvar`. 
+     This function should be placed in a new python module with the prefix 
+     'g_' (i.e. g_yourdiagnostic.py)
+     
+   - Decorate your getter routine with an appropriate metadata handling 
+     decorator. If you need to make a custom decorator for the metadata, 
+     place it in metadecorators.py. 
+     
+   - Update the mappings in routines.py to map your diagnostic name to your 
+     function, and to declare any keyword arguments that your function 
+     needs aside from the usual wrfin, varname, timeidx, method, 
+     squeeze, cache, and meta.
+     
+   - If you would like to make your routine available as a raw computation,
+     you will need to place an additional thin wrapper in computation.py. This 
+     thin wrapper must be decorated with an appropriate metadata decorator 
+     found in metadecorators.py (usually set_alg_metadata). If you need to 
+     write your own custom metadata decorator, write it in metadecorators.py.
+  
+   - You must provide a docstring for every function you create using 
+     Google docstring format (see `Sphinx Napoleon <https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy>`_).
+    
+   - You must provide a test for your function. See :ref:`testing`.
+   
+
+Fixing Documentation Errors
+--------------------------------------
+
+1. Documenation is made with Sphinx using restructured text.
+
+2. Python docstrings follow `Google docstring <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_ format.
+
+2. Documentation can be found in the *doc* directory, along with the 
+   docstrings contained within the Python code.
+   
+3. For documentation fixes, you can just submit a pull request with the 
+   appropriate corrections already made.
+
+
+Creating New Examples
+--------------------------------------
+
+1. Examples are made with Sphinx using restructured text.
+
+2. Examples are currently found in the *doc* directory, mostly within the 
+   basic_usage.rst and plot.rst files. Feel free to contribute more examples
+   to these files.
+   
+3. Unless you are drastically changing the documentation structure, you can 
+   submit a pull request with your examples without creating a GitHub 
+   issue. If you are making a large change, or are unsure about it, then 
+   go ahead and create a GitHub issue to discuss with the developers.
+   
 
 Setting Up Your Development Environment
 ---------------------------------------------
@@ -200,18 +349,13 @@ contributing is:
   Now follow the previous step to rebuild.
 
 
-Pull Requests
---------------------------
-
-In order to submit changes, you must use GitHub to issue a pull request. Your 
-pull requests should be made against the **develop** branch, since we are 
-following GitFlow for this project. 
-
 
 Code Style
 --------------------------
 
-Python Contributions
+.. _pythonstyle:
+
+Python Style Guide
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Python code in WRF-Python follows the 
@@ -224,7 +368,9 @@ whitespace characters in blank lines, etc.), try the
 `autopep8 <https://pypi.org/project/autopep8/0.8/>`_ utility.
 
 
-Fortran Contributions
+.. _fortranstyle:
+
+Fortran Style Guide
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 WRF-Python is a Fortran friendly project and we appreciate your contributions. 
@@ -271,7 +417,80 @@ A summary of style notes is below:
   unfamiliar OpenMP, but feel free to do so if you are already familiar.
 
 
+Pull Requests
+--------------------------
 
+In order to submit changes, you must use GitHub to issue a pull request. Your 
+pull requests should be made against the **develop** branch, since we are 
+following GitFlow for this project. 
+
+Following a pull request, automated continuous integration tools will be 
+run to ensure that your code follows the PEP 8 style guide, and verifies that
+a basic suite of unit tests run. 
+
+
+.. testing_::
+
+Tests
+---------------------------
+
+Once you have submitted your contribution, we need a way to test your 
+code. Currently, most of WRF-Python's tests are written to ensure that 
+WRF-Python produces the same result as the NCAR Command Language (NCL), which 
+is where the code was originally derived. However, this isn't applicable for 
+new contributions and bug fixes, since there is nothing to test against for 
+new contributions and bug fixes might change the numerical result. So, we have 
+some recommendations below for how you can create your own tests.
+
+Sample Data
+^^^^^^^^^^^^^^^^^^^
+
+You can download sample data for Hurricane Katrina here: <insert link>
+This data has both moving nest and static nest version. You should test
+against this data set, unless you are unable to demonstrate the problem
+with it.
+
+Supplying Data
+^^^^^^^^^^^^^^^^^^^^^^
+
+If you need to supply us data for your test, please provide us a link to 
+either a cloud storage service, by :ref:`submitting-files`, or some other 
+means. Unless the data is very small, do not add it to the GitHub repository.
+
+If you can demonstrate the problem/solution with a minimal set of hand created 
+values, you can just put that in your test itself.
+
+
+Guidelines
+^^^^^^^^^^^^^^^^^^^
+
+The following are guidelines for testing you contributions. Obviously, 
+different issues have different needs, so you can use the GitHub 
+issue related to your contribution to discuss with developers.
+
+1. New computations must work for both moving nests and static nests. 
+   Generally this is not an issue unless your data makes use of lat/lon 
+   information (e.g. cross sections with lat/lon line definitions).
+
+2. WRF-Python's tests can be found in the *test* directory.
+   
+3. WRF-Python's tests were written using the standard *unittest* package,
+   along with numpy's test package for the assert fuctions. One 
+   reason for this is that many of the tests are dynamically generated, and 
+   some other testing frameworks can't find the tests when generated this way.
+   If you need to use another test framework, that's fine, just let us know 
+   in your GitHub issue.
+   
+4. Place your test in the test/contrib directory.
+
+5. For new contributions, images may be sufficient to show that your 
+   code is working. Discuss with the developers in you GitHub issue.
+   
+6. For bug related issues, try to create a case that demonstrates the problem, 
+   and demonstrates the fix. If your problem is a crash, then proving that 
+   your code runs without crashing should be sufficient. 
+   
+7. You might need some creativity here.
 
 
 
