@@ -181,7 +181,8 @@ tedious at this time).
 3. You should create your contribution in the WRF-Pyhon source tree as if 
    you were one of the core developers of it. This means:
    
-   - Your Fortran code (if applicable) should be placed in the fortran folder.
+   - Your Fortran code (if applicable) should be placed in the fortran
+     directory.
    
    - Update the "ext1 = numpy.distutils.core.Extension" section of setup.py 
      to include your new Fortran source (if applicable).
@@ -193,20 +194,21 @@ tedious at this time).
      
    - If the current function decorators do not cover your specific needs, 
      place your custom decorator in specialdec.py.  Most of the decorators 
-     in this module are used for products that contain multiple outputs like 
-     cape_2d, but this 
+     in specialdec.py are used for products that contain multiple outputs like 
+     cape_2d, but you can use it for other purposes.
      
    - If your function is pure python, you can create a new module for it, 
      or place it in another module with similar functionality. For example, 
      if your routine is a new interpolation routine, then it should go 
      in interp.py. Remember to apply the same type of decorators as 
-     done with Fortran extensions (checking args, leftmost indexings, etc).
+     done with Fortran extensions (checking args, leftmost dimension 
+     indexing, etc).
      
    - Create a 'getter' routine which is responsible for extracting the 
      required variables from a WRF file and calling your computational 
      routine. This is what will be called by :meth:`wrf.getvar`. 
      This function should be placed in a new python module with the prefix 
-     'g_' (i.e. g_yourdiagnostic.py)
+     'g\_' (i.e. g_yourdiagnostic.py).
      
    - Decorate your getter routine with an appropriate metadata handling 
      decorator. If you need to make a custom decorator for the metadata, 
@@ -236,10 +238,10 @@ Fixing Documentation Errors
 
 2. Python docstrings follow `Google docstring <https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_google.html>`_ format.
 
-2. Documentation can be found in the *doc* directory, along with the 
+3. Documentation can be found in the *doc* directory, along with the 
    docstrings contained within the Python code.
    
-3. For documentation fixes, you can just submit a pull request with the 
+4. For documentation fixes, you can just submit a pull request with the 
    appropriate corrections already made.
 
 
@@ -257,6 +259,8 @@ Creating New Examples
    issue. If you are making a large change, or are unsure about it, then 
    go ahead and create a GitHub issue to discuss with the developers.
    
+
+.. _dev_setup:
 
 Setting Up Your Development Environment
 ---------------------------------------------
@@ -336,6 +340,8 @@ contributing is:
      
   Windows:
   
+  .. code::
+  
      ./win_msvc_mingw_omp.bat
      
 - The previous step will build and install WRF-Python in to the 'develop' 
@@ -387,34 +393,34 @@ A summary of style notes is below:
 - Use 4 spaces for indentation, not tabs.
 - Use all capital letters for Fortran key words (e.g. IF, DO, REAL, INTENT)
 - Use all capital letters for Fortran intrinsics (e.g. MAX, MIN, SUM)
-- Use all capital letters for any PARAMETER constants.
+- Use all capital letters for any constants declared as PARAMETER (e.g. RD).
 - Use all lowercase letters for variables with '_' separting words 
   (snake case).
-- Use all lowercase letters for functions and subroutines with '_' separting 
-  words (snake case).
+- Use all lowercase letters for functions and subroutines using '_' to 
+  separate words (snake case).
 - Declare your REAL variables as REAL(KIND=8), unless you really need 4-byte
   REALs for a specific reason.
 - Do not allocate any memory in your Fortran routine (e.g work arrays). We 
   will use numpy arrays to manage all memory. Instead, declare your work 
-  array (or dynamic array) as an INOUT argument in your function 
+  array (or dynamic array) as an INTENT(INOUT) argument in your function 
   signature.
 - Avoid submitting code that uses global variables (other than for read only 
   constants). All Fortran contributions must be threadsafe and have no side 
   effects.
 - Place any computational constants in the wrf_constants module found in 
-  wrf_constants.f90 and use "USE wrf_constants, ONLY : YOUR_CONSTANT" 
+  wrf_constants.f90 and put a "USE wrf_constants, ONLY : YOUR_CONSTANT" 
   declaration in your function.
 - Please do not redefine constants already declared in 
   wrf_constants.f90 (e.g. G, RD, RV, etc). Although the WRF model itself 
   does not adhere to this, we are trying to be consistent with the constants 
-  used throughout this project.
+  used throughout WRF-Python.
 - Do not put any STOP statements in your code to deal with errors. STOP
   statements will bring down the entire Python interpreter with it. Instead, 
   add *errstat* and *errmsg* arguments to your function signature to tell 
   Python about the error so it can throw an exception. See WETBULBCALC
   in wrf_rip_phys_routines.f90 for how this is handled. 
-- Don't worry about adding OpenMP directives to your code if you are 
-  unfamiliar OpenMP, but feel free to do so if you are already familiar.
+- If you know how to use OpenMP directives, feel free to add them to your 
+  routine, but this is not required.
 
 
 Pull Requests
@@ -428,6 +434,10 @@ Following a pull request, automated continuous integration tools will be
 run to ensure that your code follows the PEP 8 style guide, and verifies that
 a basic suite of unit tests run. 
 
+If your pull request is for a bug fix to an existing computational routine, 
+then the automated unit tests will probably fail due to the new values. This 
+is not a problem, but be sure to indicate to the developers in your GitHub 
+issue that the unit tests will need to be updated.
 
 .. testing_::
 
@@ -446,26 +456,27 @@ Sample Data
 ^^^^^^^^^^^^^^^^^^^
 
 You can download sample data for Hurricane Katrina here: <insert link>
-This data has both moving nest and static nest version. You should test
-against this data set, unless you are unable to demonstrate the problem
-with it.
+This data includes both a moving nest and a static nest version. You should 
+create your tests with this data set (both static and moving nests), unless 
+you are unable to reproduce a particular problem with it.
 
 Supplying Data
 ^^^^^^^^^^^^^^^^^^^^^^
 
-If you need to supply us data for your test, please provide us a link to 
-either a cloud storage service, by :ref:`submitting-files`, or some other 
-means. Unless the data is very small, do not add it to the GitHub repository.
+If you need to supply us data for your test (due to a bug) please provide us a 
+link to either a cloud storage service, by :ref:`submitting_files`, or some 
+other means. Unless the data is very small, do not add it to the GitHub 
+repository.
 
 If you can demonstrate the problem/solution with a minimal set of hand created 
-values, you can just put that in your test itself.
+values, you can just use that in your test.
 
 
 Guidelines
 ^^^^^^^^^^^^^^^^^^^
 
-The following are guidelines for testing you contributions. Obviously, 
-different issues have different needs, so you can use the GitHub 
+The following are guidelines for testing you contributions. The developers are 
+aware that some issues have unique needs, so you can use the GitHub 
 issue related to your contribution to discuss with developers.
 
 1. New computations must work for both moving nests and static nests. 
@@ -484,7 +495,7 @@ issue related to your contribution to discuss with developers.
 4. Place your test in the test/contrib directory.
 
 5. For new contributions, images may be sufficient to show that your 
-   code is working. Discuss with the developers in you GitHub issue.
+   code is working. Please discuss with the developers in you GitHub issue.
    
 6. For bug related issues, try to create a case that demonstrates the problem, 
    and demonstrates the fix. If your problem is a crash, then proving that 
