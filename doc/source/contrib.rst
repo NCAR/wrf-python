@@ -58,7 +58,7 @@ Users are encouraged to contribute various ways. This includes:
 Ground Rules
 ------------------------------
 
-Please follow the `Code of Conduct <https://github.com/ncar/wrf-python>`_.
+Please follow the `Code of Conduct <https://github.com/NCAR/wrf-python/blob/develop/CODE_OF_CONDUCT.md>`_.
 
 - Please create an issue on GitHub for any pull request you wish to submit, 
   except for documentation issues.
