@@ -176,7 +176,7 @@ SUBROUTINE DLOOKUP_TABLE(psadithte, psadiprs, psaditmk, fname, errstat, errmsg)
 
     !      FNAME = 'psadilookup.dat'
     iustnlist = 33
-    OPEN (UNIT=iustnlist, FILE=fname, FORM='formatted', STATUS='old')
+    OPEN (UNIT=iustnlist, FILE=fname, FORM='formatted', STATUS='old', ACTION='read')
 
     DO i = 1,14
         READ (iustnlist, FMT=*)

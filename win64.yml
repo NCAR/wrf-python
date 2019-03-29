@@ -1,0 +1,19 @@
+# Create full conda environment for development, including some useful tools
+name: develop
+channels:
+  - conda-forge
+dependencies:
+  - python=3
+  - wrapt
+  - numpy
+  - matplotlib
+  - netcdf4
+  - xarray
+  - jupyter
+  - sphinx
+  - sphinx_rtd_theme
+  - pycodestyle
+  - cartopy
+  - basemap
+  - m2w64-toolchain
+
