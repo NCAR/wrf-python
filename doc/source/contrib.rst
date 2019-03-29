@@ -113,7 +113,7 @@ below.
 2. Follow the :ref:`fortranstyle`.
 
 3. Please only submit routines relevant to WRF-Python (e.g. diagnostics, 
-   interpolation). General purpose climate/meteorology should go in the 
+   interpolation). General purpose climate/meteorology should go in to the 
    SkyLab project (a project providing similar functionality as 
    NCL).
    
@@ -123,11 +123,11 @@ below.
 5. Place your code in the fortran/contrib directory in the WRF-Python 
    source tree.
    
-6. Document your code with a text file that has same name as your Fortran 
+6. Document your code with a text file that has the same name as your Fortran 
    file, but ending in .rst. This file should placed with your F90 code 
    in the fortran/contrib directory. Your documentation can use 
    restructured text formatting, or just plain text. This documentation 
-   will be used in the docstring when Python wrappers are made.
+   will be used for the docstring when Python wrappers are made.
 
 7. If you are unable to provide any type of test for your routine, please 
    ensure that your documentation describes what your computation 
@@ -138,8 +138,8 @@ below.
 Submitting Python Computational Routines
 ---------------------------------------------
 
-If you would like to submit a computational routine in Python, but don't know 
-how to integrate it with the rest of WRF-Python's internals 
+If you would like to submit a computational routine written in Python, but 
+don't know how to integrate it with the rest of WRF-Python's internals 
 (e.g. left indexing, arg checking, etc), feel free to 
 submit the pure Python routine. Below is the guide for submitting pure 
 Python routines.
@@ -170,30 +170,29 @@ Submitting Fully Wrapped Computational Routines
 
 Submitting a fully wrapped computational routines is the fastest way to get 
 your contributation released. However, it requires the most effort on your 
-part. (This process will be simplified in the future, but it's a little  
-tedious at this time).
+part. 
 
 1. Read the :ref:`internals` guide. This will show you how to wrap your
    routine.
 
 2. Follow the :ref:`fortranstyle` and :ref:`pythonstyle`.
 
-3. You should create your contribution in the WRF-Pyhon source tree as if 
+3. You should create your contribution in the WRF-Python source tree as if 
    you were one of the core developers of it. This means:
    
-   - Your Fortran code (if applicable) should be placed in the fortran
+   - Your Fortran code (if applicable) should be placed in the *fortran*
      directory.
    
-   - Update the "ext1 = numpy.distutils.core.Extension" section of setup.py 
+   - Update the "ext1 = numpy.distutils.core.Extension" section of *setup.py* 
      to include your new Fortran source (if applicable).
      
-   - Update extension.py to create the Python wrapper that calls your 
+   - Update *extension.py* to create the Python wrapper that calls your 
      Fortran function. This must include the appropriate function decorators
      for handling argument checking, leftmost dimension indexing, etc. as 
      described in :ref:`internals`.
      
    - If the current function decorators do not cover your specific needs, 
-     place your custom decorator in specialdec.py.  Most of the decorators 
+     place your custom decorator in *specialdec.py*.  Most of the decorators 
      in specialdec.py are used for products that contain multiple outputs like 
      cape_2d, but you can use it for other purposes.
      
@@ -212,18 +211,18 @@ tedious at this time).
      
    - Decorate your getter routine with an appropriate metadata handling 
      decorator. If you need to make a custom decorator for the metadata, 
-     place it in metadecorators.py. 
+     place it in *metadecorators.py*. 
      
-   - Update the mappings in routines.py to map your diagnostic name to your 
+   - Update the mappings in *routines.py* to map your diagnostic name to your 
      function, and to declare any keyword arguments that your function 
      needs aside from the usual wrfin, varname, timeidx, method, 
      squeeze, cache, and meta.
      
    - If you would like to make your routine available as a raw computation,
-     you will need to place an additional thin wrapper in computation.py. This 
-     thin wrapper must be decorated with an appropriate metadata decorator 
-     found in metadecorators.py (usually set_alg_metadata). If you need to 
-     write your own custom metadata decorator, write it in metadecorators.py.
+     you will need to place an additional thin wrapper in *computation.py*. 
+     This thin wrapper must be decorated with an appropriate metadata decorator 
+     found in *metadecorators.py* (usually set_alg_metadata). If you need to 
+     write your own custom metadata decorator, write it in *metadecorators.py*.
   
    - You must provide a docstring for every function you create using 
      Google docstring format (see `Sphinx Napoleon <https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy>`_).
@@ -251,8 +250,8 @@ Creating New Examples
 1. Examples are made with Sphinx using restructured text.
 
 2. Examples are currently found in the *doc* directory, mostly within the 
-   basic_usage.rst and plot.rst files. Feel free to contribute more examples
-   to these files.
+   *basic_usage.rst* and *plot.rst* files. Feel free to contribute more 
+   examples to these files.
    
 3. Unless you are drastically changing the documentation structure, you can 
    submit a pull request with your examples without creating a GitHub 
@@ -379,8 +378,7 @@ whitespace characters in blank lines, etc.), try the
 Fortran Style Guide
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-WRF-Python is a Fortran friendly project and we appreciate your contributions. 
-However, we are only accepting Fortran 90 contributions, so you must 
+At this time, we are only accepting Fortran 90 contributions, so you must 
 convert any F77 code to F90 before contributing.
 
 Although there is no formal style guide for Fortran contributions, Fortran 
@@ -408,17 +406,17 @@ A summary of style notes is below:
   constants). All Fortran contributions must be threadsafe and have no side 
   effects.
 - Place any computational constants in the wrf_constants module found in 
-  wrf_constants.f90 and put a "USE wrf_constants, ONLY : YOUR_CONSTANT" 
+  *wrf_constants.f90* and put a "USE wrf_constants, ONLY : YOUR_CONSTANT,..." 
   declaration in your function.
 - Please do not redefine constants already declared in 
   wrf_constants.f90 (e.g. G, RD, RV, etc). Although the WRF model itself 
   does not adhere to this, we are trying to be consistent with the constants 
   used throughout WRF-Python.
-- Do not put any STOP statements in your code to deal with errors. STOP
-  statements will bring down the entire Python interpreter with it. Instead, 
-  add *errstat* and *errmsg* arguments to your function signature to tell 
+- Do not put any STOP statements in your code to handle errors. STOP
+  statements will bring the entire Python interpreter down with it. Instead, 
+  use *errstat* and *errmsg* arguments to your function signature to tell 
   Python about the error so it can throw an exception. See WETBULBCALC
-  in wrf_rip_phys_routines.f90 for how this is handled. 
+  in *wrf_rip_phys_routines.f90* for how this is handled. 
 - If you know how to use OpenMP directives, feel free to add them to your 
   routine, but this is not required.
 
@@ -437,7 +435,7 @@ a basic suite of unit tests run.
 If your pull request is for a bug fix to an existing computational routine, 
 then the automated unit tests will probably fail due to the new values. This 
 is not a problem, but be sure to indicate to the developers in your GitHub 
-issue that the unit tests will need to be updated.
+issue that the tests will need to be updated.
 
 .. testing_::
 
@@ -455,7 +453,7 @@ some recommendations below for how you can create your own tests.
 Sample Data
 ^^^^^^^^^^^^^^^^^^^
 
-You can download sample data for Hurricane Katrina here: <insert link>
+You can download sample data for Hurricane Katrina here: <contact developers>
 This data includes both a moving nest and a static nest version. You should 
 create your tests with this data set (both static and moving nests), unless 
 you are unable to reproduce a particular problem with it.
@@ -464,12 +462,12 @@ Supplying Data
 ^^^^^^^^^^^^^^^^^^^^^^
 
 If you need to supply us data for your test (due to a bug) please provide us a 
-link to either a cloud storage service, by :ref:`submitting_files`, or some 
-other means. Unless the data is very small, do not add it to the GitHub 
+link to the file or upload it using :ref:`submitting_files`. 
+Unless the data is very small, do not add it to the GitHub 
 repository.
 
 If you can demonstrate the problem/solution with a minimal set of hand created 
-values, you can just use that in your test.
+values, then you can use that in your test.
 
 
 Guidelines
@@ -488,7 +486,7 @@ issue related to your contribution to discuss with developers.
 3. WRF-Python's tests were written using the standard *unittest* package,
    along with numpy's test package for the assert fuctions. One 
    reason for this is that many of the tests are dynamically generated, and 
-   some other testing frameworks can't find the tests when generated this way.
+   other testing frameworks can't find the tests when generated this way.
    If you need to use another test framework, that's fine, just let us know 
    in your GitHub issue.
    
