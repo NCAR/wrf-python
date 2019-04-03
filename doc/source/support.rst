@@ -11,6 +11,7 @@ you can submit an issue to the
 This should be used strictly for crashes and bugs.  For general usage
 questions, please use the :ref:`google-group`.
 
+.. _submitting_files:
 
 Submitting Files
 -------------------

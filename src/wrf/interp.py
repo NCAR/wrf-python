@@ -93,7 +93,7 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             z = getvar(wrfin, "z")
             pblh = getvar(wrfin, "PBLH")
 
-            rh_pblh = interplevel(rh, p, pblh)
+            rh_pblh = interplevel(rh, z, pblh)
 
 
     """
