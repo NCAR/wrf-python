@@ -146,20 +146,21 @@ Mac and Linux:
     
     2. Follow the instructions.  
     
-    3. At the end of the installation, it will ask if you want to add the 
-       miniconda3 path to your bash environment.  If you are unsure what to do,
-       you should say "yes".  If you say "no", we're going to assume you know
-       what you are doing.
-       
-       If you said "yes", then once you restart your shell, the miniconda3 Python 
-       will be found instead of the system Python when you type the "python" 
-       command.  If you want to undo this later, then you can edit 
-       either ~/.bash_profile or ~/.bashrc (depending on OS used) and 
-       comment out the line that looks similar to::
-    
-            # added by Miniconda3 x.x.x installer
-            export PATH="/path/to/miniconda3/bin:$PATH"
-            
+    3. At the end of the installation, it will ask if you "wish the installer to
+       initialize Miniconda3".  If you are unsure what to do, you should say "yes".
+       If you say "no", we're going to assume you know what you are doing.
+
+       If you said "yes", then once you restart your shell, the "base" conda environment
+       will be activated by default and the miniconda3 Python will be found instead
+       of the system Python when you type the "python" command.  If you want to undo
+       this later, then you can run the following "conda" command::
+
+            conda config --set auto_activate_base false
+
+       Note that this will not affect your ability to run "conda" commands, it will just
+       prevent the miniconda3 Python from overriding any existing Python environments you
+       may already have on your machine.
+
     4. Restart your command terminal.
     
     5. [Linux and Mac Users Only] Miniconda only works with bash.  If bash is 
