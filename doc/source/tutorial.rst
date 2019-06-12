@@ -12,6 +12,7 @@ Upcoming Tutorials
 .. toctree::
    :maxdepth: 1
    
+   tutorials/wrf_workshop_2019.rst
    
 
 Past Tutorials
