@@ -374,9 +374,9 @@ or xarray, but you can safely ignore these).
 Step 7: Obtain WRF Output Files
 ----------------------------------
 
-A link will be provided in an email prior to the tutorial for the WRF-ARW 
-data files used for the examples. If you did not receive this email, the link 
-will also be provided at the tutorial itself.  
+The wrf_python_tutorial git repository linked to in Step 5 includes a directory
+containing several WRF-ARW data files which will be used for examples during
+the tutorial.
 
 You also have the option of using your own data files for the tutorial by 
 modifying the first Jupyter Notebook cell to point to your data set. 
@@ -384,23 +384,28 @@ However, there is no guarantee that every cell in your workbook will work
 without some modifications (e.g. cross section lines will be drawn outside of 
 your domain).
 
-    1. The link in the email should take you to a location on an Amazon cloud 
-       drive.
-       
-    2. If you hover your mouse over the wrf_tutorial_data.zip file, you'll see 
-       an empty check box appear next to the file name.  Click this check 
-       box.
-       
-    3. At the bottom of the screen, you'll see a Download button next to a 
-       cloud icon.  Click this button to start the download.
-       
-    4. The download was most likely placed in to your ~/Downloads folder 
-       [%HOMEPATH%\\Downloads for Windows]. Using your preferred method of choice 
-       for unzipping files, unzip this file in to your home directory.  Your data 
-       should now be in ~/wrf_tutorial_data 
-       [%HOMEPATH%\\wrf_tutorial_data for Windows].
-       
-    5. Verify that you have three WRF output files in that directory. 
+    1. If you have recently cloned the wrf_python_tutorial git repository, then
+       you should have a "wrf_tutorial_data" directory at the root level of the
+       "wrf_python_tutorial" directory.
+
+    2. If this directory does not exist, try running the following commands
+       from within the "wrf_python_tutorial" directory to update your local
+       copy of the git repository::
+
+           git checkout -- .
+           git pull
+           git submodule init
+           git submodule update
+           cd wrf_tutorial_data
+           git checkout -- .
+
+    3. Verify that you have three WRF output files in the "wrf_tutorial_data"
+       directory::
+
+           $ ls wrf_tutorial_data
+           wrfout_d01_2005-08-28_00_00_00
+           wrfout_d01_2005-08-28_12_00_00
+           wrfout_d01_2005-08-29_00_00_00
 
 
 Getting Help
