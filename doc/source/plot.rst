@@ -7,6 +7,8 @@ make use of xarray's builtin plotting functions, since additional work is most
 likely needed to extend xarray in order to work correctly.  This is planned 
 for a future release.
 
+A subset of the wrfout file used in these examples can be downloaded `here <https://doi.org/10.5065/yd8c-hm41>`.
+
 Matplotlib With Cartopy
 -------------------------
 
