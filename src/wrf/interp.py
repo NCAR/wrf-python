@@ -90,10 +90,10 @@ def interplevel(field3d, vert, desiredlev, missing=default_fill(np.float64),
             wrfin = Dataset("wrfout_d02_2010-06-13_21:00:00")
 
             rh = getvar(wrfin, "rh")
-            z = getvar(wrfin, "z")
+            height = getvar(wrfin, "height_agl")
             pblh = getvar(wrfin, "PBLH")
 
-            rh_pblh = interplevel(rh, z, pblh)
+            rh_pblh = interplevel(rh, height, pblh)
 
 
     """
