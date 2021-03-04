@@ -37,7 +37,7 @@ that when you first clone the repository, you will be on the
 
 Since you will be submitting pull requests for your contributions, you don't 
 really need to know much about GitFlow, other than making sure that you 
-are not developing off of the master branch.
+are not developing off of the main branch.
 
   
 Ways to Contribute
