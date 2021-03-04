@@ -531,7 +531,7 @@ class LambertConformal(WrfProj):
         _cf_params["standard_parallel"] = self._std_parallels
         _cf_params["longitude_of_central_meridian"] = self.stand_lon
         _cf_params["latitude_of_projection_origin"] = self.moad_cen_lat
-        _cf_params["semi_major_axis"] = Constants.WRF_EARTH_RADIUS
+        _cf_params["earth_radius"] = Constants.WRF_EARTH_RADIUS
 
         return _cf_params
 
@@ -602,7 +602,7 @@ class LambertConformal(WrfProj):
                     if _ismissing(self.truelat2)
                     else self.truelat2)
 
-        _proj4 = ("+proj=lcc +units=meters +a={} +b={} +lat_1={} "
+        _proj4 = ("+proj=lcc +units=m +a={} +b={} +lat_1={} "
                   "+lat_2={} +lat_0={} +lon_0={} +nadgrids=@null".format(
                       Constants.WRF_EARTH_RADIUS,
                       Constants.WRF_EARTH_RADIUS,
@@ -654,6 +654,7 @@ class Mercator(WrfProj):
         _cf_params["grid_mapping_name"] = "mercator"
         _cf_params["longitude_of_projection_origin"] = self.stand_lon
         _cf_params["standard_parallel"] = self.truelat1
+        _cf_params["earth_radius"] = Constants.WRF_EARTH_RADIUS
 
         return _cf_params
 
@@ -714,7 +715,7 @@ class Mercator(WrfProj):
 
     def _proj4(self):
 
-        _proj4 = ("+proj=merc +units=meters +a={} +b={} "
+        _proj4 = ("+proj=merc +units=m +a={} +b={} "
                   "+lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
@@ -762,6 +763,7 @@ class PolarStereographic(WrfProj):
                                                                self.stand_lon)
         _cf_params["standard_parallel"] = self.truelat1
         _cf_params["latitude_of_projection_origin"] = self._hemi
+        _cf_params["earth_radius"] = Constants.WRF_EARTH_RADIUS
 
         return _cf_params
 
@@ -821,7 +823,7 @@ class PolarStereographic(WrfProj):
         return _cartopy
 
     def _proj4(self):
-        _proj4 = ("+proj=stere +units=meters +a={} +b={} "
+        _proj4 = ("+proj=stere +units=m +a={} +b={} "
                   "+lat0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
@@ -864,6 +866,7 @@ class LatLon(WrfProj):
     def _cf_params(self):
         _cf_params = {}
         _cf_params["grid_mapping_name"] = "latitude_longitude"
+        _cf_params["earth_radius"] = Constants.WRF_EARTH_RADIUS
         return _cf_params
 
     def _pyngl(self, geobounds, **kwargs):
@@ -920,7 +923,7 @@ class LatLon(WrfProj):
                 [geobounds.bottom_left.lat, geobounds.top_right.lat])
 
     def _proj4(self):
-        _proj4 = ("+proj=eqc +units=meters +a={} +b={} "
+        _proj4 = ("+proj=eqc +units=m +a={} +b={} "
                   "+lon_0={} +nadgrids=@null".format(
                       Constants.WRF_EARTH_RADIUS,
                       Constants.WRF_EARTH_RADIUS,
@@ -1037,6 +1040,7 @@ class RotatedLatLon(WrfProj):
         _cf_params["grid_north_pole_latitude"] = self._bm_cart_pole_lat
         _cf_params["grid_north_pole_longitude"] = self.pole_lon
         _cf_params["north_pole_grid_longitude"] = self._bm_lon_0
+        _cf_params["earth_radius"] = Constants.WRF_EARTH_RADIUS
 
         return _cf_params
 
