@@ -864,8 +864,8 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
             !$OMP DO COLLAPSE(2) SCHEDULE(runtime)
             DO j = 1,ny
                 DO i = 1,nx
-                    uvmet(i,j,1) = v(i,j)*longcb(i,j) + u(i,j)*longca(i,j)
-                    uvmet(i,j,2) = v(i,j)*longca(i,j) - u(i,j)*longcb(i,j)
+                    uvmet(i,j,1) = u(i,j)*longca(i,j) - v(i,j)*longcb(i,j)
+                    uvmet(i,j,2) = v(i,j)*longca(i,j) + u(i,j)*longcb(i,j)
                 END DO
             END DO
             !$OMP END DO
@@ -874,8 +874,8 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
             DO j = 1,ny
                 DO i = 1,nx
                     IF ((u(i,j) .NE. umsg .AND. v(i,j) .NE. vmsg)) THEN
-                        uvmet(i,j,1) = v(i,j)*longcb(i,j) + u(i,j)*longca(i,j)
-                        uvmet(i,j,2) = v(i,j)*longca(i,j) - u(i,j)*longcb(i,j)
+                        uvmet(i,j,1) = u(i,j)*longca(i,j) - v(i,j)*longcb(i,j)
+                        uvmet(i,j,2) = v(i,j)*longca(i,j) + u(i,j)*longcb(i,j)
                     ELSE
                         uvmet(i,j,1) = uvmetmsg
                         uvmet(i,j,2) = uvmetmsg
@@ -895,9 +895,9 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
                     !uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
                     !uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
 
-                    uvmet(i,j,1) = (0.5D0*(v(i,j) + v(i,j+1)))*longcb(i,j) + &
-                                   (0.5D0*(u(i,j) + u(i+1,j)))*longca(i,j)
-                    uvmet(i,j,2) = (0.5D0*(v(i,j) + v(i,j+1)))*longca(i,j) - &
+                    uvmet(i,j,1) = (0.5D0*(u(i,j) + u(i,j+1)))*longca(i,j) - &
+                                   (0.5D0*(v(i,j) + v(i+1,j)))*longcb(i,j)
+                    uvmet(i,j,2) = (0.5D0*(v(i,j) + v(i,j+1)))*longca(i,j) + &
                                    (0.5D0*(u(i,j) + u(i+1,j)))*longcb(i,j)
 
                 END DO
@@ -914,9 +914,9 @@ SUBROUTINE DCOMPUTEUVMET(u, v, uvmet, longca,longcb,flong,flat, &
                         !uvmet(i,j,1) = vk*longcb(i,j) + uk*longca(i,j)
                         !uvmet(i,j,2) = vk*longca(i,j) - uk*longcb(i,j)
 
-                        uvmet(i,j,1) = (0.5D0*(v(i,j) + v(i,j+1)))*longcb(i,j) + &
-                                       (0.5D0*(u(i,j) + u(i+1,j)))*longca(i,j)
-                        uvmet(i,j,2) = (0.5D0*(v(i,j) + v(i,j+1)))*longca(i,j) - &
+                        uvmet(i,j,1) = (0.5D0*(u(i,j) + u(i,j+1)))*longca(i,j) - &
+                                       (0.5D0*(v(i,j) + v(i+1,j)))*longcb(i,j)
+                        uvmet(i,j,2) = (0.5D0*(v(i,j) + v(i,j+1)))*longca(i,j) + &
                                        (0.5D0*(u(i,j) + u(i+1,j)))*longcb(i,j)
                     ELSE
                         uvmet(i,j,1) = uvmetmsg
