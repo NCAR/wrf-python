@@ -66,7 +66,9 @@ jobs:
       - name: Build WRF-Python (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          ./build_scripts/win_msvc_mingw_omp.bat
+          cd build_scripts
+          ./win_msvc_mingw_omp.bat
+          cd ..
       - name: Run tests
         run: |
           cd test/ci_tests
