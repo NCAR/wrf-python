@@ -46,7 +46,7 @@ jobs:
         run: |
           conda env update --file build_envs/Linux.yml --prune
       - name: Conda install (Windows)
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.os == 'windows-latest'
         run: |
           conda env update --file build_envs/Win64.yml --prune
       - name: Build WRF-Python

@@ -2,6 +2,7 @@
 name: wrf_python_build
 channels:
   - conda-forge
+  - msys2
 dependencies:
   - python=3
   - wrapt
