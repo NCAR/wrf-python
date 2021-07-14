@@ -48,7 +48,7 @@ jobs:
       - name: Conda install (Windows)
         if: matrix.os == 'windows-latest'
         run: |
-          choco install visualstudio2015professional
+          choco install visualstudio2015community
           conda env update --file build_envs/Win64.yml --prune
       - name: Build WRF-Python (Linux or Darwin)
         if: matrix.os != 'windows-latest'
