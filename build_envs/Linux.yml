@@ -10,6 +10,7 @@ dependencies:
   - netcdf4
   - xarray
   - jupyter
+  - setuptools
   - sphinx
   - sphinx_rtd_theme
   - pycodestyle
