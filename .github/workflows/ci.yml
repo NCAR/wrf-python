@@ -70,11 +70,10 @@ jobs:
           unset LDFLAGS
           unset CFLAGS
           cd fortran/build_help
-          set FC=gfortran
-          $FC -o sizes -fopenmp omp_sizes.f90
+          gfortran -o sizes -fopenmp omp_sizes.f90
           LD_LIBRARY_PATH=~/miniconda3/envs/wrf_python_build/lib python sub_sizes.py
           cd ..
-          $FC -E ompgen.F90 -fopenmp -cpp -o omp.f90
+          gfortran -E ompgen.F90 -fopenmp -cpp -o omp.f90
           cd ..
           python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
           python setup.py install --single-version-externally-managed --record=record.txt
