@@ -1,0 +1,64 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # schedule:
+  #    - cron: '0 0 * * *' # Daily “At 00:00”
+
+jobs:
+  test:
+    # if: |
+    #   github.repository == 'NCAR/geocat-f2py'
+    name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ "ubuntu-latest", "macos-latest"]
+        python-version: [ "3.6", "3.7", "3.8", "3.9" ]
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          token: ${{ github.token }}
+      - name: Conda setup
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: geocat_f2py_build
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge, ncar
+      - name: Conda install (Darwin)
+        if: matrix.os == 'macos-latest'
+        run: |
+          conda install numpy=1.19 xarray dask pytest pytest-cov gfortran_osx-64 liblapack
+      - name: Conda install (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          conda install numpy=1.19 xarray dask pytest pytest-cov gfortran_linux-64 liblapack
+      - name: Install geocat-f2py
+        run: |
+          source build.sh
+      - name: Run namespace tests
+        run: |
+          python -m pytest test
+      - name: Run coverage tests
+        run: |
+          python -m pytest test -v --cov=./src/geocat/f2py --cov-report=xml
+      - name: Upload code coverage to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          file: ./coverage.xml
+          flags: unittests
+          env_vars: OS,PYTHON
+          name: codecov-umbrella
+          fail_ci_if_error: false

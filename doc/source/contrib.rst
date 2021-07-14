@@ -301,19 +301,19 @@ contributing is:
   
   .. code::
   
-     conda env create -f osx.yml
+     conda env create -f build_envs/osx.yml
      
   Linux:
   
   .. code::
   
-     conda env create -f linux.yml
+     conda env create -f build_envs/linux.yml
      
   Win64:
   
   .. code::
   
-     conda env create -f win64.yml
+     conda env create -f build_envs/win64.yml
      
   Note: For Win64, you will also need VS2015 installed on your system.
   
