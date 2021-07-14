@@ -49,20 +49,20 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           conda env update --file build_envs/Win64.yml --prune
-      - name: Install geocat-f2py
+      - name: Build WRF-Python
         run: |
-          source build.sh
-      - name: Run namespace tests
+          unset FFLAGS
+          unset LDFLAGS
+          unset CFLAGS
+          cd fortran/build_help
+          $FC -o sizes -fopenmp omp_sizes.f90
+          LD_LIBRARY_PATH=~/miniconda3/envs/wrf_python_build/lib python sub_sizes.py
+          cd ..
+          $FC -E ompgen.F90 -fopenmp -cpp -o omp.f90
+          cd ..
+          python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
+          python setup.py install --single-version-externally-managed --record=record.txt
+      - name: Run tests
         run: |
-          python -m pytest test
-      - name: Run coverage tests
-        run: |
-          python -m pytest test -v --cov=./src/geocat/f2py --cov-report=xml
-      - name: Upload code coverage to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          file: ./coverage.xml
-          flags: unittests
-          env_vars: OS,PYTHON
-          name: codecov-umbrella
-          fail_ci_if_error: false
+          cd test/ci_tests
+          python utests.py

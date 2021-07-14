@@ -1,5 +1,5 @@
 # Create full conda environment for development, including some useful tools
-name: develop
+name: wrf_python_build
 channels:
   - conda-forge
 dependencies:
