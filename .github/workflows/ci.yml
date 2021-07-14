@@ -49,11 +49,23 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           conda env update --file build_envs/Win64.yml --prune
-      - name: Build WRF-Python
+      - name: Build WRF-Python (Linux or Darwin)
+        if: matrix.os != 'windows-latest'
         run: |
           unset FFLAGS
           unset LDFLAGS
           unset CFLAGS
+          cd fortran/build_help
+          $FC -o sizes -fopenmp omp_sizes.f90
+          LD_LIBRARY_PATH=~/miniconda3/envs/wrf_python_build/lib python sub_sizes.py
+          cd ..
+          $FC -E ompgen.F90 -fopenmp -cpp -o omp.f90
+          cd ..
+          python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
+          python setup.py install --single-version-externally-managed --record=record.txt
+      - name: Build WRF-Python (Windows)
+        if: matrix.os == 'windows-latest'
+        run: |
           cd fortran/build_help
           $FC -o sizes -fopenmp omp_sizes.f90
           LD_LIBRARY_PATH=~/miniconda3/envs/wrf_python_build/lib python sub_sizes.py
