@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     # if: |
-    #   github.repository == 'NCAR/geocat-f2py'
+    #   github.repository == 'NCAR/wrf-python'
     name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     defaults:
@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu-latest", "macos-latest"]
+        os: [ "ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: [ "3.6", "3.7", "3.8", "3.9" ]
 
     steps:
@@ -34,17 +34,21 @@ jobs:
       - name: Conda setup
         uses: conda-incubator/setup-miniconda@v2
         with:
-          activate-environment: geocat_f2py_build
+          activate-environment: wrf_python_build
           python-version: ${{ matrix.python-version }}
           channels: conda-forge, ncar
       - name: Conda install (Darwin)
         if: matrix.os == 'macos-latest'
         run: |
-          conda install numpy=1.19 xarray dask pytest pytest-cov gfortran_osx-64 liblapack
+          conda env update --file build_envs/Darwin.yml --prune
       - name: Conda install (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
-          conda install numpy=1.19 xarray dask pytest pytest-cov gfortran_linux-64 liblapack
+          conda env update --file build_envs/Linux.yml --prune
+      - name: Conda install (Windows)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          conda env update --file build_envs/Win64.yml --prune
       - name: Install geocat-f2py
         run: |
           source build.sh
