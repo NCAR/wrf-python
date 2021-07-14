@@ -48,6 +48,7 @@ jobs:
       - name: Conda install (Windows)
         if: matrix.os == 'windows-latest'
         run: |
+          choco install visualstudio2015professional
           conda env update --file build_envs/Win64.yml --prune
       - name: Build WRF-Python (Linux or Darwin)
         if: matrix.os != 'windows-latest'
@@ -59,7 +60,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd build_scripts
-          ./win_mingw_no_omp.bat
+          ./win_msvc_mingw_omp.bat
           cd ..
       - name: Run tests
         run: |
