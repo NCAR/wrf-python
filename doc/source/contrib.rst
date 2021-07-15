@@ -321,7 +321,7 @@ contributing is:
 
   .. code::
   
-     conda activate develop
+     conda activate wrf_python_build
      
 - CD to the build_scripts directory.
 
