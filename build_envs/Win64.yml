@@ -5,17 +5,17 @@ channels:
   - msys2
 dependencies:
   - python=3
-  - wrapt
-  - numpy
+  - basemap
+  - cartopy
+  - jupyter
+  - m2w64-toolchain
   - matplotlib
   - netcdf4
-  - xarray
-  - jupyter
+  - numpy
+  - pycodestyle
   - setuptools
   - sphinx
   - sphinx_rtd_theme
-  - pycodestyle
-  - cartopy
-  - basemap
-  - m2w64-toolchain
+  - wrapt
+  - xarray
 

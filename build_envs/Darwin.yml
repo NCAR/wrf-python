@@ -4,18 +4,18 @@ channels:
   - conda-forge
 dependencies:
   - python=3
-  - wrapt
-  - numpy
+  - basemap
+  - cartopy
+  - clang_osx-64
+  - gfortran_osx-64
+  - jupyter
   - matplotlib
   - netcdf4
-  - xarray
-  - jupyter
+  - numpy
+  - pycodestyle
   - setuptools
   - sphinx
   - sphinx_rtd_theme
-  - pycodestyle
-  - cartopy
-  - basemap
-  - clang_osx-64
-  - gfortran_osx-64
+  - wrapt
+  - xarray
 
