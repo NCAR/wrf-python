@@ -16,7 +16,7 @@ class Constants(object):
 
 
 for key, val in viewitems(wrf_constants.__dict__):
-    setattr(Constants, key.upper(), val)
+    setattr(Constants, key.upper(), np.array(val).item())
 
 OMP_SCHED_STATIC = omp_constants.fomp_sched_static
 OMP_SCHED_DYNAMIC = omp_constants.fomp_sched_dynamic
