@@ -3,7 +3,8 @@ from __future__ import (absolute_import, division, print_function)
 import os
 from sys import version_info
 from copy import copy
-from collections import Iterable, Mapping, OrderedDict
+from collections import OrderedDict
+from collections.abc import Iterable, Mapping
 from itertools import product, tee
 from types import GeneratorType
 import datetime as dt

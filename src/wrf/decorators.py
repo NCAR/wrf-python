@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function)
 
-from collections import Iterable, OrderedDict
+from collections import OrderedDict
+from collections.abc import Iterable
 
 import wrapt
 import numpy as np

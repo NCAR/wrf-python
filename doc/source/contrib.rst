@@ -301,19 +301,19 @@ contributing is:
   
   .. code::
   
-     conda env create -f osx.yml
+     conda env create -f build_envs/Darwin.yml
      
   Linux:
   
   .. code::
   
-     conda env create -f linux.yml
+     conda env create -f build_envs/Linux.yml
      
   Win64:
   
   .. code::
   
-     conda env create -f win64.yml
+     conda env create -f build_envs/Win64.yml
      
   Note: For Win64, you will also need VS2015 installed on your system.
   
@@ -321,7 +321,7 @@ contributing is:
 
   .. code::
   
-     conda activate develop
+     conda activate wrf_python_build
      
 - CD to the build_scripts directory.
 
