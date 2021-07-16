@@ -1,0 +1,56 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  # schedule:
+  #    - cron: '0 0 * * *' # Daily “At 00:00”
+
+jobs:
+  test:
+    # if: |
+    #   github.repository == 'NCAR/wrf-python'
+    name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ "ubuntu-latest", "macos-latest"]
+        python-version: [ "3.6", "3.7", "3.8", "3.9" ]
+
+    steps:
+      - name: Cancel previous runs
+        uses: styfle/cancel-workflow-action@0.9.0
+        with:
+          access_token: ${{ github.token }}
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          token: ${{ github.token }}
+      - name: Conda setup
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          activate-environment: wrf_python_build
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge, ncar
+      - name: Conda install (Darwin)
+        if: matrix.os == 'macos-latest'
+        run: |
+          conda env update --file build_envs/Darwin.yml --prune
+      - name: Conda install (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          conda env update --file build_envs/Linux.yml --prune
+      - name: Build WRF-Python
+        run: |
+          cd build_scripts
+          ./gnu_omp.sh
+          cd ..
+      - name: Run tests
+        run: |
+          cd test/ci_tests
+          python utests.py
