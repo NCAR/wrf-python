@@ -824,7 +824,7 @@ class PolarStereographic(WrfProj):
 
     def _proj4(self):
         _proj4 = ("+proj=stere +units=m +a={} +b={} "
-                  "+lat0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
+                  "+lat_0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self._hemi,
