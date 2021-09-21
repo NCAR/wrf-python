@@ -63,7 +63,7 @@ def get_slp(wrfin, timeidx=0, method="cat", squeeze=True,
 
         units (:obj:`str`): The desired units.  Refer to the :meth:`getvar`
             product table for a list of available units for 'slp'.  Default
-            is 'Pa'.
+            is 'hPa'.
 
     Returns:
 
