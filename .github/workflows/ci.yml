@@ -52,6 +52,5 @@ jobs:
           cd ..
       - name: Run tests
         run: |
-          python -m pytest test/ci_tests
-#          cd test/ci_tests
-#          python utests.py
+          cd test/ci_tests
+          python utests.py
