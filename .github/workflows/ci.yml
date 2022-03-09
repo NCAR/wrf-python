@@ -37,6 +37,8 @@ jobs:
           activate-environment: wrf_python_build
           python-version: ${{ matrix.python-version }}
           channels: conda-forge, ncar
+          environment-file: build_envs/Linux.yml
+
       - name: Conda install (Darwin)
         if: matrix.os == 'macos-latest'
         run: |
