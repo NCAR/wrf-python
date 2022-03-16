@@ -76,12 +76,9 @@ if cartopy_enabled():
                 else:
                     xlimits[0] = -xlimits[0]
 
-            self._xlimits = tuple(xlimits)
-            self._ylimits = tuple(limits[..., 1])
-
             # Compatibility with cartopy >= 0.17
-            self._x_limits = self._xlimits
-            self._y_limits = self._ylimits
+            self._x_limits = tuple(xlimits)
+            self._y_limits =  tuple(limits[..., 1])
 
             self._threshold = np.diff(self.x_limits)[0] / 720
 
@@ -824,7 +821,7 @@ class PolarStereographic(WrfProj):
 
     def _proj4(self):
         _proj4 = ("+proj=stere +units=m +a={} +b={} "
-                  "+lat0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
+                  "+lat_0={} +lon_0={} +lat_ts={} +nadgrids=@null".format(
                                             Constants.WRF_EARTH_RADIUS,
                                             Constants.WRF_EARTH_RADIUS,
                                             self._hemi,
