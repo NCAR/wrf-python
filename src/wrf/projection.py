@@ -18,69 +18,76 @@ if pyngl_enabled():
     from Ngl import Resources
 
 
+
 if cartopy_enabled():
-    class MercatorWithLatTS(crs.Mercator):
-        """A :class:`cartopy.crs.Mercator` subclass that adds support for
-        a latitude of true scale parameter.
+    if cartopy_enabled():
+        class MercatorWithLatTS(crs.Mercator):
+            """A :class:`cartopy.crs.Mercator` subclass that adds support for
+            a latitude of true scale parameter.
 
-        See Also:
+            See Also:
 
-            :class:`cartopy.crs.Mercator`
-
-        """
-        def __init__(self, central_longitude=0.0,
-                     latitude_true_scale=0.0,
-                     min_latitude=-80.0,
-                     max_latitude=84.0,
-                     globe=None):
-            """Initialize a :class:`wrf.MercatorWithLatTS` object.
-
-            Args:
-
-                central_longitude (:obj:`float`, optional): The central
-                    longitude.  Default is 0.0.
-
-                latitude_true_scale (:obj:`float`, optional): The latitude
-                    of true scale.  Default is 0.0.
-
-                min_latitude (:obj:`float`, optional): The maximum southerly
-                    extent of the projection.  Default is -80.0.
-
-                max_latitude (:obj:`float`, optional): The maximum northerly
-                    extent of the projection.  Default is 84.0.
-
-                globe (:class:`cartopy.crs.Globe`, optional): A globe object.
-                    If omitted, a default globe is created.
+                :class:`cartopy.crs.Mercator`
 
             """
-            proj4_params = [("proj", "merc"),
-                            ("lon_0", central_longitude),
-                            ("lat_ts", latitude_true_scale),
-                            ("k", 1),
-                            ("units", "m")]
-            super(crs.Mercator, self).__init__(proj4_params, globe=globe)
+            def __init__(self, central_longitude=0.0,
+                         latitude_true_scale=0.0,
+                         min_latitude=-80.0,
+                         max_latitude=84.0,
+                         globe=None):
+                """Initialize a :class:`wrf.MercatorWithLatTS` object.
 
-            # Calculate limits.
-            limits = self.transform_points(
-                crs.Geodetic(),
-                np.array([-180, 180]) + central_longitude,
-                np.array([min_latitude, max_latitude]))
+                Args:
 
-            # When using a latitude of true scale, the min/max x-limits get set
-            # to the same value, so make sure the left one is negative
-            xlimits = limits[..., 0]
+                    central_longitude (:obj:`float`, optional): The central
+                        longitude.  Default is 0.0.
 
-            if math.fabs(xlimits[0] - xlimits[1]) < 1e-6:
-                if xlimits[0] < 0:
-                    xlimits[1] = -xlimits[1]
-                else:
-                    xlimits[0] = -xlimits[0]
+                    latitude_true_scale (:obj:`float`, optional): The latitude
+                        of true scale.  Default is 0.0.
 
-            # Compatibility with cartopy >= 0.17
-            self._x_limits = tuple(xlimits)
-            self._y_limits =  tuple(limits[..., 1])
+                    min_latitude (:obj:`float`, optional): The maximum southerly
+                        extent of the projection.  Default is -80.0.
 
-            self._threshold = np.diff(self.x_limits)[0] / 720
+                    max_latitude (:obj:`float`, optional): The maximum northerly
+                        extent of the projection.  Default is 84.0.
+
+                    globe (:class:`cartopy.crs.Globe`, optional): A globe object.
+                        If omitted, a default globe is created.
+
+                """
+                proj4_params = [("proj", "merc"),
+                                ("lon_0", central_longitude),
+                                ("lat_ts", latitude_true_scale),
+                                ("k", 1),
+                                ("units", "m")]
+                super(crs.Mercator, self).__init__(proj4_params, globe=globe)
+
+                # Need to have x/y limits defined for the initial hash which
+                # gets used within transform_points for caching
+                self._x_limits = self._y_limits = None
+
+                # Calculate limits.
+                limits = self.transform_points(
+                    crs.Geodetic(),
+                    np.array([-180, 180]) + central_longitude,
+                    np.array([min_latitude, max_latitude]))
+
+                # When using a latitude of true scale, the min/max x-limits get set
+                # to the same value, so make sure the left one is negative
+                xlimits = limits[..., 0]
+
+                if math.fabs(xlimits[0] - xlimits[1]) < 1e-6:
+                    if xlimits[0] < 0:
+                        xlimits[1] = -xlimits[1]
+                    else:
+                        xlimits[0] = -xlimits[0]
+
+                # Compatibility with cartopy >= 0.17
+                self._x_limits = tuple(xlimits)
+                self._y_limits =  tuple(limits[..., 1])
+
+                self._threshold = min(np.diff(self.x_limits)[0] / 720,
+                                      np.diff(self.y_limits)[0] / 360)
 
 
 def _ismissing(val, islat=True):
