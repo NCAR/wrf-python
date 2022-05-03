@@ -18,6 +18,7 @@ if pyngl_enabled():
     from Ngl import Resources
 
 
+
 if cartopy_enabled():
     class MercatorWithLatTS(crs.Mercator):
         """A :class:`cartopy.crs.Mercator` subclass that adds support for
@@ -60,6 +61,10 @@ if cartopy_enabled():
                             ("units", "m")]
             super(crs.Mercator, self).__init__(proj4_params, globe=globe)
 
+            # Need to have x/y limits defined for the initial hash which
+            # gets used within transform_points for caching
+            self._x_limits = self._y_limits = None
+
             # Calculate limits.
             limits = self.transform_points(
                 crs.Geodetic(),
@@ -80,7 +85,8 @@ if cartopy_enabled():
             self._x_limits = tuple(xlimits)
             self._y_limits =  tuple(limits[..., 1])
 
-            self._threshold = np.diff(self.x_limits)[0] / 720
+            self._threshold = min(np.diff(self.x_limits)[0] / 720,
+                                  np.diff(self.y_limits)[0] / 360)
 
 
 def _ismissing(val, islat=True):
