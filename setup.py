@@ -5,9 +5,9 @@ from setuptools import setup
 import socket
 
 # Bootstrap a numpy installation before trying to import it.
-import imp
+import importlib
 try:
-    imp.find_module('numpy')
+    importlib.util.find_spec('numpy')
 except ImportError:
     import subprocess
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'numpy'])
@@ -73,7 +73,7 @@ else:
         #     requirements.append("mock")
     ext_modules = [ext1]
 
-setup(
+numpy.distutils.core.setup(
     name='wrf-python',
     author="Bill Ladwig",
     maintainer="GeoCAT",
