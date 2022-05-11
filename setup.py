@@ -113,7 +113,6 @@ setup(
     license="Apache License 2.0",
     packages=setuptools.find_packages("src"),
     ext_modules=ext_modules,
-    package_dir={"": "src"},
     download_url="http://python.org/pypi/wrf-python",
     package_data={"wrf": ["data/psadilookup.dat"]},
     scripts=[]
