@@ -111,7 +111,6 @@ setup(
                  "Operating System :: Microsoft :: Windows"],
     platforms=["any"],
     license="Apache License 2.0",
-    version=__version__,
     packages=setuptools.find_packages("src"),
     ext_modules=ext_modules,
     package_dir={"": "src"},
@@ -119,4 +118,3 @@ setup(
     package_data={"wrf": ["data/psadilookup.dat"]},
     scripts=[]
 )
-
