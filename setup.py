@@ -1,7 +1,6 @@
 import os
 import sys
 import setuptools
-from setuptools import setup
 import socket
 
 # Bootstrap a numpy installation before trying to import it.

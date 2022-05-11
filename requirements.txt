@@ -1,3 +1,6 @@
+basemap
+cartopy>0.17
 numpy>=1.11
-wrapt
 setuptools
+wrapt
+xarray
