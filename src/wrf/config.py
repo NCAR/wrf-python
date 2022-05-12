@@ -10,35 +10,52 @@ from ._wrffortran import (fomp_enabled, fomp_set_num_threads,
 _local_config = local()
 
 
-def _init_local():
+def _try_enable_xarray():
     global _local_config
-
     _local_config.xarray_enabled = True
-    _local_config.cartopy_enabled = True
-    _local_config.basemap_enabled = True
-    _local_config.pyngl_enabled = True
-    _local_config.cache_size = 20
-    _local_config.initialized = True
-
     try:
         from xarray import DataArray
     except ImportError:
         _local_config.xarray_enabled = False
 
+
+def _try_enable_cartopy():
+    global _local_config
+    _local_config.cartopy_enabled = True
     try:
         from cartopy import crs
     except ImportError:
         _local_config.cartopy_enabled = False
 
+
+def _try_enable_basemap():
+    global _local_config
+    _local_config.basemap_enabled = True
     try:
         from mpl_toolkits.basemap import Basemap
     except ImportError:
         _local_config.basemap_enabled = False
 
+
+def _try_enable_pyngl():
+    global _local_config
+    _local_config.pyngl_enabled = True
     try:
         from Ngl import Resources
     except ImportError:
         _local_config.pyngl_enabled = False
+
+
+def _init_local():
+    global _local_config
+
+    _try_enable_xarray()
+    _try_enable_cartopy()
+    _try_enable_basemap()
+    _try_enable_pyngl()
+
+    _local_config.cache_size = 20
+    _local_config.initialized = True
 
 
 # Initialize the main thread's configuration
@@ -51,11 +68,11 @@ def init_local():
     def func_wrapper(wrapped, instance, args, kwargs):
         global _local_config
         try:
-            init = _local_config.init
+            initialized = _local_config.initialized
         except AttributeError:
             _init_local()
         else:
-            if not init:
+            if not initialized:
                 _init_local()
 
         return wrapped(*args, **kwargs)
@@ -77,17 +94,16 @@ def xarray_enabled():
 
 
 @init_local()
+def enable_xarray():
+    """Enable xarray if it is installed."""
+    _try_enable_xarray()
+
+
+@init_local()
 def disable_xarray():
     """Disable xarray."""
     global _local_config
     _local_config.xarray_enabled = False
-
-
-@init_local()
-def enable_xarray():
-    """Enable xarray."""
-    global _local_config
-    _local_config.xarray_enabled = True
 
 
 @init_local()
@@ -105,16 +121,15 @@ def cartopy_enabled():
 
 @init_local()
 def enable_cartopy():
-    """Enable cartopy."""
-    global _local_config
-    _local_config.cartopy_enabled = True
+    """Enable cartopy if it is installed."""
+    _try_enable_cartopy()
 
 
 @init_local()
 def disable_cartopy():
     """Disable cartopy."""
     global _local_config
-    _local_config.cartopy_enabled = True
+    _local_config.cartopy_enabled = False
 
 
 @init_local()
@@ -132,16 +147,15 @@ def basemap_enabled():
 
 @init_local()
 def enable_basemap():
-    """Enable basemap."""
-    global _local_config
-    _local_config.basemap_enabled = True
+    """Enable basemap if it is installed."""
+    _try_enable_basemap()
 
 
 @init_local()
 def disable_basemap():
     """Disable basemap."""
     global _local_config
-    _local_config.basemap_enabled = True
+    _local_config.basemap_enabled = False
 
 
 @init_local()
@@ -159,16 +173,15 @@ def pyngl_enabled():
 
 @init_local()
 def enable_pyngl():
-    """Enable pyngl."""
-    global _local_config
-    _local_config.pyngl_enabled = True
+    """Enable pyngl if it is installed."""
+    _try_enable_pyngl()
 
 
 @init_local()
 def disable_pyngl():
     """Disable pyngl."""
     global _local_config
-    _local_config.pyngl_enabled = True
+    _local_config.pyngl_enabled = False
 
 
 @init_local()
