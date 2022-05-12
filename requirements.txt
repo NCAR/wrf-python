@@ -1,5 +1,4 @@
 basemap
-cartopy>0.17
 numpy>=1.11
 setuptools
 wrapt
