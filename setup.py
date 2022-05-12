@@ -4,9 +4,9 @@ import setuptools
 import socket
 
 # Bootstrap a numpy installation before trying to import it.
-import importlib
+import imp
 try:
-    importlib.util.find_spec('numpy')
+    imp.find_module('numpy')
 except ImportError:
     import subprocess
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'numpy'])
@@ -72,11 +72,10 @@ else:
         #     requirements.append("mock")
     ext_modules = [ext1]
 
+
 numpy.distutils.core.setup(
-    name='wrf-python',
     author="Bill Ladwig",
-    maintainer="GeoCAT",
-    maintainer_email="geocat@ucar.edu",
+    author_email="ladwig@ucar.edu",
     description="Diagnostic and interpolation routines for WRF-ARW data.",
     long_description=("A collection of diagnostic and interpolation "
                       "routines to be used with WRF-ARW data.\n\n"
@@ -85,33 +84,35 @@ numpy.distutils.core.setup(
                       "Documentation:\n\n"
                       "http://wrf-python.rtfd.org\n"),
     url="https://github.com/NCAR/wrf-python",
-    version=__version__,
-    package_dir={"": "src"},
     keywords=["python", "wrf-python", "wrf", "forecast", "model",
               "weather research and forecasting", "interpolation",
               "plotting", "plots", "meteorology", "nwp",
               "numerical weather prediction", "diagnostic",
               "science", "numpy"],
-    python_requires='>=3.7',
     install_requires=requirements,
     classifiers=["Development Status :: 5 - Production/Stable",
                  "Intended Audience :: Science/Research",
                  "Intended Audience :: Developers",
                  "License :: OSI Approved :: Apache Software License",
                  "Programming Language :: Fortran",
+                 "Programming Language :: Python :: 2.7",
+                 "Programming Language :: Python :: 3.4",
+                 "Programming Language :: Python :: 3.5",
+                 "Programming Language :: Python :: 3.6",
                  "Programming Language :: Python :: 3.7",
-                 'Programming Language :: Python :: 3.8',
-                 'Programming Language :: Python :: 3.9',
                  "Topic :: Scientific/Engineering :: Atmospheric Science",
                  "Topic :: Software Development",
                  "Operating System :: POSIX",
                  "Operating System :: Unix",
                  "Operating System :: MacOS",
                  "Operating System :: Microsoft :: Windows"],
+    name="wrf-python",
     platforms=["any"],
     license="Apache License 2.0",
+    version=__version__,
     packages=setuptools.find_packages("src"),
     ext_modules=ext_modules,
+    package_dir={"": "src"},
     download_url="http://python.org/pypi/wrf-python",
     package_data={"wrf": ["data/psadilookup.dat"]},
     scripts=[]
