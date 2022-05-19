@@ -51,6 +51,8 @@ ext1 = numpy.distutils.core.Extension(
              "fortran/omp.f90"]
     )
 
+#Note: __version__ will be set in the version.py script loaded below
+__version__ = None
 with open("src/wrf/version.py") as f:
     exec(f.read())
 
