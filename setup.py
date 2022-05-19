@@ -83,7 +83,7 @@ numpy.distutils.core.setup(
                       "GitHub Repository:\n\n"
                       "https://github.com/NCAR/wrf-python\n\n"
                       "Documentation:\n\n"
-                      "http://wrf-python.rtfd.org\n"),
+                      "https://wrf-python.rtfd.org\n"),
     url="https://github.com/NCAR/wrf-python",
     version=__version__,
     package_dir={"": "src"},
@@ -112,7 +112,7 @@ numpy.distutils.core.setup(
     license="Apache License 2.0",
     packages=setuptools.find_packages("src"),
     ext_modules=ext_modules,
-    download_url="http://python.org/pypi/wrf-python",
+    download_url="https://python.org/pypi/wrf-python",
     package_data={"wrf": ["data/psadilookup.dat"]},
     scripts=[]
 )
