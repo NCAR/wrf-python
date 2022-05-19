@@ -6,8 +6,10 @@ import socket
 # Bootstrap a numpy installation before trying to import it.
 import importlib
 try:
-    importlib.util.find_spec('numpy')
-except ImportError:
+    numpy_module = importlib.util.find_spec('numpy')
+    if numpy_module is None:
+        raise ModuleNotFoundError
+except (ImportError, ModuleNotFoundError):
     import subprocess
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'numpy'])
 
