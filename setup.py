@@ -6,8 +6,10 @@ import socket
 # Bootstrap a numpy installation before trying to import it.
 import importlib
 try:
-    importlib.util.find_spec('numpy')
-except ImportError:
+    numpy_module = importlib.util.find_spec('numpy')
+    if numpy_module is None:
+        raise ModuleNotFoundError
+except (ImportError, ModuleNotFoundError):
     import subprocess
     subprocess.call([sys.executable, '-m', 'pip', 'install', 'numpy'])
 
@@ -51,6 +53,8 @@ ext1 = numpy.distutils.core.Extension(
              "fortran/omp.f90"]
     )
 
+#Note: __version__ will be set in the version.py script loaded below
+__version__ = None
 with open("src/wrf/version.py") as f:
     exec(f.read())
 
@@ -83,7 +87,7 @@ numpy.distutils.core.setup(
                       "GitHub Repository:\n\n"
                       "https://github.com/NCAR/wrf-python\n\n"
                       "Documentation:\n\n"
-                      "http://wrf-python.rtfd.org\n"),
+                      "https://wrf-python.rtfd.org\n"),
     url="https://github.com/NCAR/wrf-python",
     version=__version__,
     package_dir={"": "src"},
@@ -112,7 +116,7 @@ numpy.distutils.core.setup(
     license="Apache License 2.0",
     packages=setuptools.find_packages("src"),
     ext_modules=ext_modules,
-    download_url="http://python.org/pypi/wrf-python",
+    download_url="https://python.org/pypi/wrf-python",
     package_data={"wrf": ["data/psadilookup.dat"]},
     scripts=[]
 )
