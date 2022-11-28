@@ -273,7 +273,7 @@ def _kwarg_proj_params(**projparams):
     else:
         latinc = 0.0
         loninc = 0.0
-        dy = 0.0
+        #dy = 0.0
 
     return (map_proj, truelat1, truelat2, stdlon, ref_lat, ref_lon, pole_lat,
             pole_lon, known_x, known_y, dx, dy, latinc, loninc)
