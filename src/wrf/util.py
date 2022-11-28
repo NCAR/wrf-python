@@ -51,15 +51,20 @@ _COORD_PAIR_MAP = {"XLAT": ("XLAT", "XLONG"),
                    "XLAT_V": ("XLAT_V", "XLONG_V"),
                    "XLONG_V": ("XLAT_V", "XLONG_V"),
                    "CLAT": ("CLAT", "CLONG"),
-                   "CLONG": ("CLAT", "CLONG")}
+                   "CLONG": ("CLAT", "CLONG"),
+                   "lat0": ("lat0","lon0"),
+                   "lon0": ("lat0","lon0"),
+                   "lat": ("lat","lon"),
+                   "lon": ("lat","lon")
+                   }
 
 
 _COORD_VARS = ("XLAT", "XLONG", "XLAT_M", "XLONG_M", "XLAT_U", "XLONG_U",
-               "XLAT_V", "XLONG_V", "CLAT", "CLONG")
+               "XLAT_V", "XLONG_V", "CLAT", "CLONG", "lat0", "lon0", "lat", "lon")
 
-_LAT_COORDS = ("XLAT", "XLAT_M", "XLAT_U", "XLAT_V", "CLAT")
+_LAT_COORDS = ("XLAT", "XLAT_M", "XLAT_U", "XLAT_V", "CLAT", "lat0", "lat")
 
-_LON_COORDS = ("XLONG", "XLONG_M", "XLONG_U", "XLONG_V", "CLONG")
+_LON_COORDS = ("XLONG", "XLONG_M", "XLONG_U", "XLONG_V", "CLONG", "lon0", "lon")
 
 _TIME_COORD_VARS = ("XTIME",)
 
@@ -289,7 +294,7 @@ def latlon_coordvars(ncvars):
         if name in viewkeys(ncvars):
             lat_coord = name
             break
-
+    
     for name in _LON_COORDS:
         if name in viewkeys(ncvars):
             lon_coord = name
