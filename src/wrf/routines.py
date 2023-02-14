@@ -196,6 +196,8 @@ _ALIASES = {"cape_2d": "cape2d",
             "wdir_uvmet": "uvmet_wdir",
             "wspd_uvmet10": "uvmet10_wspd",
             "wdir_uvmet10": "uvmet10_wdir",
+            "mcape": "cape2d_only",
+            "mcin": "cin2d_only"
             }
 
 
