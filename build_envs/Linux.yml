@@ -11,7 +11,7 @@ dependencies:
   - jupyter
   - matplotlib
   - netcdf4
-  - numpy
+  - numpy!=1.24.3
   - pycodestyle
   - setuptools
   - sphinx
