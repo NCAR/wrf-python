@@ -3,13 +3,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-  # schedule:
-  #    - cron: '0 0 * * *' # Daily “At 00:00”
+  schedule:
+    - cron: '0 0 * * *' # Daily “At 00:00”
 
 jobs:
   test:
-    # if: |
-    #   github.repository == 'NCAR/wrf-python'
     name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     defaults:
@@ -24,11 +22,11 @@ jobs:
 
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ github.token }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ github.token }}
       - name: Conda setup
