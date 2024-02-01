@@ -40,7 +40,7 @@ jobs:
         run: |
           conda env update --file build_envs/Darwin.yml --prune
       - name: Conda install (macOS - ARM)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-14'
         run: |
           conda env update --file build_envs/environment.yml --prune
       - name: Conda install (Linux)
