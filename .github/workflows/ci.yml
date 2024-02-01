@@ -17,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu-latest", "macos-latest"]
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+        os: [ "ubuntu-latest", "macos-latest", "macos-14" ]
+        python-version: [ "3.9", "3.10", "3.11" ]
 
     steps:
       - name: Cancel previous runs
@@ -34,11 +34,15 @@ jobs:
         with:
           activate-environment: wrf_python_build
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge, ncar
-      - name: Conda install (Darwin)
+          channels: conda-forge
+      - name: Conda install (macOS - Intel)
         if: matrix.os == 'macos-latest'
         run: |
           conda env update --file build_envs/Darwin.yml --prune
+      - name: Conda install (macOS - ARM)
+        if: matrix.os == 'macos-latest'
+        run: |
+          conda env update --file build_envs/environment.yml --prune
       - name: Conda install (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |

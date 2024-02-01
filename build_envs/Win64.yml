@@ -11,7 +11,7 @@ dependencies:
   - m2w64-toolchain
   - matplotlib
   - netcdf4
-  - numpy!=1.24.3
+  - numpy
   - pycodestyle
   - setuptools
   - sphinx
