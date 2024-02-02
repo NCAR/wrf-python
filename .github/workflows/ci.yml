@@ -54,7 +54,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           cd build_scripts
-          ./win_msvc_mingw_omp.bat
+          ./win_mingw_omp.bat
           cd ..
       - name: Run tests
         run: |
