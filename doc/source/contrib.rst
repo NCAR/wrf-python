@@ -294,28 +294,13 @@ contributing is:
   
      git remote add ncar https://github.com/ncar/wrf-python.git
      
-- To create the development environment, you'll need to run the appropriate 
-  command below for your operating system.
-  
-  OSX:
+- To create the development environment, you'll need to run the command below:
   
   .. code::
   
-     conda env create -f build_envs/Darwin.yml
+     conda env create -f build_envs/environment.yml
      
-  Linux:
-  
-  .. code::
-  
-     conda env create -f build_envs/Linux.yml
-     
-  Win64:
-  
-  .. code::
-  
-     conda env create -f build_envs/Win64.yml
-     
-  Note: For Win64, you will also need VS2015 installed on your system.
+  Note: For Windows, you will also need Visual Studio installed on your system.
   
 - Activate your conda environment.
 

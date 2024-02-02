@@ -2,13 +2,13 @@
 name: wrf_python_build
 channels:
   - conda-forge
-  - msys2
 dependencies:
-  - python=3
+  - python<3.12
   - basemap
   - cartopy
+  - clang_osx-arm64
+  - gfortran_osx-arm64
   - jupyter
-  - m2w64-toolchain
   - matplotlib
   - netcdf4
   - numpy

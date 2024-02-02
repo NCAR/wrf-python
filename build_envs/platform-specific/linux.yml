@@ -1,0 +1,21 @@
+# Create full conda environment for development, including some useful tools
+name: wrf_python_build
+channels:
+  - conda-forge
+dependencies:
+  - python<3.12
+  - basemap
+  - cartopy
+  - gcc_linux-64
+  - gfortran_linux-64
+  - jupyter
+  - matplotlib
+  - netcdf4
+  - numpy
+  - pycodestyle
+  - setuptools
+  - sphinx
+  - sphinx_rtd_theme
+  - wrapt
+  - xarray
+
