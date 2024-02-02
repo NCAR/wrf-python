@@ -3,13 +3,11 @@ on:
   push:
   pull_request:
   workflow_dispatch:
-  # schedule:
-  #    - cron: '0 0 * * *' # Daily “At 00:00”
+  schedule:
+    - cron: '0 0 * * *' # Daily “At 00:00”
 
 jobs:
   test:
-    # if: |
-    #   github.repository == 'NCAR/wrf-python'
     name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     defaults:
@@ -19,32 +17,33 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ "ubuntu-latest", "macos-latest"]
-        python-version: [ "3.7", "3.8", "3.9", "3.10" ]
+        os: [ "ubuntu-latest", "macos-latest", "macos-14" ]
+        python-version: [ "3.9", "3.10", "3.11" ]
 
     steps:
       - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.9.1
+        uses: styfle/cancel-workflow-action@0.11.0
         with:
           access_token: ${{ github.token }}
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ github.token }}
       - name: Conda setup
         uses: conda-incubator/setup-miniconda@v2
+        if: matrix.os != 'macos-14'
         with:
-          activate-environment: wrf_python_build
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge, ncar
-      - name: Conda install (Darwin)
-        if: matrix.os == 'macos-latest'
-        run: |
-          conda env update --file build_envs/Darwin.yml --prune
-      - name: Conda install (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          conda env update --file build_envs/Linux.yml --prune
+          channels: conda-forge
+          environment-file: build_envs/environment.yml
+      - name: Conda setup (macOS M1)
+        uses: conda-incubator/setup-miniconda@v2
+        if: matrix.os == 'macos-14'
+        with:
+          installer-url: https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh
+          python-version: ${{ matrix.python-version }}
+          channels: conda-forge
+          environment-file: build_envs/environment.yml
       - name: Build WRF-Python
         run: |
           cd build_scripts
