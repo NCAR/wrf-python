@@ -31,7 +31,7 @@ jobs:
           token: ${{ github.token }}
       - name: Conda setup
         uses: conda-incubator/setup-miniconda@v2
-        if: {{ (matrix.os != 'macos-14' && matrix.os != 'windows-latest') }}
+        if: {{ (matrix.os != 'macos-14') && (matrix.os != 'windows-latest') }}
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
@@ -44,7 +44,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
           environment-file: build_envs/environment.yml
-      - name: Conda setup (macOS M1)
+      - name: Conda setup (Windows)
         uses: conda-incubator/setup-miniconda@v2
         if: matrix.os == 'windows-latest'
         with:
