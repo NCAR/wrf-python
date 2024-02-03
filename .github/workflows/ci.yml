@@ -30,14 +30,14 @@ jobs:
         with:
           token: ${{ github.token }}
       - name: Conda setup
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         if: matrix.os != 'macos-14'
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
           environment-file: build_envs/environment.yml
       - name: Conda setup (macOS M1)
-        uses: conda-incubator/setup-miniconda@v2
+        uses: conda-incubator/setup-miniconda@v3
         if: matrix.os == 'macos-14'
         with:
           installer-url: https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh
