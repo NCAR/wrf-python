@@ -96,7 +96,7 @@ numpy.distutils.core.setup(
               "plotting", "plots", "meteorology", "nwp",
               "numerical weather prediction", "diagnostic",
               "science", "numpy"],
-    python_requires='>=3.7',
+    python_requires='>=3.9',
     install_requires=requirements,
     classifiers=["Development Status :: 5 - Production/Stable",
                  "Intended Audience :: Science/Research",
