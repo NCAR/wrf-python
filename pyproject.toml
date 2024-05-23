@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools", "numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wrf-python"
+authors = ["Bill Ladwig"]
+maintainers = [
+    { name = "GeoCAT", email = "geocat@ucar.edu" },
+]
+description = "Diagnostic and interpolation routines for WRF-ARW data."
+readme = "README.md"
+requires-python = ">=3.7, <3.12"
+keywords = [
+    "python", "wrf-python", "wrf", "forecast", "model",
+    "weather research and forecasting", "interpolation",
+    "plotting", "plots", "meteorology", "nwp",
+    "numerical weather prediction", "diagnostic",
+    "science", "numpy"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Fortran",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "Topic :: Software Development",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows"
+]
+license = { text = "Apache-2.0", file = "LICENSE" }
+dynamic = [ "version", "dependencies" ]
+
+[project.urls]
+Repository = "https://github.com/NCAR/wrf-python"
+Documentation = "https://wrf-python.rtfd.org"
+
+[tool.setuptools]
+package-data = { "wrf" = ["data/psadilookup.dat"]}
+platforms = ["any"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "wrf.version.__version__" }
+dependencies = { file = "requirements.txt" }
