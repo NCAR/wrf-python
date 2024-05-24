@@ -1,17 +1,6 @@
 import os
-import sys
 import setuptools
 import socket
-
-# Bootstrap a numpy installation before trying to import it.
-import importlib
-try:
-    numpy_module = importlib.util.find_spec('numpy')
-    if numpy_module is None:
-        raise ModuleNotFoundError
-except (ImportError, ModuleNotFoundError):
-    import subprocess
-    subprocess.call([sys.executable, '-m', 'pip', 'install', 'numpy'])
 
 if not socket.gethostname().startswith("cheyenne"):
     import numpy.distutils.core
@@ -53,18 +42,10 @@ ext1 = numpy.distutils.core.Extension(
              "fortran/omp.f90"]
     )
 
-#Note: __version__ will be set in the version.py script loaded below
-__version__ = None
-with open("src/wrf/version.py") as f:
-    exec(f.read())
-
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 # on_rtd=True
 if on_rtd:
-    if sys.version_info < (3, 3):
-        requirements = ["mock"]  # for python2 and python < 3.3
-    else:
-        requirements = []  # for >= python3.3
+    requirements = ["mock; python_version < 3.3"]
     ext_modules = []
 
 else:
@@ -72,51 +53,10 @@ else:
     with open("requirements.txt") as f2:
         requirements = f2.read().strip().splitlines()
 
-        # if sys.version_info < (3,3):
-        #     requirements.append("mock")
     ext_modules = [ext1]
 
 numpy.distutils.core.setup(
-    name='wrf-python',
-    author="Bill Ladwig",
-    maintainer="GeoCAT",
-    maintainer_email="geocat@ucar.edu",
-    description="Diagnostic and interpolation routines for WRF-ARW data.",
-    long_description=("A collection of diagnostic and interpolation "
-                      "routines to be used with WRF-ARW data.\n\n"
-                      "GitHub Repository:\n\n"
-                      "https://github.com/NCAR/wrf-python\n\n"
-                      "Documentation:\n\n"
-                      "https://wrf-python.rtfd.org\n"),
-    url="https://github.com/NCAR/wrf-python",
-    version=__version__,
-    package_dir={"": "src"},
-    keywords=["python", "wrf-python", "wrf", "forecast", "model",
-              "weather research and forecasting", "interpolation",
-              "plotting", "plots", "meteorology", "nwp",
-              "numerical weather prediction", "diagnostic",
-              "science", "numpy"],
-    python_requires='>=3.7',
     install_requires=requirements,
-    classifiers=["Development Status :: 5 - Production/Stable",
-                 "Intended Audience :: Science/Research",
-                 "Intended Audience :: Developers",
-                 "License :: OSI Approved :: Apache Software License",
-                 "Programming Language :: Fortran",
-                 "Programming Language :: Python :: 3.9",
-                 "Programming Language :: Python :: 3.10",
-                 "Programming Language :: Python :: 3.11",
-                 "Topic :: Scientific/Engineering :: Atmospheric Science",
-                 "Topic :: Software Development",
-                 "Operating System :: POSIX",
-                 "Operating System :: Unix",
-                 "Operating System :: MacOS",
-                 "Operating System :: Microsoft :: Windows"],
-    platforms=["any"],
-    license="Apache License 2.0",
-    packages=setuptools.find_packages("src"),
     ext_modules=ext_modules,
-    download_url="https://python.org/pypi/wrf-python",
-    package_data={"wrf": ["data/psadilookup.dat"]},
     scripts=[]
 )

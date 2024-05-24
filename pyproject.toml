@@ -4,7 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wrf-python"
-authors = ["Bill Ladwig"]
+authors = [
+    { name = "Bill Ladwig" }
+]
 maintainers = [
     { name = "GeoCAT", email = "geocat@ucar.edu" },
 ]
@@ -34,7 +36,7 @@ classifiers = [
     "Operating System :: MacOS",
     "Operating System :: Microsoft :: Windows"
 ]
-license = { text = "Apache-2.0", file = "LICENSE" }
+license = { text = "Apache-2.0" }
 dynamic = [ "version", "dependencies" ]
 
 [project.urls]
