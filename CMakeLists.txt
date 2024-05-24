@@ -1,8 +1,9 @@
 ### setup project ###
+# https://numpy.org/doc/stable/f2py/buildtools/skbuild.html
 cmake_minimum_required(VERSION 3.18)
 
-project(wrf-python
-  VERSION 1.3.4.1
+project(${SKBUILD_PROJECT_NAME}
+  VERSION ${SKBUILD_PROJECT_VERSION}
   DESCRIPTION "Utilities for reading WRF output"
   LANGUAGES C Fortran
   )
@@ -15,10 +16,11 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   )
 endif()
 
-# set(FindPython_DIR "/usr/share/cmake-${CMAKE_VERSION}/Modules")
+find_package(Python 3.8 REQUIRED COMPONENTS Development.Module NumPy)
+find_package(OpenMP COMPONENTS Fortran)
+
 # Ensure scikit-build modules
 if (NOT SKBUILD)
-  find_package(Python 3.8 REQUIRED COMPONENTS Development.Module NumPy)
   # Kanged --> https://github.com/Kitware/torch_liberator/blob/master/CMakeLists.txt
   # If skbuild is not the driver; include its utilities in CMAKE_MODULE_PATH
   execute_process(
@@ -30,10 +32,6 @@ if (NOT SKBUILD)
   list(APPEND CMAKE_MODULE_PATH "${SKBLD_DIR}/resources/cmake")
   message(STATUS "Looking in ${SKBLD_DIR}/resources/cmake for CMake modules")
 endif()
-
-# scikit-build style includes
-# find_package(PythonExtensions REQUIRED) # for ${PYTHON_EXTENSION_MODULE_SUFFIX}
-# Python_SOABI
 
 # Grab the variables from a local Python installation
 # NumPy headers
@@ -119,6 +117,8 @@ add_custom_target(genpyf
 )
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_c}"
+	    "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers.f"
+	    "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers2.f90"
   COMMAND ${PYTHON_EXECUTABLE}  -m "numpy.f2py"
                    -m "${f2py_module_name}"
                    --lower # Important
@@ -139,6 +139,9 @@ target_include_directories(${f2py_module_name} PUBLIC
                            ${Python_INCLUDE_DIRS})
 set_target_properties(${f2py_module_name} PROPERTIES SUFFIX ".${Python_SOABI}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 set_target_properties(${f2py_module_name} PROPERTIES PREFIX "")
+
+# https://scikit-build-core.readthedocs.io/en/latest/getting_started.html
+target_link_libraries(${f2py_module_name} PRIVATE Python::NumPy)
 
 # Linker fixes
 if (UNIX)
