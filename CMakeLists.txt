@@ -1,0 +1,162 @@
+### setup project ###
+cmake_minimum_required(VERSION 3.18)
+
+project(wrf-python
+  VERSION 1.3.4.1
+  DESCRIPTION "Utilities for reading WRF output"
+  LANGUAGES C Fortran
+  )
+
+# Safety net
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+  message(
+    FATAL_ERROR
+      "In-source builds not allowed. Please make a new directory (called a build directory) and run CMake from there.\n"
+  )
+endif()
+
+# set(FindPython_DIR "/usr/share/cmake-${CMAKE_VERSION}/Modules")
+# Ensure scikit-build modules
+if (NOT SKBUILD)
+  find_package(Python 3.8 REQUIRED COMPONENTS Development.Module NumPy)
+  # Kanged --> https://github.com/Kitware/torch_liberator/blob/master/CMakeLists.txt
+  # If skbuild is not the driver; include its utilities in CMAKE_MODULE_PATH
+  execute_process(
+    COMMAND "${PYTHON_EXECUTABLE}"
+    -c "import os, skbuild; print(os.path.dirname(skbuild.__file__))"
+    OUTPUT_VARIABLE SKBLD_DIR
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+  list(APPEND CMAKE_MODULE_PATH "${SKBLD_DIR}/resources/cmake")
+  message(STATUS "Looking in ${SKBLD_DIR}/resources/cmake for CMake modules")
+endif()
+
+# scikit-build style includes
+# find_package(PythonExtensions REQUIRED) # for ${PYTHON_EXTENSION_MODULE_SUFFIX}
+# Python_SOABI
+
+# Grab the variables from a local Python installation
+# NumPy headers
+# F2PY headers
+execute_process(
+  COMMAND "${PYTHON_EXECUTABLE}"
+  -c "import numpy.f2py; print(numpy.f2py.get_include())"
+  OUTPUT_VARIABLE F2PY_INCLUDE_DIR
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Prepping the module
+set(f2py_module_name "_wrffortran")
+set(fortran_src_files
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_constants.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_testfunc.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_user.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/rip_cape.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_cloud_fracf.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_fctt.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_user_dbz.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_relhl.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/calc_uh.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_user_latlon_routines.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_pvo.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/eqthecalc.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_rip_phys_routines.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_pw.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_vinterp.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/wrf_wind.f90"
+    "${CMAKE_SOURCE_DIR}/fortran/omp.f90")
+set(python_src_files
+    "${CMAKE_SOURCE_DIR}/src/wrf/__init__.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/api.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/cache.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/computation.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/config.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/constants.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/contrib.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/coordpair.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/decorators.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/destag.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/extension.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_cape.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_cloudfrac.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_ctt.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_dbz.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_dewpoint.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_geoht.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_helicity.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_latlon.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_omega.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_precip.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_pressure.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_pw.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_rh.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_slp.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_temp.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_terrain.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_times.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_uvmet.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_vorticity.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/g_wind.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/geobnds.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/interp.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/interputils.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/latlonutils.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/metadecorators.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/projection.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/projutils.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/py3compat.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/routines.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/specialdec.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/units.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/util.py"
+    "${CMAKE_SOURCE_DIR}/src/wrf/version.py"
+)
+set(f2py_module_c "${f2py_module_name}module.c")
+
+# Target for enforcing dependencies
+add_custom_target(genpyf
+  DEPENDS "${fortran_src_files}"
+)
+add_custom_command(
+  OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_c}"
+  COMMAND ${PYTHON_EXECUTABLE}  -m "numpy.f2py"
+                   -m "${f2py_module_name}"
+                   --lower # Important
+                   ${fortran_src_files}
+  DEPENDS "${fortran_src_files}" # Fortran source
+)
+
+Python_add_library(${f2py_module_name} MODULE
+            "${f2py_module_c}"
+	    "${f2py_module_name}-f2pywrappers.f"
+	    "${f2py_module_name}-f2pywrappers2.f90"
+            "${F2PY_INCLUDE_DIR}/fortranobject.c"
+            "${fortran_src_files}")
+
+target_include_directories(${f2py_module_name} PUBLIC
+                           ${F2PY_INCLUDE_DIR}
+                           ${Python_NumPy_INCLUDE_DIRS}
+                           ${Python_INCLUDE_DIRS})
+set_target_properties(${f2py_module_name} PROPERTIES SUFFIX ".${Python_SOABI}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set_target_properties(${f2py_module_name} PROPERTIES PREFIX "")
+
+# Linker fixes
+if (UNIX)
+  if (APPLE)
+    set_target_properties(${f2py_module_name} PROPERTIES
+    LINK_FLAGS  '-Wl,-dylib,-undefined,dynamic_lookup')
+  else()
+    set_target_properties(${f2py_module_name} PROPERTIES
+  LINK_FLAGS  '-Wl,--allow-shlib-undefined')
+  endif()
+endif()
+
+add_dependencies(${f2py_module_name} genpyf)
+
+string(REGEX REPLACE "^/(usr/(local/)?)?" "" Python_SITEARCH_INSTALL ${Python_SITEARCH})
+string(REGEX REPLACE "^/(usr/(local/)?)?" "" Python_SITELIB_INSTALL ${Python_SITELIB})
+# string(SUBSTRING ${Python_SITEARCH} 1 -1 Python_SITEARCH_INSTALL)
+# string(SUBSTRING ${Python_SITELIB} 1 -1 Python_SITELIB_INSTALL)
+
+install(TARGETS ${f2py_module_name} DESTINATION "${Python_SITEARCH_INSTALL}/wrf/")
+install(FILES ${python_src_files} DESTINATION "${Python_SITELIB_INSTALL}/wrf/")
