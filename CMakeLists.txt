@@ -17,7 +17,6 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
 endif()
 
 find_package(Python 3.8 REQUIRED COMPONENTS Development.Module NumPy)
-find_package(OpenMP COMPONENTS Fortran)
 
 # Ensure scikit-build modules
 if (NOT SKBUILD)
@@ -43,6 +42,42 @@ execute_process(
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
+find_package(OpenMP COMPONENTS Fortran)
+set_source_files_properties(fortran/ompgen.F90 PROPERTIES Fortran_PREPROCESS ON)
+# TODO: Figure out the conditionals for running the C Preprocessor on Fortran files
+# I think the main thing to be changed is -E -cpp
+# Intel is -fpp -save-temps or /fpp on Windows
+# or call fpp instead of the fortran compiler to get it to stop after preprocessing
+if (${OpenMP_Fortran_FOUND})
+  # This would probably be cleaner if I shoved it in the subdirectory
+  file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fortran")
+  add_executable(sizes "${CMAKE_SOURCE_DIR}/fortran/build_help/omp_sizes.f90")
+  target_link_libraries(sizes PRIVATE OpenMP::OpenMP_Fortran)
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fortran/ompgen.F90"
+    DEPENDS "${CMAKE_SOURCE_DIR}/fortran/ompgen.F90.template"
+      ${CMAKE_SOURCE_DIR}/fortran/build_help/sub_sizes.py
+      sizes
+    COMMAND
+      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/fortran/build_help/sub_sizes.py
+        ${CMAKE_SOURCE_DIR}/fortran/ompgen.F90.template
+	${CMAKE_CURRENT_BINARY_DIR}/fortran/ompgen.F90
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fortran/omp.f90"
+    DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/fortran/ompgen.F90"
+    COMMAND ${CMAKE_Fortran_COMPILER} -E "${CMAKE_CURRENT_BINARY_DIR}/fortran/ompgen.F90"
+      -o "${CMAKE_CURRENT_BINARY_DIR}/fortran/omp.f90" ${OpenMP_Fortran_FLAGS} -cpp
+    )
+else()
+  add_custom_command(
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fortran/omp.f90"
+    DEPENDS "${CMAKE_SOURCE_DIR}/fortran/ompgen.F90"
+    COMMAND ${CMAKE_Fortran_COMPILER} -E fortran/ompgen.F90 -o fortran/omp.f90 -cpp
+    )
+endif()
+
 # Prepping the module
 set(f2py_module_name "_wrffortran")
 set(fortran_src_files
@@ -62,7 +97,7 @@ set(fortran_src_files
     "${CMAKE_SOURCE_DIR}/fortran/wrf_pw.f90"
     "${CMAKE_SOURCE_DIR}/fortran/wrf_vinterp.f90"
     "${CMAKE_SOURCE_DIR}/fortran/wrf_wind.f90"
-    "${CMAKE_SOURCE_DIR}/fortran/omp.f90")
+    "${CMAKE_CURRENT_BINARY_DIR}/fortran/omp.f90")
 set(python_src_files
     "${CMAKE_SOURCE_DIR}/src/wrf/__init__.py"
     "${CMAKE_SOURCE_DIR}/src/wrf/api.py"
@@ -142,6 +177,9 @@ set_target_properties(${f2py_module_name} PROPERTIES PREFIX "")
 
 # https://scikit-build-core.readthedocs.io/en/latest/getting_started.html
 target_link_libraries(${f2py_module_name} PRIVATE Python::NumPy)
+if (${OpenMP_Fortran_FOUND})
+  target_link_libraries(${f2py_module_name} PRIVATE OpenMP::OpenMP_Fortran)
+endif()
 
 # Linker fixes
 if (UNIX)

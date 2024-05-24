@@ -60,7 +60,6 @@ logging.level = "INFO"
 minimum-version = "0.8"
 cmake.version = ">=3.18"
 wheel.packages = ["src/wrf"]
-sdist.include = ["fortran/omp.f90"]
 
 # To avoid stripping installed libraries
 # Packages often want to do their own stripping
