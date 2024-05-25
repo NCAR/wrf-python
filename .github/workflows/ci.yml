@@ -52,6 +52,15 @@ jobs:
           python -m pip install build
           python -m build .
           python -m pip install dist/wrf*.whl
+      - name: Check import
+        run: |
+          python -m pip show wrf-python
+          python -m pip show --files wrf-python
+          installed_files="$(python -m pip show --files wrf-python | grep -v :)"
+          ls -l ${installed_files}
+          file ${installed_files}
+          ldd ${installed_files}
+          python -vvv -d -c "import wrf"
       - name: Run tests
         run: |
           cd test/ci_tests
