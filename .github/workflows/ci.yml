@@ -56,8 +56,8 @@ jobs:
         run: |
           python -m pip show wrf-python
           python -m pip show --files wrf-python
-          prefix="$(python -m pip show --files six | grep Location: | cut -f2 -d' ')"
-          installed_files="$(python -m pip show --files wrf-python | sed -E -e "/\\w+:/ d" -e "/^\s+/ s|^  |${prefix}/|g")"
+          prefix="$(python -m pip show --files wrf-python | grep Location: | cut -f2 -d" ")"
+          installed_files="$(python -m pip show --files wrf-python | sed -E -e "/\\w+:/ d" -e "/^\s+/ s|^\s+|${prefix}/|g")"
           ls -l ${installed_files}
           file ${installed_files}
           ldd ${installed_files}
