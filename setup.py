@@ -45,7 +45,7 @@ ext1 = numpy.distutils.core.Extension(
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 # on_rtd=True
 if on_rtd:
-    requirements = ["mock; python_version < 3.3"]
+    requirements = ['mock; python_version < "3.3"']
     ext_modules = []
 
 else:
