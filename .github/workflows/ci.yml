@@ -60,7 +60,7 @@ jobs:
           installed_files="$(python -m pip show --files wrf-python | sed -E -e "/\\w+:/ d" -e "/^\s+/ s|^\s+|${prefix}/|g")"
           ls -l ${installed_files}
           file ${installed_files}
-          ldd $(echo ${installed_files} | grep -v -e ".py" -e ".dist-info")
+          ldd $(echo ${installed_files} | grep -F -v -e ".py" -e ".dist-info")
           python -vvv -d -c "import wrf"
       - name: Run tests
         run: |
