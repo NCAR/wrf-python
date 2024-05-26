@@ -52,16 +52,6 @@ jobs:
           python -m pip install build
           python -m build .
           python -m pip install dist/wrf*.whl
-      - name: Check import
-        run: |
-          python -m pip show wrf-python
-          python -m pip show --files wrf-python
-          prefix="$(python -m pip show --files wrf-python | grep Location: | cut -f2 -d" ")"
-          installed_files="$(python -m pip show --files wrf-python | sed -E -e "/\\w+:/ d" -e "/^\s+/ s|^\s+|${prefix}/|g")"
-          ls -l ${installed_files}
-          file ${installed_files}
-          ldd $(echo ${installed_files} | grep -F -v -e ".py" -e ".dist-info")
-          python -vvv -d -c "import wrf"
       - name: Run tests
         run: |
           cd test/ci_tests
