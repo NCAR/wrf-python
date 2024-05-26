@@ -205,5 +205,5 @@ if (NOT SKBUILD)
   install(FILES src/wrf/data/psadilookup.dat DESTINATION "${Python_SITELIB_INSTALL}/wrf")
 else()
   # https://scikit-build-core.readthedocs.io/en/latest/cmakelists.html#install-directories
-  install(TARGETS ${f2py_module_name} DESTINATION "${SKBUILD_PLATLIB_DIR}")
+  install(TARGETS ${f2py_module_name} DESTINATION "${SKBUILD_PLATLIB_DIR}/wrf/")
 endif()
