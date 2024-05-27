@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=60", "numpy"]
+requires = ["setuptools>=61", "numpy"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -37,7 +37,14 @@ classifiers = [
     "Operating System :: Microsoft :: Windows"
 ]
 license = { text = "Apache-2.0" }
-dynamic = [ "version", "dependencies" ]
+dynamic = [ "version" ]
+dependencies = [
+    "basemap",
+    "numpy >=1.11, !=1.24.3",
+    "setuptools",
+    "wrapt",
+    "xarray"
+]
 
 [project.urls]
 Repository = "https://github.com/NCAR/wrf-python"
@@ -52,4 +59,3 @@ where = ["src"]
 
 [tool.setuptools.dynamic]
 version = { attr = "wrf.version.__version__" }
-dependencies = { file = "requirements.txt" }

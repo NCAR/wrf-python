@@ -45,14 +45,9 @@ ext1 = numpy.distutils.core.Extension(
 on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 # on_rtd=True
 if on_rtd:
-    requirements = ['mock; python_version < "3.3"']
     ext_modules = []
 
 else:
-    # Place install_requires into the text file "requirements.txt"
-    with open("requirements.txt") as f2:
-        requirements = f2.read().strip().splitlines()
-
     ext_modules = [ext1]
 
 numpy.distutils.core.setup(
