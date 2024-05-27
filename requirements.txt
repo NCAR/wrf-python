@@ -1,5 +1,0 @@
-basemap
-numpy >=1.11, !=1.24.3
-setuptools
-wrapt
-xarray
