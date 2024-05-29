@@ -51,7 +51,6 @@ else:
     ext_modules = [ext1]
 
 numpy.distutils.core.setup(
-    install_requires=requirements,
     ext_modules=ext_modules,
     scripts=[]
 )
