@@ -4,7 +4,7 @@ Installation
 Required Dependencies
 ----------------------
 
-    - Python 2.7, 3.4, or 3.5+
+    - Python 3.9+
     - numpy (1.11 or later; 1.14 required to build on Windows)
     - wrapt (1.10 or later)
     - setuptools (38.0 or later) 
