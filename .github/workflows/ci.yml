@@ -38,7 +38,7 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
-          environment-file: build_envs/platform-specific/linux.yml
+          environment-file: build_envs/environment.yml
       - name: Conda setup (macOS M1)
         uses: conda-incubator/setup-miniconda@v3
         if: matrix.os == 'macos-latest'
