@@ -1,6 +1,9 @@
 [build-system]
-requires = ["setuptools>=61", "numpy"]
 build-backend = "setuptools.build_meta"
+requires = [
+    "setuptools>=61", 
+    "setuptools-scm>=8",
+]
 
 [project]
 name = "wrf-python"
@@ -56,6 +59,9 @@ platforms = ["any"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools_scm]
+fallback_version = "9999"
 
 [tool.setuptools.dynamic]
 version = { attr = "wrf.version.__version__" }
