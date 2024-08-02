@@ -47,6 +47,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
           environment-file: build_envs/environment.yml
+      - name: Conda list
+        run: |
+          conda list
       - name: Build WRF-Python
         run: |
           cd build_scripts
