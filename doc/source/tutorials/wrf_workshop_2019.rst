@@ -82,7 +82,7 @@ Step 2: Download Miniconda
 ----------------------------
 
 For this tutorial, you will need to download and install Miniconda.  We are 
-going to use Python 3.7, but it will also work with Python 2.7. 
+going to use Python 3.7, but it will also work with Python 2.7.
 
 Please use the appropriate link below to download Miniconda for your operating 
 system. 
