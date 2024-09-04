@@ -153,7 +153,6 @@ add_custom_target(genpyf
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_c}"
 	    "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers.f"
-	    "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers2.f90"
   COMMAND ${PYTHON_EXECUTABLE}  -m "numpy.f2py"
                    -m "${f2py_module_name}"
                    --lower # Important
@@ -164,7 +163,6 @@ add_custom_command(
 Python_add_library(${f2py_module_name} MODULE
             "${f2py_module_c}"
 	    "${f2py_module_name}-f2pywrappers.f"
-	    "${f2py_module_name}-f2pywrappers2.f90"
             "${F2PY_INCLUDE_DIR}/fortranobject.c"
             "${fortran_src_files}")
 
