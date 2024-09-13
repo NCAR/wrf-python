@@ -52,7 +52,7 @@ if (${OpenMP_Fortran_FOUND})
   # This would probably be cleaner if I shoved it in the subdirectory
   file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fortran")
   add_executable(sizes "${CMAKE_SOURCE_DIR}/fortran/build_help/omp_sizes.f90")
-  target_link_libraries(sizes PRIVATE OpenMP::OpenMP_Fortran)
+  target_link_libraries(sizes PUBLIC OpenMP::OpenMP_Fortran)
   add_custom_command(
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/fortran/ompgen.F90"
     DEPENDS "${CMAKE_SOURCE_DIR}/fortran/ompgen.F90.template"
@@ -176,7 +176,7 @@ set_target_properties(${f2py_module_name} PROPERTIES PREFIX "")
 # https://scikit-build-core.readthedocs.io/en/latest/getting_started.html
 target_link_libraries(${f2py_module_name} PRIVATE Python::NumPy)
 if (${OpenMP_Fortran_FOUND})
-  target_link_libraries(${f2py_module_name} PRIVATE OpenMP::OpenMP_Fortran)
+  target_link_libraries(${f2py_module_name} PUBLIC OpenMP::OpenMP_Fortran)
 endif()
 
 # Linker fixes
