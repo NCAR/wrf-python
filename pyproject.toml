@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "numpy<2.0"]
+requires = ["scikit-build-core", "numpy>=2.0"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -41,8 +41,8 @@ license = { text = "Apache-2.0" }
 dynamic = [ "version" ]
 dependencies = [
     "basemap",
-    "numpy >=1.11, !=1.24.3, <2.0",
-    "setuptools",
+    "numpy >=1.11, !=1.24.3",
+    "setuptools>=61",
     "wrapt",
     "xarray"
 ]
