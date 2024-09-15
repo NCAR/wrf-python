@@ -23,7 +23,7 @@ if (NOT SKBUILD)
   # Kanged --> https://github.com/Kitware/torch_liberator/blob/master/CMakeLists.txt
   # If skbuild is not the driver; include its utilities in CMAKE_MODULE_PATH
   execute_process(
-    COMMAND "${PYTHON_EXECUTABLE}"
+    COMMAND "${Python_EXECUTABLE}"
     -c "import os, skbuild; print(os.path.dirname(skbuild.__file__))"
     OUTPUT_VARIABLE SKBLD_DIR
     OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -36,7 +36,7 @@ endif()
 # NumPy headers
 # F2PY headers
 execute_process(
-  COMMAND "${PYTHON_EXECUTABLE}"
+  COMMAND "${Python_EXECUTABLE}"
   -c "import numpy.f2py; print(numpy.f2py.get_include())"
   OUTPUT_VARIABLE F2PY_INCLUDE_DIR
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -59,7 +59,7 @@ if (${OpenMP_Fortran_FOUND})
       ${CMAKE_SOURCE_DIR}/fortran/build_help/sub_sizes.py
       sizes
     COMMAND
-      ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/fortran/build_help/sub_sizes.py
+      ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/fortran/build_help/sub_sizes.py
         ${CMAKE_SOURCE_DIR}/fortran/ompgen.F90.template
 	${CMAKE_CURRENT_BINARY_DIR}/fortran/ompgen.F90
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -153,7 +153,7 @@ add_custom_target(genpyf
 add_custom_command(
   OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_c}"
 	    "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers.f"
-  COMMAND ${PYTHON_EXECUTABLE}  -m "numpy.f2py"
+  COMMAND ${Python_EXECUTABLE}  -m "numpy.f2py"
                    -m "${f2py_module_name}"
                    --lower # Important
                    ${fortran_src_files}
