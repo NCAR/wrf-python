@@ -162,7 +162,7 @@ add_custom_command(
 )
 
 Python_add_library(${f2py_module_name} MODULE
-            "${CMAKE_CURRENT_BINARY_DIR}/${${f2py_module_c}"
+            "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_c}"
 	    "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers.f"
             "${CMAKE_CURRENT_BINARY_DIR}/${f2py_module_name}-f2pywrappers2.f90"
             "${F2PY_INCLUDE_DIR}/fortranobject.c"
