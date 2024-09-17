@@ -70,8 +70,9 @@ MODULE wrf_constants
     REAL(KIND=8), PARAMETER :: EXPONI =  1./EXPON
 
     contains
-    logical function have_wrf_constants()
-        have_wrf_constants = .true.
-    end function have_wrf_constants
+    subroutine have_wrf_constants(a)
+        logical, intent(out) :: a
+        a = .true.
+    end subroutine have_wrf_constants
 END MODULE wrf_constants
 
