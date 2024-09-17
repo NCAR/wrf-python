@@ -20,6 +20,7 @@ MODULE omp_constants
     INTEGER(KIND=4), PARAMETER :: fomp_sched_auto = 4
 #endif
 
+    contains
     logical function have_omp_constants()
         have_omp_constants = .true.
     end function have_omp_constants
