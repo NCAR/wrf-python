@@ -172,7 +172,7 @@ target_include_directories(${f2py_module_name} PUBLIC
                            ${F2PY_INCLUDE_DIR}
                            ${Python_NumPy_INCLUDE_DIRS}
                            ${Python_INCLUDE_DIRS})
-set_target_properties(${f2py_module_name} PROPERTIES SUFFIX ".${Python_SOABI}${CMAKE_SHARED_LIBRARY_SUFFIX}")
+set_target_properties(${f2py_module_name} PROPERTIES SUFFIX ".${Python_SOABI}${CMAKE_SHARED_MODULE_SUFFIX}")
 set_target_properties(${f2py_module_name} PROPERTIES PREFIX "")
 
 # https://scikit-build-core.readthedocs.io/en/latest/getting_started.html
