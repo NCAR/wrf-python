@@ -63,7 +63,8 @@ jobs:
           python -m pip show --files wrf-python
           prefix="$(python -m pip show --files wrf-python | grep Location: | cut -f2 -d" ")"
           echo "Site-packages directory is ${prefix}"
-          installed_files="$(python -m pip show --files wrf-python | grep -v -E -e '^[-a-zA-Z]+:'|  sed -E -e "/^\s+/ s|^\s+|${prefix}/|g")"
+          cd "${prefix}"
+          installed_files="$(python -m pip show --files wrf-python | grep -v -E -e '^[-a-zA-Z]+:')"
           ls -l ${installed_files}
           file ${installed_files}
           ldd $(echo ${installed_files} | grep -F -v -e ".py" -e ".dist-info")
