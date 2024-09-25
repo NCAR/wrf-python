@@ -11,6 +11,7 @@ $FC -E ompgen.F90 -fopenmp -cpp -o omp.f90
 cd ..
 
 python setup.py clean --all
+export LDFLAGS=" -fopenmp "
 python setup.py config_fc --f90flags="-mtune=generic -fopenmp" build_ext --libraries="gomp" build
 pip install .
 
