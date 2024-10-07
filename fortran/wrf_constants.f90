@@ -69,6 +69,9 @@ MODULE wrf_constants
     REAL(KIND=8), PARAMETER :: EXPON =  RD*USSALR/G
     REAL(KIND=8), PARAMETER :: EXPONI =  1./EXPON
 
+  contains
+    subroutine have_wrf_constants()
+    end subroutine have_wrf_constants
 
 END MODULE wrf_constants
 

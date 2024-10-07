@@ -7,6 +7,9 @@ MODULE omp_constants
     INTEGER(KIND=fomp_sched_kind), PARAMETER :: fomp_sched_dynamic = 2
     INTEGER(KIND=fomp_sched_kind), PARAMETER :: fomp_sched_guided = 3
     INTEGER(KIND=fomp_sched_kind), PARAMETER :: fomp_sched_auto = 4
+contains
+  subroutine have_omp_constants()
+  end subroutine have_omp_constants
 END MODULE omp_constants
 
 
