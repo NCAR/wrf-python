@@ -16,7 +16,7 @@ if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
   )
 endif()
 
-find_package(Python 3.8 REQUIRED COMPONENTS Development.Module NumPy)
+find_package(Python COMPONENTS Interpreter Development.Module NumPy REQUIRED)
 
 # Ensure scikit-build modules
 if (NOT SKBUILD)
