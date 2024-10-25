@@ -41,6 +41,9 @@ def main():
 
     ompgen_temp_path = os.path.join("..", "ompgen.F90.template")
     ompgen_out_path = os.path.join("..", "ompgen.F90")
+    if len(sys.argv) == 3:
+        ompgen_temp_path = sys.argv[1]
+        ompgen_out_path = sys.argv[2]
 
     with open(ompgen_temp_path, "r") as ompgen_in:
         ompgen_template = Template(ompgen_in.read())

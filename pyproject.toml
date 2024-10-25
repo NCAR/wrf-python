@@ -1,6 +1,6 @@
 [build-system]
-requires = ["setuptools>=61, <70", "numpy"]
-build-backend = "setuptools.build_meta"
+requires = ["scikit-build-core", "numpy"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "wrf-python"
@@ -12,7 +12,7 @@ maintainers = [
 ]
 description = "Diagnostic and interpolation routines for WRF-ARW data."
 readme = "README.md"
-requires-python = ">=3.7, <3.12"
+requires-python = ">=3.9, <3.13"
 keywords = [
     "python", "wrf-python", "wrf", "forecast", "model",
     "weather research and forecasting", "interpolation",
@@ -29,6 +29,7 @@ classifiers = [
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
     "Topic :: Software Development",
     "Operating System :: POSIX",
@@ -41,7 +42,7 @@ dynamic = [ "version" ]
 dependencies = [
     "basemap",
     "numpy >=1.11, !=1.24.3",
-    "setuptools",
+    "setuptools>=61",
     "wrapt",
     "xarray"
 ]
@@ -59,3 +60,19 @@ where = ["src"]
 
 [tool.setuptools.dynamic]
 version = { attr = "wrf.version.__version__" }
+
+[tool.scikit-build]
+cmake.verbose = true
+logging.level = "INFO"
+minimum-version = "0.8"
+cmake.version = ">=3.18"
+wheel.packages = ["src/wrf"]
+
+# To avoid stripping installed libraries
+# Packages often want to do their own stripping
+# SKBUILD_INSTALL_STRIP: "false"
+# install.strip = false
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "src/wrf/version.py"
