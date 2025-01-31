@@ -40,7 +40,6 @@ Examples of unacceptable behavior include, but are not limited to:
   beliefs
 * Publishing others' private information, such as a physical or electronic 
   address, without explicit permission
-* Refusing to use the pronouns that someone requests
 * Alarming, intimidating, threatening, or hostile comments or conduct
 * Physical or verbal abuse by anyone to anyone, including but not limited to a 
   participant, member of the public, guest, member of any institution or 
