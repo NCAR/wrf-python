@@ -75,8 +75,11 @@ extensions = [
     'sphinx.ext.napoleon', 
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.mathjax'
+    'sphinx.ext.mathjax',
+    'sphinxcontrib.googleanalytics'
 ]
+
+googleanalytics_id = 'G-6WSSSBGTH8'
 
 #mathjax_path = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML"
 
