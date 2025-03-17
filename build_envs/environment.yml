@@ -15,6 +15,7 @@ dependencies:
   - setuptools
   - sphinx
   - sphinx_rtd_theme
+  - sphinxcontrib-googleanalytics
   - wrapt
   - xarray
   - python-build
