@@ -50,13 +50,13 @@ Instances of unacceptable behavior can be brought to the attention of the projec
 Instances of unacceptable behavior may also be reported:
 - To [The Chief Human Resources Officer](chro@ucar.edu) who serves as UCAR’s Section 504, Title VI, VII and IX Coordinator;
 - Through [UCAR’s Reporting a Concern website](https://www.ucar.edu/who-we-are/ethics); or
-- Anonymously through [UCAR’s EthicsPoint Hotline](https://www2.fin.ucar.edu/ethics/anonymous-reporting).
+- Anonymously through [UCAR’s EthicsPoint Hotline](https://www.ucar.edu/who-we-are/ethics).
 
 Complaints received by UCAR will be handled pursuant to the procedures outlined in [UCAR’s Complaint and Investigations Procedures](https://sundog.ucar.edu/Interact/Pages/Content/Document.aspx?id=5140). Complaints to UCAR will be held as confidential as practicable under the circumstances, and retaliation against a person who initiates a complaint or an inquiry about inappropriate behavior will not be tolerated.
 
 If you require a reasonable accommodation due to a disability or for assistance as an individual with Limited English Proficiency (LEP), please contact UCAR's [Chief Human Resources Officer](chro@ucar.edu).
 
-Any Contributor can use these reporting methods even if they are not directly affiliated with UCAR. The Frequently Asked Questions (FAQ) page for reporting is [here](https://www2.fin.ucar.edu/procedures/hr/reporting-faqs).
+Any Contributor can use these reporting methods even if they are not directly affiliated with UCAR. The Frequently Asked Questions (FAQ) page for reporting is [here](https://www.ucar.edu/who-we-are/ethics).
 
 ## Consequences
 
@@ -72,4 +72,4 @@ Projects that adopt this Code of Conduct need to stay up to date with UCAR's Con
 
 This Code of Conduct was originally adapted from the [Contributor Covenant](http://contributor-covenant.org/version/1/4), version 1.4. We then aligned it with the UCAR Participant Code of Conduct, which also borrows from the American Geophysical Union (AGU) Code of Conduct. The UCAR Participant Code of Conduct applies to both UCAR employees as well as participants in activities run by UCAR. The original version of this for all software projects that have strong management from UCAR or UCAR staff is available on the UCAR website at [https://doi.org/10.5065/6w2c-a132](https://doi.org/10.5065/6w2c-a132). The date that it was adopted by this project was April 2, 2025. When responding to complaints, UCAR HR will do so based on the latest published version. Therefore, any project-specific changes should follow the Process for Changes section above.
 
-As an Equal Employment Opportunity Employer and recipient of federal funds, UCAR complies with Title VI, Title VII, and Title IX of the Civil Rights Act; the Rehabilitation Act of 1973, as amended, and the Age Discrimination in Employment Act of 1975, as amended. See [UCAR’s Nondiscrimination Statement](https://www.ucar.edu/who-we-are/ethics-integrity/codes-conduct/contributors#:~:text=As%20an%20Equal,Nondiscrimination%20Statement.).
+As an Equal Employment Opportunity Employer and recipient of federal funds, UCAR complies with Title VI, Title VII, and Title IX of the Civil Rights Act; the Rehabilitation Act of 1973, as amended, and the Age Discrimination in Employment Act of 1975, as amended. See [UCAR’s Nondiscrimination Statement](https://www.ucar.edu/who-we-are/ethics-integrity/nondiscrimination).
