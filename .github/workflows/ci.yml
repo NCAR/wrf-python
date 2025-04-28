@@ -9,54 +9,41 @@ on:
   schedule:
     - cron: '0 0 * * *' # Daily “At 00:00”
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: Python (${{ matrix.python-version }}, ${{ matrix.os }})
+    name: Python ${{ matrix.python-version }}, ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     defaults:
       run:
         shell: bash -l {0}
-
     strategy:
       fail-fast: false
       matrix:
         os: [ "ubuntu-latest", "macos-latest", "macos-14" ]
         python-version: [ "3.9", "3.10", "3.11", "3.12" ]
-
     steps:
-      - name: Cancel previous runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v4
-        with:
-          token: ${{ github.token }}
-      - name: Conda setup
-        uses: conda-incubator/setup-miniconda@v3
-        if: matrix.os != 'macos-14'
+      - name: environment setup
+        uses: conda-incubator/setup-miniconda@505e6394dae86d6a5c7fbb6e3fb8938e3e863830 # v3.1.1
         with:
           python-version: ${{ matrix.python-version }}
           channels: conda-forge
           environment-file: build_envs/environment.yml
-      - name: Conda setup (macOS M1)
-        uses: conda-incubator/setup-miniconda@v3
-        if: matrix.os == 'macos-14'
-        with:
-          installer-url: https://github.com/conda-forge/miniforge/releases/download/23.11.0-0/Mambaforge-23.11.0-0-MacOSX-arm64.sh
-          python-version: ${{ matrix.python-version }}
-          channels: conda-forge
-          environment-file: build_envs/environment.yml
-      - name: Build WRF-Python
+      - name: build WRF-Python
         run: |
           python -m pip install build
           python -m build .
           python -m pip install dist/wrf*.whl
-      - name: Run tests
+      - name: run tests
         run: |
           cd test/ci_tests
           python utests.py
-      - name: Check import
+      - name: check import
         if: failure()
         run: |
           python -m pip show wrf-python
