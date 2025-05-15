@@ -20,6 +20,10 @@ MODULE omp_constants
     INTEGER(KIND=4), PARAMETER :: fomp_sched_auto = 4
 #endif
 
+contains
+  subroutine have_omp_constants()
+  end subroutine have_omp_constants
+
 END MODULE omp_constants
 
 

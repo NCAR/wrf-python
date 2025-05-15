@@ -1,0 +1,78 @@
+[build-system]
+requires = ["scikit-build-core", "numpy"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "wrf-python"
+authors = [
+    { name = "Bill Ladwig" }
+]
+maintainers = [
+    { name = "GeoCAT", email = "geocat@ucar.edu" },
+]
+description = "Diagnostic and interpolation routines for WRF-ARW data."
+readme = "README.md"
+requires-python = ">=3.9, <3.13"
+keywords = [
+    "python", "wrf-python", "wrf", "forecast", "model",
+    "weather research and forecasting", "interpolation",
+    "plotting", "plots", "meteorology", "nwp",
+    "numerical weather prediction", "diagnostic",
+    "science", "numpy"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Fortran",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
+    "Topic :: Software Development",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows"
+]
+license = { text = "Apache-2.0" }
+dynamic = [ "version" ]
+dependencies = [
+    "basemap",
+    "numpy >=1.11, !=1.24.3",
+    "setuptools>=61",
+    "wrapt",
+    "xarray"
+]
+
+[project.urls]
+Repository = "https://github.com/NCAR/wrf-python"
+Documentation = "https://wrf-python.rtfd.org"
+
+[tool.setuptools]
+package-data = { "wrf" = ["data/psadilookup.dat"]}
+platforms = ["any"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.dynamic]
+version = { attr = "wrf.version.__version__" }
+
+[tool.scikit-build]
+cmake.verbose = true
+logging.level = "INFO"
+minimum-version = "0.8"
+cmake.version = ">=3.18"
+wheel.packages = ["src/wrf"]
+
+# To avoid stripping installed libraries
+# Packages often want to do their own stripping
+# SKBUILD_INSTALL_STRIP: "false"
+# install.strip = false
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "src/wrf/version.py"
