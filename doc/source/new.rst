@@ -4,6 +4,15 @@ What's New
 Releases
 -------------
 
+v1.4.0 (May 2025)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Release 1.4.0
+- Transition to CMake build using scikit-build-core
+- Packaging updates and adoption of pyproject.toml
+- Support for Python 3.12
+- Support for macOS ARM architecture
+
 v1.3.2 (February 2019)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
