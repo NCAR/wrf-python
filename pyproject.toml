@@ -12,7 +12,7 @@ maintainers = [
 ]
 description = "Diagnostic and interpolation routines for WRF-ARW data."
 readme = "README.md"
-requires-python = ">=3.9, <3.13"
+requires-python = ">=3.9, <3.14"
 keywords = [
     "python", "wrf-python", "wrf", "forecast", "model",
     "weather research and forecasting", "interpolation",
