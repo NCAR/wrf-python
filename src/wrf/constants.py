@@ -7,6 +7,9 @@ import numpy as np
 from .py3compat import viewitems
 from ._wrffortran import wrf_constants, omp_constants
 
+from packaging.version import Version
+np_version = Version(np.__version__)
+
 #: Indicates that all times should be used in a diagnostic routine.
 ALL_TIMES = None
 
@@ -62,6 +65,9 @@ _DEFAULT_FILL_MAP = {None: Constants.DEFAULT_FILL,
                      np.dtype(np.float32): Constants.DEFAULT_FILL_FLOAT,
                      np.dtype(np.float64): Constants.DEFAULT_FILL_DOUBLE
                      }
+
+if np_version < Version('2.0'):
+    _DEFAULT_FILL_MAP[np.float_] = Constants.Constants.DEFAULT_FILL_DOUBLE
 
 if version_info >= (3, ):
     _DEFAULT_FILL_MAP[np.int_] = Constants.DEFAULT_FILL_INT64
