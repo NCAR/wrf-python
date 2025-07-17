@@ -1,6 +1,5 @@
 from __future__ import (absolute_import, division, print_function)
 import os
-import pkg_resources
 
 from . import api
 from .api import *
