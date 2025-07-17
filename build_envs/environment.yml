@@ -11,9 +11,7 @@ dependencies:
   - matplotlib
   - netcdf4
   - numpy
-  - packaging
   - pycodestyle
-  - setuptools
   - sphinx
   - sphinx_rtd_theme
   - sphinxcontrib-googleanalytics
