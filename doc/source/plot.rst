@@ -23,9 +23,6 @@ should  be aware of a few shortcomings when working with WRF data.
 - The rotated pole projection requires the x and y limits to be set manually
   using set_xlim and set_ylim.
 
-- You can't place latitude and longitude labels on the axes when using 
-  any projection other than Mercator or LatLon.
-
 
 Plotting a Two-dimensional Field
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -89,7 +86,10 @@ Plotting a Two-dimensional Field
     ax.set_ylim(cartopy_ylim(smooth_slp))
     
     # Add the gridlines
-    ax.gridlines(color="black", linestyle="dotted")
+    gl = ax.gridlines(draw_labels=True, color="black", linestyle="dotted")
+    gl.right_labels = False
+    gl.x_inline = False
+    gl.top_labels = False
 
     plt.title("Sea Level Pressure (hPa)")
 
