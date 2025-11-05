@@ -3,7 +3,7 @@ name: wrf_python_build
 channels:
   - conda-forge
 dependencies:
-  - python
+  - python<3.12
   - basemap
   - cartopy
   - clang_osx-arm64

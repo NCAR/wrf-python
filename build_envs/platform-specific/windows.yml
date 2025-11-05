@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - msys2
 dependencies:
-  - python
+  - python<3.12
   - basemap
   - cartopy
   - jupyter
