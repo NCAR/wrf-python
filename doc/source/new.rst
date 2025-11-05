@@ -4,6 +4,15 @@ What's New
 Releases
 -------------
 
+v1.4.1 (November 2025)
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Release 1.4.1
+- Support for Python 3.13
+- Fix to accommodate recent netCDF4 changes
+- Remove pkg_resources
+- Correct units for LCL and LFC in the subproduct diagnostics documentation 
+
 v1.4.0 (May 2025)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
