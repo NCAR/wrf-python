@@ -134,13 +134,7 @@ def is_multi_file(wrfin):
         is a single NetCDF file object.
 
     """
-    try:
-        iter(wrfin)
-        is_iterable = True
-    except Exception:
-        is_iterable = False
-
-    return (is_iterable and not isstr(wrfin))
+    return (isinstance(wrfin, Iterable) and not isstr(wrfin))
 
 
 def has_time_coord(wrfnc):
