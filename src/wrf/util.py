@@ -9,7 +9,6 @@ from itertools import product, tee
 from types import GeneratorType
 import datetime as dt
 from inspect import getmodule
-from netCDF4 import Dataset
 
 try:
     from inspect import signature
@@ -135,11 +134,10 @@ def is_multi_file(wrfin):
         is a single NetCDF file object.
 
     """
-    if isinstance(wrfin, Dataset):
-        is_iterable = False
-    elif isinstance(wrfin, Iterable):
+    try:
+        iter(wrfin)
         is_iterable = True
-    else:
+    except Exception:
         is_iterable = False
 
     return (is_iterable and not isstr(wrfin))
