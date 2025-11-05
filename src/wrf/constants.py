@@ -59,6 +59,7 @@ _DEFAULT_FILL_MAP = {None: Constants.DEFAULT_FILL,
                      np.dtype(np.uint32): 4294967295,
                      np.dtype(np.int64): Constants.DEFAULT_FILL_INT64,
                      np.dtype(np.uint64): 18446744073709551614,
+                     np.dtype(np.float_): Constants.DEFAULT_FILL_DOUBLE,
                      np.dtype(np.float32): Constants.DEFAULT_FILL_FLOAT,
                      np.dtype(np.float64): Constants.DEFAULT_FILL_DOUBLE
                      }
