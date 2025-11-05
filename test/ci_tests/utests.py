@@ -107,7 +107,7 @@ def make_interp_test(varname, wrf_in, referent, multi=False,
             # print (hts_850)
             hts_850 = interplevel(hts, p, 850)
 
-            nt.assert_allclose(to_np(hts_850), ref_ht_850, rtol=1e-06)
+            nt.assert_allclose(to_np(hts_850), ref_ht_850)
 
         elif (varname == "vertcross"):
             ref_ht_cross = _get_refvals(referent, "vertcross", repeat, multi)
