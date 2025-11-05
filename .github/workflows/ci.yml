@@ -27,7 +27,7 @@ jobs:
         python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
       - name: environment setup
         uses: conda-incubator/setup-miniconda@835234971496cad1653abb28a638a281cf32541f # v3.2.0
         with:
