@@ -4,6 +4,10 @@ What's New
 Releases
 -------------
 
+v1.4.2 (December 2025)
+- Release 1.4.2
+- Remove Python upper version pin and drop Python 3.9
+
 v1.4.1 (November 2025)
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
