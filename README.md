@@ -9,26 +9,21 @@ This package provides over 30 diagnostic calculations, several interpolation rou
 Installation
 ----------------------------
 
-    conda install -c conda-forge wrf-python
+    conda install conda-forge::wrf-python
 
 Documentation
 ----------------------------------
 
-http://wrf-python.rtfd.org
+https://wrf-python.readthedocs.io
 
 
 Citation
 ------------------
 
-If you use this software, please cite it as described at the [WRF-Python - Citation](
-https://wrf-python.readthedocs.io/en/latest/citation.html) page.
+If you use this software, please cite it as described in the [documentation](
+https://wrf-python.readthedocs.io/en/latest/citation.html).
 
 
 --------------------
 
-*The National Center for Atmospheric Research is sponsored by the National
-Science Foundation. Any opinions, findings and conclusions or recommendations
-expressed in this material do not necessarily reflect the views of the
-National Science Foundation.*
-
-
+*This material is based upon work supported by the NSF National Center for Atmospheric Research, a major facility sponsored by the U.S. National Science Foundation and managed by the University Corporation for Atmospheric Research. Any opinions, findings and conclusions or recommendations expressed in this material do not necessarily reflect the views of the U.S. National Science Foundation.*
