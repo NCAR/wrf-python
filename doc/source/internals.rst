@@ -220,8 +220,8 @@ OpenMP enabled on GCC (Linux or Mac):
    sh ./gnu_omp.sh
    
 The above command will build and install the new routine, along with the 
-other Fortran routines. If you recieve errors, then your code failed to 
-build sucessfully. Otherwise, your new routine can be called as 
+other Fortran routines. If you receive errors, then your code failed to 
+build successfully. Otherwise, your new routine can be called as 
 :meth:`wrf._wrffortran.pert_add`. 
 
 
