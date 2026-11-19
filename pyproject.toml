@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core", "numpy"]
+requires = ["scikit-build-core", "numpy", "charset-normalizer"]
 build-backend = "scikit_build_core.build"
 
 [project]
