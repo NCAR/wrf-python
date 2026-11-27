@@ -110,6 +110,9 @@ SUBROUTINE DINTERP3DZ(data3d, out2d, zdata, levels, nx, ny, nz, nlev, missingval
                         w1 = 1.D0 - w2
                         out2d(i,j,lev) = w1*data3d(i,j,kp-im) + w2*data3d(i,j,kp-ip)
                         dointerp = .TRUE.
+                    ELSE IF (zdata(i,j,kp) == desiredloc) THEN
+                        out2d(i,j,lev) = data3d(i,j,kp)
+                        dointerp = .TRUE.
                     END IF
                     kp = kp - 1
                 END DO
@@ -169,6 +172,9 @@ SUBROUTINE DINTERP3DZ_2DLEV(data3d, out2d, zdata, levs2d, nx, ny, nz, missingval
                     w1 = 1.D0 - w2
                     out2d(i,j) = w1*data3d(i,j,kp-im) + w2*data3d(i,j,kp-ip)
                     dointerp = .TRUE.
+                ELSE IF (zdata(i,j,kp) == desiredloc) THEN
+                    out2d(i,j) = data3d(i,j,kp)
+                    dointerp = .TRUE.  
                 END IF
                 kp = kp - 1
             END DO
